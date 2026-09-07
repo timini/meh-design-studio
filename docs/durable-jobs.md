@@ -17,7 +17,7 @@ with JobQueue.create(Path("jobs.sqlite"), Path("job-artifacts")) as queue:
 
 The example digest is a placeholder, not an evaluation identity. Each process/thread must open its own queue connection. SQLite writer transactions make competing claims exclusive. Claiming commits an attempt record before returning work. A lease specifies a unique attempt directory; the worker creates it and writes its artifacts there.
 
-Workers must renew leases while working. Heartbeat returns whether cancellation has been requested. An expired lease cannot renew, publish success or modify a newer attempt. Recovery marks the abandoned attempt failed and requeues only when its attempt budget remains; a pending cancellation becomes cancelled instead. A worker can explicitly fail an active attempt, and the caller can explicitly retry failed/cancelled work within the attempt budget. All attempts remain recorded.
+Workers must renew leases while working. Heartbeat returns whether cancellation has been requested. An expired lease cannot renew, publish success or modify a newer attempt. Recovery marks the abandoned attempt failed and automatically requeues at most once per job, and only when its attempt budget remains; a pending cancellation becomes cancelled instead. A worker can explicitly fail an active attempt, and the caller can explicitly retry failed/cancelled work within the attempt budget. Explicit retries do not reset the automatic-retry allowance. All attempts remain recorded.
 
 ```mermaid
 stateDiagram-v2
@@ -25,7 +25,7 @@ stateDiagram-v2
     queued --> cancelled: cancel
     running --> succeeded: verify completion bundle
     running --> failed: fail / exhausted expired lease
-    running --> queued: expired lease with budget
+    running --> queued: first expired lease with budget
     running --> cancel_requested: cancel
     cancel_requested --> cancelled: acknowledge / expire
     failed --> queued: explicit retry with budget
@@ -39,3 +39,5 @@ The database retains the descriptor hash. Consumers must call `queue.result(job_
 The wall-clock lease model requires a reliable UTC system clock. Separate queue connections are safe for concurrent workers; one connection is not shared across threads. Recovery prevents late workers from publishing into the accepted attempt, but cannot stop an old process from consuming compute. Process supervision, resource ceilings, stage handlers, semantic result validation, resume checkpoints and optimizer integration are the next layer.
 
 Tests include competing connections, an actual worker process exiting immediately after claim, lease expiry, late completion, cancellation races, bounded retry after reopening the database, missing/corrupted artifacts and overwrite refusal.
+
+Completion descriptors are limited to 16 MiB before parsing; reads remain bounded even if a file grows during inspection. This includes both publication and later archive verification. Database schema 2 records the consumed automatic-retry allowance persistently; development schema 1 databases are rejected explicitly and must be recreated.

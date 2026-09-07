@@ -225,3 +225,39 @@ def test_symlink_cannot_escape_attempt_directory(queue,tmp_path):
     except OSError:
         pytest.skip('symbolic links unavailable')
     with pytest.raises(ValueError,match='escaped'): q.complete(lease)
+
+
+def test_only_one_automatic_retry_even_after_reopening_and_explicit_retry(queue):
+    q,now = queue
+    job = q.enqueue(spec(max_attempts=10))
+    q.claim('first',lease_seconds=1)
+    now[0] += 2
+    q.recover_expired()
+    with JobQueue(q.path,clock=lambda:now[0]) as reopened:
+        reopened.claim('second',lease_seconds=1)
+        now[0] += 2
+        reopened.recover_expired()
+        assert reopened.get(job)['status'] == 'failed'
+        assert reopened.claim('third') is None
+        reopened.retry(job)
+        reopened.claim('explicit',lease_seconds=1)
+        now[0] += 2
+        reopened.recover_expired()
+        assert reopened.get(job)['status'] == 'failed'
+        assert reopened.get(job)['attempt'] == 3
+
+
+@pytest.mark.parametrize('published',[False,True])
+def test_oversized_completion_rejected_before_loading(queue,published):
+    from meh_studio.jobs import MAX_COMPLETION_BYTES
+    q,_ = queue
+    job = q.enqueue(spec())
+    lease = q.claim('worker')
+    publish(lease)
+    if published:
+        q.complete(lease)
+    path = lease.output_directory/'completion.json'
+    with path.open('wb') as stream:
+        stream.truncate(MAX_COMPLETION_BYTES + 1)
+    with pytest.raises(ValueError,match='size limit'):
+        q.result(job) if published else q.complete(lease)

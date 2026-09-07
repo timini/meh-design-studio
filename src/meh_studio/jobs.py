@@ -17,6 +17,19 @@ from pydantic import Field, field_validator, model_validator
 from .domain import Digest, Identifier, Record
 
 
+MAX_COMPLETION_BYTES = 16 * 1024 * 1024
+
+
+def completion_bytes(path: Path) -> bytes:
+    with path.open("rb") as stream:
+        if path.stat().st_size > MAX_COMPLETION_BYTES:
+            raise ValueError("completion descriptor exceeds size limit")
+        payload = stream.read(MAX_COMPLETION_BYTES + 1)
+    if len(payload) > MAX_COMPLETION_BYTES:
+        raise ValueError("completion descriptor exceeds size limit")
+    return payload
+
+
 class JobSpec(Record):
     kind: Literal["geometry", "mesh", "compile", "solve", "validate"]
     input_digest: Digest
@@ -87,7 +100,7 @@ class JobQueue:
         try:
             self.connection.row_factory = sqlite3.Row
             self.connection.execute("PRAGMA foreign_keys=ON")
-            if self.connection.execute("PRAGMA user_version").fetchone()[0] != 1:
+            if self.connection.execute("PRAGMA user_version").fetchone()[0] != 2:
                 raise ValueError("unsupported job database schema")
             setting = self.connection.execute("SELECT value FROM settings WHERE key='artifact_root'").fetchone()
             if setting is None:
@@ -113,13 +126,13 @@ class JobQueue:
                     CREATE TABLE jobs(
                         id TEXT PRIMARY KEY, spec TEXT NOT NULL,
                         status TEXT NOT NULL CHECK(status IN ('queued','running','cancel_requested','succeeded','failed','cancelled')),
-                        created REAL NOT NULL, attempt INTEGER NOT NULL DEFAULT 0,
+                        created REAL NOT NULL, attempt INTEGER NOT NULL DEFAULT 0, automatic_retries INTEGER NOT NULL DEFAULT 0,
                         token TEXT, owner TEXT, deadline REAL, completion_hash TEXT, error TEXT);
                     CREATE TABLE attempts(
                         token TEXT PRIMARY KEY, job_id TEXT NOT NULL REFERENCES jobs(id),
                         number INTEGER NOT NULL, owner TEXT NOT NULL, started REAL NOT NULL,
                         finished REAL, outcome TEXT, error TEXT, UNIQUE(job_id, number));
-                    PRAGMA user_version=1;
+                    PRAGMA user_version=2;
                 ''')
                 con.execute("INSERT INTO settings VALUES ('artifact_root',?)", (str(artifact_root),))
         except BaseException:
@@ -247,8 +260,9 @@ class JobQueue:
             for item in rows:
                 row = self._row(item["id"])
                 self._finish(row,"cancelled" if row["status"] == "cancel_requested" else "failed","worker lease expired")
-                if row["status"] != "cancel_requested" and row["attempt"] < JobSpec.model_validate_json(row["spec"]).max_attempts:
-                    self.connection.execute("UPDATE jobs SET status='queued',token=NULL,owner=NULL WHERE id=?",(row["id"],))
+                if (row["status"] != "cancel_requested" and row["automatic_retries"] < 1
+                        and row["attempt"] < JobSpec.model_validate_json(row["spec"]).max_attempts):
+                    self.connection.execute("UPDATE jobs SET status='queued',token=NULL,owner=NULL,automatic_retries=automatic_retries+1 WHERE id=?",(row["id"],))
             return len(rows)
 
     def _verified_completion(self, row):
@@ -258,8 +272,9 @@ class JobQueue:
         path = directory/"completion.json"
         if path.is_symlink():
             raise ValueError("completion descriptor cannot be a symbolic link")
-        digest = file_digest(path)
-        record = Completion.model_validate_json(path.read_text(encoding="utf-8"))
+        payload = completion_bytes(path)
+        digest = hashlib.sha256(payload).hexdigest()
+        record = Completion.model_validate_json(payload)
         if record.job_id != row["id"] or record.attempt_token != row["token"]:
             raise ValueError("completion belongs to another job or attempt")
         for artifact in record.files:
@@ -268,7 +283,7 @@ class JobQueue:
                 raise ValueError("artifact is missing or escaped the attempt directory")
             if file.stat().st_size != artifact.size_bytes or file_digest(file) != artifact.sha256:
                 raise ValueError("completion artifact integrity mismatch")
-        if file_digest(path) != digest:
+        if hashlib.sha256(completion_bytes(path)).hexdigest() != digest:
             raise ValueError("completion descriptor changed during verification")
         return record,digest
 
@@ -283,7 +298,7 @@ class JobQueue:
             if row["status"] == "cancel_requested":
                 raise ValueError("cancelled work cannot publish a successful result")
             path = self.artifact_root/row["id"]/row["token"]/"completion.json"
-            if file_digest(path) != digest:
+            if hashlib.sha256(completion_bytes(path)).hexdigest() != digest:
                 raise ValueError("completion descriptor changed before publication")
             self._finish(row,"succeeded",digest=digest)
 
