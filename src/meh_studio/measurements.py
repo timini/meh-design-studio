@@ -21,6 +21,7 @@ from .domain import Band, Digest, Identifier, Nonnegative, Positive, Record
 
 MAX_INPUT_BYTES = 16 * 1024 * 1024
 MAX_MANIFEST_BYTES = 4096
+MAX_METADATA_BYTES = 128 * 1024
 MAX_SAMPLES = 100_000
 Text = Annotated[str, Field(min_length=1, max_length=4096)]
 
@@ -121,9 +122,23 @@ def parse_trace(payload: bytes, metadata: MeasurementMetadata):
     return {'frequency_hz':f,'real':values[:,1],'imag':values[:,2],'within_declared_band':valid}
 
 
+def _decode_declaration(payload: bytes):
+    def unique_object(pairs):
+        result={}
+        for key,value in pairs:
+            if key in result:
+                raise ValueError("duplicate JSON declaration key")
+            result[key]=value
+        return result
+    try:
+        return json.loads(payload,object_pairs_hook=unique_object)
+    except RecursionError as exc:
+        raise ValueError("measurement declaration exceeds nesting limit") from exc
+
+
 def import_measurement(csv_path: Path, metadata_path: Path, output: Path, *, calibration_path: Path | None=None):
-    raw=read_bounded(csv_path); declaration=read_bounded(metadata_path)
-    metadata=MeasurementMetadata.model_validate_json(declaration)
+    raw=read_bounded(csv_path); declaration=read_bounded(metadata_path,max_bytes=MAX_METADATA_BYTES)
+    metadata=MeasurementMetadata.model_validate(_decode_declaration(declaration))
     arrays=parse_trace(raw,metadata)
     calibration=read_bounded(calibration_path) if calibration_path is not None else None
     if (calibration is None) != (metadata.calibration_sha256 is None):
@@ -180,11 +195,11 @@ def read_measurement(output: Path):
     if (output/'manifest.json').is_symlink():
         raise ValueError('measurement manifest cannot be a symlink')
     try:
-        manifest=json.loads(read_bounded(output/'manifest.json',max_bytes=MAX_MANIFEST_BYTES))
+        manifest=_decode_declaration(read_bounded(output/'manifest.json',max_bytes=MAX_MANIFEST_BYTES))
     except RecursionError as exc:
         raise ValueError('measurement manifest exceeds nesting limit') from exc
     if (set(manifest)!={'schema_version','kind','status','evidence','metadata_hash','files'}
-            or manifest['schema_version'] != 1 or manifest['kind'] != 'single_complex_measurement'
+            or type(manifest['schema_version']) is not int or manifest['schema_version'] != 1 or manifest['kind'] != 'single_complex_measurement'
             or manifest['status'] != 'complete' or manifest['evidence'] != 'imported_not_qualified'):
         raise ValueError("unsupported measurement bundle")
     names=set(manifest['files'])
@@ -195,11 +210,11 @@ def read_measurement(output: Path):
     for name in names:
         path=output/name
         if path.is_symlink(): raise ValueError("measurement bundle files cannot be symlinks")
-        data=read_bounded(path)
+        data=read_bounded(path,max_bytes=MAX_METADATA_BYTES if name=='metadata.json' else MAX_INPUT_BYTES)
         if manifest['files'][name] != {'sha256':digest(data),'size_bytes':len(data)}:
             raise ValueError("measurement artifact integrity mismatch")
         payloads[name]=data
-    metadata=MeasurementMetadata.model_validate_json(payloads['metadata.json'])
+    metadata=MeasurementMetadata.model_validate(_decode_declaration(payloads['metadata.json']))
     if metadata.content_hash!=manifest['metadata_hash']:
         raise ValueError("measurement metadata identity mismatch")
     calibration=payloads.get('calibration.bin')

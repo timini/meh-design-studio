@@ -281,3 +281,46 @@ read_measurement(Path(sys.argv[3]))
     csv,meta,_,out=inputs
     result=subprocess.run([sys.executable,'-c',code,str(csv),str(meta),str(out)],capture_output=True,text=True,timeout=10)
     assert result.returncode==0,result.stderr
+
+
+@pytest.mark.parametrize('version',[True,1.0,'1'])
+def test_manifest_requires_integer_version(inputs,version):
+    csv,meta,_,out=inputs;import_measurement(csv,meta,out)
+    manifest=json.loads((out/'manifest.json').read_text());manifest['schema_version']=version
+    (out/'manifest.json').write_text(json.dumps(manifest))
+    with pytest.raises(ValueError,match='unsupported'):read_measurement(out)
+
+
+@pytest.mark.parametrize('inspection',[False,True])
+def test_metadata_size_rejected_before_validation(inputs,monkeypatch,inspection):
+    from meh_studio.measurements import MAX_METADATA_BYTES
+    csv,meta,_,out=inputs
+    if inspection:import_measurement(csv,meta,out)
+    payload=b'{"extra":"'+b'x'*MAX_METADATA_BYTES+b'"}'
+    target=out/'metadata.json' if inspection else meta
+    target.write_bytes(payload)
+    if inspection:
+        manifest=json.loads((out/'manifest.json').read_text())
+        manifest['files']['metadata.json']={'sha256':digest(payload),'size_bytes':len(payload)}
+        (out/'manifest.json').write_text(json.dumps(manifest))
+    def forbidden(*args,**kwargs):pytest.fail('oversized metadata validated')
+    monkeypatch.setattr(MeasurementMetadata,'model_validate',forbidden)
+    with pytest.raises(ValueError,match='byte limit'):
+        if inspection:read_measurement(out)
+        else:import_measurement(csv,meta,out)
+
+
+@pytest.mark.parametrize('inspection',[False,True])
+def test_duplicate_metadata_keys_rejected(inputs,inspection):
+    csv,meta,_,out=inputs
+    if inspection:import_measurement(csv,meta,out)
+    payload=meta.read_bytes().rstrip()[:-1]+b',"phasor_convention":"exp(-i omega t)"}'
+    target=out/'metadata.json' if inspection else meta
+    target.write_bytes(payload)
+    if inspection:
+        manifest=json.loads((out/'manifest.json').read_text())
+        manifest['files']['metadata.json']={'sha256':digest(payload),'size_bytes':len(payload)}
+        (out/'manifest.json').write_text(json.dumps(manifest))
+    with pytest.raises(ValueError,match='duplicate JSON'):
+        if inspection:read_measurement(out)
+        else:import_measurement(csv,meta,out)
