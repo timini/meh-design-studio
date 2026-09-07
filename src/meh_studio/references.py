@@ -36,7 +36,10 @@ def cavity_modes(lengths_m: tuple[float, float, float], max_hz: float,
                     continue
                 f = sound_speed_m_s / 2 * math.hypot(
                     *(n / length for n, length in zip((nx, ny, nz), lengths_m)))
-                if f <= math.nextafter(max_hz, math.inf):
+                # Cover rounding across division, squaring/hypot and scaling in
+                # equivalent eigenfrequency formulae; never accept non-finite modes.
+                if math.isfinite(f) and (f <= max_hz or math.isclose(
+                        f, max_hz, rel_tol=8 * math.ulp(1.0), abs_tol=0.0)):
                     modes.append({"indices": [nx, ny, nz], "frequency_hz": f})
     return sorted(modes, key=lambda m: (m["frequency_hz"], m["indices"]))
 

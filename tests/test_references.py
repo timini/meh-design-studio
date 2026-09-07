@@ -84,3 +84,11 @@ def test_finite_motion_but_overflowing_power_is_rejected(source):
     fs = 1 / (2 * math.pi * math.sqrt(source.mmd_kg * source.cms_m_n))
     with pytest.raises(ValueError, match="numerical range|non-finite"):
         solve_driver_circuit((source,), [fs], [[2.2e200]])
+
+
+def test_oblique_cutoff_accepts_equivalent_sqrt_formula():
+    maximum = 343 / 2 * math.sqrt((7 / 0.03)**2 + (9 / 0.03)**2)
+    modes = cavity_modes((0.03, 0.03, 0.03), maximum, 343)
+    assert any(m["indices"] == [0, 7, 9] for m in modes)
+    below = cavity_modes((0.03, 0.03, 0.03), maximum * (1 - 1e-12), 343)
+    assert not any(m["indices"] == [0, 7, 9] for m in below)
