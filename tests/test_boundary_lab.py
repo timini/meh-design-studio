@@ -836,3 +836,37 @@ def test_cancellation_while_classifying_failure_cannot_leave_running(tmp_path,mo
     with pytest.raises(a.EvaluationCancelled):
         runtime.solve(tmp_path/'project.json',SolveRequest(frequencies_hz=(1000,)),tmp_path/'output')
     assert json.loads((tmp_path/'output/evaluation.json').read_text())['status'] == 'cancelled'
+
+
+@pytest.mark.parametrize('payload',[[],None,'text',3,True])
+def test_nonobject_manifest_is_a_validation_error(artifact,payload):
+    root,_=artifact
+    (root/'manifest.json').write_text(json.dumps(payload))
+    with pytest.raises(ValueError,match='root must be an object'):
+        inspect_result(root,SolveRequest(frequencies_hz=(1000,)),'beat_cpu')
+
+
+def test_unknown_output_identity_cannot_publish_known_quantity(artifact):
+    root,_=artifact;path=root/'frequencies/000000.json'
+    metadata=json.loads(path.read_text());metadata['quantities'][0]['id']='unknown:pressure'
+    path.write_text(json.dumps(metadata))
+    with pytest.raises(ValueError):
+        inspect_result(root,SolveRequest(frequencies_hz=(1000,)),'beat_cpu',('unknown:pressure',))
+
+
+@pytest.mark.parametrize('signum',[2,15])
+@pytest.mark.skipif(sys.platform == 'win32',reason='POSIX signal lifecycle')
+def test_cancellation_inside_popen_cleans_up_new_child(tmp_path,monkeypatch,signum):
+    from meh_studio import boundary_lab as a
+    real_popen=subprocess.Popen;children=[]
+    def interrupted(*args,**kwargs):
+        child=real_popen(*args,**kwargs);children.append(child)
+        a.signal.raise_signal(signum)
+        return child
+    monkeypatch.setattr(a.subprocess,'Popen',interrupted)
+    report={'status':'running'}
+    with pytest.raises(a.EvaluationCancelled):
+        with a._termination_guard(report) as activate:
+            activate()
+            a._execute([sys.executable,'-c','import time;time.sleep(30)'],tmp_path,tmp_path/'log',10)
+    assert len(children)==1 and children[0].poll() is not None

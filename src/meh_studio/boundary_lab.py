@@ -52,6 +52,8 @@ def sha256(path: Path) -> str:
 
 def _read_json(path: Path):
     payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("artifact JSON root must be an object")
     # Check the whole tree, including metadata and overflowed numeric literals.
     json.dumps(payload, allow_nan=False)
     return payload
@@ -409,7 +411,7 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
                 if name not in QUANTITY_UNITS or quantity.get("unit") != QUANTITY_UNITS[name]:
                     raise ValueError("quantity unit does not match the physical contract")
                 expected_name = OUTPUT_QUANTITIES.get(quantity["id"])
-                if expected_name is not None and expected_name != name:
+                if expected_name is None or expected_name != name:
                     raise ValueError("quantity name does not match its output ID")
                 if (not isinstance(axes, list) or len(axes) != values.ndim
                         or any(not isinstance(axis, str) or not axis for axis in axes)
@@ -474,6 +476,34 @@ def _kill_process_group(pgid: int):
     raise last_error
 
 
+@contextmanager
+def _defer_spawn_cancellation():
+    if threading.current_thread() is not threading.main_thread():
+        raise ValueError("process launch must run in its worker main thread")
+    signals = (signal.SIGINT,) if os.name == "nt" else (signal.SIGINT, signal.SIGTERM)
+    previous = {sig:signal.getsignal(sig) for sig in signals}
+    pending = []
+    def defer(signum, frame):
+        if previous[signum] != signal.SIG_IGN:
+            pending.append(signum)
+    def activate():
+        for sig,handler in previous.items():
+            signal.signal(sig,handler)
+        for sig in pending:
+            handler = previous[sig]
+            if callable(handler):
+                handler(sig,None)
+            elif handler != signal.SIG_IGN:
+                raise EvaluationCancelled(f"signal {sig} during process creation")
+    try:
+        for sig in signals:
+            signal.signal(sig,defer)
+        yield activate
+    finally:
+        for sig,handler in previous.items():
+            signal.signal(sig,handler)
+
+
 def _execute(command: list[str], cwd: Path, log: Path, timeout_s: float,
              stderr_log: Path | None = None) -> None:
     if not math.isfinite(timeout_s) or timeout_s <= 0:
@@ -488,23 +518,26 @@ def _execute(command: list[str], cwd: Path, log: Path, timeout_s: float,
         stream = stack.enter_context(log.open("wb"))
         diagnostics = (stack.enter_context(stderr_log.open("wb"))
                        if stderr_log is not None else subprocess.STDOUT)
-        process = subprocess.Popen(command, cwd=cwd, stdout=stream, stderr=diagnostics, **options)
+        activate = stack.enter_context(_defer_spawn_cancellation())
+        process = None
         try:
+            process = subprocess.Popen(command, cwd=cwd, stdout=stream, stderr=diagnostics, **options)
+            activate()
             if job is not None:
                 job.assign_and_resume(process.pid)
             code = process.wait(timeout=timeout_s)
         finally:
-            # A parent can exit before its solver children. Cleanup applies to
-            # successful/nonzero exits as well as timeout and cancellation.
-            try:
-                if job is not None:
-                    job.close()
-                else:
-                    _kill_process_group(process.pid)
-            finally:
-                if process.poll() is None:
-                    process.kill()
-                process.wait()
+            # The PID is covered before deferred cancellation can be raised.
+            if process is not None:
+                try:
+                    if job is not None:
+                        job.close()
+                    else:
+                        _kill_process_group(process.pid)
+                finally:
+                    if process.poll() is None:
+                        process.kill()
+                    process.wait()
     if code:
         raise ValueError(f"Boundary Lab exited with code {code}; see {log.name}")
 
