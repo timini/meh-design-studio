@@ -870,3 +870,43 @@ def test_cancellation_inside_popen_cleans_up_new_child(tmp_path,monkeypatch,sign
             activate()
             a._execute([sys.executable,'-c','import time;time.sleep(30)'],tmp_path,tmp_path/'log',10)
     assert len(children)==1 and children[0].poll() is not None
+
+
+@pytest.mark.parametrize('unsupported_tag',[1,2])
+def test_selected_non_tetrahedral_volume_is_not_silently_dropped(artifact,unsupported_tag):
+    import meshio
+    root,manifest=artifact;source=Path(manifest['meshes'][0]['file'])
+    raw=meshio.read(source)
+    meshio.write(source,meshio.Mesh(raw.points,[('tetra',np.array([[0,1,2,3]])),
+        ('hexahedron',np.array([[0,1,2,3,0,1,2,3]]))],
+        cell_data={'gmsh:physical':[np.array([1]),np.array([unsupported_tag])],
+                   'gmsh:geometrical':[np.array([1]),np.array([2])]}),file_format='gmsh22',binary=False)
+    manifest['meshes'][0].update(sha256=sha256(source),size_bytes=source.stat().st_size)
+    (root/'manifest.json').write_text(json.dumps(manifest))
+    if unsupported_tag == 1:
+        with pytest.raises(ValueError,match='non-tetrahedral'):
+            inspect_result(root,SolveRequest(frequencies_hz=(1000,)),'beat_cpu')
+    else:
+        assert inspect_result(root,SolveRequest(frequencies_hz=(1000,)),'beat_cpu')['evidence']=='predicted'
+
+
+def test_multi_mesh_region_remains_explicitly_unsupported_by_pinned_runtime(artifact):
+    root,manifest=artifact;path=root/manifest['project_file'];project=json.loads(path.read_text())
+    project['physical_system']['regions'][0]['mesh_ids'].append('mesh:other')
+    path.write_text(json.dumps(project));manifest['project_sha256']=sha256(path)
+    (root/'manifest.json').write_text(json.dumps(manifest))
+    with pytest.raises(ValueError,match='pinned Boundary Lab requires one FEM mesh'):
+        inspect_result(root,SolveRequest(frequencies_hz=(1000,)),'beat_cpu')
+
+
+@pytest.mark.parametrize('signum,code',[(2,130),(15,143),(None,130)])
+def test_cli_returns_structured_cancellation(tmp_path,monkeypatch,capsys,signum,code):
+    from meh_studio.boundary_lab import EvaluationCancelled
+    from meh_studio.cli import main
+    request=tmp_path/'request.json';request.write_text(SolveRequest(frequencies_hz=(1000,)).model_dump_json())
+    def cancel(*args,**kwargs):raise EvaluationCancelled('cancelled test',signum=signum)
+    monkeypatch.setattr(BoundaryLabRuntime,'solve',cancel)
+    result=main(['solve-project',str(tmp_path/'project.json'),'--request',str(request),
+        '--checkout',str(tmp_path),'--python',sys.executable,'--julia','julia','--output',str(tmp_path/'output')])
+    assert result==code
+    assert json.loads(capsys.readouterr().err)=={'status':'cancelled','error':'cancelled test'}

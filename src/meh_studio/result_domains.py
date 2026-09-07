@@ -69,11 +69,16 @@ def load_domains(root: Path, manifest: dict, system: dict, meshes: dict) -> dict
                     if purpose == "fem_volume":
                         regions = [r for r in system["regions"] if r["kind"] == "bounded_air" and mid in r["mesh_ids"]]
                         if len(regions) != 1 or regions[0]["mesh_ids"] != [mid]:
-                            raise ValueError("one bounded region per FEM mesh is required")
+                            raise ValueError("pinned Boundary Lab requires one FEM mesh per bounded region and one owning region per mesh")
                         tags = {g["tag"] for g in regions[0].get("volume_groups", []) if g["mesh_id"] == mid}
                         physical = raw.cell_data.get("gmsh:physical", [])
                         if not tags or len(physical) != len(raw.cells):
                             raise ValueError("FEM source requires selected physical volume tags")
+                        for block, block_tags in zip(raw.cells,physical):
+                            if np.asarray(block_tags).shape != (len(block.data),):
+                                raise ValueError("source cell tags do not align with connectivity")
+                            if block.dim == 3 and block.type not in {"tetra","tetra10"} and np.any(np.isin(block_tags,list(tags))):
+                                raise ValueError("selected FEM volume contains unsupported non-tetrahedral cells")
                         selected = [c.data[np.isin(t, list(tags))] for c,t in zip(raw.cells,physical)
                                     if c.type in {"tetra", "tetra10"} and np.any(np.isin(t,list(tags)))]
                         if not selected or len({c.shape[1] for c in selected}) != 1:

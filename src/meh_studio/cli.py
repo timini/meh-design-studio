@@ -72,6 +72,9 @@ def main(argv=None) -> int:
                       "modes": cavity_modes(tuple(args.lengths_m), args.max_hz, args.sound_speed_m_s)}
         print(json.dumps(result, indent=2, allow_nan=False))
         return 0
+    except KeyboardInterrupt as exc:
+        print(json.dumps({"status":"cancelled", "error":str(exc) or "interrupted"}), file=sys.stderr)
+        return 143 if getattr(exc,"signum",None) == 15 else 130
     except (ValueError, OSError, sqlite3.Error, subprocess.SubprocessError) as exc:
         print(json.dumps({"error": str(exc)}), file=sys.stderr)
         return 2
