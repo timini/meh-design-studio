@@ -1,7 +1,7 @@
 """Version-pinned subprocess adapter. A completed solve is a prediction, not validation."""
 from __future__ import annotations
 
-from contextlib import contextmanager
+from contextlib import contextmanager, ExitStack
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import hashlib
@@ -76,6 +76,7 @@ QUANTITY_UNITS = {
     "radiation_impedance": "N*s/m",
 }
 OUTPUT_QUANTITIES = {
+    "ui:exterior-pressure": "exterior_pressure",
     "acoustic:pressure:fem-nodes": "fem_nodal_pressure",
     "acoustic:pressure:bem-boundary": "bem_boundary_pressure",
     "acoustic:normal-derivative:bem-boundary": "bem_boundary_neumann",
@@ -86,6 +87,34 @@ OUTPUT_QUANTITIES = {
     "acoustic:pressure:vertical-polar": "exterior_pressure",
     "acoustic:pressure:sphere": "exterior_pressure",
 }
+
+
+def _output_ids(ids) -> tuple[str, ...]:
+    if (not isinstance(ids, (list, tuple)) or not ids
+            or any(not isinstance(item, str) or not item for item in ids)
+            or len(set(ids)) != len(ids)):
+        raise ValueError("output IDs must be nonempty unique strings")
+    return tuple(ids)
+
+
+def _project_observation_ids(project: dict, request: SolveRequest) -> set[str]:
+    """Derive requirements from the pinned project format, not solver preflight."""
+    required = set()
+    if request.include_project_observations:
+        system = project.get("physical_system")
+        if not isinstance(system, dict) or not isinstance(system.get("regions"), list):
+            raise ValueError("project observations require explicit physical-system regions")
+        if any(region.get("kind") == "unbounded_air" for region in system["regions"]):
+            required.add("ui:exterior-pressure")
+    # Upstream retains plane fields even when polar observations are disabled.
+    for plane in project.get("observation_planes", []):
+        kind = plane.get("type", "interior")
+        if kind in {"interior", "combined"}:
+            required.add("acoustic:pressure:fem-nodes")
+        if kind in {"exterior", "combined"}:
+            required.update(("acoustic:pressure:bem-boundary",
+                             "acoustic:normal-derivative:bem-boundary"))
+    return required
 
 
 def _mesh_inventory(payload: dict) -> list[dict]:
@@ -138,6 +167,8 @@ def _termination_guard():
 def _inspect_result(root: Path, request: SolveRequest, backend: str,
                     expected_output_ids: tuple[str, ...] | None = None) -> dict:
     """Reject partial runs and retain raw complex quantities without DSP synthesis."""
+    if expected_output_ids is not None:
+        expected_output_ids = _output_ids(expected_output_ids)
     root = Path(root)
     manifest = _read_json(root / "manifest.json")
     if (manifest.get("schema") != "boundary-lab-headless-result"
@@ -162,11 +193,15 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
     if len(rows) != len(frequencies):
         raise ValueError("missing frequency results")
     inventory = []
+    seen_arrays = set()
     for frequency, row in zip(frequencies, rows):
         if not isinstance(row, dict) or row.get("freq_hz") != frequency:
             raise ValueError("frequency result mismatch")
         metadata_path = _contained(root, row["metadata_file"])
         array_path = _contained(root, row["arrays_file"])
+        if array_path in seen_arrays:
+            raise ValueError("frequency rows must reference distinct array artifacts")
+        seen_arrays.add(array_path)
         metadata = _read_json(metadata_path)
         if metadata.get("freq_hz") != frequency or metadata.get("excitation_port_ids") != excitations:
             raise ValueError("frequency metadata axis mismatch")
@@ -175,7 +210,8 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
         quantities = metadata.get("quantities", [])
         if not quantities or len({q["key"] for q in quantities}) != len(quantities):
             raise ValueError("missing or duplicate quantities")
-        if expected_output_ids is not None and {q["id"] for q in quantities} != set(expected_output_ids):
+        actual_ids = _output_ids([q["id"] for q in quantities])
+        if expected_output_ids is not None and set(actual_ids) != set(expected_output_ids):
             raise ValueError("returned quantities differ from the compiled output contract")
         required = set(request.retain)
         if "bem_boundary_traces" in required:
@@ -189,7 +225,7 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
             for quantity in quantities:
                 values = arrays[quantity["key"]]
                 if (list(values.shape) != quantity["shape"] or str(values.dtype) != quantity["dtype"]
-                        or values.dtype.kind not in "fciub" or not np.all(np.isfinite(values))):
+                        or values.dtype not in (np.dtype("complex64"), np.dtype("complex128")) or not np.all(np.isfinite(values))):
                     raise ValueError("non-finite or inconsistent quantity array")
                 axes = quantity["axes"]
                 name = quantity.get("quantity")
@@ -198,8 +234,12 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
                 expected_name = OUTPUT_QUANTITIES.get(quantity["id"])
                 if expected_name is not None and expected_name != name:
                     raise ValueError("quantity name does not match its output ID")
-                if len(axes) != values.ndim:
-                    raise ValueError("missing quantity axes")
+                if (not isinstance(axes, list) or len(axes) != values.ndim
+                        or any(not isinstance(axis, str) or not axis for axis in axes)
+                        or len(set(axes)) != len(axes)):
+                    raise ValueError("missing or duplicate quantity axes")
+                if name != "radiation_impedance" and axes.count("excitation") != 1:
+                    raise ValueError("quantity requires an excitation axis")
                 if "excitation" in axes and values.shape[axes.index("excitation")] != len(excitations):
                     raise ValueError("quantity excitation count mismatch")
         inventory.append({"frequency_hz": frequency, "metadata_sha256": sha256(metadata_path),
@@ -217,13 +257,17 @@ def inspect_result(root: Path, request: SolveRequest, backend: str,
         raise ValueError(f"invalid or missing result artifact: {exc}") from exc
 
 
-def _execute(command: list[str], cwd: Path, log: Path, timeout_s: float) -> None:
+def _execute(command: list[str], cwd: Path, log: Path, timeout_s: float,
+             stderr_log: Path | None = None) -> None:
     if not math.isfinite(timeout_s) or timeout_s <= 0:
         raise ValueError("timeout must be positive and finite")
     options = {"start_new_session": True} if os.name != "nt" else {
         "creationflags": subprocess.CREATE_NEW_PROCESS_GROUP}
-    with log.open("wb") as stream:
-        process = subprocess.Popen(command, cwd=cwd, stdout=stream, stderr=subprocess.STDOUT, **options)
+    with ExitStack() as stack:
+        stream = stack.enter_context(log.open("wb"))
+        diagnostics = (stack.enter_context(stderr_log.open("wb"))
+                       if stderr_log is not None else subprocess.STDOUT)
+        process = subprocess.Popen(command, cwd=cwd, stdout=stream, stderr=diagnostics, **options)
         try:
             code = process.wait(timeout=timeout_s)
         except BaseException:
@@ -301,15 +345,19 @@ class BoundaryLabRuntime:
                   "--julia-executable", str(Path(self.julia).absolute())]
         try:
             _execute(base + ["validate"] + common + ["--json"], Path(self.checkout),
-                     output / "preflight.json", timeout_s)
+                     output / "preflight.json", timeout_s, stderr_log=output / "preflight.stderr.log")
             preflight = _read_json(output / "preflight.json")
             if preflight.get("valid") is not True:
                 raise ValueError("upstream preflight did not confirm validity")
             preflight_meshes = _mesh_inventory(preflight)
+            expected_outputs = _output_ids(preflight.get("output_ids"))
+            observations = _project_observation_ids(_read_json(project), request)
+            if not observations.issubset(expected_outputs):
+                raise ValueError("preflight omitted requested project observations")
             _execute(base + ["solve"] + common + ["--events", "ndjson", "--output", str(output / "upstream")],
                      Path(self.checkout), output / "solve.ndjson", timeout_s)
             result = inspect_result(output / "upstream", request, self.backend,
-                                    tuple(preflight["output_ids"]))
+                                    expected_outputs)
             if sha256(project) != project_hash or sha256(request_file) != report["request_sha256"]:
                 raise ValueError("project or request changed during evaluation")
             manifest = _read_json(output / "upstream/manifest.json")
