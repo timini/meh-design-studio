@@ -59,3 +59,30 @@ def test_catalogue_cli_reports_declared_qualification_only_when_present(tmp_path
         result = json.loads(capsys.readouterr().out)
         assert result["added"] is expected_added
         assert result["qualification"] == "user_declared_not_independently_verified"
+
+
+def test_utf8_inputs_do_not_depend_on_locale(tmp_path, driver, capsys, monkeypatch):
+    from meh_studio.domain import DriverRevision
+    # Emulate a legacy Windows locale when callers omit encoding.
+    original_read = Path.read_text
+    def locale_read(path, encoding=None, errors=None):
+        return original_read(path, encoding=encoding or "cp1252", errors=errors)
+    monkeypatch.setattr(Path, "read_text", locale_read)
+    data = driver.model_dump()
+    data["manufacturer"] = "Électroacoustique 日本"
+    record = DriverRevision.model_validate(data)
+    record_path, database = tmp_path / "utf8.json", tmp_path / "drivers.sqlite"
+    record_path.write_text(record.canonical_json(), encoding="utf-8")
+    # Ensure literal Unicode bytes, not only ASCII JSON escape sequences.
+    record_path.write_text(json.dumps(record.model_dump(), ensure_ascii=False), encoding="utf-8")
+    assert main(["catalogue", "init", str(database)]) == 0
+    capsys.readouterr()
+    assert main(["catalogue", "add", str(database), str(record_path)]) == 0
+    assert json.loads(capsys.readouterr().out)["record_hash"] == record.content_hash
+    example = Path(__file__).resolve().parents[1] / "examples/reference-brief.json"
+    brief = json.loads(original_read(example, encoding="utf-8"))
+    brief["level_definition"] = "Bruit rose, durée 60 s, référence 日本"
+    brief_path = tmp_path / "brief.json"
+    brief_path.write_text(json.dumps(brief, ensure_ascii=False), encoding="utf-8")
+    assert main(["validate-brief", str(brief_path)]) == 0
+    assert json.loads(capsys.readouterr().out)["brief"]["level_definition"] == brief["level_definition"]

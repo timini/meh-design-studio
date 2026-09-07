@@ -33,7 +33,7 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
     try:
         if args.command == "validate-brief":
-            record = DesignBrief.model_validate_json(args.path.read_text())
+            record = DesignBrief.model_validate_json(args.path.read_text(encoding="utf-8"))
             result = {"valid": True, "brief_hash": record.content_hash,
                       "acoustic_feasibility": "not_evaluated", "brief": record.model_dump(mode="json")}
         elif args.command == "catalogue":
@@ -41,7 +41,7 @@ def main(argv=None) -> int:
                 with Catalogue.create(args.database):
                     result = {"created": True, "qualified_bundled_pack": False}
             elif args.operation == "add":
-                record = DriverRevision.model_validate_json(args.record.read_text())
+                record = DriverRevision.model_validate_json(args.record.read_text(encoding="utf-8"))
                 with Catalogue(args.database) as cat:
                     added = cat.add(record)
                 result = {"added": added, "record_hash": record.content_hash,

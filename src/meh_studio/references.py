@@ -24,7 +24,8 @@ def cavity_modes(lengths_m: tuple[float, float, float], max_hz: float,
     extents = [2 * (max_hz / sound_speed_m_s) * length for length in lengths_m]
     if any(not math.isfinite(x) or x > 1_000_000 for x in extents):
         raise ValueError("reference request exceeds the mode enumeration budget")
-    limits = [math.floor(x) for x in extents]
+    # Enumerate conservatively; a rounded-down integer extent must not drop a mode.
+    limits = [math.ceil(x) for x in extents]
     if math.prod(n + 1 for n in limits) > 1_000_000:
         raise ValueError("reference request exceeds one million candidate modes")
     modes = []
@@ -33,9 +34,9 @@ def cavity_modes(lengths_m: tuple[float, float, float], max_hz: float,
             for nz in range(limits[2] + 1):
                 if (nx, ny, nz) == (0, 0, 0):
                     continue
-                f = sound_speed_m_s / 2 * math.sqrt(sum(
-                    (n / length) ** 2 for n, length in zip((nx, ny, nz), lengths_m)))
-                if f <= max_hz:
+                f = sound_speed_m_s / 2 * math.hypot(
+                    *(n / length for n, length in zip((nx, ny, nz), lengths_m)))
+                if f <= math.nextafter(max_hz, math.inf):
                     modes.append({"indices": [nx, ny, nz], "frequency_hz": f})
     return sorted(modes, key=lambda m: (m["frequency_hz"], m["indices"]))
 
@@ -71,24 +72,33 @@ def solve_driver_circuit(sources: tuple[SourceModel, ...], frequencies_hz,
              else np.asarray(mechanical_load, dtype=complex))
     if zload.shape != (len(f), d, d) or not np.all(np.isfinite(zload)):
         raise ValueError("mechanical load must be finite with shape (frequency, driver, driver)")
-    w = 2 * np.pi * f[:, None]
-    re = np.array([s.re_ohm for s in sources])
-    bl = np.array([s.bl_n_a for s in sources])
-    rms = np.array([s.rms_ns_m for s in sources])
-    ze = re - 1j * w * np.array([s.le_h for s in sources])
-    zm = rms - 1j * (w * np.array([s.mmd_kg for s in sources])
-                     - 1 / (w * np.array([s.cms_m_n for s in sources])))
-    matrix = zload.copy()
-    matrix[:, np.arange(d), np.arange(d)] += zm + bl**2 / ze
-    velocity = np.linalg.solve(matrix, (bl * v / ze)[..., None])[..., 0]
-    current = (v - bl * velocity) / ze
-    if not np.all(np.isfinite(velocity)) or not np.all(np.isfinite(current)):
-        raise ValueError("circuit solution is non-finite")
-    force = np.einsum("fij,fj->fi", zload, velocity)
-    return CircuitResponse(
-        current_a=current, velocity_m_s=velocity,
-        electrical_input_w=np.real(v * current.conj()).sum(axis=1),
-        coil_loss_w=(re * abs(current)**2).sum(axis=1),
-        mechanical_loss_w=(rms * abs(velocity)**2).sum(axis=1),
-        load_power_w=np.real(force * velocity.conj()).sum(axis=1),
-    )
+    try:
+        with np.errstate(over="raise", invalid="raise", divide="raise"):
+            w = 2 * np.pi * f[:, None]
+            re = np.array([s.re_ohm for s in sources])
+            bl = np.array([s.bl_n_a for s in sources])
+            rms = np.array([s.rms_ns_m for s in sources])
+            ze = re - 1j * w * np.array([s.le_h for s in sources])
+            zm = rms - 1j * (w * np.array([s.mmd_kg for s in sources])
+                             - 1 / (w * np.array([s.cms_m_n for s in sources])))
+            matrix = zload.copy()
+            matrix[:, np.arange(d), np.arange(d)] += zm + bl**2 / ze
+            velocity = np.linalg.solve(matrix, (bl * v / ze)[..., None])[..., 0]
+            current = (v - bl * velocity) / ze
+            if not np.all(np.isfinite(velocity)) or not np.all(np.isfinite(current)):
+                raise ValueError("circuit solution is non-finite")
+            force = np.einsum("fij,fj->fi", zload, velocity)
+            result = CircuitResponse(
+                current_a=current, velocity_m_s=velocity,
+                electrical_input_w=np.real(v * current.conj()).sum(axis=1),
+                coil_loss_w=(re * abs(current)**2).sum(axis=1),
+                mechanical_loss_w=(rms * abs(velocity)**2).sum(axis=1),
+                load_power_w=np.real(force * velocity.conj()).sum(axis=1),
+            )
+            for values in (result.electrical_input_w, result.coil_loss_w,
+                           result.mechanical_loss_w, result.load_power_w):
+                if not np.all(np.isfinite(values)):
+                    raise ValueError("circuit power result is non-finite")
+            return result
+    except FloatingPointError as exc:
+        raise ValueError("circuit calculation exceeded finite numerical range") from exc

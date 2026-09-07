@@ -70,3 +70,17 @@ def test_voltage_scaling_complex_superposition_and_no_load(source):
 def test_bad_circuit_inputs_rejected(source, f, v, load):
     with pytest.raises(ValueError):
         solve_driver_circuit((source,), f, v, load)
+
+
+def test_modal_cutoff_does_not_drop_rounded_integer_extent():
+    maximum = 340 * 3 / (2 * 0.22)
+    modes = cavity_modes((0.22, 0.1, 0.1), maximum, 340)
+    assert any(m["indices"] == [3, 0, 0] for m in modes)
+    lower = cavity_modes((0.22, 0.1, 0.1), maximum * (1 - 1e-10), 340)
+    assert not any(m["indices"] == [3, 0, 0] for m in lower)
+
+
+def test_finite_motion_but_overflowing_power_is_rejected(source):
+    fs = 1 / (2 * math.pi * math.sqrt(source.mmd_kg * source.cms_m_n))
+    with pytest.raises(ValueError, match="numerical range|non-finite"):
+        solve_driver_circuit((source,), [fs], [[2.2e200]])
