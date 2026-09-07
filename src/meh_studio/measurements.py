@@ -8,16 +8,9 @@ import json
 import os
 import zipfile
 import zlib
-import lzma
 import stat
 import struct
 
-try:
-    from compression.zstd import ZstdError
-except ImportError:  # Python before 3.14 has no stdlib Zstandard ZIP support.
-    DECOMPRESSION_ERRORS = (zlib.error, lzma.LZMAError)
-else:
-    DECOMPRESSION_ERRORS = (zlib.error, lzma.LZMAError, ZstdError)
 from pathlib import Path
 from typing import Annotated, Literal
 
@@ -27,6 +20,7 @@ from pydantic import Field, model_validator
 from .domain import Band, Digest, Identifier, Nonnegative, Positive, Record
 
 MAX_INPUT_BYTES = 16 * 1024 * 1024
+MAX_MANIFEST_BYTES = 4096
 MAX_SAMPLES = 100_000
 Text = Annotated[str, Field(min_length=1, max_length=4096)]
 
@@ -81,7 +75,7 @@ def digest(payload: bytes):
     return hashlib.sha256(payload).hexdigest()
 
 
-def read_bounded(path: Path):
+def read_bounded(path: Path, *, max_bytes: int = MAX_INPUT_BYTES):
     path=Path(path)
     if not stat.S_ISREG(path.stat().st_mode):
         raise ValueError('measurement input must be a regular file')
@@ -90,11 +84,11 @@ def read_bounded(path: Path):
         before=os.fstat(stream.fileno())
         if not stat.S_ISREG(before.st_mode):
             raise ValueError('measurement input must be a regular file')
-        if before.st_size > MAX_INPUT_BYTES:
-            raise ValueError("measurement input exceeds 16 MiB")
-        payload=stream.read(MAX_INPUT_BYTES+1)
+        if before.st_size > max_bytes:
+            raise ValueError("measurement input exceeds byte limit (16 MiB maximum)")
+        payload=stream.read(max_bytes+1)
         after=os.fstat(stream.fileno())
-    if len(payload)>MAX_INPUT_BYTES:
+    if len(payload)>max_bytes:
         raise ValueError("measurement input exceeds 16 MiB")
     if (before.st_size,before.st_mtime_ns,before.st_ctime_ns) != (after.st_size,after.st_mtime_ns,after.st_ctime_ns):
         raise ValueError("measurement input changed during read")
@@ -116,7 +110,7 @@ def parse_trace(payload: bytes, metadata: MeasurementMetadata):
             if len(rows)>MAX_SAMPLES: raise ValueError("measurement exceeds sample limit")
     except (UnicodeError,csv.Error) as exc:
         raise ValueError("invalid UTF-8 CSV measurement") from exc
-    values=np.asarray(rows,dtype=np.float64)
+    values=np.asarray(rows,dtype="<f8")
     if not rows or not np.isfinite(values).all():
         raise ValueError("measurement requires finite nonempty samples")
     f=values[:,0]
@@ -186,7 +180,7 @@ def read_measurement(output: Path):
     if (output/'manifest.json').is_symlink():
         raise ValueError('measurement manifest cannot be a symlink')
     try:
-        manifest=json.loads(read_bounded(output/'manifest.json'))
+        manifest=json.loads(read_bounded(output/'manifest.json',max_bytes=MAX_MANIFEST_BYTES))
     except RecursionError as exc:
         raise ValueError('measurement manifest exceeds nesting limit') from exc
     if (set(manifest)!={'schema_version','kind','status','evidence','metadata_hash','files'}
@@ -235,6 +229,6 @@ def read_measurement(output: Path):
                     data=stream.read(values.nbytes+1)
                     if len(data)!=values.nbytes or data != values.tobytes(order="C"):
                         raise ValueError("measurement arrays differ from raw evidence")
-    except (zipfile.BadZipFile,EOFError,NotImplementedError,RuntimeError,OSError,*DECOMPRESSION_ERRORS) as exc:
+    except (zipfile.BadZipFile,EOFError,NotImplementedError,RuntimeError,OSError,zlib.error) as exc:
         raise ValueError("invalid measurement array archive") from exc
     return metadata,expected

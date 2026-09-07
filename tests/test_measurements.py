@@ -246,3 +246,38 @@ def test_unbounded_compression_rejected_before_open(inputs,monkeypatch,method):
     def forbidden(*args,**kwargs):pytest.fail('unsafe compressed stream was opened')
     monkeypatch.setattr(zipfile.ZipFile,'open',forbidden)
     with pytest.raises(ValueError,match='archive compression'):read_measurement(out)
+
+
+def test_manifest_size_rejected_before_json_decoding(inputs,monkeypatch):
+    csv,meta,_,out=inputs;import_measurement(csv,meta,out)
+    (out/'manifest.json').write_text(json.dumps({'files':{str(i):{} for i in range(1000)}}))
+    def forbidden(*args,**kwargs):pytest.fail('oversized manifest decoded')
+    monkeypatch.setattr(json,'loads',forbidden)
+    with pytest.raises(ValueError,match='byte limit'):read_measurement(out)
+
+
+def test_derived_arrays_use_fixed_little_endian_even_if_native_alias_changes(inputs,monkeypatch):
+    csv,_,record,_=inputs
+    monkeypatch.setattr(np,'float64',np.dtype('>f8'))
+    arrays=parse_trace(csv.read_bytes(),record)
+    for key in ('frequency_hz','real','imag'):
+        assert arrays[key].dtype.str=='<f8'
+    import struct
+    assert arrays['real'].tobytes()==struct.pack('<4d',1,3,0,5)
+
+
+def test_importer_loads_without_optional_decoders(inputs):
+    import subprocess,sys
+    code="""
+import sys
+sys.modules['lzma']=None
+sys.modules['_lzma']=None
+sys.modules['compression.zstd']=None
+from meh_studio.measurements import import_measurement,read_measurement
+from pathlib import Path
+import_measurement(Path(sys.argv[1]),Path(sys.argv[2]),Path(sys.argv[3]))
+read_measurement(Path(sys.argv[3]))
+"""
+    csv,meta,_,out=inputs
+    result=subprocess.run([sys.executable,'-c',code,str(csv),str(meta),str(out)],capture_output=True,text=True,timeout=10)
+    assert result.returncode==0,result.stderr
