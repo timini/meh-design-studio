@@ -33,15 +33,20 @@ def circuit_artifact(tmp_path):
     np.savez(upstream / "arrays.npz", **arrays)
     quantities = [{"key": key, "id": name, "quantity": name, "unit": unit,
         "dtype": "complex128", "shape": [2, 2], "axes": ["excitation", "transducer"],
-        "metadata": {"component_ids": ids}} for key, name, unit in (
+        "target_id": "components:electrodynamic-transducers", "metadata": {"component_ids": ids}} for key, name, unit in (
             ("current", "voice_coil_current", "A"), ("velocity", "diaphragm_velocity", "m/s"))]
     (upstream / "metadata.json").write_text(json.dumps({"freq_hz": 1000, "excitation_port_ids": ids,
         "arrays_file": "arrays.npz", "quantities": quantities,
         "diagnostics": {"transducer_reference_voltage_v": 2.83}}))
+    np.savez(upstream / "domains.npz", ids=np.array(ids))
+    (upstream / "domains.json").write_text(json.dumps({"domains": [{
+        "id": "components:electrodynamic-transducers", "coordinates": {"component_id": "ids"},
+        "topology": {}, "metadata": {}}]}))
     (upstream / "project.snapshot.blab.json").write_bytes(project.read_bytes())
     mesh_file = upstream / "fixture.msh"
     mesh_file.write_bytes(b"circuit-only contract fixture")
     (upstream / "manifest.json").write_text(json.dumps({"project_file": "project.snapshot.blab.json",
+        "domains_file": "domains.npz", "domains_metadata_file": "domains.json",
         "project_sha256": sha256(project), "meshes": [{"id": "mesh:a", "purpose": "fem_volume",
             "file": str(mesh_file), "sha256": sha256(mesh_file), "size_bytes": mesh_file.stat().st_size}], "schema": "boundary-lab-headless-result",
         "schema_version": 2, "status": "complete", "backend_id": "beat_cpu", "solve_kind": "interior_fem",
