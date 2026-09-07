@@ -27,7 +27,7 @@ The main part includes side mounting apertures; rear cups meet its mounting plan
 
 ## Checks and evidence
 
-Inputs reject intersecting chamber envelopes, invalid flare dimensions, unsupported counts, extreme lengths and unsuitable mesh/tessellation targets. Kernel output must consist of positive-volume valid connected solids. Tests additionally check that material does not overlap air and separate parts do not overlap each other for both initial families.
+Inputs require at least 1 micrometre tessellation tolerance and radial chamber clearance over the full flare envelope. They reject intersecting chamber envelopes, invalid flare dimensions, unsupported counts, extreme lengths and unsuitable mesh/tessellation targets. Kernel output must consist of positive-volume valid connected solids. Tests additionally check that material does not overlap air and separate parts do not overlap each other for both initial families.
 
 For acoustic meshes, source disks and the mouth must be identified uniquely by planar geometry, centre and area. Remaining constructed faces are rigid walls. Each region has a named volume and physical boundary groups. The front volume contains `throat_source`, one source per side entry and `mouth_interface`; each rear region contains its own rear source. All required source/interface faces must be found. Tetrahedra must have positive quality, and imported air volume must match the source CAD.
 

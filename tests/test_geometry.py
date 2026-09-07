@@ -19,7 +19,7 @@ def geometry_data():
     {"entry_positions_m": [.07, .09]}, {"entry_positions_m": [.17, .07]},
     {"mouth_radius_m": .001}, {"front_radius_m": .003}, {"wall_m": .1},
     {"mesh_size_m": .1}, {"mesh_size_m": 1e-100}, {"rear_depth_m": 1e200},
-    {"length_m": True}, {"throat_radius_m": float("nan")},
+    {"tessellation_tolerance_m": 1e-12}, {"length_m": True}, {"throat_radius_m": float("nan")},
 ])
 def test_invalid_geometry_rejected_before_kernel(geometry_data, patch):
     with pytest.raises(ValueError):
@@ -71,3 +71,12 @@ def test_export_mesh_units_and_source_tags(geometry_data, tmp_path):
         export_geometry(design, tmp_path / "export")
     with pytest.raises(FileExistsError):
         mesh_geometry(tmp_path / "export")
+
+
+def test_steep_flare_cannot_consume_source_disk(geometry_data):
+    with pytest.raises(ValueError, match="buried"):
+        HornGeometry.model_validate(geometry_data | {
+            "length_m": .1, "throat_radius_m": .001, "mouth_radius_m": .09,
+            "entry_positions_m": [.05], "front_radius_m": .01, "wall_m": .0005,
+            "port_radius_m": .0005, "port_length_m": .001, "front_depth_m": .001,
+            "mesh_size_m": .0005})
