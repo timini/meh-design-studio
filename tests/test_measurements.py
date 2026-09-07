@@ -157,3 +157,28 @@ def test_invalid_deflate_stream_is_structured_cli_error(inputs,capsys):
     (out/'manifest.json').write_text(json.dumps(manifest))
     assert main(['inspect',str(out)])==2
     assert 'invalid measurement array archive' in json.loads(capsys.readouterr().err)['error']
+
+
+def test_deep_manifest_is_structured_cli_error(inputs,capsys):
+    csv,meta,_,out=inputs;import_measurement(csv,meta,out)
+    (out/'manifest.json').write_text('{"nested":'+'['*10000+'0'+']'*10000+'}')
+    assert main(['inspect',str(out)])==2
+    assert json.loads(capsys.readouterr().err)['error']
+
+
+def test_bare_carriage_return_records_are_preserved(inputs):
+    csv,meta,_,out=inputs
+    raw=b'frequency_hz,real,imag\r100,1,-2\r200,3,-4\r'
+    csv.write_bytes(raw);import_measurement(csv,meta,out)
+    _,arrays=read_measurement(out)
+    assert arrays['frequency_hz'].tolist()==[100,200]
+    assert (out/'raw.csv').read_bytes()==raw
+
+
+def test_decoder_recursion_is_structured_cli_error(inputs,monkeypatch,capsys):
+    csv,meta,_,out=inputs;import_measurement(csv,meta,out)
+    def fail(*args,**kwargs):raise RecursionError('decoder depth')
+    with monkeypatch.context() as patch:
+        patch.setattr(json,'loads',fail)
+        assert main(['inspect',str(out)])==2
+    assert 'nesting limit' in json.loads(capsys.readouterr().err)['error']

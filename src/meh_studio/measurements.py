@@ -91,7 +91,7 @@ def parse_trace(payload: bytes, metadata: MeasurementMetadata):
     if len(payload)>MAX_INPUT_BYTES: raise ValueError("measurement input exceeds 16 MiB")
     rows=[]
     try:
-        reader=csv.reader(io.StringIO(payload.decode('utf-8-sig')),strict=True)
+        reader=csv.reader(io.StringIO(payload.decode('utf-8-sig'),newline=''),strict=True)
         if next(reader,None) != ['frequency_hz','real','imag']:
             raise ValueError("CSV header must be frequency_hz,real,imag")
         for row in reader:
@@ -144,7 +144,10 @@ def read_measurement(output: Path):
     output=Path(output)
     if (output/'manifest.json').is_symlink():
         raise ValueError('measurement manifest cannot be a symlink')
-    manifest=json.loads(read_bounded(output/'manifest.json'))
+    try:
+        manifest=json.loads(read_bounded(output/'manifest.json'))
+    except RecursionError as exc:
+        raise ValueError('measurement manifest exceeds nesting limit') from exc
     if (set(manifest)!={'schema_version','kind','status','evidence','metadata_hash','files'}
             or manifest['schema_version'] != 1 or manifest['kind'] != 'single_complex_measurement'
             or manifest['status'] != 'complete' or manifest['evidence'] != 'imported_not_qualified'):
