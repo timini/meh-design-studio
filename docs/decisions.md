@@ -16,4 +16,4 @@
 
 The product owner still needs to select the first market/currency, precise performance brief, printer process, assembled-size limit, amplification assumptions and distribution licence. Planning defaults allow the work packages to be specified; these choices must be frozen for A01 before experiments and purchases depend on them.
 
-No software distribution licence is granted by this planning decision. External source code, geometry, data and bundled tools retain their own rights. The current repo contains authored documents, an authored diagram and links/metadata; it does not vendor Boundary Lab or a driver dataset.
+No software distribution licence is granted by this planning decision. External source code, geometry, data and bundled tools retain their own rights. The current repo contains authored documents, an authored diagram, foundation Python tools and links/metadata; it does not vendor Boundary Lab or a driver dataset.

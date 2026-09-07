@@ -5,3 +5,7 @@ __pycache__/
 .venv/
 runs/
 validation/raw/
+*.egg-info/
+.pytest_cache/
+build/
+dist/

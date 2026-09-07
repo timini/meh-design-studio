@@ -2,7 +2,24 @@
 
 Design, optimise and manufacture affordable, efficient, high-fidelity multiple entry horn speakers from a curated driver database and a set of acoustic, budget and printing constraints.
 
-**Status: research and implementation planning. There is no working application or validated speaker design in this repository yet.** The recommended next step is a four-week feasibility study, with explicit gates before funding the full product.
+**Status: experimental foundation tools. There is no complete design application or validated speaker design yet.** The feasibility study has explicit gates before the full product can be qualified.
+
+## Try the foundation tools
+
+Requires Python 3.11 or newer. From the repository root:
+
+```sh
+python -m venv .venv
+# Activate .venv using your shell's standard activation command.
+python -m pip install -e ".[dev]"
+meh validate-brief examples/reference-brief.json
+meh cavity-reference --lengths-m 0.47 0.33 0.22 --max-hz 1000
+python -m pytest
+```
+
+The command-line tools validate an explicit design brief, manage immutable private driver imports in SQLite, and generate analytic cavity reference data. The Python API also provides an independent coupled electromechanical circuit reference using RMS amplitudes and `exp(-i omega t)`.
+
+These references do not simulate a 3D horn, and a syntactically valid brief is not evidence of an achievable speaker. The example brief remains a proposed challenge. See [implementation status and next steps](docs/implementation-status.md).
 
 ## Documents
 

@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "id": "initial-feasibility",
+  "band": {"low_hz": 150, "high_hz": 18000},
+  "max_drivers": 5,
+  "driver_budget": 100,
+  "total_material_budget": 200,
+  "currency": "GBP",
+  "target_spl_db": 96,
+  "distance_m": 1,
+  "level_definition": "Proposed: band-limited pink noise, 6 dB crest factor, 60 s duration; subject to physical protocol review",
+  "response_tolerance_db": 3,
+  "horizontal_coverage_deg": 90,
+  "vertical_coverage_deg": 60,
+  "coverage_control_from_hz": 1000,
+  "assembled_envelope_m": [0.6, 0.6, 0.5],
+  "printer": {"envelope_m": [0.22, 0.22, 0.25], "minimum_wall_m": 0.003},
+  "topology_families": ["straight_3", "straight_5"]
+}
