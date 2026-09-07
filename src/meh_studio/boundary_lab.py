@@ -150,6 +150,18 @@ def _output_ids(ids) -> tuple[str, ...]:
     return tuple(ids)
 
 
+def _automatic_output_ids(system: dict) -> set[str]:
+    required = set()
+    if any(c.get("kind") == "electrodynamic_transducer" for c in system.get("components", [])):
+        required.update(("mechanical:diaphragm-velocity", "electrical:voice-coil-current"))
+    kinds = {r.get("kind") for r in system.get("regions", [])}
+    if kinds == {"bounded_air"}:
+        required.add("acoustic:pressure:fem-nodes")
+    if kinds == {"unbounded_air"}:
+        required.add("acoustic:radiation-impedance")
+    return required
+
+
 def _project_observation_ids(project: dict, request: SolveRequest) -> set[str]:
     """Derive requirements from the pinned project format, not solver preflight."""
     required = set()
@@ -273,6 +285,7 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
     if expected_output_ids is not None:
         expected_output_ids = _output_ids(expected_output_ids)
     root = Path(root)
+    manifest_hash = sha256(root / "manifest.json")
     manifest = _read_json(root / "manifest.json")
     if (manifest.get("schema") != "boundary-lab-headless-result"
             or manifest.get("schema_version") != 2):
@@ -284,6 +297,12 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
         raise ValueError("upstream result is not complete")
     if manifest.get("backend_id") != backend or manifest.get("phasor_convention") != "exp(-i omega t)":
         raise ValueError("backend or phasor convention mismatch")
+    artifact_paths = {"manifest": root / "manifest.json",
+                      "domains_metadata": _contained(root, manifest["domains_metadata_file"]),
+                      "domains_arrays": _contained(root, manifest["domains_file"])}
+    artifact_hashes = {name: sha256(path) for name, path in artifact_paths.items()}
+    if artifact_hashes["manifest"] != manifest_hash:
+        raise ValueError("manifest changed while inspecting results")
     system, meshes = _result_project(root, manifest)
     from .result_domains import load_domains, check_quantity_domain
     domains = load_domains(root, manifest, system, meshes)
@@ -324,6 +343,8 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
         if not quantities or len({q["key"] for q in quantities}) != len(quantities):
             raise ValueError("missing or duplicate quantities")
         actual_ids = _output_ids([q["id"] for q in quantities])
+        if not _automatic_output_ids(system).issubset(actual_ids):
+            raise ValueError("result omitted mandatory project outputs")
         if expected_output_ids is not None and set(actual_ids) != set(expected_output_ids):
             raise ValueError("returned quantities differ from the compiled output contract")
         required = set(request.retain)
@@ -364,7 +385,9 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
         first_contract = contract
         inventory.append({"frequency_hz": frequency, "metadata_sha256": sha256(metadata_path),
                           "arrays_sha256": sha256(array_path), "quantities": quantities})
-    return {"evidence": "predicted", "solve_kind": manifest.get("solve_kind"),
+    if any(sha256(path) != artifact_hashes[name] for name, path in artifact_paths.items()):
+        raise ValueError("result domain artifacts changed during inspection")
+    return {"evidence": "predicted", "artifact_hashes": artifact_hashes, "solve_kind": manifest.get("solve_kind"),
             "phasor_convention": manifest["phasor_convention"], "frequencies_hz": frequencies,
             "excitation_port_ids": excitations, "inventory": inventory}
 
@@ -478,6 +501,9 @@ class BoundaryLabRuntime:
                     raise ValueError("preflight solve kind differs from project topology")
                 preflight_meshes = _mesh_inventory(preflight)
                 expected_outputs = _output_ids(preflight.get("output_ids"))
+                required_outputs = _automatic_output_ids(project_data["physical_system"])
+                if not required_outputs.issubset(expected_outputs):
+                    raise ValueError("preflight omitted mandatory project outputs")
                 observations = _project_observation_ids(project_data, request)
                 if not observations.issubset(expected_outputs):
                     raise ValueError("preflight omitted requested project observations")

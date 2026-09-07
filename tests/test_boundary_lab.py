@@ -17,7 +17,7 @@ def artifact(tmp_path):
     values = np.array([[1+2j, 3-4j]], dtype=np.complex64)
     np.savez(root / "frequencies/000000.npz", q0000=values)
     metadata = {"freq_hz": 1000, "excitation_port_ids": ["voltage:a"], "arrays_file": "000000.npz",
-                "quantities": [{"key": "q0000", "id": "pressure", "quantity": "fem_nodal_pressure", "unit": "Pa",
+                "quantities": [{"key": "q0000", "id": "acoustic:pressure:fem-nodes", "quantity": "fem_nodal_pressure", "unit": "Pa",
                                 "target_id": "domain:fem-volume", "axes": ["excitation", "fem_node"], "shape": [1, 2], "dtype": "complex64",
                                 "metadata": {"mesh_ids": ["mesh:a"], "region_ids": ["region:a"],
                                              "node_counts": [2], "node_offsets": [0]}}]}
@@ -165,15 +165,15 @@ def test_timeout_status_is_distinct_from_numerical_failure(tmp_path, monkeypatch
 def test_missing_compiled_output_is_rejected(artifact):
     root, _ = artifact
     with pytest.raises(ValueError, match="compiled output contract"):
-        inspect_result(root, SolveRequest(frequencies_hz=(1000,)), "beat_cpu", ("pressure", "current"))
-    assert inspect_result(root, SolveRequest(frequencies_hz=(1000,)), "beat_cpu", ("pressure",))["evidence"] == "predicted"
+        inspect_result(root, SolveRequest(frequencies_hz=(1000,)), "beat_cpu", ("acoustic:pressure:fem-nodes", "current"))
+    assert inspect_result(root, SolveRequest(frequencies_hz=(1000,)), "beat_cpu", ("acoustic:pressure:fem-nodes",))["evidence"] == "predicted"
 
 
 @pytest.mark.parametrize("retain", [("bem_boundary_pressure",), ("bem_boundary_traces",)])
 def test_requested_retained_fields_cannot_be_omitted_by_preflight(artifact, retain):
     root, _ = artifact
     with pytest.raises(ValueError, match="requested retained"):
-        inspect_result(root, SolveRequest(frequencies_hz=(1000,), retain=retain), "beat_cpu", ("pressure",))
+        inspect_result(root, SolveRequest(frequencies_hz=(1000,), retain=retain), "beat_cpu", ("acoustic:pressure:fem-nodes",))
 
 
 @pytest.mark.parametrize("unit,name", [("A", "fem_nodal_pressure"), ("Pa", "voice_coil_current"),
@@ -259,12 +259,14 @@ def test_nonfinite_result_metadata_records_failed_evaluation(artifact, tmp_path,
     mesh = {"id": "mesh:a", "file": str(source), "purpose": "fem_volume",
             "sha256": sha256(source), "size_bytes": source.stat().st_size}
     output, project = tmp_path / "evaluation", tmp_path / "project.json"
-    project.write_text('{}', encoding="utf-8")
+    project.write_bytes((root / "project.snapshot.blab.json").read_bytes())
     runtime = BoundaryLabRuntime(tmp_path, Path(sys.executable), tmp_path / "julia")
     monkeypatch.setattr(BoundaryLabRuntime, "verify", lambda self: {"revision": "test"})
+    calls = []
     def execute(command, cwd, log, timeout, **kwargs):
+        calls.append(command)
         if "validate" in command:
-            log.write_text(json.dumps({"valid": True, "output_ids": ["pressure"], "meshes": [mesh]}), encoding="utf-8")
+            log.write_text(json.dumps({"valid": True, "solve_kind": "interior_fem", "output_ids": ["acoustic:pressure:fem-nodes"], "meshes": [mesh]}), encoding="utf-8")
         else:
             shutil.copytree(root, output / "upstream")
     monkeypatch.setattr(adapter, "_execute", execute)
@@ -272,6 +274,8 @@ def test_nonfinite_result_metadata_records_failed_evaluation(artifact, tmp_path,
         runtime.solve(project, SolveRequest(frequencies_hz=(1000,)), output)
     report = json.loads((output / "evaluation.json").read_text(encoding="utf-8"))
     assert report["status"] == "failed"
+    assert len(calls) == 2
+    assert "JSON compliant" in report["error"]
 
 
 @pytest.mark.parametrize("dtype", ["float64", "int64", "bool"])
@@ -306,10 +310,10 @@ def test_duplicate_output_identity_with_distinct_storage_keys_rejected(artifact)
     values = np.array([[1+2j, 3-4j]], dtype=np.complex64)
     np.savez(root / "frequencies/000000.npz", q0000=values, q0001=values)
     with pytest.raises(ValueError, match="output IDs"):
-        inspect_result(root, SolveRequest(frequencies_hz=(1000,)), "beat_cpu", ("pressure",))
+        inspect_result(root, SolveRequest(frequencies_hz=(1000,)), "beat_cpu", ("acoustic:pressure:fem-nodes",))
 
 
-@pytest.mark.parametrize("ids", [None, [], [""], [1], ["pressure", "pressure"]])
+@pytest.mark.parametrize("ids", [None, [], [""], [1], ["acoustic:pressure:fem-nodes", "acoustic:pressure:fem-nodes"]])
 def test_invalid_compiled_output_ids(ids):
     from meh_studio.boundary_lab import _output_ids
     with pytest.raises(ValueError, match="output IDs"):
@@ -347,7 +351,7 @@ def test_observation_requirements_come_from_project():
         "acoustic:pressure:bem-boundary", "acoustic:normal-derivative:bem-boundary"}
 
 
-@pytest.mark.parametrize("output_ids", [["pressure", "pressure"], ["pressure"]])
+@pytest.mark.parametrize("output_ids", [["acoustic:radiation-impedance", "acoustic:radiation-impedance"], ["acoustic:radiation-impedance"]])
 def test_preflight_contract_failure_stops_before_solver(tmp_path, monkeypatch, output_ids):
     import meh_studio.boundary_lab as adapter
     project = tmp_path / "project.json"
@@ -509,3 +513,61 @@ def test_radiator_order_is_bound_to_project_components(tmp_path):
     system = {"components":[{"id":"a"},{"id":"b"}],"meshes":[]}
     with pytest.raises(ValueError, match="component identities"):
         load_domains(tmp_path, manifest, system, {})
+
+
+def test_transducer_responses_cannot_be_omitted_consistently(artifact):
+    root, manifest = artifact
+    snapshot = root / manifest["project_file"]
+    project = json.loads(snapshot.read_text())
+    project["physical_system"]["components"] = [{"id": "driver", "kind": "electrodynamic_transducer"}]
+    snapshot.write_text(json.dumps(project))
+    manifest["project_sha256"] = sha256(snapshot)
+    (root / "manifest.json").write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match="mandatory project outputs"):
+        inspect_result(root, SolveRequest(frequencies_hz=(1000,)), "beat_cpu", ("acoustic:pressure:fem-nodes",))
+
+
+def test_missing_automatic_outputs_stop_before_solver(artifact, tmp_path, monkeypatch):
+    import meh_studio.boundary_lab as adapter
+    root, manifest = artifact
+    project = tmp_path / "project.json"
+    payload = json.loads((root / manifest["project_file"]).read_text())
+    payload["physical_system"]["components"] = [{"id": "driver", "kind": "electrodynamic_transducer"}]
+    project.write_text(json.dumps(payload))
+    calls = []
+    def execute(command, cwd, log, timeout, **kwargs):
+        calls.append(command)
+        log.write_text(json.dumps({"valid":True,"solve_kind":"interior_fem", "meshes":manifest["meshes"],
+                                  "output_ids":["acoustic:pressure:fem-nodes"]}))
+    monkeypatch.setattr(adapter, "_execute", execute)
+    monkeypatch.setattr(BoundaryLabRuntime, "verify", lambda self: {"revision":"test"})
+    with pytest.raises(ValueError, match="mandatory project outputs"):
+        BoundaryLabRuntime(tmp_path, Path(sys.executable), tmp_path/'julia').solve(
+            project, SolveRequest(frequencies_hz=(1000,)), tmp_path/'evaluation')
+    assert len(calls) == 1
+
+
+def test_completed_evidence_hashes_domains_and_manifest(artifact):
+    root, _ = artifact
+    before = inspect_result(root, SolveRequest(frequencies_hz=(1000,)), "beat_cpu")
+    assert before["artifact_hashes"] == {"manifest":sha256(root/'manifest.json'),
+        "domains_metadata":sha256(root/'domains.json'), "domains_arrays":sha256(root/'domains.npz')}
+    domain = json.loads((root/'domains.json').read_text())
+    domain["archive_note"] = "changed after completion"
+    (root/'domains.json').write_text(json.dumps(domain))
+    after = inspect_result(root, SolveRequest(frequencies_hz=(1000,)), "beat_cpu")
+    assert before["artifact_hashes"] != after["artifact_hashes"]
+
+
+def test_domain_mutation_during_inspection_is_rejected(artifact, monkeypatch):
+    import meh_studio.result_domains as domains
+    root, _ = artifact
+    original = domains.load_domains
+    def mutate(*args):
+        result = original(*args)
+        path = root/'domains.json'
+        path.write_text(path.read_text()+'\n')
+        return result
+    monkeypatch.setattr(domains, "load_domains", mutate)
+    with pytest.raises(ValueError, match="changed during inspection"):
+        inspect_result(root, SolveRequest(frequencies_hz=(1000,)), "beat_cpu")
