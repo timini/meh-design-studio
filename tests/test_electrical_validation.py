@@ -18,7 +18,8 @@ def circuit_artifact(tmp_path):
     components = [{"id": name, "kind": "electrodynamic_transducer", "parameters": {
         "re_ohm": source.re_ohm, "le_h": source.le_h, "bl_n_per_a": source.bl_n_a}} for name in ids]
     project = tmp_path / "project.json"
-    project.write_text(json.dumps({"physical_system": {"components": components,
+    project.write_text(json.dumps({"physical_system": {"meshes": [{"id": "mesh:a", "purpose": "fem_volume"}],
+        "regions": [{"id": "region:a", "kind": "bounded_air", "mesh_ids": ["mesh:a"]}], "components": components,
         "excitation_ports": [{"id": name, "component_id": name, "kind": "voltage"} for name in ids]}}))
     root = tmp_path / "evaluation"
     upstream = root / "upstream"
@@ -37,7 +38,12 @@ def circuit_artifact(tmp_path):
     (upstream / "metadata.json").write_text(json.dumps({"freq_hz": 1000, "excitation_port_ids": ids,
         "arrays_file": "arrays.npz", "quantities": quantities,
         "diagnostics": {"transducer_reference_voltage_v": 2.83}}))
-    (upstream / "manifest.json").write_text(json.dumps({"schema": "boundary-lab-headless-result",
+    (upstream / "project.snapshot.blab.json").write_bytes(project.read_bytes())
+    mesh_file = upstream / "fixture.msh"
+    mesh_file.write_bytes(b"circuit-only contract fixture")
+    (upstream / "manifest.json").write_text(json.dumps({"project_file": "project.snapshot.blab.json",
+        "project_sha256": sha256(project), "meshes": [{"id": "mesh:a", "purpose": "fem_volume",
+            "file": str(mesh_file), "sha256": sha256(mesh_file), "size_bytes": mesh_file.stat().st_size}], "schema": "boundary-lab-headless-result",
         "schema_version": 2, "status": "complete", "backend_id": "beat_cpu", "solve_kind": "interior_fem",
         "phasor_convention": "exp(-i omega t)", "frequencies_hz": [1000],
         "excitation_port_ids": ids, "completion_mask": [True],
