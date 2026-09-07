@@ -966,3 +966,53 @@ def test_source_mesh_changed_after_domain_read_is_rejected(artifact,monkeypatch)
     monkeypatch.setattr(d,'load_domains',mutate)
     with pytest.raises(ValueError,match='source mesh changed during inspection'):
         inspect_result(root,SolveRequest(frequencies_hz=(1000,)),'beat_cpu')
+
+
+@pytest.mark.parametrize('filename',['domains.npz','frequencies/000000.npz'])
+def test_empty_numpy_artifacts_are_validation_errors(artifact,filename):
+    root,_=artifact;(root/filename).write_bytes(b'')
+    with pytest.raises(ValueError):inspect_result(root,SolveRequest(frequencies_hz=(1000,)),'beat_cpu')
+
+
+@pytest.mark.parametrize('signum',[2,15])
+@pytest.mark.skipif(sys.platform=='win32',reason='POSIX child-group cancellation')
+def test_first_signal_during_group_cleanup_does_not_leave_child(tmp_path,monkeypatch,signum):
+    import time
+    from meh_studio import boundary_lab as a
+    original=a._kill_process_group
+    def interrupted(pgid):
+        a.signal.raise_signal(signum)
+        original(pgid)
+    monkeypatch.setattr(a,'_kill_process_group',interrupted)
+    child="import time;from pathlib import Path;Path('ready').write_text('yes');time.sleep(1);Path('survived').write_text('bad')"
+    parent=f"import subprocess,sys,time;from pathlib import Path;subprocess.Popen([sys.executable,'-c',{child!r}]);\nwhile not Path('ready').exists():time.sleep(.01)"
+    with pytest.raises(a.EvaluationCancelled):
+        with a._termination_guard({'status':'running'}) as activate:
+            activate()
+            a._execute([sys.executable,'-c',parent],tmp_path,tmp_path/'log',10)
+    time.sleep(1.1)
+    assert not (tmp_path/'survived').exists()
+
+
+def test_missing_retained_output_stops_after_preflight(artifact,tmp_path,monkeypatch):
+    from meh_studio import boundary_lab as a
+    root,manifest=artifact;calls=[]
+    monkeypatch.setattr(BoundaryLabRuntime,'verify',lambda self:{'revision':'test'})
+    def execute(command,cwd,log,timeout,**kwargs):
+        calls.append(command)
+        log.write_text(json.dumps({'valid':True,'solve_kind':'interior_fem','meshes':manifest['meshes'],
+            'output_ids':['acoustic:pressure:fem-nodes']}))
+    monkeypatch.setattr(a,'_execute',execute)
+    runtime=BoundaryLabRuntime(tmp_path,Path(sys.executable),tmp_path/'julia')
+    with pytest.raises(ValueError,match='preflight omitted requested retained'):
+        runtime.solve(root/'project.snapshot.blab.json',SolveRequest(frequencies_hz=(1000,),retain=('bem_boundary_traces',)),tmp_path/'out')
+    assert len(calls)==1 and 'validate' in calls[0]
+
+
+def test_standalone_inspection_requires_declared_observation_outputs(artifact):
+    root,manifest=artifact;path=root/manifest['project_file'];project=json.loads(path.read_text())
+    project['observation_planes']=[{'type':'exterior'}]
+    path.write_text(json.dumps(project));manifest['project_sha256']=sha256(path)
+    (root/'manifest.json').write_text(json.dumps(manifest))
+    with pytest.raises(ValueError,match='requested project observations'):
+        inspect_result(root,SolveRequest(frequencies_hz=(1000,),include_project_observations=True),'beat_cpu')

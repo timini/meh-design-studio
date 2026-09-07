@@ -196,6 +196,14 @@ def _verify_mesh_declarations(system: dict, meshes: dict, project_path: Path | N
             raise ValueError("solved mesh file identity differs from the project declaration")
 
 
+def _retained_output_ids(request: SolveRequest) -> set[str]:
+    mapping = {"fem_nodal_pressure":{"acoustic:pressure:fem-nodes"},
+               "bem_boundary_pressure":{"acoustic:pressure:bem-boundary"},
+               "bem_boundary_neumann":{"acoustic:normal-derivative:bem-boundary"},
+               "bem_boundary_traces":{"acoustic:pressure:bem-boundary","acoustic:normal-derivative:bem-boundary"}}
+    return set().union(*(mapping[name] for name in request.retain))
+
+
 def _project_observation_ids(project: dict, request: SolveRequest) -> set[str]:
     """Derive requirements from the pinned project format, not solver preflight."""
     required = set()
@@ -360,6 +368,8 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
         raise ValueError("result solve kind differs from the saved project topology")
     from .result_domains import load_domains, check_quantity_domain
     domains = load_domains(root, manifest, system, meshes, project=project)
+    observations = _project_observation_ids(project, request)
+    observation_outputs = set(_result_output_ids(project, tuple(sorted(observations)))) if observations else set()
     frequencies = list(request.frequencies_hz)
     if manifest.get("frequencies_hz") != frequencies:
         raise ValueError("result frequency grid differs from request")
@@ -401,6 +411,8 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
             raise ValueError("missing or duplicate quantities")
         actual_ids = _output_ids([q["id"] for q in quantities])
         _require_project_outputs(system, actual_ids)
+        if not observation_outputs.issubset(actual_ids):
+            raise ValueError("result omitted requested project observations")
         if expected_output_ids is not None and set(actual_ids) != set(expected_output_ids):
             raise ValueError("returned quantities differ from the compiled output contract")
         required = set(request.retain)
@@ -461,7 +473,7 @@ def inspect_result(root: Path, request: SolveRequest, backend: str,
                     expected_solve_kind: str | None = None, project_path: Path | None = None) -> dict:
     try:
         return _inspect_result(root, request, backend, expected_output_ids, expected_solve_kind, project_path)
-    except (KeyError, TypeError, AttributeError, RecursionError, OSError, IndexError, zipfile.BadZipFile) as exc:
+    except (KeyError, TypeError, AttributeError, RecursionError, EOFError, OSError, IndexError, zipfile.BadZipFile) as exc:
         raise ValueError(f"invalid or missing result artifact: {exc}") from exc
 
 
@@ -494,28 +506,36 @@ def _kill_process_group(pgid: int):
 
 
 @contextmanager
-def _defer_spawn_cancellation():
+def _process_cancellation_guard():
     if threading.current_thread() is not threading.main_thread():
         raise ValueError("process launch must run in its worker main thread")
     signals = (signal.SIGINT,) if os.name == "nt" else (signal.SIGINT, signal.SIGTERM)
     previous = {sig:signal.getsignal(sig) for sig in signals}
-    pending = []
-    def defer(signum, frame):
-        if previous[signum] != signal.SIG_IGN:
-            pending.append(signum)
+    pending = set()
+    state = {"deferred":True}
+    def forward(sig):
+        handler = previous[sig]
+        if callable(handler):
+            handler(sig,None)
+        elif handler != signal.SIG_IGN:
+            raise EvaluationCancelled(f"signal {sig} during process lifecycle", signum=sig)
+    def dispatch(signum, frame):
+        if previous[signum] == signal.SIG_IGN:
+            return
+        if state["deferred"]:
+            pending.add(signum)
+        else:
+            forward(signum)
+    def defer():
+        state["deferred"] = True
     def activate():
-        for sig,handler in previous.items():
-            signal.signal(sig,handler)
-        for sig in pending:
-            handler = previous[sig]
-            if callable(handler):
-                handler(sig,None)
-            elif handler != signal.SIG_IGN:
-                raise EvaluationCancelled(f"signal {sig} during process creation", signum=sig)
+        state["deferred"] = False
+        while pending:
+            forward(pending.pop())
     try:
         for sig in signals:
-            signal.signal(sig,defer)
-        yield activate
+            signal.signal(sig,dispatch)
+        yield activate,defer
     finally:
         for sig,handler in previous.items():
             signal.signal(sig,handler)
@@ -535,7 +555,7 @@ def _execute(command: list[str], cwd: Path, log: Path, timeout_s: float,
         stream = stack.enter_context(log.open("wb"))
         diagnostics = (stack.enter_context(stderr_log.open("wb"))
                        if stderr_log is not None else subprocess.STDOUT)
-        activate = stack.enter_context(_defer_spawn_cancellation())
+        activate, defer = stack.enter_context(_process_cancellation_guard())
         process = None
         try:
             process = subprocess.Popen(command, cwd=cwd, stdout=stream, stderr=diagnostics, **options)
@@ -543,6 +563,10 @@ def _execute(command: list[str], cwd: Path, log: Path, timeout_s: float,
             if job is not None:
                 job.assign_and_resume(process.pid)
             code = process.wait(timeout=timeout_s)
+            defer()
+        except BaseException:
+            defer()
+            raise
         finally:
             # The PID is covered before deferred cancellation can be raised.
             if process is not None:
@@ -555,6 +579,7 @@ def _execute(command: list[str], cwd: Path, log: Path, timeout_s: float,
                     if process.poll() is None:
                         process.kill()
                     process.wait()
+            activate()
     if code:
         raise ValueError(f"Boundary Lab exited with code {code}; see {log.name}")
 
@@ -636,6 +661,8 @@ class BoundaryLabRuntime:
                 expected_outputs = _output_ids(preflight.get("output_ids"))
                 _verify_mesh_declarations(project_data["physical_system"], {m["id"]:m for m in preflight_meshes}, project)
                 _require_project_outputs(project_data["physical_system"], expected_outputs)
+                if not _retained_output_ids(request).issubset(expected_outputs):
+                    raise ValueError("preflight omitted requested retained quantities")
                 observations = _project_observation_ids(project_data, request)
                 if not observations.issubset(expected_outputs):
                     raise ValueError("preflight omitted requested project observations")
