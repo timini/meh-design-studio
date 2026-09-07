@@ -103,3 +103,39 @@ def test_zip_expansion_is_bounded_before_loading_array(inputs):
     manifest['files']['trace.npz']={'sha256':digest(data),'size_bytes':len(data)}
     (out/'manifest.json').write_text(json.dumps(manifest))
     with pytest.raises(ValueError,match='expected byte size'):read_measurement(out)
+
+
+def test_signed_zero_is_preserved_and_substitution_rejected(inputs):
+    csv,meta,_,out=inputs
+    csv.write_bytes(b'frequency_hz,real,imag\n100,-1,-0.0\n200,0,0\n')
+    import_measurement(csv,meta,out)
+    _,arrays=read_measurement(out)
+    assert np.signbit(arrays['imag'][0])
+    arrays['imag'][0]=0.
+    np.savez(out/'trace.npz',**arrays)
+    manifest=json.loads((out/'manifest.json').read_text());data=(out/'trace.npz').read_bytes()
+    manifest['files']['trace.npz']={'sha256':digest(data),'size_bytes':len(data)}
+    (out/'manifest.json').write_text(json.dumps(manifest))
+    with pytest.raises(ValueError,match='raw evidence'):read_measurement(out)
+
+
+def test_unsupported_zip_compression_is_structured_cli_error(inputs,capsys):
+    import struct
+    csv,meta,_,out=inputs;import_measurement(csv,meta,out)
+    data=bytearray((out/'trace.npz').read_bytes())
+    struct.pack_into('<H',data,8,99)
+    central=data.index(b'PK\x01\x02')
+    struct.pack_into('<H',data,central+10,99)
+    (out/'trace.npz').write_bytes(data)
+    manifest=json.loads((out/'manifest.json').read_text())
+    manifest['files']['trace.npz']={'sha256':digest(data),'size_bytes':len(data)}
+    (out/'manifest.json').write_text(json.dumps(manifest))
+    assert main(['inspect',str(out)])==2
+    assert 'invalid measurement array archive' in json.loads(capsys.readouterr().err)['error']
+
+
+@pytest.mark.parametrize('value',[False,True,'0','1.2'])
+def test_declared_numbers_do_not_accept_booleans_or_strings(inputs,value):
+    _,_,record,_=inputs
+    with pytest.raises(ValueError):UncertaintyDeclaration(magnitude_db=None,phase_deg=value,interpretation='unknown')
+    with pytest.raises(ValueError):MeasurementMetadata.model_validate(record.model_dump()|{'observation_xyz_m':[value,0.,1.]})

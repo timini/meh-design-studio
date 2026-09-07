@@ -24,7 +24,7 @@ class UncertaintyDeclaration(Record):
     # Optional values remain unknown, never zero. These are declared constant
     # bounds for this trace, not independently established uncertainties.
     magnitude_db: Nonnegative | None
-    phase_deg: Annotated[float, Field(ge=0, le=180, allow_inf_nan=False)] | None
+    phase_deg: Annotated[float, Field(strict=True, ge=0, le=180, allow_inf_nan=False)] | None
     interpretation: Literal["standard", "expanded", "unknown"]
     coverage_factor: Positive | None = None
 
@@ -51,7 +51,7 @@ class MeasurementMetadata(Record):
     phasor_convention: Literal["exp(-i omega t)", "exp(+i omega t)"]
     valid_band: Band
     stimulus_rms_v: Positive | None
-    observation_xyz_m: tuple[float, float, float] | None
+    observation_xyz_m: tuple[Annotated[float, Field(strict=True)], Annotated[float, Field(strict=True)], Annotated[float, Field(strict=True)]] | None
     calibration_sha256: Digest | None
     uncertainty: UncertaintyDeclaration
 
@@ -182,8 +182,8 @@ def read_measurement(output: Path):
                     if shape!=values.shape or dtype!=values.dtype or fortran:
                         raise ValueError("measurement array header differs from raw evidence")
                     data=stream.read(values.nbytes+1)
-                    if len(data)!=values.nbytes or not np.array_equal(np.frombuffer(data,dtype=dtype),values):
+                    if len(data)!=values.nbytes or data != values.tobytes(order="C"):
                         raise ValueError("measurement arrays differ from raw evidence")
-    except (zipfile.BadZipFile,EOFError) as exc:
+    except (zipfile.BadZipFile,EOFError,NotImplementedError,RuntimeError) as exc:
         raise ValueError("invalid measurement array archive") from exc
     return metadata,expected
