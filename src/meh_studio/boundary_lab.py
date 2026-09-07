@@ -170,6 +170,17 @@ def _project_observation_ids(project: dict, request: SolveRequest) -> set[str]:
     return required
 
 
+def _result_output_ids(project: dict, compiled_ids: tuple[str, ...]) -> tuple[str, ...]:
+    """Pinned upstream splits its compact polar block before saving artifacts."""
+    ids = list(_output_ids(compiled_ids))
+    if "ui:exterior-pressure" in ids:
+        ids.remove("ui:exterior-pressure")
+        ids.extend(("acoustic:pressure:horizontal-polar", "acoustic:pressure:vertical-polar"))
+        if project.get("project_preferences", {}).get("spherical_sampling_enabled", False):
+            ids.append("acoustic:pressure:sphere")
+    return _output_ids(ids)
+
+
 def _mesh_inventory(payload: dict) -> list[dict]:
     meshes = payload.get("meshes")
     if not isinstance(meshes, list) or not meshes:
@@ -408,18 +419,19 @@ class BoundaryLabRuntime:
             preflight = _read_json(output / "preflight.json")
             if preflight.get("valid") is not True:
                 raise ValueError("upstream preflight did not confirm validity")
-            solve_kind = _project_solve_kind(_read_json(project))
+            project_data = _read_json(project)
+            solve_kind = _project_solve_kind(project_data)
             if preflight.get("solve_kind") != solve_kind:
                 raise ValueError("preflight solve kind differs from project topology")
             preflight_meshes = _mesh_inventory(preflight)
             expected_outputs = _output_ids(preflight.get("output_ids"))
-            observations = _project_observation_ids(_read_json(project), request)
+            observations = _project_observation_ids(project_data, request)
             if not observations.issubset(expected_outputs):
                 raise ValueError("preflight omitted requested project observations")
             _execute(base + ["solve"] + common + ["--events", "ndjson", "--output", str(output / "upstream")],
                      Path(self.checkout), output / "solve.ndjson", timeout_s)
             result = inspect_result(output / "upstream", request, self.backend,
-                                    expected_outputs, solve_kind)
+                                    _result_output_ids(project_data, expected_outputs), solve_kind)
             if sha256(project) != project_hash or sha256(request_file) != report["request_sha256"]:
                 raise ValueError("project or request changed during evaluation")
             manifest = _read_json(output / "upstream/manifest.json")
