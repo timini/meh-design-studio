@@ -1,10 +1,13 @@
 # Implementation status
 
-The foundation PR implements parts of B01 and the independent-reference infrastructure for A05. It does **not** pass G0 or any physical release gate. A01's example brief is provisional; its measurement protocol has not been ratified. The pinned Boundary Lab CPU solver has now executed the interior compression-driver fixture at one and three frequencies; see the [adapter and evidence](boundary-lab-adapter.md). This demonstrates integration and repeatability, not independent accuracy or a complete MEH solve.
+Merged increments now include the foundation, geometry generator, durable job ledger and initial complex metric library. These implement parts of B01/B02/B04/B05 and independent-reference infrastructure for A05. It does **not** pass G0 or any physical release gate. A01's example brief is provisional; its measurement protocol has not been ratified. The pinned Boundary Lab CPU solver has now executed the interior compression-driver fixture at one and three frequencies; see the [adapter and evidence](boundary-lab-adapter.md). This demonstrates integration and repeatability, not independent accuracy or a complete MEH solve.
 
 The generated interior experiment now connects synthetic three-source geometry to FEM and includes an 8-to-4 mm mesh sensitivity study, independent electrical consistency checks, and a uniform-tube analytic load comparison. See [generated-system evidence](generated-system.md). These remain experimental numerical results with no free-field, band or physical qualification.
 
 ## Available
+
+- Durable SQLite job leases, cancellation, one automatic recovery retry, bounded completion descriptors and integrity-checked publication. Worker execution and dependency-aware scheduling remain to implement.
+- Explicit RMS complex source synthesis, signed real electrical power, pressure-level null handling and full-sphere pressure quadrature. Native-solver amplitude calibration and evaluation-to-metrics integration remain to implement.
 
 - Pinned Boundary Lab subprocess adapter, preflight, explicit backend/runtime checks, preserved complex output, timeout/failure reports and result integrity checks.
 
@@ -31,8 +34,8 @@ The circuit accepts a prescribed mechanical load matrix in N·s/m. It does not d
 ## Next reviewable increments
 
 1. Extend the executed adapter to generated geometry and full FEM/BEM radiation; establish independent acoustic accuracy and source normalisation checks (remaining A02/A05).
-2. Single-origin horn geometry with real source boundary tags, print solids and generated mesh validation (A04/B02).
-3. Generated geometry/source coupling, independent-oracle and mesh convergence comparisons; durable evaluations and metrics (A05/B03–B05).
+2. Connect durable jobs to isolated CAD/solver workers with cancellation, input snapshots, resource accounting and restart tests (remaining B04).
+3. Complete generated geometry/source convergence comparisons and connect trusted evaluations to metrics with explicit amplitude calibration (A05/B03–B05).
 4. Supported mixed-variable search and manufacturing export, followed by measured qualification gates in the plan.
 
 Physical source/load acquisition, actual builds, calibrated measurements and rights-cleared catalogue release remain external evidence work. Reference tests passing cannot mark those items complete.
