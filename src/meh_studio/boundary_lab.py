@@ -1,6 +1,7 @@
 """Version-pinned subprocess adapter. A completed solve is a prediction, not validation."""
 from __future__ import annotations
 
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import hashlib
@@ -10,6 +11,7 @@ import os
 from pathlib import Path
 import signal
 import subprocess
+import threading
 import time
 import zipfile
 from typing import Literal
@@ -48,7 +50,10 @@ def sha256(path: Path) -> str:
 
 
 def _read_json(path: Path):
-    return json.loads(path.read_text(encoding="utf-8"))
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    # Check the whole tree, including metadata and overflowed numeric literals.
+    json.dumps(payload, allow_nan=False)
+    return payload
 
 
 def _write_json(path: Path, payload):
@@ -62,6 +67,72 @@ def _contained(root: Path, relative: str) -> Path:
     if not path.is_relative_to(root.resolve()) or not path.is_file():
         raise ValueError("result references a missing file or a path outside its directory")
     return path
+
+
+QUANTITY_UNITS = {
+    "fem_nodal_pressure": "Pa", "bem_boundary_pressure": "Pa",
+    "bem_boundary_neumann": "Pa/m", "exterior_pressure": "Pa",
+    "diaphragm_velocity": "m/s", "voice_coil_current": "A",
+    "radiation_impedance": "N*s/m",
+}
+OUTPUT_QUANTITIES = {
+    "acoustic:pressure:fem-nodes": "fem_nodal_pressure",
+    "acoustic:pressure:bem-boundary": "bem_boundary_pressure",
+    "acoustic:normal-derivative:bem-boundary": "bem_boundary_neumann",
+    "mechanical:diaphragm-velocity": "diaphragm_velocity",
+    "electrical:voice-coil-current": "voice_coil_current",
+    "acoustic:radiation-impedance": "radiation_impedance",
+    "acoustic:pressure:horizontal-polar": "exterior_pressure",
+    "acoustic:pressure:vertical-polar": "exterior_pressure",
+    "acoustic:pressure:sphere": "exterior_pressure",
+}
+
+
+def _mesh_inventory(payload: dict) -> list[dict]:
+    meshes = payload.get("meshes")
+    if not isinstance(meshes, list) or not meshes:
+        raise ValueError("a nonempty mesh inventory is required")
+    seen = set()
+    for mesh in meshes:
+        if not isinstance(mesh, dict):
+            raise ValueError("malformed mesh identity")
+        for key in ("id", "file", "purpose", "sha256"):
+            if not isinstance(mesh.get(key), str) or not mesh[key]:
+                raise ValueError("missing mesh identity field")
+        if mesh["id"] in seen:
+            raise ValueError("duplicate mesh identity")
+        seen.add(mesh["id"])
+        digest = mesh["sha256"]
+        if len(digest) != 64 or any(c not in "0123456789abcdef" for c in digest):
+            raise ValueError("invalid mesh digest")
+        if type(mesh.get("size_bytes")) is not int or mesh["size_bytes"] <= 0:
+            raise ValueError("invalid mesh byte size")
+        if not Path(mesh["file"]).is_absolute():
+            raise ValueError("mesh identity must contain an absolute source path")
+    return meshes
+
+
+class EvaluationCancelled(KeyboardInterrupt):
+    """Termination requested by the process supervisor."""
+
+
+@contextmanager
+def _termination_guard():
+    if os.name == "nt":
+        yield
+        return
+    if threading.current_thread() is not threading.main_thread():
+        raise ValueError("run the solver adapter in a worker process, not a background thread")
+    previous = signal.getsignal(signal.SIGTERM)
+    def terminate(signum, frame):
+        # Let cleanup finish even if a supervisor repeats SIGTERM.
+        signal.signal(signal.SIGTERM, signal.SIG_IGN)
+        raise EvaluationCancelled("SIGTERM requested cancellation")
+    signal.signal(signal.SIGTERM, terminate)
+    try:
+        yield
+    finally:
+        signal.signal(signal.SIGTERM, previous)
 
 
 def _inspect_result(root: Path, request: SolveRequest, backend: str,
@@ -106,6 +177,12 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
             raise ValueError("missing or duplicate quantities")
         if expected_output_ids is not None and {q["id"] for q in quantities} != set(expected_output_ids):
             raise ValueError("returned quantities differ from the compiled output contract")
+        required = set(request.retain)
+        if "bem_boundary_traces" in required:
+            required.remove("bem_boundary_traces")
+            required.update(("bem_boundary_pressure", "bem_boundary_neumann"))
+        if not required.issubset({q.get("quantity") for q in quantities}):
+            raise ValueError("result is missing a requested retained quantity")
         with np.load(array_path, allow_pickle=False) as arrays:
             if set(arrays.files) != {q["key"] for q in quantities}:
                 raise ValueError("quantity metadata does not match stored arrays")
@@ -115,8 +192,14 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
                         or values.dtype.kind not in "fciub" or not np.all(np.isfinite(values))):
                     raise ValueError("non-finite or inconsistent quantity array")
                 axes = quantity["axes"]
-                if len(axes) != values.ndim or not quantity.get("unit"):
-                    raise ValueError("missing quantity units or axes")
+                name = quantity.get("quantity")
+                if name not in QUANTITY_UNITS or quantity.get("unit") != QUANTITY_UNITS[name]:
+                    raise ValueError("quantity unit does not match the physical contract")
+                expected_name = OUTPUT_QUANTITIES.get(quantity["id"])
+                if expected_name is not None and expected_name != name:
+                    raise ValueError("quantity name does not match its output ID")
+                if len(axes) != values.ndim:
+                    raise ValueError("missing quantity axes")
                 if "excitation" in axes and values.shape[axes.index("excitation")] != len(excitations):
                     raise ValueError("quantity excitation count mismatch")
         inventory.append({"frequency_hz": frequency, "metadata_sha256": sha256(metadata_path),
@@ -183,10 +266,12 @@ class BoundaryLabRuntime:
         python = Path(self.python).absolute()
         probe = subprocess.check_output([str(python), "-I", "-c",
             "import blab, json, sys, importlib.metadata as m; "
-            "print(json.dumps({'module':blab.__file__,'python':sys.version,"
+            "print(json.dumps({'module':blab.__file__,'python':sys.version,'python_version':list(sys.version_info[:2]),"
             "'packages':{d.metadata['Name']:d.version for d in m.distributions()}}))"],
             cwd=checkout, text=True, encoding="utf-8", timeout=30)
         environment = json.loads(probe)
+        if environment.get("python_version") != [3, 11]:
+            raise ValueError("the supported Boundary Lab runtime requires Python 3.11")
         if Path(environment["module"]).resolve() != checkout / "src/blab/__init__.py":
             raise ValueError("Python imports Boundary Lab from a different checkout")
         julia_version = subprocess.check_output([str(Path(self.julia).absolute()), "--version"],
@@ -196,6 +281,7 @@ class BoundaryLabRuntime:
         return {"revision": revision, "backend": self.backend, "python": environment["python"],
                 "julia": julia_version, "packages": environment["packages"]}
 
+    @_termination_guard()
     def solve(self, project: Path, request: SolveRequest, output: Path, *, timeout_s: float = 1800) -> dict:
         if not math.isfinite(timeout_s) or timeout_s <= 0:
             raise ValueError("timeout must be positive and finite")
@@ -219,6 +305,7 @@ class BoundaryLabRuntime:
             preflight = _read_json(output / "preflight.json")
             if preflight.get("valid") is not True:
                 raise ValueError("upstream preflight did not confirm validity")
+            preflight_meshes = _mesh_inventory(preflight)
             _execute(base + ["solve"] + common + ["--events", "ndjson", "--output", str(output / "upstream")],
                      Path(self.checkout), output / "solve.ndjson", timeout_s)
             result = inspect_result(output / "upstream", request, self.backend,
@@ -228,10 +315,12 @@ class BoundaryLabRuntime:
             manifest = _read_json(output / "upstream/manifest.json")
             if manifest.get("project_sha256") != project_hash:
                 raise ValueError("solver project snapshot differs from evaluated input")
-            if manifest.get("meshes") != preflight.get("meshes"):
+            meshes = _mesh_inventory(manifest)
+            if meshes != preflight_meshes:
                 raise ValueError("mesh identity changed between preflight and solve")
-            for mesh in manifest.get("meshes", []):
-                if sha256(Path(mesh["file"])) != mesh["sha256"]:
+            for mesh in meshes:
+                if (Path(mesh["file"]).stat().st_size != mesh["size_bytes"]
+                        or sha256(Path(mesh["file"])) != mesh["sha256"]):
                     raise ValueError("source mesh changed during evaluation")
             if self.verify() != runtime:
                 raise ValueError("runtime changed during evaluation")

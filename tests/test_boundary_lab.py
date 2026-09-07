@@ -17,7 +17,7 @@ def artifact(tmp_path):
     values = np.array([[1+2j, 3-4j]], dtype=np.complex64)
     np.savez(root / "frequencies/000000.npz", q0000=values)
     metadata = {"freq_hz": 1000, "excitation_port_ids": ["voltage:a"], "arrays_file": "000000.npz",
-                "quantities": [{"key": "q0000", "id": "pressure", "unit": "Pa",
+                "quantities": [{"key": "q0000", "id": "pressure", "quantity": "fem_nodal_pressure", "unit": "Pa",
                                 "axes": ["excitation", "node"], "shape": [1, 2], "dtype": "complex64"}]}
     (root / "frequencies/000000.json").write_text(json.dumps(metadata), encoding="utf-8")
     manifest = {"schema": "boundary-lab-headless-result", "schema_version": 2, "status": "complete",
@@ -111,7 +111,7 @@ def test_failed_solve_records_failure_and_does_not_reuse_output(tmp_path, monkey
         runtime.solve(project, SolveRequest(frequencies_hz=(1000,)), output)
 
 
-@pytest.mark.parametrize("fault", ["revision", "dirty", "module", "julia"])
+@pytest.mark.parametrize("fault", ["revision", "dirty", "module", "julia", "python"])
 def test_runtime_identity_checks_reject_mismatches(tmp_path, monkeypatch, fault):
     import meh_studio.boundary_lab as adapter
     checkout = tmp_path / "checkout"
@@ -124,7 +124,7 @@ def test_runtime_identity_checks_reject_mismatches(tmp_path, monkeypatch, fault)
             return "src/blab/changed.py" if fault == "dirty" else ""
         if "-I" in command:
             module = tmp_path / "elsewhere/blab/__init__.py" if fault == "module" else checkout / "src/blab/__init__.py"
-            return json.dumps({"module": str(module), "python": "test", "packages": {}})
+            return json.dumps({"module": str(module), "python": "test", "python_version": [3, 12] if fault == "python" else [3, 11], "packages": {}})
         return "julia version 1.10.12" if fault == "julia" else "julia version 1.12.6"
     monkeypatch.setattr(subprocess, "check_output", check_output)
     with pytest.raises(ValueError):
@@ -151,3 +151,108 @@ def test_missing_compiled_output_is_rejected(artifact):
     with pytest.raises(ValueError, match="compiled output contract"):
         inspect_result(root, SolveRequest(frequencies_hz=(1000,)), "beat_cpu", ("pressure", "current"))
     assert inspect_result(root, SolveRequest(frequencies_hz=(1000,)), "beat_cpu", ("pressure",))["evidence"] == "predicted"
+
+
+@pytest.mark.parametrize("retain", [("bem_boundary_pressure",), ("bem_boundary_traces",)])
+def test_requested_retained_fields_cannot_be_omitted_by_preflight(artifact, retain):
+    root, _ = artifact
+    with pytest.raises(ValueError, match="requested retained"):
+        inspect_result(root, SolveRequest(frequencies_hz=(1000,), retain=retain), "beat_cpu", ("pressure",))
+
+
+@pytest.mark.parametrize("unit,name", [("A", "fem_nodal_pressure"), ("Pa", "voice_coil_current"),
+    ("Pa", "bem_boundary_neumann"), ("Pa", "unknown")])
+def test_units_follow_quantity_contract(artifact, unit, name):
+    root, _ = artifact
+    path = root / "frequencies/000000.json"
+    metadata = json.loads(path.read_text())
+    metadata["quantities"][0].update(unit=unit, quantity=name)
+    path.write_text(json.dumps(metadata), encoding="utf-8")
+    with pytest.raises(ValueError, match="unit"):
+        inspect_result(root, SolveRequest(frequencies_hz=(1000,)), "beat_cpu")
+
+
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), -float("inf")])
+def test_nested_nonfinite_metadata_rejected(artifact, value):
+    root, _ = artifact
+    path = root / "frequencies/000000.json"
+    metadata = json.loads(path.read_text())
+    metadata["quantities"][0]["metadata"] = {"nested": [{"value": value}]}
+    path.write_text(json.dumps(metadata), encoding="utf-8")
+    with pytest.raises(ValueError):
+        inspect_result(root, SolveRequest(frequencies_hz=(1000,)), "beat_cpu")
+
+
+@pytest.mark.parametrize("meshes", [None, [], [None], [{}],
+    [{"id": "m", "file": "/mesh", "purpose": "fem", "sha256": "x", "size_bytes": 1}]])
+def test_mesh_inventory_cannot_be_missing_or_malformed(meshes):
+    from meh_studio.boundary_lab import _mesh_inventory
+    with pytest.raises(ValueError):
+        _mesh_inventory({"meshes": meshes})
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX SIGTERM lifecycle")
+def test_sigterm_cancels_report_and_kills_solver_group(tmp_path):
+    import os
+    import signal
+    import time
+    # Launch an actual adapter process with only the upstream runtime replaced.
+    script = tmp_path / "adapter.py"
+    script.write_text('''
+import sys
+from pathlib import Path
+import meh_studio.boundary_lab as a
+root=Path(sys.argv[1])
+a.BoundaryLabRuntime.verify=lambda self: {"revision":"test"}
+execute=a._execute
+child="import os,time;from pathlib import Path;Path('ready').write_text(str(os.getpid()));time.sleep(2);Path('survived').write_text('bad');time.sleep(60)"
+a._execute=lambda command,cwd,log,timeout: execute([sys.executable,"-c",child],root,log,timeout)
+(root/'project.json').write_text('{}')
+a.BoundaryLabRuntime(root,Path(sys.executable),root/'julia').solve(root/'project.json',a.SolveRequest(frequencies_hz=(1000,)),root/'output')
+''', encoding="utf-8")
+    process = subprocess.Popen([sys.executable, str(script), str(tmp_path)],
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        deadline = time.monotonic() + 10
+        while not (tmp_path / "ready").exists() and time.monotonic() < deadline:
+            assert process.poll() is None
+            time.sleep(.02)
+        assert (tmp_path / "ready").exists()
+        os.kill(process.pid, signal.SIGTERM)
+        process.wait(timeout=10)
+        report = json.loads((tmp_path / "output/evaluation.json").read_text())
+        assert report["status"] == "cancelled"
+        time.sleep(2.2)
+        assert not (tmp_path / "survived").exists()
+    finally:
+        if process.poll() is None:
+            process.kill()
+            process.wait()
+
+
+def test_nonfinite_result_metadata_records_failed_evaluation(artifact, tmp_path, monkeypatch):
+    import shutil
+    import meh_studio.boundary_lab as adapter
+    root, _ = artifact
+    metadata_file = root / "frequencies/000000.json"
+    data = json.loads(metadata_file.read_text())
+    data["quantities"][0]["metadata"] = {"invalid": [float("nan")]}
+    metadata_file.write_text(json.dumps(data), encoding="utf-8")
+    source = tmp_path / "source.msh"
+    source.write_bytes(b"mesh fixture")
+    mesh = {"id": "mesh:a", "file": str(source), "purpose": "fem_volume",
+            "sha256": sha256(source), "size_bytes": source.stat().st_size}
+    output, project = tmp_path / "evaluation", tmp_path / "project.json"
+    project.write_text('{}', encoding="utf-8")
+    runtime = BoundaryLabRuntime(tmp_path, Path(sys.executable), tmp_path / "julia")
+    monkeypatch.setattr(BoundaryLabRuntime, "verify", lambda self: {"revision": "test"})
+    def execute(command, cwd, log, timeout):
+        if "validate" in command:
+            log.write_text(json.dumps({"valid": True, "output_ids": ["pressure"], "meshes": [mesh]}), encoding="utf-8")
+        else:
+            shutil.copytree(root, output / "upstream")
+    monkeypatch.setattr(adapter, "_execute", execute)
+    with pytest.raises(ValueError):
+        runtime.solve(project, SolveRequest(frequencies_hz=(1000,)), output)
+    report = json.loads((output / "evaluation.json").read_text(encoding="utf-8"))
+    assert report["status"] == "failed"
