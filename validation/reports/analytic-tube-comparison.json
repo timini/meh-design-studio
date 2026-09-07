@@ -1,0 +1,326 @@
+{
+  "schema_version": 1,
+  "reference": "Uniform piston in constant-area tube with matched plane-wave termination; exact mechanical load rho*c*area",
+  "mechanical_load_ns_m": 0.664048,
+  "mesh_size_m": 0.01,
+  "rows": [
+    {
+      "frequency_hz": 500.0,
+      "velocity_relative_error": 2.781354398499056e-05,
+      "current_relative_error": 4.884807133323313e-06
+    },
+    {
+      "frequency_hz": 1000.0,
+      "velocity_relative_error": 3.205103070590768e-05,
+      "current_relative_error": 2.72957114665109e-06
+    },
+    {
+      "frequency_hz": 2000.0,
+      "velocity_relative_error": 0.00014061228266151944,
+      "current_relative_error": 5.853807272683964e-06
+    }
+  ],
+  "evaluation": {
+    "schema_version": 1,
+    "status": "complete",
+    "runtime": {
+      "revision": "8cb166226e412877d3f71f2845918e479b97aa85",
+      "backend": "beat_cpu",
+      "python": "3.11.15 (main, Mar  3 2026, 00:52:57) [Clang 21.0.0 (clang-2100.0.123.102)]",
+      "julia": "julia version 1.12.6",
+      "packages": {
+        "kiwisolver": "1.5.1",
+        "setuptools": "82.0.1",
+        "packaging": "26.3",
+        "Pygments": "2.21.0",
+        "rich": "15.0.0",
+        "contourpy": "1.3.3",
+        "numpy": "2.4.6",
+        "pytools": "2026.1.1",
+        "matplotlib": "3.11.1",
+        "bempp-cl": "0.4.2",
+        "llvmlite": "0.49.0",
+        "mdurl": "0.1.2",
+        "python-dateutil": "2.9.0.post0",
+        "numba": "0.67.0",
+        "fonttools": "4.64.0",
+        "scipy": "1.17.1",
+        "pyopencl": "2026.1.4",
+        "platformdirs": "4.11.7",
+        "cycler": "0.12.1",
+        "gmsh": "4.15.2",
+        "pyparsing": "3.3.2",
+        "markdown-it-py": "4.2.0",
+        "siphash24": "1.8",
+        "meshio": "5.3.5",
+        "pip": "26.1.2",
+        "typing_extensions": "4.16.0",
+        "pillow": "12.3.0",
+        "six": "1.17.0",
+        "boundary-lab": "0.4.2"
+      }
+    },
+    "started_at_utc": "2026-09-07T10:46:33.920203+00:00",
+    "project_sha256": "75e53eb24bb1b1cc069db0b6a7a1e13827fa83c6d0b1598cb5900eaef40a3547",
+    "request_sha256": "ebc3125b314a506e99fb28acb546ff36cbeb61802cb8496ef8c61bea8dd59b58",
+    "result": {
+      "evidence": "predicted",
+      "solve_kind": "interior_fem",
+      "phasor_convention": "exp(-i omega t)",
+      "frequencies_hz": [
+        500.0,
+        1000.0,
+        2000.0
+      ],
+      "excitation_port_ids": [
+        "voltage"
+      ],
+      "inventory": [
+        {
+          "frequency_hz": 500.0,
+          "metadata_sha256": "636da50d8b7ee7358011e16e143daf62c2d5cf4f260b390cee402d478b39ac9e",
+          "arrays_sha256": "d20bce939a5762719ee8a0dca7670289aae46ba798614b8060353608ab319058",
+          "quantities": [
+            {
+              "axes": [
+                "excitation",
+                "fem_node"
+              ],
+              "dtype": "complex128",
+              "id": "acoustic:pressure:fem-nodes",
+              "key": "q0000",
+              "metadata": {
+                "mesh_ids": [
+                  "mesh:tube"
+                ],
+                "node_counts": [
+                  557
+                ],
+                "node_offsets": [
+                  0
+                ],
+                "region_ids": [
+                  "region:tube"
+                ]
+              },
+              "quantity": "fem_nodal_pressure",
+              "shape": [
+                1,
+                557
+              ],
+              "target_id": "domain:fem-volume",
+              "unit": "Pa"
+            },
+            {
+              "axes": [
+                "excitation",
+                "transducer"
+              ],
+              "dtype": "complex128",
+              "id": "mechanical:diaphragm-velocity",
+              "key": "q0001",
+              "metadata": {
+                "component_ids": [
+                  "driver"
+                ]
+              },
+              "quantity": "diaphragm_velocity",
+              "shape": [
+                1,
+                1
+              ],
+              "target_id": "components:electrodynamic-transducers",
+              "unit": "m/s"
+            },
+            {
+              "axes": [
+                "excitation",
+                "transducer"
+              ],
+              "dtype": "complex128",
+              "id": "electrical:voice-coil-current",
+              "key": "q0002",
+              "metadata": {
+                "component_ids": [
+                  "driver"
+                ]
+              },
+              "quantity": "voice_coil_current",
+              "shape": [
+                1,
+                1
+              ],
+              "target_id": "components:electrodynamic-transducers",
+              "unit": "A"
+            }
+          ]
+        },
+        {
+          "frequency_hz": 1000.0,
+          "metadata_sha256": "378bd1f6f1adfa90b8d8c9ec75d2e7cd81231fd8f6854db521cc171da85d4a92",
+          "arrays_sha256": "751a9fe59a67f13bc901452be3c6b68c62d154a04fa2d0983c92c27a34a45eb1",
+          "quantities": [
+            {
+              "axes": [
+                "excitation",
+                "fem_node"
+              ],
+              "dtype": "complex128",
+              "id": "acoustic:pressure:fem-nodes",
+              "key": "q0000",
+              "metadata": {
+                "mesh_ids": [
+                  "mesh:tube"
+                ],
+                "node_counts": [
+                  557
+                ],
+                "node_offsets": [
+                  0
+                ],
+                "region_ids": [
+                  "region:tube"
+                ]
+              },
+              "quantity": "fem_nodal_pressure",
+              "shape": [
+                1,
+                557
+              ],
+              "target_id": "domain:fem-volume",
+              "unit": "Pa"
+            },
+            {
+              "axes": [
+                "excitation",
+                "transducer"
+              ],
+              "dtype": "complex128",
+              "id": "mechanical:diaphragm-velocity",
+              "key": "q0001",
+              "metadata": {
+                "component_ids": [
+                  "driver"
+                ]
+              },
+              "quantity": "diaphragm_velocity",
+              "shape": [
+                1,
+                1
+              ],
+              "target_id": "components:electrodynamic-transducers",
+              "unit": "m/s"
+            },
+            {
+              "axes": [
+                "excitation",
+                "transducer"
+              ],
+              "dtype": "complex128",
+              "id": "electrical:voice-coil-current",
+              "key": "q0002",
+              "metadata": {
+                "component_ids": [
+                  "driver"
+                ]
+              },
+              "quantity": "voice_coil_current",
+              "shape": [
+                1,
+                1
+              ],
+              "target_id": "components:electrodynamic-transducers",
+              "unit": "A"
+            }
+          ]
+        },
+        {
+          "frequency_hz": 2000.0,
+          "metadata_sha256": "f97e070eef7b0037c50dc267f8384ddea30fbda76bdcc420ea29bc8ff1ab39d0",
+          "arrays_sha256": "f213cefd9fca1dc0bc8aeac1c37fc43d1235308a45815238c9ecf8503b3403de",
+          "quantities": [
+            {
+              "axes": [
+                "excitation",
+                "fem_node"
+              ],
+              "dtype": "complex128",
+              "id": "acoustic:pressure:fem-nodes",
+              "key": "q0000",
+              "metadata": {
+                "mesh_ids": [
+                  "mesh:tube"
+                ],
+                "node_counts": [
+                  557
+                ],
+                "node_offsets": [
+                  0
+                ],
+                "region_ids": [
+                  "region:tube"
+                ]
+              },
+              "quantity": "fem_nodal_pressure",
+              "shape": [
+                1,
+                557
+              ],
+              "target_id": "domain:fem-volume",
+              "unit": "Pa"
+            },
+            {
+              "axes": [
+                "excitation",
+                "transducer"
+              ],
+              "dtype": "complex128",
+              "id": "mechanical:diaphragm-velocity",
+              "key": "q0001",
+              "metadata": {
+                "component_ids": [
+                  "driver"
+                ]
+              },
+              "quantity": "diaphragm_velocity",
+              "shape": [
+                1,
+                1
+              ],
+              "target_id": "components:electrodynamic-transducers",
+              "unit": "m/s"
+            },
+            {
+              "axes": [
+                "excitation",
+                "transducer"
+              ],
+              "dtype": "complex128",
+              "id": "electrical:voice-coil-current",
+              "key": "q0002",
+              "metadata": {
+                "component_ids": [
+                  "driver"
+                ]
+              },
+              "quantity": "voice_coil_current",
+              "shape": [
+                1,
+                1
+              ],
+              "target_id": "components:electrodynamic-transducers",
+              "unit": "A"
+            }
+          ]
+        }
+      ]
+    },
+    "elapsed_s": 20.31709866700112
+  },
+  "physical_validation": false,
+  "limitations": [
+    "Single mesh level and three frequencies",
+    "Checks input acoustic loading, not full nodal field accuracy",
+    "Synthetic piston, not a qualified purchased driver"
+  ]
+}

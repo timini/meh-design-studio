@@ -50,3 +50,5 @@ The registry currently contains **references and acquisition plans**, not a bund
 ## Licensing
 
 Repository visibility is private. A distribution licence has not yet been selected. The proposed application direction is GPL-compatible, with driver data licensed separately. See [decisions](docs/decisions.md). References to external software or data do not grant permission to redistribute them.
+
+The [generated interior experiment](docs/generated-system.md) connects horn air meshes to the solver and records independent circuit/tube comparisons and mesh-refinement evidence.
