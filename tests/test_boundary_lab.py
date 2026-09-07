@@ -390,3 +390,12 @@ def test_empty_or_unindexed_physical_dimensions_fail(name, axes, shape):
     from meh_studio.boundary_lab import _quantity_dimensions
     with pytest.raises(ValueError):
         _quantity_dimensions({"quantity": name, "axes": axes}, np.zeros(shape, dtype=complex), 1)
+
+
+@pytest.mark.parametrize("sphere", [False, True])
+def test_compiled_polar_block_expands_to_saved_output_contract(sphere):
+    from meh_studio.boundary_lab import _result_output_ids
+    project = {"project_preferences": {"spherical_sampling_enabled": sphere}}
+    ids = _result_output_ids(project, ("ui:exterior-pressure", "mechanical:diaphragm-velocity"))
+    assert set(ids) == {"mechanical:diaphragm-velocity", "acoustic:pressure:horizontal-polar",
+                        "acoustic:pressure:vertical-polar"} | ({"acoustic:pressure:sphere"} if sphere else set())
