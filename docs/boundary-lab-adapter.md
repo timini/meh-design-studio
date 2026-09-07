@@ -83,3 +83,5 @@ The pinned runtime requires exactly one FEM mesh per bounded region, and this ad
 Recorded CLI cancellations return structured JSON and exit 130 for Ctrl-C, or 143 for the adapter's POSIX SIGTERM cancellation. The durable evaluation remains cancelled before the command returns.
 
 Standalone inspection derives the solve kind from the hashed project even when no expected kind is supplied. Domain validation receives that verified project object rather than rereading its preferences. The copied snapshot, supplied original project and source meshes are checked again before inspection returns. Nested domain mappings and decoder depth failures produce structured validation errors.
+
+The process signal guard defers cancellation during both child creation and cleanup/reaping, forwarding it only after the process group has been stopped. Tests inject the first cancellation signal inside group cleanup and verify residual children cannot continue. Preflight rejects missing retained-field IDs before solving; standalone inspection independently enforces requested project observations. Empty NumPy artifacts are structured validation failures.
