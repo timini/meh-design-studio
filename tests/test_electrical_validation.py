@@ -38,7 +38,7 @@ def circuit_artifact(tmp_path):
         "arrays_file": "arrays.npz", "quantities": quantities,
         "diagnostics": {"transducer_reference_voltage_v": 2.83}}))
     (upstream / "manifest.json").write_text(json.dumps({"schema": "boundary-lab-headless-result",
-        "schema_version": 2, "status": "complete", "backend_id": "beat_cpu",
+        "schema_version": 2, "status": "complete", "backend_id": "beat_cpu", "solve_kind": "interior_fem",
         "phasor_convention": "exp(-i omega t)", "frequencies_hz": [1000],
         "excitation_port_ids": ids, "completion_mask": [True],
         "results": [{"freq_hz": 1000, "metadata_file": "metadata.json", "arrays_file": "arrays.npz"}]}))
