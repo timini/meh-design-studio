@@ -1,0 +1,245 @@
+[
+  {
+    "url": "https://github.com/JWSound/boundary-lab",
+    "accessed": "2026-09-06",
+    "claim_context": [
+      "The recommended starting point is Boundary Lab, the software associated with JW Sound and Solana. Evaluate its solver through a versioned adapter, and build the product-specific catalogue, geometry generator, optimisation controller and manufacturing pipeline around it. Treat the first development phase as an integration and validation experiment before committing to a full product. Its documented capabilities make a new acoustic solver an unnecessary initial investment. [Boundary Lab repository](https://github.com/JWSound/boundary-lab).",
+      "Boundary Lab documents mesh generation/import, exterior boundary element simulation, interior finite element simulation, coupled electromechanical models, DSP controls and acoustic plots. A local/LAN solve server provides a promising automation boundary. These features need a pinned-version capability test rather than an assumption of a stable external API. [Boundary Lab repository](https://github.com/JWSound/boundary-lab); [server documentation](https://github.com/JWSound/boundary-lab/blob/main/docs/Boundary%20Lab%20Server.md).",
+      "Boundary Lab\u2019s physical-system documentation requires dry moving mass Mmd rather than the air-loaded Mms often found in catalogues. It derives projected diaphragm area from moving geometry and warns against duplicating a meshed rear chamber with an additional lumped compliance. The adapter must preserve these conventions. Never relabel Mms as Mmd or add both rear loads. Use a measured or justified conversion with provenance and uncertainty, otherwise limit the driver to screening. [Boundary Lab physical system model](https://github.com/JWSound/boundary-lab/blob/main/docs/Physical%20System%20Model.md).",
+      "The coupled-solver documentation describes first-order interior elements, a Burton\u2013Miller exterior formulation, dense retained-system factorisation and single-precision production paths with a double-precision reference path. Some older passages conflict with newer backend descriptions. Require a pinned revision, runtime capability interrogation and executed regression fixtures before selecting a supported backend. Do not advertise fast-multipole scaling for this coupled path. [Boundary Lab coupled solver](https://github.com/JWSound/boundary-lab/blob/main/docs/Coupled%20Solver.md).",
+      "For fixed physical geometry and driver termination, reuse complex source-basis results while varying ideal active DSP. Boundary Lab explicitly separates physical excitation from application-side gain, delay and filtering. Electrical networks or source-impedance changes require a new physical solution or a validated multiport calculation. [Boundary Lab physical system model](https://github.com/JWSound/boundary-lab/blob/main/docs/Physical%20System%20Model.md).",
+      "Boundary Lab is GPL-3.0 licensed. The recommended product direction is a GPL-compatible open application with explicit component attribution and a separately licensed driver-data pack. Its bundled ATH permission should be reviewed separately before redistributing that component; a new CadQuery geometry provider can reduce dependence on it. [Boundary Lab licence](https://github.com/JWSound/boundary-lab/blob/main/LICENSE); [Boundary Lab repository](https://github.com/JWSound/boundary-lab)."
+    ],
+    "source_date": "As stated in claim context; otherwise undated/current documentation",
+    "access_note": "Primary-source review; no executed acoustic verification"
+  },
+  {
+    "url": "https://www.jwsound.live/designs/solana-diy",
+    "accessed": "2026-09-06",
+    "claim_context": [
+      "JW Sound\u2019s Solana page describes an emphasis on smooth directivity and driver integration, with additive manufacturing enabling complex waveguide geometry. The designer\u2019s project thread describes the original Solana as a proof of concept for genetic-algorithm-driven waveguide design. These are strong precedents for the proposed workflow, but they do not establish that an arbitrary cheap-driver combination can achieve the same result. [JW Sound Solana](https://www.jwsound.live/designs/solana-diy); [designer project thread](https://www.diyaudio.com/community/threads/solana-project-thread.439795/)."
+    ],
+    "source_date": "As stated in claim context; otherwise undated/current documentation",
+    "access_note": "Primary-source review; no executed acoustic verification"
+  },
+  {
+    "url": "https://www.diyaudio.com/community/threads/solana-project-thread.439795/",
+    "accessed": "2026-09-06",
+    "claim_context": [
+      "JW Sound\u2019s Solana page describes an emphasis on smooth directivity and driver integration, with additive manufacturing enabling complex waveguide geometry. The designer\u2019s project thread describes the original Solana as a proof of concept for genetic-algorithm-driven waveguide design. These are strong precedents for the proposed workflow, but they do not establish that an arbitrary cheap-driver combination can achieve the same result. [JW Sound Solana](https://www.jwsound.live/designs/solana-diy); [designer project thread](https://www.diyaudio.com/community/threads/solana-project-thread.439795/)."
+    ],
+    "source_date": "As stated in claim context; otherwise undated/current documentation",
+    "access_note": "Primary-source review; no executed acoustic verification"
+  },
+  {
+    "url": "https://github.com/JWSound/boundary-lab/blob/main/docs/Boundary%20Lab%20Server.md",
+    "accessed": "2026-09-06",
+    "claim_context": [
+      "Boundary Lab documents mesh generation/import, exterior boundary element simulation, interior finite element simulation, coupled electromechanical models, DSP controls and acoustic plots. A local/LAN solve server provides a promising automation boundary. These features need a pinned-version capability test rather than an assumption of a stable external API. [Boundary Lab repository](https://github.com/JWSound/boundary-lab); [server documentation](https://github.com/JWSound/boundary-lab/blob/main/docs/Boundary%20Lab%20Server.md)."
+    ],
+    "source_date": "As stated in claim context; otherwise undated/current documentation",
+    "access_note": "Primary-source review; no executed acoustic verification"
+  },
+  {
+    "url": "https://patents.google.com/patent/US6411718B1/en",
+    "accessed": "2026-09-06",
+    "claim_context": [
+      "The Danley and Skuran technical disclosure describes multiple frequency ranges entering a common horn at different positions, with drivers outside the main sound path. It links entry arrangements to acoustic loading and summation. Use that as a starting design principle, not a universal quarter-wavelength placement rule or an assurance of performance. [Sound reproduction employing unity summation aperture loudspeakers, 2002](https://patents.google.com/patent/US6411718B1/en)."
+    ],
+    "source_date": "As stated in claim context; otherwise undated/current documentation",
+    "access_note": "Primary-source review; no executed acoustic verification"
+  },
+  {
+    "url": "https://www.comsol.com/model/optimizing-the-shape-of-a-horn-4353",
+    "accessed": "2026-09-06",
+    "claim_context": [
+      "COMSOL\u2019s horn optimisation example raises on-axis output while producing unwanted minima in other directions. Published horn optimisation research also demonstrates impedance-oriented shape optimisation with numerical and experimental validation. The relevant lesson is that objective selection determines the result: impedance matching, on-axis flatness and even coverage are related but distinct requirements. [COMSOL horn optimisation](https://www.comsol.com/model/optimizing-the-shape-of-a-horn-4353); [Xiao and colleagues, Applied Acoustics, 2023](https://www.sciencedirect.com/science/article/pii/S0003682X23004176).",
+      "AKABAK\u2019s official description supports its role as a combined acoustic/lumped-element tool. COMSOL\u2019s examples establish relevant optimisation capability. Bempp supplies acoustic boundary-element building blocks rather than a complete inverse-design product. No recommendation here assumes unattended embedding or redistribution rights for commercial tools. [AKABAK](https://www.randteam.de/AKABAK3/Index.html); [COMSOL horn optimisation](https://www.comsol.com/model/optimizing-the-shape-of-a-horn-4353); [Bempp](https://bempp.com/)."
+    ],
+    "source_date": "As stated in claim context; otherwise undated/current documentation",
+    "access_note": "Primary-source review; no executed acoustic verification"
+  },
+  {
+    "url": "https://www.sciencedirect.com/science/article/pii/S0003682X23004176",
+    "accessed": "2026-09-06",
+    "claim_context": [
+      "COMSOL\u2019s horn optimisation example raises on-axis output while producing unwanted minima in other directions. Published horn optimisation research also demonstrates impedance-oriented shape optimisation with numerical and experimental validation. The relevant lesson is that objective selection determines the result: impedance matching, on-axis flatness and even coverage are related but distinct requirements. [COMSOL horn optimisation](https://www.comsol.com/model/optimizing-the-shape-of-a-horn-4353); [Xiao and colleagues, Applied Acoustics, 2023](https://www.sciencedirect.com/science/article/pii/S0003682X23004176)."
+    ],
+    "source_date": "As stated in claim context; otherwise undated/current documentation",
+    "access_note": "Primary-source review; no executed acoustic verification"
+  },
+  {
+    "url": "https://www.comsol.com/support/learning-center/course/modeling-speaker-drivers-in-comsol-multiphysics-202/modeling-speaker-drivers-lumped-methods-88401",
+    "accessed": "2026-09-06",
+    "claim_context": [
+      "COMSOL distinguishes imposed diaphragm motion from a driver model that responds to acoustic loading. Its lumped-driver guidance also limits simple piston models to appropriate regimes and separates small-signal frequency-domain models from large-displacement nonlinear analysis. Consequently, a detailed mesh driven by inadequate source data can still produce misleading results. [COMSOL lumped driver modelling](https://www.comsol.com/support/learning-center/course/modeling-speaker-drivers-in-comsol-multiphysics-202/modeling-speaker-drivers-lumped-methods-88401).",
+      "For high-frequency sources, qualify an effective source model at the intended horn interface, including its loading behaviour and usable band. Ordinary free-field manufacturer frequency response is not an intrinsic diaphragm-velocity curve. Do not multiply it into the simulated horn and assume that baffle, radiation and horn loading have been correctly separated. If a suitable source model is unavailable, show the high-frequency result as provisional and require measurement. [COMSOL lumped driver modelling](https://www.comsol.com/support/learning-center/course/modeling-speaker-drivers-in-comsol-multiphysics-202/modeling-speaker-drivers-lumped-methods-88401)."
+    ],
+    "source_date": "As stated in claim context; otherwise undated/current documentation",
+    "access_note": "Primary-source review; no executed acoustic verification"
+  },
+  {
+    "url": "https://github.com/JWSound/boundary-lab/blob/main/docs/Physical%20System%20Model.md",
+    "accessed": "2026-09-06",
+    "claim_context": [
+      "Boundary Lab\u2019s physical-system documentation requires dry moving mass Mmd rather than the air-loaded Mms often found in catalogues. It derives projected diaphragm area from moving geometry and warns against duplicating a meshed rear chamber with an additional lumped compliance. The adapter must preserve these conventions. Never relabel Mms as Mmd or add both rear loads. Use a measured or justified conversion with provenance and uncertainty, otherwise limit the driver to screening. [Boundary Lab physical system model](https://github.com/JWSound/boundary-lab/blob/main/docs/Physical%20System%20Model.md).",
+      "For fixed physical geometry and driver termination, reuse complex source-basis results while varying ideal active DSP. Boundary Lab explicitly separates physical excitation from application-side gain, delay and filtering. Electrical networks or source-impedance changes require a new physical solution or a validated multiport calculation. [Boundary Lab physical system model](https://github.com/JWSound/boundary-lab/blob/main/docs/Physical%20System%20Model.md)."
+    ],
+    "source_date": "As stated in claim context; otherwise undated/current documentation",
+    "access_note": "Primary-source review; no executed acoustic verification"
+  },
+  {
+    "url": "https://github.com/JWSound/boundary-lab/blob/main/docs/Coupled%20Solver.md",
+    "accessed": "2026-09-06",
+    "claim_context": [
+      "The coupled-solver documentation describes first-order interior elements, a Burton\u2013Miller exterior formulation, dense retained-system factorisation and single-precision production paths with a double-precision reference path. Some older passages conflict with newer backend descriptions. Require a pinned revision, runtime capability interrogation and executed regression fixtures before selecting a supported backend. Do not advertise fast-multipole scaling for this coupled path. [Boundary Lab coupled solver](https://github.com/JWSound/boundary-lab/blob/main/docs/Coupled%20Solver.md)."
+    ],
+    "source_date": "As stated in claim context; otherwise undated/current documentation",
+    "access_note": "Primary-source review; no executed acoustic verification"
+  },
+  {
+    "url": "https://arxiv.org/abs/1801.04177",
+    "accessed": "2026-09-06",
+    "claim_context": [
+      "Narrow passages deserve particular attention: viscous and thermal boundary layers can matter, and general bulk damping is not a substitute. Research supports reduced boundary-layer treatments under stated geometric assumptions. Add calibrated duct-loss or boundary-impedance models first; reserve detailed thermoviscous FEM and nonlinear flow analysis for cases that justify the expense. [Berggren, Bernland and Noreland, 2018](https://arxiv.org/abs/1801.04177)."
+    ],
+    "source_date": "As stated in claim context; otherwise undated/current documentation",
+    "access_note": "Primary-source review; no executed acoustic verification"
+  },
+  {
+    "url": "https://pymoo.org/customization/mixed.html",
+    "accessed": "2026-09-06",
+    "claim_context": [
+      "Use pymoo with mixed-variable operators and explicit multiobjective survival for the first search implementation. Its documentation supports categorical, integer and real variables, including multiobjective compositions. Do not assume that the default single-objective mixed-variable algorithm becomes multiobjective merely by returning more numbers. [pymoo mixed-variable documentation](https://pymoo.org/customization/mixed.html)."
+    ],
+    "source_date": "As stated in claim context; otherwise undated/current documentation",
+    "access_note": "Primary-source review; no executed acoustic verification"
+  },
+  {
+    "url": "https://botorch.org/docs/models",
+    "accessed": "2026-09-06",
+    "claim_context": [
+      "Add Bayesian selection only after collecting paired low/high-fidelity data. BoTorch offers mixed-variable and multifidelity model classes, but combining changing topology, fidelity, constraints and several objectives remains custom development. Start with separate models by topology family and explicit uncertainty calibration. Keep surrogate predictions out of the final verified leaderboard. [BoTorch model documentation](https://botorch.org/docs/models)."
+    ],
+    "source_date": "As stated in claim context; otherwise undated/current documentation",
+    "access_note": "Primary-source review; no executed acoustic verification"
+  },
+  {
+    "url": "https://cadquery.readthedocs.io/en/stable/index.html",
+    "accessed": "2026-09-06",
+    "claim_context": [
+      "CadQuery is a suitable code-driven solid-modelling starting point, with STEP and mesh export options. Preserve the original parametric definition because a STEP or STL export alone does not retain the full editable design logic. Gmsh provides programmable meshing and physical groups needed by the analysis pipeline. [CadQuery documentation](https://cadquery.readthedocs.io/en/stable/index.html); [CadQuery export documentation](https://github.com/CadQuery/cadquery/blob/master/doc/importexport.rst); [Gmsh](https://gmsh.info/)."
+    ],
+    "source_date": "As stated in claim context; otherwise undated/current documentation",
+    "access_note": "Primary-source review; no executed acoustic verification"
+  },
+  {
+    "url": "https://github.com/CadQuery/cadquery/blob/master/doc/importexport.rst",
+    "accessed": "2026-09-06",
+    "claim_context": [
+      "CadQuery is a suitable code-driven solid-modelling starting point, with STEP and mesh export options. Preserve the original parametric definition because a STEP or STL export alone does not retain the full editable design logic. Gmsh provides programmable meshing and physical groups needed by the analysis pipeline. [CadQuery documentation](https://cadquery.readthedocs.io/en/stable/index.html); [CadQuery export documentation](https://github.com/CadQuery/cadquery/blob/master/doc/importexport.rst); [Gmsh](https://gmsh.info/)."
+    ],
+    "source_date": "As stated in claim context; otherwise undated/current documentation",
+    "access_note": "Primary-source review; no executed acoustic verification"
+  },
+  {
+    "url": "https://gmsh.info/",
+    "accessed": "2026-09-06",
+    "claim_context": [
+      "CadQuery is a suitable code-driven solid-modelling starting point, with STEP and mesh export options. Preserve the original parametric definition because a STEP or STL export alone does not retain the full editable design logic. Gmsh provides programmable meshing and physical groups needed by the analysis pipeline. [CadQuery documentation](https://cadquery.readthedocs.io/en/stable/index.html); [CadQuery export documentation](https://github.com/CadQuery/cadquery/blob/master/doc/importexport.rst); [Gmsh](https://gmsh.info/).",
+      "Gmsh documents GPL distribution and a commercial licensing route for closed-source integration. CadQuery identifies Apache-2.0 for its own code, while its CAD kernel and packaged dependencies require their own inventory. If a proprietary product is required, settle the distribution model before implementing tight integration. A subprocess boundary is not by itself a resolution of licence obligations. [Gmsh licensing](https://gmsh.info/); [CadQuery repository](https://github.com/cadquery/cadquery)."
+    ],
+    "source_date": "As stated in claim context; otherwise undated/current documentation",
+    "access_note": "Primary-source review; no executed acoustic verification"
+  },
+  {
+    "url": "https://help.prusa3d.com/article/modeling-with-3d-printing-in-mind_164135?product=core-one-plus",
+    "accessed": "2026-09-06",
+    "claim_context": [
+      "The printer profile shall specify bed dimensions, material/process, nozzle or feature capability, dimensional allowance, layer height, support policy and cost assumptions. Overhang limits are profile-dependent. Segment the model into printable orientations, add alignment features and seals, and keep supports removable from every internal duct. For resin, include drainage and cleaning access as applicable. Orientation and splitting affect manufacturability and surface finish. [Prusa design guidance](https://help.prusa3d.com/article/modeling-with-3d-printing-in-mind_164135?product=core-one-plus)."
+    ],
+    "source_date": "As stated in claim context; otherwise undated/current documentation",
+    "access_note": "Primary-source review; no executed acoustic verification"
+  },
+  {
+    "url": "https://3mf.io/spec/",
+    "accessed": "2026-09-06",
+    "claim_context": [
+      "Use 3MF as the primary mesh container because it carries units and multiple objects. Export one STL per part for compatibility, with an explicit millimetre convention in the manifest. Export STEP for subsequent CAD work. A mesh-container specification does not prove a real print is airtight or mechanically suitable. [3MF specification](https://3mf.io/spec/); [Prusa multiple-object handling](https://help.prusa3d.com/article/split-to-objects-parts_1751)."
+    ],
+    "source_date": "As stated in claim context; otherwise undated/current documentation",
+    "access_note": "Primary-source review; no executed acoustic verification"
+  },
+  {
+    "url": "https://help.prusa3d.com/article/split-to-objects-parts_1751",
+    "accessed": "2026-09-06",
+    "claim_context": [
+      "Use 3MF as the primary mesh container because it carries units and multiple objects. Export one STL per part for compatibility, with an explicit millimetre convention in the manifest. Export STEP for subsequent CAD work. A mesh-container specification does not prove a real print is airtight or mechanically suitable. [3MF specification](https://3mf.io/spec/); [Prusa multiple-object handling](https://help.prusa3d.com/article/split-to-objects-parts_1751)."
+    ],
+    "source_date": "As stated in claim context; otherwise undated/current documentation",
+    "access_note": "Primary-source review; no executed acoustic verification"
+  },
+  {
+    "url": "https://help.prusa3d.com/article/watertight-prints_112324?product=mk3s-2",
+    "accessed": "2026-09-06",
+    "claim_context": [
+      "Printed wall stiffness, joints and sealing require physical checks. Prusa\u2019s watertight-print guidance illustrates that apparently solid plastic prints can leak. The product shall require a seal test and mounting fit check for its reference builds, and a panel-resonance check before claiming rigid-wall predictions represent the finished speaker. [Prusa watertight-print guidance](https://help.prusa3d.com/article/watertight-prints_112324?product=mk3s-2)."
+    ],
+    "source_date": "As stated in claim context; otherwise undated/current documentation",
+    "access_note": "Primary-source review; no executed acoustic verification"
+  },
+  {
+    "url": "https://www.daytonaudio.com/product/1046/nd91-4-3-1-2-aluminum-cone-full-range-driver-4-ohm",
+    "accessed": "2026-09-06",
+    "claim_context": [
+      "Manufacturer sources can be rich: Dayton\u2019s ND91-4 page provides specification, response/data, Klippel and scan downloads. Availability of a download is not evidence of permission to redistribute it in another product. Treat public aggregators as discovery resources until their data terms are resolved. [Dayton ND91-4](https://www.daytonaudio.com/product/1046/nd91-4-3-1-2-aluminum-cone-full-range-driver-4-ohm); [Loudspeaker Database about page](https://loudspeakerdatabase.com/about)."
+    ],
+    "source_date": "As stated in claim context; otherwise undated/current documentation",
+    "access_note": "Primary-source review; no executed acoustic verification"
+  },
+  {
+    "url": "https://loudspeakerdatabase.com/about",
+    "accessed": "2026-09-06",
+    "claim_context": [
+      "Manufacturer sources can be rich: Dayton\u2019s ND91-4 page provides specification, response/data, Klippel and scan downloads. Availability of a download is not evidence of permission to redistribute it in another product. Treat public aggregators as discovery resources until their data terms are resolved. [Dayton ND91-4](https://www.daytonaudio.com/product/1046/nd91-4-3-1-2-aluminum-cone-full-range-driver-4-ohm); [Loudspeaker Database about page](https://loudspeakerdatabase.com/about)."
+    ],
+    "source_date": "As stated in claim context; otherwise undated/current documentation",
+    "access_note": "Primary-source review; no executed acoustic verification"
+  },
+  {
+    "url": "https://github.com/JWSound/boundary-lab/blob/main/LICENSE",
+    "accessed": "2026-09-06",
+    "claim_context": [
+      "Boundary Lab is GPL-3.0 licensed. The recommended product direction is a GPL-compatible open application with explicit component attribution and a separately licensed driver-data pack. Its bundled ATH permission should be reviewed separately before redistributing that component; a new CadQuery geometry provider can reduce dependence on it. [Boundary Lab licence](https://github.com/JWSound/boundary-lab/blob/main/LICENSE); [Boundary Lab repository](https://github.com/JWSound/boundary-lab)."
+    ],
+    "source_date": "As stated in claim context; otherwise undated/current documentation",
+    "access_note": "Primary-source review; no executed acoustic verification"
+  },
+  {
+    "url": "https://github.com/cadquery/cadquery",
+    "accessed": "2026-09-06",
+    "claim_context": [
+      "Gmsh documents GPL distribution and a commercial licensing route for closed-source integration. CadQuery identifies Apache-2.0 for its own code, while its CAD kernel and packaged dependencies require their own inventory. If a proprietary product is required, settle the distribution model before implementing tight integration. A subprocess boundary is not by itself a resolution of licence obligations. [Gmsh licensing](https://gmsh.info/); [CadQuery repository](https://github.com/cadquery/cadquery)."
+    ],
+    "source_date": "As stated in claim context; otherwise undated/current documentation",
+    "access_note": "Primary-source review; no executed acoustic verification"
+  },
+  {
+    "url": "https://www.randteam.de/AKABAK3/Index.html",
+    "accessed": "2026-09-06",
+    "claim_context": [
+      "AKABAK\u2019s official description supports its role as a combined acoustic/lumped-element tool. COMSOL\u2019s examples establish relevant optimisation capability. Bempp supplies acoustic boundary-element building blocks rather than a complete inverse-design product. No recommendation here assumes unattended embedding or redistribution rights for commercial tools. [AKABAK](https://www.randteam.de/AKABAK3/Index.html); [COMSOL horn optimisation](https://www.comsol.com/model/optimizing-the-shape-of-a-horn-4353); [Bempp](https://bempp.com/)."
+    ],
+    "source_date": "As stated in claim context; otherwise undated/current documentation",
+    "access_note": "Primary-source review; no executed acoustic verification"
+  },
+  {
+    "url": "https://bempp.com/",
+    "accessed": "2026-09-06",
+    "claim_context": [
+      "AKABAK\u2019s official description supports its role as a combined acoustic/lumped-element tool. COMSOL\u2019s examples establish relevant optimisation capability. Bempp supplies acoustic boundary-element building blocks rather than a complete inverse-design product. No recommendation here assumes unattended embedding or redistribution rights for commercial tools. [AKABAK](https://www.randteam.de/AKABAK3/Index.html); [COMSOL horn optimisation](https://www.comsol.com/model/optimizing-the-shape-of-a-horn-4353); [Bempp](https://bempp.com/)."
+    ],
+    "source_date": "As stated in claim context; otherwise undated/current documentation",
+    "access_note": "Primary-source review; no executed acoustic verification"
+  }
+]

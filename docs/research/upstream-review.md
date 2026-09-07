@@ -1,0 +1,21 @@
+# Boundary Lab evidence review
+
+Reviewed 7 September 2026. Reference revision: [`8cb166226e412877d3f71f2845918e479b97aa85`](https://github.com/JWSound/boundary-lab/commit/8cb166226e412877d3f71f2845918e479b97aa85), committed 3 September 2026. GitHub API resolved `main` to this revision during the review. This is a research pin, not a qualified dependency release.
+
+The repository tree, the fixture descriptions and the FEM validation test file below were read. The solver was not installed or run; test presence is not evidence of a passing test on our platform. The [captured fixture-path inventory](upstream-fixture-paths.json) records discovered paths, not the contents or redistribution rights of the assets.
+
+| Evidence | What it supports | What it does not establish |
+| --- | --- | --- |
+| [Fixture inventory](https://github.com/JWSound/boundary-lab/blob/8cb166226e412877d3f71f2845918e479b97aa85/tests/fixtures/README.md) | Existing interface, curved-interface, symmetry and cavity fixtures are useful integration starting points | Independent physical accuracy or this application's correct model compilation |
+| [Noncubic cavity fixture](https://github.com/JWSound/boundary-lab/blob/8cb166226e412877d3f71f2845918e479b97aa85/tests/fixtures/noncubic_cavity/README.md) | Three mesh densities and source-position variants allow modal and convergence checks | An eight-elements-per-wavelength rule guaranteeing one-percent accuracy |
+| [Compression-driver fixture](https://github.com/JWSound/boundary-lab/blob/8cb166226e412877d3f71f2845918e479b97aa85/examples/compression_driver/README.md) | A front/rear diaphragm-coupling case with a documented headless solve request | Measured compression-driver accuracy, full-band radiation or MEH performance; the request is a single 1 kHz point with a tube termination |
+| [CRAM measurement conditions](https://github.com/JWSound/boundary-lab/blob/8cb166226e412877d3f71f2845918e479b97aa85/examples/2x12_CRAM/Measured/info.txt) | A described ground-plane acquisition, distance, environment and equipment | Absolute sensitivity or efficiency: voltage calibration is explicitly absent; this is also not a complete spherical MEH dataset |
+| [FEM validation tests](https://github.com/JWSound/boundary-lab/blob/8cb166226e412877d3f71f2845918e479b97aa85/tests/test_fem_validation.py) | Tests cover field metrics, gradients and mesh-resolution diagnostics | Absolute gain/phase convergence: one comparison deliberately removes common amplitude and phase |
+
+The cavity notes report fixture-specific working resolutions of approximately 17 elements per wavelength for 1% modal error, 12 for 2%, eight for 5% and six for 10%. These are upstream reported results, not independently reproduced benchmarks. They motivate checking the actual local mesh and phase error; they are not universal requirements for every horn. At 20 kHz with c = 343 m/s, wavelength/17 is approximately 1.01 mm. The PRD's wavelength/8 starting heuristic must therefore remain a starting heuristic.
+
+The two concrete additions to our verification plan are an **absolute complex-response comparison with no fitted gain/phase**, and a measured convergence-versus-memory study before promising full-band searches. Relative field-shape comparisons remain useful diagnostics but cannot replace either test.
+
+Upstream documentation describes a headless server and coupled FEM/BEM/electromechanical modelling. It also specifies model conventions, including dry moving mass. Integration should use a pinned adapter and explicit capability checks. See the [server](https://github.com/JWSound/boundary-lab/blob/8cb166226e412877d3f71f2845918e479b97aa85/docs/Boundary%20Lab%20Server.md), [physical model](https://github.com/JWSound/boundary-lab/blob/8cb166226e412877d3f71f2845918e479b97aa85/docs/Physical%20System%20Model.md) and [coupled solver](https://github.com/JWSound/boundary-lab/blob/8cb166226e412877d3f71f2845918e479b97aa85/docs/Coupled%20Solver.md) at the same revision.
+
+Reuse fixtures only after the asset rights are checked. Independently authored elementary geometry and reference equations should form the release oracle; agreement between two pathways through the same upstream implementation can share the same defect.

@@ -1,0 +1,79 @@
+{
+  "schema_version": "0.1-draft",
+  "record_status": "planned",
+  "dataset_id": null,
+  "design_id": null,
+  "physical_sample_id": null,
+  "driver_serials": [],
+  "claim": {
+    "description": null,
+    "valid_band_hz": null,
+    "level_and_signal": null,
+    "mounting_domain": null
+  },
+  "split": "unassigned",
+  "protocol_version": null,
+  "prediction_frozen_at_utc": null,
+  "prediction_manifest_sha256": null,
+  "acquisition": {
+    "operator": null,
+    "time_utc": null,
+    "instrument_ids": [],
+    "calibration_records": [],
+    "terminal_voltage_rms_v": null,
+    "current_measurement": null,
+    "amplitude_convention": null,
+    "phase_convention": null,
+    "timing_reference": null,
+    "distance_m": null,
+    "coordinate_system": null,
+    "angles_and_weights_asset": null,
+    "temperature_c": null,
+    "humidity_percent": null,
+    "pressure_pa": null,
+    "window_seconds": null,
+    "noise_floor_asset": null,
+    "preconditioning": null,
+    "termination_states": null
+  },
+  "build": {
+    "cad_sha256": null,
+    "analysis_geometry_sha256": null,
+    "as_built_measurements_asset": null,
+    "print_material_and_profile": null,
+    "assembly_log_asset": null
+  },
+  "assets": [],
+  "asset_contract": {
+    "required_fields": [
+      "relative_path_or_stable_uri",
+      "sha256",
+      "size_bytes",
+      "media_type",
+      "units",
+      "axes",
+      "provenance"
+    ],
+    "note": "Contract guidance only; not itself an acquired asset."
+  },
+  "processing": {
+    "software_revision": null,
+    "recipe_asset": null,
+    "exclusions": [],
+    "calibration_correction": null,
+    "uncertainty_budget_asset": null
+  },
+  "rights": {
+    "owner": null,
+    "licence_or_permission": null,
+    "permission_evidence_asset": null,
+    "redistribution_allowed": null
+  },
+  "qualification": {
+    "state": "not_qualified",
+    "report_asset": null,
+    "reviewer": null,
+    "reviewed_at_utc": null,
+    "limitations": []
+  }
+}
