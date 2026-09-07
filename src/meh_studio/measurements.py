@@ -7,6 +7,8 @@ import io
 import json
 import os
 import zipfile
+import zlib
+import lzma
 from pathlib import Path
 from typing import Annotated, Literal
 
@@ -184,6 +186,6 @@ def read_measurement(output: Path):
                     data=stream.read(values.nbytes+1)
                     if len(data)!=values.nbytes or data != values.tobytes(order="C"):
                         raise ValueError("measurement arrays differ from raw evidence")
-    except (zipfile.BadZipFile,EOFError,NotImplementedError,RuntimeError) as exc:
+    except (zipfile.BadZipFile,EOFError,NotImplementedError,RuntimeError,zlib.error,lzma.LZMAError,OSError) as exc:
         raise ValueError("invalid measurement array archive") from exc
     return metadata,expected

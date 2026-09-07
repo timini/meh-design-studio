@@ -139,3 +139,21 @@ def test_declared_numbers_do_not_accept_booleans_or_strings(inputs,value):
     _,_,record,_=inputs
     with pytest.raises(ValueError):UncertaintyDeclaration(magnitude_db=None,phase_deg=value,interpretation='unknown')
     with pytest.raises(ValueError):MeasurementMetadata.model_validate(record.model_dump()|{'observation_xyz_m':[value,0.,1.]})
+
+
+def test_invalid_deflate_stream_is_structured_cli_error(inputs,capsys):
+    import zipfile,struct
+    csv,meta,_,out=inputs;import_measurement(csv,meta,out)
+    with zipfile.ZipFile(out/'trace.npz') as archive:
+        entries={info.filename:archive.read(info) for info in archive.infolist()}
+    with zipfile.ZipFile(out/'trace.npz','w',compression=zipfile.ZIP_DEFLATED) as archive:
+        for name,payload in entries.items():archive.writestr(name,payload)
+    data=bytearray((out/'trace.npz').read_bytes())
+    name_len,extra_len=struct.unpack_from('<HH',data,26)
+    data[30+name_len+extra_len]=0x07  # DEFLATE's reserved block type
+    (out/'trace.npz').write_bytes(data)
+    manifest=json.loads((out/'manifest.json').read_text())
+    manifest['files']['trace.npz']={'sha256':digest(data),'size_bytes':len(data)}
+    (out/'manifest.json').write_text(json.dumps(manifest))
+    assert main(['inspect',str(out)])==2
+    assert 'invalid measurement array archive' in json.loads(capsys.readouterr().err)['error']
