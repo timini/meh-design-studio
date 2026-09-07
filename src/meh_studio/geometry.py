@@ -37,6 +37,11 @@ class HornGeometry(Record):
         if self.front_radius_m <= self.port_radius_m:
             raise ValueError("front chamber radius must exceed port radius")
         margin = self.front_radius_m + self.wall_m
+        flare_slope = (self.mouth_radius_m - self.throat_radius_m) / self.length_m
+        if self.wall_m + self.port_length_m <= flare_slope * margin:
+            raise ValueError("entry chamber envelope is buried by the horn flare")
+        if self.tessellation_tolerance_m < 1e-6:
+            raise ValueError("tessellation tolerance must be at least 1 micrometre")
         if any(not margin < z < self.length_m - margin for z in self.entry_positions_m):
             raise ValueError("entry chambers must clear throat and mouth planes")
         if any(b - a <= 2 * margin for a, b in zip(self.entry_positions_m, self.entry_positions_m[1:])):
