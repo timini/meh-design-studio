@@ -51,12 +51,15 @@ def sha256(path: Path) -> str:
 
 
 def _read_json(path: Path):
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(payload, dict):
-        raise ValueError("artifact JSON root must be an object")
-    # Check the whole tree, including metadata and overflowed numeric literals.
-    json.dumps(payload, allow_nan=False)
-    return payload
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(payload, dict):
+            raise ValueError("artifact JSON root must be an object")
+        # Check the whole tree, including overflowed numeric literals.
+        json.dumps(payload, allow_nan=False)
+        return payload
+    except RecursionError as exc:
+        raise ValueError("artifact JSON exceeds nesting limit") from exc
 
 
 def _write_json(path: Path, payload):
@@ -293,12 +296,13 @@ def _result_project(root: Path, manifest: dict, project_path: Path | None) -> tu
     path = _contained(root, manifest["project_file"])
     if sha256(path) != manifest.get("project_sha256"):
         raise ValueError("project snapshot hash mismatch")
-    system = _read_json(path)["physical_system"]
+    project = _read_json(path)
+    system = project["physical_system"]
     meshes = {m["id"]: m for m in _mesh_inventory(manifest)}
     if project_path is not None and sha256(project_path) != manifest["project_sha256"]:
         raise ValueError("result project snapshot differs from the original project")
     _verify_mesh_declarations(system, meshes, project_path)
-    return system, meshes
+    return project, meshes
 
 
 def _field_identity(quantity: dict, system: dict, meshes: dict):
@@ -350,9 +354,12 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
     artifact_hashes = {name: sha256(path) for name, path in artifact_paths.items()}
     if artifact_hashes["manifest"] != manifest_hash:
         raise ValueError("manifest changed while inspecting results")
-    system, meshes = _result_project(root, manifest, Path(project_path).resolve() if project_path is not None else None)
+    project, meshes = _result_project(root, manifest, Path(project_path).resolve() if project_path is not None else None)
+    system = project["physical_system"]
+    if manifest["solve_kind"] != _project_solve_kind(project):
+        raise ValueError("result solve kind differs from the saved project topology")
     from .result_domains import load_domains, check_quantity_domain
-    domains = load_domains(root, manifest, system, meshes)
+    domains = load_domains(root, manifest, system, meshes, project=project)
     frequencies = list(request.frequencies_hz)
     if manifest.get("frequencies_hz") != frequencies:
         raise ValueError("result frequency grid differs from request")
@@ -436,6 +443,12 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
                           "arrays_sha256": frequency_hashes[array_path], "quantities": quantities})
     if any(sha256(path) != digest for path, digest in frequency_hashes.items()):
         raise ValueError("frequency artifacts changed during inspection")
+    if project_path is not None and sha256(Path(project_path)) != manifest["project_sha256"]:
+        raise ValueError("original project changed during inspection")
+    if any(sha256(Path(mesh["file"])) != mesh["sha256"] for mesh in meshes.values()):
+        raise ValueError("source mesh changed during inspection")
+    if sha256(_contained(root, manifest["project_file"])) != manifest["project_sha256"]:
+        raise ValueError("project snapshot changed during inspection")
     if any(sha256(path) != artifact_hashes[name] for name, path in artifact_paths.items()):
         raise ValueError("result domain artifacts changed during inspection")
     return {"evidence": "predicted", "artifact_hashes": artifact_hashes, "solve_kind": manifest.get("solve_kind"),
@@ -448,7 +461,7 @@ def inspect_result(root: Path, request: SolveRequest, backend: str,
                     expected_solve_kind: str | None = None, project_path: Path | None = None) -> dict:
     try:
         return _inspect_result(root, request, backend, expected_output_ids, expected_solve_kind, project_path)
-    except (KeyError, TypeError, OSError, IndexError, zipfile.BadZipFile) as exc:
+    except (KeyError, TypeError, AttributeError, RecursionError, OSError, IndexError, zipfile.BadZipFile) as exc:
         raise ValueError(f"invalid or missing result artifact: {exc}") from exc
 
 
