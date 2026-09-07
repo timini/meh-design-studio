@@ -16,6 +16,8 @@ def validate_electrical_basis(project_path: Path, evaluation_directory: Path) ->
     evaluation = _read_json(root / "evaluation.json")
     if evaluation.get("status") != "complete" or evaluation["project_sha256"] != sha256(project_path):
         raise ValueError("validation requires a complete evaluation of this project")
+    if "artifact_hashes" not in evaluation["result"]:
+        raise ValueError("saved evaluation predates domain integrity checks; rerun the solver")
     request_path = root / "request.json"
     if sha256(request_path) != evaluation["request_sha256"]:
         raise ValueError("request identity mismatch")
