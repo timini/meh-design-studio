@@ -182,3 +182,32 @@ def test_decoder_recursion_is_structured_cli_error(inputs,monkeypatch,capsys):
         patch.setattr(json,'loads',fail)
         assert main(['inspect',str(out)])==2
     assert 'nesting limit' in json.loads(capsys.readouterr().err)['error']
+
+
+@pytest.mark.skipif(not hasattr(__import__('os'),'mkfifo'),reason='POSIX FIFO')
+@pytest.mark.parametrize('name',['manifest.json','raw.csv'])
+def test_fifo_bundle_artifacts_fail_without_blocking(inputs,name):
+    import os,subprocess,sys
+    csv,meta,_,out=inputs;import_measurement(csv,meta,out)
+    (out/name).unlink();os.mkfifo(out/name)
+    result=subprocess.run([sys.executable,'-m','meh_studio.measurement_cli','inspect',str(out)],capture_output=True,text=True,timeout=5)
+    assert result.returncode==2
+    assert 'regular file' in json.loads(result.stderr)['error']
+
+
+@pytest.mark.skipif(__import__('sys').version_info<(3,14),reason='stdlib Zstandard starts in Python 3.14')
+def test_corrupt_zstandard_is_structured_error(inputs,capsys):
+    import zipfile,struct
+    csv,meta,_,out=inputs;import_measurement(csv,meta,out)
+    with zipfile.ZipFile(out/'trace.npz') as archive:entries={i.filename:archive.read(i) for i in archive.infolist()}
+    with zipfile.ZipFile(out/'trace.npz','w',compression=zipfile.ZIP_ZSTANDARD) as archive:
+        for name,payload in entries.items():archive.writestr(name,payload)
+    data=bytearray((out/'trace.npz').read_bytes())
+    name_len,extra_len=struct.unpack_from('<HH',data,26)
+    data[30+name_len+extra_len]^=0xff
+    (out/'trace.npz').write_bytes(data)
+    manifest=json.loads((out/'manifest.json').read_text())
+    manifest['files']['trace.npz']={'sha256':digest(data),'size_bytes':len(data)}
+    (out/'manifest.json').write_text(json.dumps(manifest))
+    assert main(['inspect',str(out)])==2
+    assert 'invalid measurement array archive' in json.loads(capsys.readouterr().err)['error']

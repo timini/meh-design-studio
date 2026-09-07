@@ -9,6 +9,14 @@ import os
 import zipfile
 import zlib
 import lzma
+import stat
+
+try:
+    from compression.zstd import ZstdError
+except ImportError:  # Python before 3.14 has no stdlib Zstandard ZIP support.
+    DECOMPRESSION_ERRORS = (zlib.error, lzma.LZMAError)
+else:
+    DECOMPRESSION_ERRORS = (zlib.error, lzma.LZMAError, ZstdError)
 from pathlib import Path
 from typing import Annotated, Literal
 
@@ -73,8 +81,14 @@ def digest(payload: bytes):
 
 
 def read_bounded(path: Path):
-    with Path(path).open('rb') as stream:
+    path=Path(path)
+    if not stat.S_ISREG(path.stat().st_mode):
+        raise ValueError('measurement input must be a regular file')
+    descriptor=os.open(path,os.O_RDONLY|getattr(os,'O_NONBLOCK',0)|getattr(os,'O_BINARY',0))
+    with os.fdopen(descriptor,'rb') as stream:
         before=os.fstat(stream.fileno())
+        if not stat.S_ISREG(before.st_mode):
+            raise ValueError('measurement input must be a regular file')
         if before.st_size > MAX_INPUT_BYTES:
             raise ValueError("measurement input exceeds 16 MiB")
         payload=stream.read(MAX_INPUT_BYTES+1)
@@ -189,6 +203,6 @@ def read_measurement(output: Path):
                     data=stream.read(values.nbytes+1)
                     if len(data)!=values.nbytes or data != values.tobytes(order="C"):
                         raise ValueError("measurement arrays differ from raw evidence")
-    except (zipfile.BadZipFile,EOFError,NotImplementedError,RuntimeError,zlib.error,lzma.LZMAError,OSError) as exc:
+    except (zipfile.BadZipFile,EOFError,NotImplementedError,RuntimeError,OSError,*DECOMPRESSION_ERRORS) as exc:
         raise ValueError("invalid measurement array archive") from exc
     return metadata,expected
