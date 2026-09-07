@@ -228,6 +228,44 @@ def _termination_guard():
         signal.signal(signal.SIGTERM, previous)
 
 
+def _result_project(root: Path, manifest: dict) -> tuple[dict, dict]:
+    path = _contained(root, manifest["project_file"])
+    if sha256(path) != manifest.get("project_sha256"):
+        raise ValueError("project snapshot hash mismatch")
+    system = _read_json(path)["physical_system"]
+    meshes = {m["id"]: m for m in _mesh_inventory(manifest)}
+    project_meshes = {m["id"]: m for m in system["meshes"]}
+    if set(meshes) != set(project_meshes):
+        raise ValueError("solved mesh inventory differs from the project")
+    if any(meshes[mid]["purpose"] != project_meshes[mid]["purpose"] for mid in meshes):
+        raise ValueError("solved mesh purpose differs from the project")
+    return system, meshes
+
+
+def _field_identity(quantity: dict, system: dict, meshes: dict):
+    name = quantity["quantity"]
+    metadata = quantity.get("metadata", {})
+    if name in {"diaphragm_velocity", "voice_coil_current"}:
+        expected = {c["id"] for c in system["components"] if c["kind"] == "electrodynamic_transducer"}
+        if set(metadata["component_ids"]) != expected:
+            raise ValueError("response component inventory differs from the project")
+    if name in {"fem_nodal_pressure", "bem_boundary_pressure", "bem_boundary_neumann"}:
+        purpose = "fem_volume" if name == "fem_nodal_pressure" else "bem_surface"
+        applicable = {mid for mid, mesh in meshes.items() if mesh["purpose"] == purpose}
+        # Exterior-only upstream BEM outputs have no per-quantity mesh metadata;
+        # their field spans all exterior meshes. Supplied identities must be exact.
+        ids = metadata.get("mesh_ids", list(applicable))
+        if set(ids) != applicable or len(ids) != len(applicable) or not applicable:
+            raise ValueError("field mesh identities differ from the solved inventory")
+        if name == "fem_nodal_pressure":
+            regions = {r["id"]: r for r in system["regions"] if r["kind"] == "bounded_air"}
+            if set(metadata["region_ids"]) != set(regions):
+                raise ValueError("field region identities differ from the project")
+            for mid, rid in zip(ids, metadata["region_ids"]):
+                if mid not in regions[rid]["mesh_ids"]:
+                    raise ValueError("field mesh does not belong to the declared region")
+
+
 def _inspect_result(root: Path, request: SolveRequest, backend: str,
                     expected_output_ids: tuple[str, ...] | None = None,
                     expected_solve_kind: str | None = None) -> dict:
@@ -246,6 +284,7 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
         raise ValueError("upstream result is not complete")
     if manifest.get("backend_id") != backend or manifest.get("phasor_convention") != "exp(-i omega t)":
         raise ValueError("backend or phasor convention mismatch")
+    system, meshes = _result_project(root, manifest)
     frequencies = list(request.frequencies_hz)
     if manifest.get("frequencies_hz") != frequencies:
         raise ValueError("result frequency grid differs from request")
@@ -257,11 +296,15 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
             or any(not isinstance(x, str) or not x for x in excitations)
             or len(set(excitations)) != len(excitations)):
         raise ValueError("invalid excitation axis")
+    expected_excitations = _output_ids([p["id"] for p in system["excitation_ports"]])
+    if tuple(excitations) != expected_excitations:
+        raise ValueError("result excitation basis differs from the project")
     rows = manifest.get("results", [])
     if len(rows) != len(frequencies):
         raise ValueError("missing frequency results")
     inventory = []
     seen_arrays = set()
+    first_contract = None
     for frequency, row in zip(frequencies, rows):
         if not isinstance(row, dict) or row.get("freq_hz") != frequency:
             raise ValueError("frequency result mismatch")
@@ -311,6 +354,11 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
                 if "excitation" in axes and values.shape[axes.index("excitation")] != len(excitations):
                     raise ValueError("quantity excitation count mismatch")
                 _quantity_dimensions(quantity, values, len(excitations))
+                _field_identity(quantity, system, meshes)
+        contract = {q["id"]: {k: v for k, v in q.items() if k != "key"} for q in quantities}
+        if first_contract is not None and contract != first_contract:
+            raise ValueError("physical quantity inventories changed across frequencies")
+        first_contract = contract
         inventory.append({"frequency_hz": frequency, "metadata_sha256": sha256(metadata_path),
                           "arrays_sha256": sha256(array_path), "quantities": quantities})
     return {"evidence": "predicted", "solve_kind": manifest.get("solve_kind"),
@@ -395,64 +443,64 @@ class BoundaryLabRuntime:
         return {"revision": revision, "backend": self.backend, "python": environment["python"],
                 "julia": julia_version, "packages": environment["packages"]}
 
-    @_termination_guard()
     def solve(self, project: Path, request: SolveRequest, output: Path, *, timeout_s: float = 1800) -> dict:
         if not math.isfinite(timeout_s) or timeout_s <= 0:
             raise ValueError("timeout must be positive and finite")
         project, output = Path(project).resolve(), Path(output).resolve()
-        runtime = self.verify()
-        project_hash = sha256(project)
         output.mkdir(parents=True, exist_ok=False)
         request_file = output / "request.json"
-        _write_json(request_file, request.model_dump(mode="json"))
         started = time.monotonic()
-        report = {"schema_version": 1, "status": "running", "runtime": runtime,
-                  "started_at_utc": datetime.now(timezone.utc).isoformat(),
-                  "project_sha256": project_hash, "request_sha256": sha256(request_file)}
+        report = {"schema_version": 1, "status": "running",
+                  "started_at_utc": datetime.now(timezone.utc).isoformat()}
         _write_json(output / "evaluation.json", report)
         base = [str(Path(self.python).absolute()), "-I", "-m", "blab.cli", "project"]
         common = [str(project), "--request", str(request_file), "--backend", self.backend,
                   "--julia-executable", str(Path(self.julia).absolute())]
-        try:
-            _execute(base + ["validate"] + common + ["--json"], Path(self.checkout),
-                     output / "preflight.json", timeout_s, stderr_log=output / "preflight.stderr.log")
-            preflight = _read_json(output / "preflight.json")
-            if preflight.get("valid") is not True:
-                raise ValueError("upstream preflight did not confirm validity")
-            project_data = _read_json(project)
-            solve_kind = _project_solve_kind(project_data)
-            if preflight.get("solve_kind") != solve_kind:
-                raise ValueError("preflight solve kind differs from project topology")
-            preflight_meshes = _mesh_inventory(preflight)
-            expected_outputs = _output_ids(preflight.get("output_ids"))
-            observations = _project_observation_ids(project_data, request)
-            if not observations.issubset(expected_outputs):
-                raise ValueError("preflight omitted requested project observations")
-            _execute(base + ["solve"] + common + ["--events", "ndjson", "--output", str(output / "upstream")],
-                     Path(self.checkout), output / "solve.ndjson", timeout_s)
-            result = inspect_result(output / "upstream", request, self.backend,
-                                    _result_output_ids(project_data, expected_outputs), solve_kind)
-            if sha256(project) != project_hash or sha256(request_file) != report["request_sha256"]:
-                raise ValueError("project or request changed during evaluation")
-            manifest = _read_json(output / "upstream/manifest.json")
-            if manifest.get("project_sha256") != project_hash:
-                raise ValueError("solver project snapshot differs from evaluated input")
-            meshes = _mesh_inventory(manifest)
-            if meshes != preflight_meshes:
-                raise ValueError("mesh identity changed between preflight and solve")
-            for mesh in meshes:
-                if (Path(mesh["file"]).stat().st_size != mesh["size_bytes"]
-                        or sha256(Path(mesh["file"])) != mesh["sha256"]):
-                    raise ValueError("source mesh changed during evaluation")
-            if self.verify() != runtime:
-                raise ValueError("runtime changed during evaluation")
-            report.update(status="complete", result=result)
-        except BaseException as exc:
-            status = ("timed_out" if isinstance(exc, subprocess.TimeoutExpired) else
-                      "cancelled" if isinstance(exc, KeyboardInterrupt) else "failed")
-            report.update(status=status, error=f"{type(exc).__name__}: {exc}")
-            raise
-        finally:
-            report["elapsed_s"] = time.monotonic() - started
-            _write_json(output / "evaluation.json", report)
-        return report
+        with _termination_guard():
+            try:
+                runtime = self.verify()
+                project_hash = sha256(project)
+                _write_json(request_file, request.model_dump(mode="json"))
+                report.update(runtime=runtime, project_sha256=project_hash, request_sha256=sha256(request_file))
+                _execute(base + ["validate"] + common + ["--json"], Path(self.checkout),
+                         output / "preflight.json", timeout_s, stderr_log=output / "preflight.stderr.log")
+                preflight = _read_json(output / "preflight.json")
+                if preflight.get("valid") is not True:
+                    raise ValueError("upstream preflight did not confirm validity")
+                project_data = _read_json(project)
+                solve_kind = _project_solve_kind(project_data)
+                if preflight.get("solve_kind") != solve_kind:
+                    raise ValueError("preflight solve kind differs from project topology")
+                preflight_meshes = _mesh_inventory(preflight)
+                expected_outputs = _output_ids(preflight.get("output_ids"))
+                observations = _project_observation_ids(project_data, request)
+                if not observations.issubset(expected_outputs):
+                    raise ValueError("preflight omitted requested project observations")
+                _execute(base + ["solve"] + common + ["--events", "ndjson", "--output", str(output / "upstream")],
+                         Path(self.checkout), output / "solve.ndjson", timeout_s)
+                result = inspect_result(output / "upstream", request, self.backend,
+                                        _result_output_ids(project_data, expected_outputs), solve_kind)
+                if sha256(project) != project_hash or sha256(request_file) != report["request_sha256"]:
+                    raise ValueError("project or request changed during evaluation")
+                manifest = _read_json(output / "upstream/manifest.json")
+                if manifest.get("project_sha256") != project_hash:
+                    raise ValueError("solver project snapshot differs from evaluated input")
+                meshes = _mesh_inventory(manifest)
+                if meshes != preflight_meshes:
+                    raise ValueError("mesh identity changed between preflight and solve")
+                for mesh in meshes:
+                    if (Path(mesh["file"]).stat().st_size != mesh["size_bytes"]
+                            or sha256(Path(mesh["file"])) != mesh["sha256"]):
+                        raise ValueError("source mesh changed during evaluation")
+                if self.verify() != runtime:
+                    raise ValueError("runtime changed during evaluation")
+                report.update(status="complete", result=result)
+            except BaseException as exc:
+                status = ("timed_out" if isinstance(exc, subprocess.TimeoutExpired) else
+                          "cancelled" if isinstance(exc, KeyboardInterrupt) else "failed")
+                report.update(status=status, error=f"{type(exc).__name__}: {exc}")
+                raise
+            finally:
+                report["elapsed_s"] = time.monotonic() - started
+                _write_json(output / "evaluation.json", report)
+            return report

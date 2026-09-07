@@ -28,6 +28,16 @@ def artifact(tmp_path):
                 "completion_mask": [True], "solve_kind": "interior_fem",
                 "results": [{"freq_hz": 1000, "metadata_file": "frequencies/000000.json",
                              "arrays_file": "frequencies/000000.npz"}]}
+    source = root / "fixture.msh"
+    source.write_bytes(b"synthetic artifact contract fixture")
+    project = {"physical_system": {"meshes": [{"id": "mesh:a", "purpose": "fem_volume"}],
+        "regions": [{"id": "region:a", "kind": "bounded_air", "mesh_ids": ["mesh:a"]}],
+        "components": [], "excitation_ports": [{"id": "voltage:a"}]}}
+    snapshot = root / "project.snapshot.blab.json"
+    snapshot.write_text(json.dumps(project))
+    manifest.update(project_file=snapshot.name, project_sha256=sha256(snapshot), meshes=[{
+        "id": "mesh:a", "file": str(source), "purpose": "fem_volume", "sha256": sha256(source),
+        "size_bytes": source.stat().st_size}])
     (root / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
     return root, manifest
 
@@ -90,11 +100,11 @@ def test_process_failures_and_timeouts_retain_logs(tmp_path):
         _execute([sys.executable, "-c", "import time;time.sleep(30)"], tmp_path, log, .1)
 
 
-def test_missing_runtime_fails_before_output_creation(tmp_path):
+def test_missing_runtime_records_initialization_failure(tmp_path):
     runtime = BoundaryLabRuntime(tmp_path / "missing", Path(sys.executable), tmp_path / "julia")
     with pytest.raises(subprocess.CalledProcessError):
         runtime.solve(tmp_path / "project.json", SolveRequest(frequencies_hz=(1000,)), tmp_path / "output")
-    assert not (tmp_path / "output").exists()
+    assert json.loads((tmp_path / "output/evaluation.json").read_text())["status"] == "failed"
 
 
 def test_failed_solve_records_failure_and_does_not_reuse_output(tmp_path, monkeypatch):
@@ -399,3 +409,52 @@ def test_compiled_polar_block_expands_to_saved_output_contract(sphere):
     ids = _result_output_ids(project, ("ui:exterior-pressure", "mechanical:diaphragm-velocity"))
     assert set(ids) == {"mechanical:diaphragm-velocity", "acoustic:pressure:horizontal-polar",
                         "acoustic:pressure:vertical-polar"} | ({"acoustic:pressure:sphere"} if sphere else set())
+
+
+@pytest.mark.parametrize("patch", [{"mesh_ids": ["mesh:absent"]}, {"region_ids": ["region:absent"]}])
+def test_field_identities_must_belong_to_solved_project(artifact, patch):
+    root, _ = artifact
+    path = root / "frequencies/000000.json"
+    metadata = json.loads(path.read_text())
+    metadata["quantities"][0]["metadata"].update(patch)
+    path.write_text(json.dumps(metadata))
+    with pytest.raises(ValueError, match="identities"):
+        inspect_result(root, SolveRequest(frequencies_hz=(1000,)), "beat_cpu")
+
+
+def test_omitted_project_excitation_cannot_appear_complete(artifact):
+    root, manifest = artifact
+    path = root / "project.snapshot.blab.json"
+    project = json.loads(path.read_text())
+    project["physical_system"]["excitation_ports"].append({"id": "voltage:b"})
+    path.write_text(json.dumps(project))
+    manifest["project_sha256"] = sha256(path)
+    (root / "manifest.json").write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match="excitation basis"):
+        inspect_result(root, SolveRequest(frequencies_hz=(1000,)), "beat_cpu")
+
+
+def test_frequency_axis_contract_cannot_change(artifact):
+    root, manifest = artifact
+    metadata = json.loads((root / "frequencies/000000.json").read_text())
+    metadata.update(freq_hz=2000, arrays_file="000001.npz")
+    metadata["quantities"][0].update(shape=[1, 3])
+    metadata["quantities"][0]["metadata"]["node_counts"] = [3]
+    np.savez(root / "frequencies/000001.npz", q0000=np.ones((1,3), dtype=np.complex64))
+    (root / "frequencies/000001.json").write_text(json.dumps(metadata))
+    manifest.update(frequencies_hz=[1000,2000], completion_mask=[True,True])
+    manifest["results"].append({"freq_hz":2000,"metadata_file":"frequencies/000001.json","arrays_file":"frequencies/000001.npz"})
+    (root / "manifest.json").write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match="changed across"):
+        inspect_result(root, SolveRequest(frequencies_hz=(1000,2000)), "beat_cpu")
+
+
+def test_cancellation_during_runtime_verification_is_recorded(tmp_path, monkeypatch):
+    from meh_studio.boundary_lab import EvaluationCancelled
+    def cancel(self):
+        raise EvaluationCancelled("verification interrupted")
+    monkeypatch.setattr(BoundaryLabRuntime, "verify", cancel)
+    with pytest.raises(EvaluationCancelled):
+        BoundaryLabRuntime(tmp_path, Path(sys.executable), tmp_path/'julia').solve(
+            tmp_path/'project.json', SolveRequest(frequencies_hz=(1000,)), tmp_path/'output')
+    assert json.loads((tmp_path/'output/evaluation.json').read_text())["status"] == "cancelled"
