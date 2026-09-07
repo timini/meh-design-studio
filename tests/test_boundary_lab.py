@@ -14,13 +14,13 @@ def artifact(tmp_path):
     root = tmp_path / "upstream"
     root.mkdir()
     (root / "frequencies").mkdir()
-    values = np.array([[1+2j, 3-4j]], dtype=np.complex64)
+    values = np.array([[1+2j, 3-4j, 1j, 2j]], dtype=np.complex64)
     np.savez(root / "frequencies/000000.npz", q0000=values)
     metadata = {"freq_hz": 1000, "excitation_port_ids": ["voltage:a"], "arrays_file": "000000.npz",
                 "quantities": [{"key": "q0000", "id": "acoustic:pressure:fem-nodes", "quantity": "fem_nodal_pressure", "unit": "Pa",
-                                "target_id": "domain:fem-volume", "axes": ["excitation", "fem_node"], "shape": [1, 2], "dtype": "complex64",
+                                "target_id": "domain:fem-volume", "axes": ["excitation", "fem_node"], "shape": [1, 4], "dtype": "complex64",
                                 "metadata": {"mesh_ids": ["mesh:a"], "region_ids": ["region:a"],
-                                             "node_counts": [2], "node_offsets": [0]}}]}
+                                             "node_counts": [4], "node_offsets": [0]}}]}
     (root / "frequencies/000000.json").write_text(json.dumps(metadata), encoding="utf-8")
     manifest = {"schema": "boundary-lab-headless-result", "schema_version": 2, "status": "complete",
                 "backend_id": "beat_cpu", "phasor_convention": "exp(-i omega t)",
@@ -29,16 +29,16 @@ def artifact(tmp_path):
                 "results": [{"freq_hz": 1000, "metadata_file": "frequencies/000000.json",
                              "arrays_file": "frequencies/000000.npz"}]}
     source = root / "fixture.msh"
-    source.write_text("$MeshFormat\n2.2 0 8\n$EndMeshFormat\n$Nodes\n2\n1 0 0 0\n2 0 0 1\n$EndNodes\n$Elements\n0\n$EndElements\n")
+    source.write_text("$MeshFormat\n2.2 0 8\n$EndMeshFormat\n$Nodes\n4\n1 0 0 0\n2 1 0 0\n3 0 1 0\n4 0 0 1\n$EndNodes\n$Elements\n1\n1 4 2 1 1 1 2 3 4\n$EndElements\n")
     project = {"physical_system": {"meshes": [{"id": "mesh:a", "purpose": "fem_volume", "file": str(source)}],
-        "regions": [{"id": "region:a", "kind": "bounded_air", "mesh_ids": ["mesh:a"]}],
+        "regions": [{"id": "region:a", "kind": "bounded_air", "mesh_ids": ["mesh:a"], "volume_groups": [{"mesh_id":"mesh:a","tag":1}]}],
         "components": [], "excitation_ports": [{"id": "voltage:a"}]}}
     snapshot = root / "project.snapshot.blab.json"
     snapshot.write_text(json.dumps(project))
-    np.savez(root / "domains.npz", points=np.array([[0.,0.,0.],[0.,0.,1.]]))
+    np.savez(root / "domains.npz", points=np.array([[0.,0.,0.],[1.,0.,0.],[0.,1.,0.],[0.,0.,1.]]), tetra=np.array([[0,1,2,3]]))
     (root / "domains.json").write_text(json.dumps({"domains": [{"id": "domain:fem-volume",
-        "coordinates": {"points_m": "points"}, "topology": {}, "metadata": {
-            "mesh_ids": ["mesh:a"], "node_counts": [2]}}]}))
+        "coordinates": {"points_m": "points"}, "topology": {"tetrahedra":"tetra"}, "metadata": {"tetra_counts":[1], "tetra_offsets":[0], "element_order":1,
+            "mesh_ids": ["mesh:a"], "node_counts": [4]}}]}))
     manifest.update(domains_file="domains.npz", domains_metadata_file="domains.json", project_file=snapshot.name, project_sha256=sha256(snapshot), meshes=[{
         "id": "mesh:a", "file": str(source), "purpose": "fem_volume", "sha256": sha256(source),
         "size_bytes": source.stat().st_size}])
@@ -479,7 +479,7 @@ def test_self_consistent_truncation_cannot_override_source_mesh(artifact):
     domain = json.loads((root / "domains.json").read_text())
     domain["domains"][0]["metadata"]["node_counts"] = [1]
     (root / "domains.json").write_text(json.dumps(domain))
-    np.savez(root / "domains.npz", points=np.zeros((1,3)))
+    np.savez(root / "domains.npz", points=np.zeros((1,3)),tetra=np.array([[0,0,0,0]]))
     with pytest.raises(ValueError, match="hashed source mesh"):
         inspect_result(root, SolveRequest(frequencies_hz=(1000,)), "beat_cpu")
 
@@ -665,3 +665,95 @@ def test_darwin_live_child_permission_failure_is_not_hidden(monkeypatch):
     monkeypatch.setattr(module.subprocess,'check_output',lambda *a,**k:'123 Z\n123 S\n')
     with pytest.raises(PermissionError,match='live child'):
         module._kill_process_group(123)
+
+
+@pytest.mark.skipif(sys.platform == 'win32',reason='POSIX signal guard')
+def test_sigterm_immediately_after_running_write_records_cancelled(tmp_path,monkeypatch):
+    from meh_studio import boundary_lab as a
+    original = a._write_json
+    def write(path,record):
+        original(path,record)
+        if record.get('status') == 'running':
+            a.os.kill(a.os.getpid(),a.signal.SIGTERM)
+    monkeypatch.setattr(a,'_write_json',write)
+    runtime=BoundaryLabRuntime(tmp_path,Path(sys.executable),tmp_path/'julia')
+    with pytest.raises(KeyboardInterrupt):
+        runtime.solve(tmp_path/'project.json',SolveRequest(frequencies_hz=(1000,)),tmp_path/'output')
+    assert json.loads((tmp_path/'output/evaluation.json').read_text())['status'] == 'cancelled'
+
+
+@pytest.mark.parametrize('mutate',[False,True])
+def test_preflight_contract_is_hashed_and_mutation_fails(artifact,tmp_path,monkeypatch,mutate):
+    import shutil
+    from meh_studio import boundary_lab as a
+    root,manifest=artifact
+    project=root/'project.snapshot.blab.json'
+    output=tmp_path/'evaluation'
+    monkeypatch.setattr(BoundaryLabRuntime,'verify',lambda self:{'revision':'test'})
+    def execute(command,cwd,log,timeout,**kwargs):
+        if 'validate' in command:
+            log.write_text(json.dumps({'valid':True,'solve_kind':'interior_fem',
+                'meshes':manifest['meshes'],'output_ids':['acoustic:pressure:fem-nodes']}))
+        else:
+            shutil.copytree(root,output/'upstream')
+            if mutate: (output/'preflight.json').write_text('{}')
+    monkeypatch.setattr(a,'_execute',execute)
+    runtime=BoundaryLabRuntime(tmp_path,Path(sys.executable),tmp_path/'julia')
+    if mutate:
+        with pytest.raises(ValueError,match='preflight contract changed'):
+            runtime.solve(project,SolveRequest(frequencies_hz=(1000,)),output)
+        assert json.loads((output/'evaluation.json').read_text())['status'] == 'failed'
+    else:
+        report=runtime.solve(project,SolveRequest(frequencies_hz=(1000,)),output)
+        assert report['preflight_sha256'] == sha256(output/'preflight.json')
+
+
+@pytest.mark.parametrize('cells',[np.array([[0,1,3,2]]),np.array([[0,1,2,2]]),np.array([[0.,1.,2.,3.]])])
+def test_fem_connectivity_must_match_hashed_source(artifact,cells):
+    root,_=artifact
+    with np.load(root/'domains.npz') as archive: points=archive['points']
+    np.savez(root/'domains.npz',points=points,tetra=cells)
+    with pytest.raises(ValueError,match='connectivity'):
+        inspect_result(root,SolveRequest(frequencies_hz=(1000,)),'beat_cpu')
+
+
+def test_darwin_exiting_group_gets_bounded_reaping_grace(monkeypatch):
+    from meh_studio import boundary_lab as a
+    monkeypatch.setattr(a.sys,'platform','darwin')
+    monkeypatch.setattr(a.signal,'SIGKILL',9,raising=False)
+    def denied(*_): raise PermissionError('exiting')
+    snapshots=iter(['123 E\n','123 Z\n'])
+    monkeypatch.setattr(a.os,'killpg',denied,raising=False)
+    monkeypatch.setattr(a.subprocess,'check_output',lambda *args,**kwargs:next(snapshots))
+    monkeypatch.setattr(a.time,'sleep',lambda _:None)
+    a._kill_process_group(123)
+
+
+@pytest.mark.parametrize('corrupt',[False,True])
+def test_quadratic_fem_connectivity_includes_midside_nodes(artifact,corrupt):
+    import meshio
+    root,manifest=artifact
+    corners=np.array([[0.,0.,0.],[1.,0.,0.],[0.,1.,0.],[0.,0.,1.]])
+    points=np.vstack((corners,[(corners[a]+corners[b])/2 for a,b in ((0,1),(1,2),(0,2),(0,3),(1,3),(2,3))]))
+    source=Path(manifest['meshes'][0]['file'])
+    meshio.write(source,meshio.Mesh(points,[('tetra10',np.arange(10)[None,:])],
+        cell_data={'gmsh:physical':[np.array([1])],'gmsh:geometrical':[np.array([1])]}),file_format='gmsh22',binary=False)
+    manifest['meshes'][0].update(sha256=sha256(source),size_bytes=source.stat().st_size)
+    (root/'manifest.json').write_text(json.dumps(manifest))
+    domain=json.loads((root/'domains.json').read_text())['domains'][0]
+    domain['metadata'].update(element_order=2,node_counts=[10])
+    domain['topology']['tetrahedra10']='quadratic'
+    (root/'domains.json').write_text(json.dumps({'domains':[domain]}))
+    cells=np.arange(10)[None,:]
+    if corrupt: cells[0,4],cells[0,5]=cells[0,5],cells[0,4]
+    np.savez(root/'domains.npz',points=points,tetra=np.arange(4)[None,:],quadratic=cells)
+    path=root/'frequencies/000000.json';metadata=json.loads(path.read_text())
+    metadata['quantities'][0]['shape']=[1,10]
+    metadata['quantities'][0]['metadata']['node_counts']=[10]
+    path.write_text(json.dumps(metadata))
+    np.savez(root/'frequencies/000000.npz',q0000=np.ones((1,10),dtype=np.complex64))
+    if corrupt:
+        with pytest.raises(ValueError,match='quadratic FEM connectivity'):
+            inspect_result(root,SolveRequest(frequencies_hz=(1000,)),'beat_cpu')
+    else:
+        assert inspect_result(root,SolveRequest(frequencies_hz=(1000,)),'beat_cpu')['evidence'] == 'predicted'

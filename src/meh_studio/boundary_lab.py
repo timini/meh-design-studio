@@ -433,22 +433,31 @@ def inspect_result(root: Path, request: SolveRequest, backend: str,
 
 
 def _kill_process_group(pgid: int):
-    try:
-        os.killpg(pgid, signal.SIGKILL)
-    except ProcessLookupError:
-        pass
-    except PermissionError:
-        if sys.platform != "darwin":
-            raise
-        # Darwin can return EPERM when only zombie members remain. Never
-        # swallow a permission failure for a live group member. Inspect the
-        # whole group, not merely the already-reaped parent PID.
-        snapshot = subprocess.check_output(
-            ["/bin/ps", "-A", "-o", "pgid=,stat="], text=True, timeout=5)
-        for line in snapshot.splitlines():
-            group, state = line.split()
-            if int(group) == pgid and not state.startswith("Z"):
+    last_error = None
+    for attempt in range(20):
+        try:
+            os.killpg(pgid, signal.SIGKILL)
+            return
+        except ProcessLookupError:
+            return
+        except PermissionError as exc:
+            if sys.platform != "darwin":
                 raise
+            last_error = exc
+            # Darwin can return EPERM for members already exiting. Inspect the
+            # whole group and permit a bounded grace for kernel exit/reaping.
+            snapshot = subprocess.check_output(
+                ["/bin/ps", "-A", "-o", "pgid=,stat="], text=True, timeout=5)
+            live = []
+            for line in snapshot.splitlines():
+                group, state = line.split()
+                if int(group) == pgid and not state.startswith("Z"):
+                    live.append(state)
+            if not live:
+                return
+            if attempt < 19:
+                time.sleep(.05)
+    raise last_error
 
 
 def _execute(command: list[str], cwd: Path, log: Path, timeout_s: float,
@@ -530,24 +539,26 @@ class BoundaryLabRuntime:
         if os.name != "nt" and threading.current_thread() is not threading.main_thread():
             raise ValueError("run the solver adapter in a worker process, not a background thread")
         project, output = Path(project).resolve(), Path(output).resolve()
-        output.mkdir(parents=True, exist_ok=False)
         request_file = output / "request.json"
         started = time.monotonic()
         report = {"schema_version": 1, "status": "running",
                   "started_at_utc": datetime.now(timezone.utc).isoformat()}
-        _write_json(output / "evaluation.json", report)
-        base = [str(Path(self.python).absolute()), "-I", "-m", "blab.cli", "project"]
-        common = [str(project), "--request", str(request_file), "--backend", self.backend,
-                  "--julia-executable", str(Path(self.julia).absolute())]
         with _termination_guard():
+            output.mkdir(parents=True, exist_ok=False)
             try:
+                _write_json(output / "evaluation.json", report)
+                base = [str(Path(self.python).absolute()), "-I", "-m", "blab.cli", "project"]
+                common = [str(project), "--request", str(request_file), "--backend", self.backend,
+                          "--julia-executable", str(Path(self.julia).absolute())]
                 runtime = self.verify()
                 project_hash = sha256(project)
                 _write_json(request_file, request.model_dump(mode="json"))
                 report.update(runtime=runtime, project_sha256=project_hash, request_sha256=sha256(request_file))
                 _execute(base + ["validate"] + common + ["--json"], Path(self.checkout),
                          output / "preflight.json", timeout_s, stderr_log=output / "preflight.stderr.log")
+                preflight_hash = sha256(output / "preflight.json")
                 preflight = _read_json(output / "preflight.json")
+                report["preflight_sha256"] = preflight_hash
                 if preflight.get("valid") is not True:
                     raise ValueError("upstream preflight did not confirm validity")
                 project_data = _read_json(project)
@@ -579,6 +590,8 @@ class BoundaryLabRuntime:
                         raise ValueError("source mesh changed during evaluation")
                 if self.verify() != runtime:
                     raise ValueError("runtime changed during evaluation")
+                if sha256(output / "preflight.json") != preflight_hash:
+                    raise ValueError("preflight contract changed during evaluation")
                 report.update(status="complete", result=result)
             except BaseException as exc:
                 status = ("timed_out" if isinstance(exc, subprocess.TimeoutExpired) else

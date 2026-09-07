@@ -49,6 +49,8 @@ def load_domains(root: Path, manifest: dict, system: dict, meshes: dict) -> dict
                 face_count = 0
                 expected_faces = []
                 face_counts = []
+                expected_tetra = []
+                tetra_counts = []
                 for mid in ids:
                     if mid not in mesh_contracts:
                         path = Path(meshes[mid]["file"])
@@ -59,10 +61,32 @@ def load_domains(root: Path, manifest: dict, system: dict, meshes: dict) -> dict
                                 raw = meshio.read(path)
                         except (Exception, SystemExit) as exc:
                             raise ValueError("cannot read source mesh for domain verification") from exc
-                        transform = project_meshes[mid]
-                        xyz = raw.points * transform.get("scale_to_m", 1.0) + np.asarray(transform.get("translation_m", [0,0,0]))
-                        mesh_contracts[mid] = (xyz, np.vstack([c.data for c in raw.cells if c.type == "triangle"]) if any(c.type == "triangle" for c in raw.cells) else np.empty((0,3),dtype=int))
-                    xyz, triangles = mesh_contracts[mid]
+                        mesh_contracts[mid] = raw
+                    raw = mesh_contracts[mid]
+                    transform = project_meshes[mid]
+                    xyz = raw.points * transform.get("scale_to_m", 1.0) + np.asarray(transform.get("translation_m", [0,0,0]))
+                    triangles = np.vstack([c.data for c in raw.cells if c.type == "triangle"]) if any(c.type == "triangle" for c in raw.cells) else np.empty((0,3),dtype=int)
+                    if purpose == "fem_volume":
+                        regions = [r for r in system["regions"] if r["kind"] == "bounded_air" and mid in r["mesh_ids"]]
+                        if len(regions) != 1 or regions[0]["mesh_ids"] != [mid]:
+                            raise ValueError("one bounded region per FEM mesh is required")
+                        tags = {g["tag"] for g in regions[0].get("volume_groups", []) if g["mesh_id"] == mid}
+                        physical = raw.cell_data.get("gmsh:physical", [])
+                        if not tags or len(physical) != len(raw.cells):
+                            raise ValueError("FEM source requires selected physical volume tags")
+                        selected = [c.data[np.isin(t, list(tags))] for c,t in zip(raw.cells,physical)
+                                    if c.type in {"tetra", "tetra10"} and np.any(np.isin(t,list(tags)))]
+                        if not selected or len({c.shape[1] for c in selected}) != 1:
+                            raise ValueError("FEM source requires supported same-order tetrahedra")
+                        cells = np.vstack(selected)
+                        active = np.unique(cells)
+                        if np.any(active < 0) or np.any(active >= len(xyz)):
+                            raise ValueError("FEM connectivity references nonexistent source nodes")
+                        compact = np.full(len(xyz),-1,dtype=int)
+                        compact[active] = np.arange(len(active))
+                        expected_tetra.append(compact[cells] + sum(counts))
+                        tetra_counts.append(len(cells))
+                        xyz = xyz[active]
                     expected_faces.append(triangles + sum(counts))
                     triangle_count = len(triangles)
                     face_counts.append(triangle_count)
@@ -76,6 +100,23 @@ def load_domains(root: Path, manifest: dict, system: dict, meshes: dict) -> dict
                 if domain["metadata"].get("node_counts") != counts:
                     raise ValueError("domain node counts differ from the source mesh")
                 entry["node_counts"] = counts
+                if identity == "domain:fem-volume":
+                    if len({c.shape[1] for c in expected_tetra}) != 1:
+                        raise ValueError("mixed FEM element orders are unsupported")
+                    cells = np.vstack(expected_tetra)
+                    actual = topology.get("tetrahedra")
+                    if actual is None or actual.dtype.kind not in "iu" or not np.array_equal(actual,cells[:,:4]):
+                        raise ValueError("FEM tetrahedral connectivity differs from the source mesh")
+                    if cells.shape[1] == 10:
+                        quadratic = topology.get("tetrahedra10")
+                        if quadratic is None or quadratic.dtype.kind not in "iu" or not np.array_equal(quadratic,cells):
+                            raise ValueError("quadratic FEM connectivity differs from the source mesh")
+                    elif "tetrahedra10" in topology:
+                        raise ValueError("unexpected quadratic FEM connectivity")
+                    if (domain["metadata"].get("tetra_counts") != tetra_counts
+                            or domain["metadata"].get("tetra_offsets") != [sum(tetra_counts[:i]) for i in range(len(ids))]
+                            or domain["metadata"].get("element_order") != (2 if cells.shape[1] == 10 else 1)):
+                        raise ValueError("FEM topology inventory differs from source meshes")
                 if identity == "domain:bem-boundary":
                     triangles = topology["triangles"]
                     if triangles.shape != (face_count, 3) or not np.array_equal(triangles, np.vstack(expected_faces)):
