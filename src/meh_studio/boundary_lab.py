@@ -1,0 +1,247 @@
+"""Version-pinned subprocess adapter. A completed solve is a prediction, not validation."""
+from __future__ import annotations
+
+from dataclasses import dataclass
+from datetime import datetime, timezone
+import hashlib
+import json
+import math
+import os
+from pathlib import Path
+import signal
+import subprocess
+import time
+import zipfile
+from typing import Literal
+
+import numpy as np
+from pydantic import model_validator
+
+from .domain import Positive, Record
+
+BOUNDARY_LAB_REVISION = "8cb166226e412877d3f71f2845918e479b97aa85"
+
+
+class SolveRequest(Record):
+    frequencies_hz: tuple[Positive, ...]
+    include_project_observations: bool = False
+    retain: tuple[Literal["bem_boundary_pressure", "bem_boundary_neumann",
+                          "bem_boundary_traces", "fem_nodal_pressure"], ...] = ()
+
+    @model_validator(mode="after")
+    def ordered(self):
+        if not self.frequencies_hz or len(self.frequencies_hz) > 10000:
+            raise ValueError("request requires 1–10000 frequencies")
+        if any(b <= a for a, b in zip(self.frequencies_hz, self.frequencies_hz[1:])):
+            raise ValueError("frequencies must be strictly increasing")
+        if len(set(self.retain)) != len(self.retain):
+            raise ValueError("retained quantities must be unique")
+        return self
+
+
+def sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _read_json(path: Path):
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _write_json(path: Path, payload):
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(json.dumps(payload, indent=2, allow_nan=False), encoding="utf-8")
+    temporary.replace(path)
+
+
+def _contained(root: Path, relative: str) -> Path:
+    path = (root / relative).resolve()
+    if not path.is_relative_to(root.resolve()) or not path.is_file():
+        raise ValueError("result references a missing file or a path outside its directory")
+    return path
+
+
+def _inspect_result(root: Path, request: SolveRequest, backend: str,
+                    expected_output_ids: tuple[str, ...] | None = None) -> dict:
+    """Reject partial runs and retain raw complex quantities without DSP synthesis."""
+    root = Path(root)
+    manifest = _read_json(root / "manifest.json")
+    if (manifest.get("schema") != "boundary-lab-headless-result"
+            or manifest.get("schema_version") != 2):
+        raise ValueError("unsupported Boundary Lab result schema")
+    if manifest.get("status") != "complete":
+        raise ValueError("upstream result is not complete")
+    if manifest.get("backend_id") != backend or manifest.get("phasor_convention") != "exp(-i omega t)":
+        raise ValueError("backend or phasor convention mismatch")
+    frequencies = list(request.frequencies_hz)
+    if manifest.get("frequencies_hz") != frequencies:
+        raise ValueError("result frequency grid differs from request")
+    completion = manifest.get("completion_mask", [])
+    if len(completion) != len(frequencies) or any(x is not True for x in completion):
+        raise ValueError("incomplete frequency mask")
+    excitations = manifest.get("excitation_port_ids")
+    if (not isinstance(excitations, list) or not excitations
+            or any(not isinstance(x, str) or not x for x in excitations)
+            or len(set(excitations)) != len(excitations)):
+        raise ValueError("invalid excitation axis")
+    rows = manifest.get("results", [])
+    if len(rows) != len(frequencies):
+        raise ValueError("missing frequency results")
+    inventory = []
+    for frequency, row in zip(frequencies, rows):
+        if not isinstance(row, dict) or row.get("freq_hz") != frequency:
+            raise ValueError("frequency result mismatch")
+        metadata_path = _contained(root, row["metadata_file"])
+        array_path = _contained(root, row["arrays_file"])
+        metadata = _read_json(metadata_path)
+        if metadata.get("freq_hz") != frequency or metadata.get("excitation_port_ids") != excitations:
+            raise ValueError("frequency metadata axis mismatch")
+        if _contained(metadata_path.parent, metadata["arrays_file"]) != array_path:
+            raise ValueError("array references disagree")
+        quantities = metadata.get("quantities", [])
+        if not quantities or len({q["key"] for q in quantities}) != len(quantities):
+            raise ValueError("missing or duplicate quantities")
+        if expected_output_ids is not None and {q["id"] for q in quantities} != set(expected_output_ids):
+            raise ValueError("returned quantities differ from the compiled output contract")
+        with np.load(array_path, allow_pickle=False) as arrays:
+            if set(arrays.files) != {q["key"] for q in quantities}:
+                raise ValueError("quantity metadata does not match stored arrays")
+            for quantity in quantities:
+                values = arrays[quantity["key"]]
+                if (list(values.shape) != quantity["shape"] or str(values.dtype) != quantity["dtype"]
+                        or values.dtype.kind not in "fciub" or not np.all(np.isfinite(values))):
+                    raise ValueError("non-finite or inconsistent quantity array")
+                axes = quantity["axes"]
+                if len(axes) != values.ndim or not quantity.get("unit"):
+                    raise ValueError("missing quantity units or axes")
+                if "excitation" in axes and values.shape[axes.index("excitation")] != len(excitations):
+                    raise ValueError("quantity excitation count mismatch")
+        inventory.append({"frequency_hz": frequency, "metadata_sha256": sha256(metadata_path),
+                          "arrays_sha256": sha256(array_path), "quantities": quantities})
+    return {"evidence": "predicted", "solve_kind": manifest.get("solve_kind"),
+            "phasor_convention": manifest["phasor_convention"], "frequencies_hz": frequencies,
+            "excitation_port_ids": excitations, "inventory": inventory}
+
+
+def inspect_result(root: Path, request: SolveRequest, backend: str,
+                   expected_output_ids: tuple[str, ...] | None = None) -> dict:
+    try:
+        return _inspect_result(root, request, backend, expected_output_ids)
+    except (KeyError, TypeError, OSError, IndexError, zipfile.BadZipFile) as exc:
+        raise ValueError(f"invalid or missing result artifact: {exc}") from exc
+
+
+def _execute(command: list[str], cwd: Path, log: Path, timeout_s: float) -> None:
+    if not math.isfinite(timeout_s) or timeout_s <= 0:
+        raise ValueError("timeout must be positive and finite")
+    options = {"start_new_session": True} if os.name != "nt" else {
+        "creationflags": subprocess.CREATE_NEW_PROCESS_GROUP}
+    with log.open("wb") as stream:
+        process = subprocess.Popen(command, cwd=cwd, stdout=stream, stderr=subprocess.STDOUT, **options)
+        try:
+            code = process.wait(timeout=timeout_s)
+        except BaseException:
+            if os.name == "nt":
+                subprocess.run(["taskkill", "/PID", str(process.pid), "/T", "/F"],
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+            else:
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+            if process.poll() is None:
+                process.kill()
+            process.wait()
+            raise
+    if code:
+        raise ValueError(f"Boundary Lab exited with code {code}; see {log.name}")
+
+
+@dataclass(frozen=True)
+class BoundaryLabRuntime:
+    checkout: Path
+    python: Path
+    julia: Path
+    backend: Literal["beat_cpu", "beat_cuda", "beat_rocm"] = "beat_cpu"
+
+    def verify(self) -> dict:
+        if self.backend not in {"beat_cpu", "beat_cuda", "beat_rocm"}:
+            raise ValueError("unsupported explicit backend")
+        checkout = Path(self.checkout).resolve()
+        revision = subprocess.check_output(["git", "-C", str(checkout), "rev-parse", "HEAD"],
+                                           text=True, timeout=30).strip()
+        if revision != BOUNDARY_LAB_REVISION:
+            raise ValueError("Boundary Lab revision differs from the supported pin")
+        dirty = subprocess.check_output(["git", "-C", str(checkout), "diff", "HEAD", "--name-only"],
+                                        text=True, timeout=30).strip()
+        if dirty:
+            raise ValueError("Boundary Lab tracked files have local modifications")
+        # Preserve the virtualenv executable path; resolving its symlink loses its environment.
+        python = Path(self.python).absolute()
+        probe = subprocess.check_output([str(python), "-I", "-c",
+            "import blab, json, sys, importlib.metadata as m; "
+            "print(json.dumps({'module':blab.__file__,'python':sys.version,"
+            "'packages':{d.metadata['Name']:d.version for d in m.distributions()}}))"],
+            cwd=checkout, text=True, encoding="utf-8", timeout=30)
+        environment = json.loads(probe)
+        if Path(environment["module"]).resolve() != checkout / "src/blab/__init__.py":
+            raise ValueError("Python imports Boundary Lab from a different checkout")
+        julia_version = subprocess.check_output([str(Path(self.julia).absolute()), "--version"],
+                                               text=True, encoding="utf-8", timeout=30).strip()
+        if julia_version != "julia version 1.12.6":
+            raise ValueError("pinned Boundary Lab dependencies require the manifest-matched Julia 1.12.6 runtime")
+        return {"revision": revision, "backend": self.backend, "python": environment["python"],
+                "julia": julia_version, "packages": environment["packages"]}
+
+    def solve(self, project: Path, request: SolveRequest, output: Path, *, timeout_s: float = 1800) -> dict:
+        if not math.isfinite(timeout_s) or timeout_s <= 0:
+            raise ValueError("timeout must be positive and finite")
+        project, output = Path(project).resolve(), Path(output).resolve()
+        runtime = self.verify()
+        project_hash = sha256(project)
+        output.mkdir(parents=True, exist_ok=False)
+        request_file = output / "request.json"
+        _write_json(request_file, request.model_dump(mode="json"))
+        started = time.monotonic()
+        report = {"schema_version": 1, "status": "running", "runtime": runtime,
+                  "started_at_utc": datetime.now(timezone.utc).isoformat(),
+                  "project_sha256": project_hash, "request_sha256": sha256(request_file)}
+        _write_json(output / "evaluation.json", report)
+        base = [str(Path(self.python).absolute()), "-I", "-m", "blab.cli", "project"]
+        common = [str(project), "--request", str(request_file), "--backend", self.backend,
+                  "--julia-executable", str(Path(self.julia).absolute())]
+        try:
+            _execute(base + ["validate"] + common + ["--json"], Path(self.checkout),
+                     output / "preflight.json", timeout_s)
+            preflight = _read_json(output / "preflight.json")
+            if preflight.get("valid") is not True:
+                raise ValueError("upstream preflight did not confirm validity")
+            _execute(base + ["solve"] + common + ["--events", "ndjson", "--output", str(output / "upstream")],
+                     Path(self.checkout), output / "solve.ndjson", timeout_s)
+            result = inspect_result(output / "upstream", request, self.backend,
+                                    tuple(preflight["output_ids"]))
+            if sha256(project) != project_hash or sha256(request_file) != report["request_sha256"]:
+                raise ValueError("project or request changed during evaluation")
+            manifest = _read_json(output / "upstream/manifest.json")
+            if manifest.get("project_sha256") != project_hash:
+                raise ValueError("solver project snapshot differs from evaluated input")
+            if manifest.get("meshes") != preflight.get("meshes"):
+                raise ValueError("mesh identity changed between preflight and solve")
+            for mesh in manifest.get("meshes", []):
+                if sha256(Path(mesh["file"])) != mesh["sha256"]:
+                    raise ValueError("source mesh changed during evaluation")
+            if self.verify() != runtime:
+                raise ValueError("runtime changed during evaluation")
+            report.update(status="complete", result=result)
+        except BaseException as exc:
+            status = ("timed_out" if isinstance(exc, subprocess.TimeoutExpired) else
+                      "cancelled" if isinstance(exc, KeyboardInterrupt) else "failed")
+            report.update(status=status, error=f"{type(exc).__name__}: {exc}")
+            raise
+        finally:
+            report["elapsed_s"] = time.monotonic() - started
+            _write_json(output / "evaluation.json", report)
+        return report

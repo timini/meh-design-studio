@@ -19,7 +19,7 @@ python -m pytest
 
 The command-line tools validate an explicit design brief, manage immutable private driver imports in SQLite, and generate analytic cavity reference data. The Python API also provides an independent coupled electromechanical circuit reference using RMS amplitudes and `exp(-i omega t)`.
 
-These references do not simulate a 3D horn, and a syntactically valid brief is not evidence of an achievable speaker. The example brief remains a proposed challenge. See [implementation status and next steps](docs/implementation-status.md).
+A [Boundary Lab adapter](docs/boundary-lab-adapter.md) also runs existing projects using a separately installed pinned solver; its interior-FEM integration smoke test has been executed. The independent references do not simulate a 3D horn, and a syntactically valid brief is not evidence of an achievable speaker. The example brief remains a proposed challenge. See [implementation status and next steps](docs/implementation-status.md).
 
 ## Documents
 
@@ -41,7 +41,7 @@ Validation is the critical path. Catalogue specifications alone cannot establish
 
 ## Reading and evidence conventions
 
-The PRD describes the product vision. The implementation and validation documents refine its delivery sequence; where they tighten a test procedure, use the newer procedure. All acceptance thresholds, prices and schedules are proposed planning assumptions, not demonstrated outcomes. No upstream acoustic solver was executed for these reports, and no physical measurement data has been collected by this project.
+The PRD describes the product vision. The implementation and validation documents refine its delivery sequence; where they tighten a test procedure, use the newer procedure. All acceptance thresholds, prices and schedules are proposed planning assumptions, not demonstrated outcomes. The original planning reports did not execute the solver. Subsequent [integration evidence](docs/boundary-lab-adapter.md) records real interior-FEM runs. No physical measurement data has been collected by this project.
 
 The registry currently contains **references and acquisition plans**, not a bundled driver database or a completed validation corpus. No third-party meshes, measurement curves or driver scans are redistributed here. The original Word PRD is retained as an archival edition; subsequent planning refinements are in Markdown.
 
