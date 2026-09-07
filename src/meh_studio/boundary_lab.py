@@ -251,6 +251,10 @@ def _mesh_inventory(payload: dict) -> list[dict]:
 class EvaluationCancelled(KeyboardInterrupt):
     """Termination requested by the process supervisor."""
 
+    def __init__(self, message, signum=None):
+        super().__init__(message)
+        self.signum = signum
+
 
 @contextmanager
 def _termination_guard(report):
@@ -271,7 +275,7 @@ def _termination_guard(report):
         # Select cancellation before unwinding, including an interrupt inside
         # the exception-reporting handler rather than its protected try body.
         report.update(status="cancelled", error=f"signal {signum} requested cancellation")
-        raise EvaluationCancelled(f"signal {signum} requested cancellation")
+        raise EvaluationCancelled(f"signal {signum} requested cancellation", signum=signum)
     def activate():
         state["reserving"] = False
         if state["requested"] is not None:
@@ -494,7 +498,7 @@ def _defer_spawn_cancellation():
             if callable(handler):
                 handler(sig,None)
             elif handler != signal.SIG_IGN:
-                raise EvaluationCancelled(f"signal {sig} during process creation")
+                raise EvaluationCancelled(f"signal {sig} during process creation", signum=sig)
     try:
         for sig in signals:
             signal.signal(sig,defer)
