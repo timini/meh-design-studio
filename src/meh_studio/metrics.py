@@ -17,7 +17,7 @@ METRICS_VERSION = "linear-rms-v1"
 class ScalarMetric(Record):
     metrics_version: Literal["linear-rms-v1"] = METRICS_VERSION
     value: float | None
-    unit: Literal["dB", "Pa^2"]
+    unit: Literal["dB"]
     reason: Literal["zero_pressure"] | None = None
 
     @model_validator(mode="after")

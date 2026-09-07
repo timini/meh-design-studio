@@ -92,3 +92,9 @@ def test_synthesised_coupled_circuit_matches_direct_excitation(source):
         assert np.allclose(combined,getattr(direct,name),rtol=1e-12,atol=1e-14)
     _,power = electrical_power_rms(voltage,direct.current_a)
     assert np.allclose(power,direct.coil_loss_w+direct.mechanical_loss_w+direct.load_power_w)
+
+
+@pytest.mark.parametrize('value,reason',[(-1,None),(None,'zero_pressure'),(0,None)])
+def test_scalar_record_only_supports_implemented_decibel_metrics(value,reason):
+    with pytest.raises(ValueError):
+        ScalarMetric(value=value,unit='Pa^2',reason=reason)
