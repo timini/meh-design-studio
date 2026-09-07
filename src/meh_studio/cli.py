@@ -45,7 +45,8 @@ def main(argv=None) -> int:
                 with Catalogue(args.database) as cat:
                     added = cat.add(record)
                 result = {"added": added, "record_hash": record.content_hash,
-                          "qualification": "user_declared_not_independently_verified"}
+                          "qualification": ("not_qualified" if record.qualification is None
+                                            else "user_declared_not_independently_verified")}
             else:
                 with Catalogue(args.database, readonly=True) as cat:
                     result = {"drivers": [d.model_dump(mode="json") for d in cat.list()]}

@@ -32,6 +32,30 @@ def test_catalogue_cli(tmp_path, driver, capsys):
     assert main(["catalogue", "init", str(path)]) == 0
     capsys.readouterr()
     assert main(["catalogue", "add", str(path), str(record)]) == 0
-    assert json.loads(capsys.readouterr().out)["added"] is True
+    result = json.loads(capsys.readouterr().out)
+    assert result["added"] is True
+    assert result["qualification"] == "not_qualified"
     assert main(["catalogue", "list", str(path)]) == 0
     assert json.loads(capsys.readouterr().out)["drivers"][0]["id"] == driver.id
+
+
+def test_catalogue_cli_reports_declared_qualification_only_when_present(tmp_path, driver, capsys):
+    from meh_studio.domain import DriverRevision
+    data = driver.model_dump()
+    data["provenance"]["kind"] = "measured"
+    data["source_model"]["provenance"]["kind"] = "measured"
+    data["qualification"] = {
+        "band": {"low_hz": 300, "high_hz": 2000}, "mounting": "load-a",
+        "level": {"min_spl_db": 80, "max_spl_db": 96, "distance_m": 1,
+                  "signal_definition": "Pink noise, 6 dB crest factor, 60 seconds"},
+        "report_sha256": "a" * 64, "reviewer": "test fixture reviewer"}
+    record = tmp_path / "declared.json"
+    record.write_text(DriverRevision.model_validate(data).canonical_json())
+    database = tmp_path / "private.sqlite"
+    assert main(["catalogue", "init", str(database)]) == 0
+    capsys.readouterr()
+    for expected_added in (True, False):
+        assert main(["catalogue", "add", str(database), str(record)]) == 0
+        result = json.loads(capsys.readouterr().out)
+        assert result["added"] is expected_added
+        assert result["qualification"] == "user_declared_not_independently_verified"
