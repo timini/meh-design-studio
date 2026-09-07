@@ -21,6 +21,8 @@ The command-line tools validate an explicit design brief, manage immutable priva
 
 A [Boundary Lab adapter](docs/boundary-lab-adapter.md) also runs existing projects using a separately installed pinned solver; its interior-FEM integration smoke test has been executed. The independent references do not simulate a 3D horn, and a syntactically valid brief is not evidence of an achievable speaker. The example brief remains a proposed challenge. See [implementation status and next steps](docs/implementation-status.md).
 
+Experimental horn CAD and tagged air meshing are available through [the geometry generator](docs/geometry-generator.md). These exports remain unverified for printing and acoustic performance.
+
 ## Documents
 
 | Document | Purpose |
