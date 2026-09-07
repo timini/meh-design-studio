@@ -47,9 +47,25 @@ def main(argv=None) -> int:
     validate_basis = commands.add_parser("validate-electrical", help="check full-basis circuit consistency")
     validate_basis.add_argument("project", type=Path)
     validate_basis.add_argument("evaluation", type=Path)
+    radiating = commands.add_parser("compile-radiating", help="compile experimental FEM/BEM horn domains")
+    radiating.add_argument("geometry", type=Path)
+    radiating.add_argument("--sources", type=Path, required=True)
+    radiating.add_argument("--output", type=Path, required=True)
+    radiating.add_argument("--checkout", type=Path, required=True)
+    radiating.add_argument("--python", type=Path, required=True)
+    radiating.add_argument("--julia", type=Path, required=True)
+    radiating.add_argument("--exterior-mesh-size-m", type=float, default=.02)
     args = parser.parse_args(argv)
     try:
-        if args.command == "validate-electrical":
+        if args.command == "compile-radiating":
+            from .boundary_lab import BoundaryLabRuntime
+            from .generated_system import HornSources
+            from .radiating_system import compile_radiating_system
+            sources = HornSources.model_validate_json(args.sources.read_text(encoding="utf-8"))
+            result = compile_radiating_system(args.geometry, sources, args.output,
+                BoundaryLabRuntime(args.checkout, args.python, args.julia),
+                exterior_mesh_size_m=args.exterior_mesh_size_m)
+        elif args.command == "validate-electrical":
             from .validation import validate_electrical_basis
             result = validate_electrical_basis(args.project, args.evaluation)
             print(json.dumps(result, indent=2, allow_nan=False))
