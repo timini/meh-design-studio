@@ -251,22 +251,33 @@ class EvaluationCancelled(KeyboardInterrupt):
 
 
 @contextmanager
-def _termination_guard():
-    if os.name == "nt":
-        yield
-        return
+def _termination_guard(report):
     if threading.current_thread() is not threading.main_thread():
         raise ValueError("run the solver adapter in a worker process, not a background thread")
-    previous = signal.getsignal(signal.SIGTERM)
+    signals = (signal.SIGINT,) if os.name == "nt" else (signal.SIGINT, signal.SIGTERM)
+    previous = {sig: signal.getsignal(sig) for sig in signals}
+    state = {"reserving": True, "requested": None, "cancelling": False}
     def terminate(signum, frame):
-        # Let cleanup finish even if a supervisor repeats SIGTERM.
-        signal.signal(signal.SIGTERM, signal.SIG_IGN)
-        raise EvaluationCancelled("SIGTERM requested cancellation")
-    signal.signal(signal.SIGTERM, terminate)
+        # Once a terminal state is selected, commit it without interruption.
+        # Repeated signals must also allow child cleanup/reporting to finish.
+        if report["status"] != "running" or state["cancelling"]:
+            return
+        if state["reserving"]:
+            state["requested"] = signum
+            return
+        state["cancelling"] = True
+        raise EvaluationCancelled(f"signal {signum} requested cancellation")
+    def activate():
+        state["reserving"] = False
+        if state["requested"] is not None:
+            terminate(state["requested"], None)
     try:
-        yield
+        for sig in signals:
+            signal.signal(sig, terminate)
+        yield activate
     finally:
-        signal.signal(signal.SIGTERM, previous)
+        for sig, handler in previous.items():
+            signal.signal(sig, handler)
 
 
 def _result_project(root: Path, manifest: dict, project_path: Path | None) -> tuple[dict, dict]:
@@ -536,16 +547,19 @@ class BoundaryLabRuntime:
     def solve(self, project: Path, request: SolveRequest, output: Path, *, timeout_s: float = 1800) -> dict:
         if not math.isfinite(timeout_s) or timeout_s <= 0:
             raise ValueError("timeout must be positive and finite")
-        if os.name != "nt" and threading.current_thread() is not threading.main_thread():
+        if threading.current_thread() is not threading.main_thread():
             raise ValueError("run the solver adapter in a worker process, not a background thread")
         project, output = Path(project).resolve(), Path(output).resolve()
         request_file = output / "request.json"
         started = time.monotonic()
         report = {"schema_version": 1, "status": "running",
                   "started_at_utc": datetime.now(timezone.utc).isoformat()}
-        with _termination_guard():
-            output.mkdir(parents=True, exist_ok=False)
+        with _termination_guard(report) as activate:
+            owned = False
             try:
+                output.mkdir(parents=True, exist_ok=False)
+                owned = True
+                activate()
                 _write_json(output / "evaluation.json", report)
                 base = [str(Path(self.python).absolute()), "-I", "-m", "blab.cli", "project"]
                 common = [str(project), "--request", str(request_file), "--backend", self.backend,
@@ -599,6 +613,7 @@ class BoundaryLabRuntime:
                 report.update(status=status, error=f"{type(exc).__name__}: {exc}")
                 raise
             finally:
-                report["elapsed_s"] = time.monotonic() - started
-                _write_json(output / "evaluation.json", report)
+                if owned:
+                    report["elapsed_s"] = time.monotonic() - started
+                    _write_json(output / "evaluation.json", report)
             return report

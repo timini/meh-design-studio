@@ -757,3 +757,66 @@ def test_quadratic_fem_connectivity_includes_midside_nodes(artifact,corrupt):
             inspect_result(root,SolveRequest(frequencies_hz=(1000,)),'beat_cpu')
     else:
         assert inspect_result(root,SolveRequest(frequencies_hz=(1000,)),'beat_cpu')['evidence'] == 'predicted'
+
+
+@pytest.mark.parametrize('signum',[2,15])
+@pytest.mark.skipif(sys.platform == 'win32',reason='POSIX signal delivery')
+def test_cancellation_during_directory_creation_records_owned_output(tmp_path,monkeypatch,signum):
+    from meh_studio import boundary_lab as a
+    output=tmp_path/'output';mkdir=Path.mkdir
+    def interrupted(path,*args,**kwargs):
+        mkdir(path,*args,**kwargs)
+        if path == output: a.signal.raise_signal(signum)
+    monkeypatch.setattr(Path,'mkdir',interrupted)
+    runtime=BoundaryLabRuntime(tmp_path,Path(sys.executable),tmp_path/'julia')
+    with pytest.raises(a.EvaluationCancelled):
+        runtime.solve(tmp_path/'project.json',SolveRequest(frequencies_hz=(1000,)),output)
+    assert json.loads((output/'evaluation.json').read_text())['status'] == 'cancelled'
+
+
+@pytest.mark.parametrize('signum',[2,15])
+@pytest.mark.parametrize('fail',[False,True])
+@pytest.mark.skipif(sys.platform == 'win32',reason='POSIX signal delivery')
+def test_terminal_report_commits_despite_new_cancellation(artifact,tmp_path,monkeypatch,signum,fail):
+    import shutil
+    from meh_studio import boundary_lab as a
+    root,manifest=artifact;output=tmp_path/'evaluation'
+    monkeypatch.setattr(BoundaryLabRuntime,'verify',lambda self:{'revision':'test'})
+    original=a._write_json
+    def write(path,report):
+        if report.get('status') in {'complete','failed'}:
+            a.signal.raise_signal(signum)
+            a.signal.raise_signal(signum)
+        original(path,report)
+    monkeypatch.setattr(a,'_write_json',write)
+    def execute(command,cwd,log,timeout,**kwargs):
+        if fail: raise ValueError('solver failure')
+        if 'validate' in command:
+            log.write_text(json.dumps({'valid':True,'solve_kind':'interior_fem',
+                'meshes':manifest['meshes'],'output_ids':['acoustic:pressure:fem-nodes']}))
+        else: shutil.copytree(root,output/'upstream')
+    monkeypatch.setattr(a,'_execute',execute)
+    runtime=BoundaryLabRuntime(tmp_path,Path(sys.executable),tmp_path/'julia')
+    def solve(): return runtime.solve(root/'project.snapshot.blab.json',SolveRequest(frequencies_hz=(1000,)),output)
+    if fail:
+        with pytest.raises(ValueError,match='solver failure'): solve()
+    else: solve()
+    assert json.loads((output/'evaluation.json').read_text())['status'] == ('failed' if fail else 'complete')
+
+
+def test_float_bem_connectivity_is_rejected(tmp_path):
+    import meshio
+    from meh_studio.result_domains import load_domains
+    points=np.array([[0.,0.,0.],[1.,0.,0.],[0.,1.,0.]])
+    source=tmp_path/'source.msh'
+    meshio.write(source,meshio.Mesh(points,[('triangle',np.array([[0,1,2]]))]),file_format='gmsh22',binary=False)
+    np.savez(tmp_path/'domains.npz',points=points,triangles=np.array([[0.,1.,2.]]))
+    (tmp_path/'domains.json').write_text(json.dumps({'domains':[{'id':'domain:bem-boundary',
+        'coordinates':{'points_m':'points'},'topology':{'triangles':'triangles'},
+        'metadata':{'mesh_ids':['mesh:a'],'node_counts':[3]}}]}))
+    (tmp_path/'project.json').write_text('{}')
+    manifest={'project_file':'project.json','domains_metadata_file':'domains.json','domains_file':'domains.npz'}
+    system={'meshes':[{'id':'mesh:a'}]}
+    meshes={'mesh:a':{'file':str(source),'purpose':'bem_surface','sha256':sha256(source)}}
+    with pytest.raises(ValueError,match='face count'):
+        load_domains(tmp_path,manifest,system,meshes)
