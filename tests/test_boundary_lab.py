@@ -30,7 +30,7 @@ def artifact(tmp_path):
                              "arrays_file": "frequencies/000000.npz"}]}
     source = root / "fixture.msh"
     source.write_text("$MeshFormat\n2.2 0 8\n$EndMeshFormat\n$Nodes\n2\n1 0 0 0\n2 0 0 1\n$EndNodes\n$Elements\n0\n$EndElements\n")
-    project = {"physical_system": {"meshes": [{"id": "mesh:a", "purpose": "fem_volume"}],
+    project = {"physical_system": {"meshes": [{"id": "mesh:a", "purpose": "fem_volume", "file": str(source)}],
         "regions": [{"id": "region:a", "kind": "bounded_air", "mesh_ids": ["mesh:a"]}],
         "components": [], "excitation_ports": [{"id": "voltage:a"}]}}
     snapshot = root / "project.snapshot.blab.json"
@@ -266,7 +266,7 @@ def test_nonfinite_result_metadata_records_failed_evaluation(artifact, tmp_path,
     def execute(command, cwd, log, timeout, **kwargs):
         calls.append(command)
         if "validate" in command:
-            log.write_text(json.dumps({"valid": True, "solve_kind": "interior_fem", "output_ids": ["acoustic:pressure:fem-nodes"], "meshes": [mesh]}), encoding="utf-8")
+            log.write_text(json.dumps({"valid": True, "solve_kind": "interior_fem", "output_ids": ["acoustic:pressure:fem-nodes"], "meshes": json.loads((root/"manifest.json").read_text())["meshes"]}), encoding="utf-8")
         else:
             shutil.copytree(root, output / "upstream")
     monkeypatch.setattr(adapter, "_execute", execute)
@@ -355,9 +355,9 @@ def test_observation_requirements_come_from_project():
 def test_preflight_contract_failure_stops_before_solver(tmp_path, monkeypatch, output_ids):
     import meh_studio.boundary_lab as adapter
     project = tmp_path / "project.json"
-    project.write_text(json.dumps({"physical_system": {"regions": [{"kind": "unbounded_air"}]}}))
     mesh = tmp_path / "air.msh"
     mesh.write_bytes(b"test")
+    project.write_text(json.dumps({"physical_system": {"regions": [{"kind":"unbounded_air"}], "meshes":[{"id":"air","file":str(mesh),"purpose":"fem_volume"}]}}))
     calls = []
     def execute(command, cwd, log, timeout, **kwargs):
         calls.append(command)
@@ -571,3 +571,75 @@ def test_domain_mutation_during_inspection_is_rejected(artifact, monkeypatch):
     monkeypatch.setattr(domains, "load_domains", mutate)
     with pytest.raises(ValueError, match="changed during inspection"):
         inspect_result(root, SolveRequest(frequencies_hz=(1000,)), "beat_cpu")
+
+
+def test_substitute_mesh_cannot_reuse_declared_identity(artifact):
+    root,manifest = artifact
+    original = Path(manifest['meshes'][0]['file'])
+    substitute = root/'substitute.msh'
+    substitute.write_bytes(original.read_bytes())
+    manifest['meshes'][0]['file'] = str(substitute)
+    (root/'manifest.json').write_text(json.dumps(manifest))
+    with pytest.raises(ValueError,match='project declaration'):
+        inspect_result(root,SolveRequest(frequencies_hz=(1000,)),'beat_cpu')
+
+
+def test_relative_mesh_declarations_require_original_project_location(artifact):
+    root,manifest = artifact
+    path = root/manifest['project_file']
+    project = json.loads(path.read_text())
+    project['physical_system']['meshes'][0]['file'] = 'fixture.msh'
+    path.write_text(json.dumps(project))
+    manifest['project_sha256'] = sha256(path)
+    (root/'manifest.json').write_text(json.dumps(manifest))
+    with pytest.raises(ValueError,match='original project path'):
+        inspect_result(root,SolveRequest(frequencies_hz=(1000,)),'beat_cpu')
+    assert inspect_result(root,SolveRequest(frequencies_hz=(1000,)),'beat_cpu',project_path=path)['evidence'] == 'predicted'
+
+
+@pytest.mark.parametrize('file',['frequencies/000000.json','frequencies/000000.npz'])
+def test_frequency_artifact_mutation_during_inspection_fails(artifact,monkeypatch,file):
+    import meh_studio.boundary_lab as adapter
+    root,_ = artifact
+    original = adapter._field_identity
+    def mutate(*args):
+        original(*args)
+        path = root/file
+        if file.endswith('.json'): path.write_text(path.read_text()+'\n')
+        else: np.savez(path,q0000=np.zeros((1,2),dtype=np.complex64))
+    monkeypatch.setattr(adapter,'_field_identity',mutate)
+    with pytest.raises(ValueError,match='frequency artifacts changed'):
+        inspect_result(root,SolveRequest(frequencies_hz=(1000,)),'beat_cpu')
+
+
+def test_coupled_run_cannot_omit_every_acoustic_output():
+    from meh_studio.boundary_lab import _require_project_outputs
+    system = {'components':[{'kind':'electrodynamic_transducer'}],
+              'regions':[{'kind':'bounded_air'},{'kind':'unbounded_air'}]}
+    ids = ['mechanical:diaphragm-velocity','electrical:voice-coil-current']
+    with pytest.raises(ValueError,match='acoustic field'):
+        _require_project_outputs(system,ids)
+    _require_project_outputs(system,ids+['acoustic:pressure:fem-nodes'])
+
+
+@pytest.mark.parametrize('exit_code',[0,7])
+def test_parent_exit_cleans_up_residual_children(tmp_path,exit_code):
+    import time
+    child = "import sys,time;from pathlib import Path;root=Path(sys.argv[1]);(root/'ready').write_text('ready');time.sleep(1);(root/'survived').write_text('orphan')"
+    parent = f"""
+import subprocess,sys,time
+from pathlib import Path
+subprocess.Popen([sys.executable,'-c',{child!r},sys.argv[1]])
+deadline=time.monotonic()+5
+while not (Path(sys.argv[1])/'ready').exists():
+    if time.monotonic()>deadline: raise RuntimeError('child did not start')
+    time.sleep(.01)
+raise SystemExit({exit_code})
+"""
+    command = [sys.executable,'-c',parent,str(tmp_path)]
+    if exit_code:
+        with pytest.raises(ValueError,match='code 7'): _execute(command,tmp_path,tmp_path/'process.log',10)
+    else:
+        _execute(command,tmp_path,tmp_path/'process.log',10)
+    time.sleep(1.2)
+    assert (tmp_path/'ready').exists() and not (tmp_path/'survived').exists()
