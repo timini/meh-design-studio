@@ -18,7 +18,7 @@ def circuit_artifact(tmp_path):
     components = [{"id": name, "kind": "electrodynamic_transducer", "parameters": {
         "re_ohm": source.re_ohm, "le_h": source.le_h, "bl_n_per_a": source.bl_n_a}} for name in ids]
     project = tmp_path / "project.json"
-    project.write_text(json.dumps({"physical_system": {"meshes": [{"id": "mesh:a", "purpose": "fem_volume"}],
+    project.write_text(json.dumps({"physical_system": {"meshes": [{"id": "mesh:a", "purpose": "fem_volume", "file": str(tmp_path / "evaluation/upstream/fixture.msh")}],
         "regions": [{"id": "region:a", "kind": "bounded_air", "mesh_ids": ["mesh:a"]}], "components": components,
         "excitation_ports": [{"id": name, "component_id": name, "kind": "voltage"} for name in ids]}}))
     root = tmp_path / "evaluation"
