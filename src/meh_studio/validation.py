@@ -23,7 +23,7 @@ def validate_electrical_basis(project_path: Path, evaluation_directory: Path) ->
         raise ValueError("request identity mismatch")
     request = SolveRequest.model_validate_json(request_path.read_text(encoding="utf-8"))
     backend = evaluation["result"].get("backend_id", evaluation["runtime"]["backend"])
-    result = inspect_result(root / "upstream", request, backend)
+    result = inspect_result(root / "upstream", request, backend, project_path=project_path)
     if result != evaluation["result"]:
         raise ValueError("result artifacts differ from the completed evaluation")
     system = _read_json(project_path)["physical_system"]
