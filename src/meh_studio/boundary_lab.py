@@ -162,6 +162,34 @@ def _automatic_output_ids(system: dict) -> set[str]:
     return required
 
 
+def _require_project_outputs(system: dict, output_ids):
+    if not _automatic_output_ids(system).issubset(output_ids):
+        raise ValueError("omitted mandatory project outputs")
+    kinds = {r.get("kind") for r in system.get("regions", [])}
+    acoustic_ids = {"ui:exterior-pressure", "acoustic:pressure:horizontal-polar",
+                   "acoustic:pressure:vertical-polar", "acoustic:pressure:sphere",
+                   "acoustic:pressure:fem-nodes", "acoustic:pressure:bem-boundary",
+                   "acoustic:normal-derivative:bem-boundary"}
+    if kinds == {"bounded_air", "unbounded_air"} and not acoustic_ids.intersection(output_ids):
+        raise ValueError("coupled evaluation requires an explicitly requested acoustic field or observation")
+
+
+def _verify_mesh_declarations(system: dict, meshes: dict, project_path: Path | None):
+    declared = {m["id"]: m for m in system["meshes"]}
+    if set(meshes) != set(declared):
+        raise ValueError("solved mesh inventory differs from the project")
+    for identity, mesh in meshes.items():
+        source = Path(declared[identity]["file"])
+        if not source.is_absolute():
+            if project_path is None:
+                raise ValueError("original project path is required to resolve declared relative meshes")
+            source = project_path.parent / source
+        source = source.resolve()
+        if (Path(mesh["file"]).resolve() != source or mesh["purpose"] != declared[identity]["purpose"]
+                or source.stat().st_size != mesh["size_bytes"] or sha256(source) != mesh["sha256"]):
+            raise ValueError("solved mesh file identity differs from the project declaration")
+
+
 def _project_observation_ids(project: dict, request: SolveRequest) -> set[str]:
     """Derive requirements from the pinned project format, not solver preflight."""
     required = set()
@@ -240,17 +268,15 @@ def _termination_guard():
         signal.signal(signal.SIGTERM, previous)
 
 
-def _result_project(root: Path, manifest: dict) -> tuple[dict, dict]:
+def _result_project(root: Path, manifest: dict, project_path: Path | None) -> tuple[dict, dict]:
     path = _contained(root, manifest["project_file"])
     if sha256(path) != manifest.get("project_sha256"):
         raise ValueError("project snapshot hash mismatch")
     system = _read_json(path)["physical_system"]
     meshes = {m["id"]: m for m in _mesh_inventory(manifest)}
-    project_meshes = {m["id"]: m for m in system["meshes"]}
-    if set(meshes) != set(project_meshes):
-        raise ValueError("solved mesh inventory differs from the project")
-    if any(meshes[mid]["purpose"] != project_meshes[mid]["purpose"] for mid in meshes):
-        raise ValueError("solved mesh purpose differs from the project")
+    if project_path is not None and sha256(project_path) != manifest["project_sha256"]:
+        raise ValueError("result project snapshot differs from the original project")
+    _verify_mesh_declarations(system, meshes, project_path)
     return system, meshes
 
 
@@ -280,7 +306,7 @@ def _field_identity(quantity: dict, system: dict, meshes: dict):
 
 def _inspect_result(root: Path, request: SolveRequest, backend: str,
                     expected_output_ids: tuple[str, ...] | None = None,
-                    expected_solve_kind: str | None = None) -> dict:
+                    expected_solve_kind: str | None = None, project_path: Path | None = None) -> dict:
     """Reject partial runs and retain raw complex quantities without DSP synthesis."""
     if expected_output_ids is not None:
         expected_output_ids = _output_ids(expected_output_ids)
@@ -303,7 +329,7 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
     artifact_hashes = {name: sha256(path) for name, path in artifact_paths.items()}
     if artifact_hashes["manifest"] != manifest_hash:
         raise ValueError("manifest changed while inspecting results")
-    system, meshes = _result_project(root, manifest)
+    system, meshes = _result_project(root, manifest, Path(project_path).resolve() if project_path is not None else None)
     from .result_domains import load_domains, check_quantity_domain
     domains = load_domains(root, manifest, system, meshes)
     frequencies = list(request.frequencies_hz)
@@ -325,6 +351,7 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
         raise ValueError("missing frequency results")
     inventory = []
     seen_arrays = set()
+    frequency_hashes = {}
     first_contract = None
     for frequency, row in zip(frequencies, rows):
         if not isinstance(row, dict) or row.get("freq_hz") != frequency:
@@ -334,6 +361,8 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
         if array_path in seen_arrays:
             raise ValueError("frequency rows must reference distinct array artifacts")
         seen_arrays.add(array_path)
+        frequency_hashes[metadata_path] = sha256(metadata_path)
+        frequency_hashes[array_path] = sha256(array_path)
         metadata = _read_json(metadata_path)
         if metadata.get("freq_hz") != frequency or metadata.get("excitation_port_ids") != excitations:
             raise ValueError("frequency metadata axis mismatch")
@@ -343,8 +372,7 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
         if not quantities or len({q["key"] for q in quantities}) != len(quantities):
             raise ValueError("missing or duplicate quantities")
         actual_ids = _output_ids([q["id"] for q in quantities])
-        if not _automatic_output_ids(system).issubset(actual_ids):
-            raise ValueError("result omitted mandatory project outputs")
+        _require_project_outputs(system, actual_ids)
         if expected_output_ids is not None and set(actual_ids) != set(expected_output_ids):
             raise ValueError("returned quantities differ from the compiled output contract")
         required = set(request.retain)
@@ -383,8 +411,10 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
         if first_contract is not None and contract != first_contract:
             raise ValueError("physical quantity inventories changed across frequencies")
         first_contract = contract
-        inventory.append({"frequency_hz": frequency, "metadata_sha256": sha256(metadata_path),
-                          "arrays_sha256": sha256(array_path), "quantities": quantities})
+        inventory.append({"frequency_hz": frequency, "metadata_sha256": frequency_hashes[metadata_path],
+                          "arrays_sha256": frequency_hashes[array_path], "quantities": quantities})
+    if any(sha256(path) != digest for path, digest in frequency_hashes.items()):
+        raise ValueError("frequency artifacts changed during inspection")
     if any(sha256(path) != artifact_hashes[name] for name, path in artifact_paths.items()):
         raise ValueError("result domain artifacts changed during inspection")
     return {"evidence": "predicted", "artifact_hashes": artifact_hashes, "solve_kind": manifest.get("solve_kind"),
@@ -394,9 +424,9 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
 
 def inspect_result(root: Path, request: SolveRequest, backend: str,
                    expected_output_ids: tuple[str, ...] | None = None,
-                    expected_solve_kind: str | None = None) -> dict:
+                    expected_solve_kind: str | None = None, project_path: Path | None = None) -> dict:
     try:
-        return _inspect_result(root, request, backend, expected_output_ids, expected_solve_kind)
+        return _inspect_result(root, request, backend, expected_output_ids, expected_solve_kind, project_path)
     except (KeyError, TypeError, OSError, IndexError, zipfile.BadZipFile) as exc:
         raise ValueError(f"invalid or missing result artifact: {exc}") from exc
 
@@ -405,19 +435,26 @@ def _execute(command: list[str], cwd: Path, log: Path, timeout_s: float,
              stderr_log: Path | None = None) -> None:
     if not math.isfinite(timeout_s) or timeout_s <= 0:
         raise ValueError("timeout must be positive and finite")
-    options = {"start_new_session": True} if os.name != "nt" else {
-        "creationflags": subprocess.CREATE_NEW_PROCESS_GROUP}
     with ExitStack() as stack:
+        job = None
+        options = {"start_new_session": True}
+        if os.name == "nt":
+            from .windows_job import WindowsJob, CREATE_SUSPENDED
+            job = stack.enter_context(WindowsJob())
+            options = {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP | CREATE_SUSPENDED}
         stream = stack.enter_context(log.open("wb"))
         diagnostics = (stack.enter_context(stderr_log.open("wb"))
                        if stderr_log is not None else subprocess.STDOUT)
         process = subprocess.Popen(command, cwd=cwd, stdout=stream, stderr=diagnostics, **options)
         try:
+            if job is not None:
+                job.assign_and_resume(process.pid)
             code = process.wait(timeout=timeout_s)
-        except BaseException:
-            if os.name == "nt":
-                subprocess.run(["taskkill", "/PID", str(process.pid), "/T", "/F"],
-                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+        finally:
+            # A parent can exit before its solver children. Cleanup applies to
+            # successful/nonzero exits as well as timeout and cancellation.
+            if job is not None:
+                job.close()
             else:
                 try:
                     os.killpg(process.pid, signal.SIGKILL)
@@ -426,7 +463,6 @@ def _execute(command: list[str], cwd: Path, log: Path, timeout_s: float,
             if process.poll() is None:
                 process.kill()
             process.wait()
-            raise
     if code:
         raise ValueError(f"Boundary Lab exited with code {code}; see {log.name}")
 
@@ -501,16 +537,15 @@ class BoundaryLabRuntime:
                     raise ValueError("preflight solve kind differs from project topology")
                 preflight_meshes = _mesh_inventory(preflight)
                 expected_outputs = _output_ids(preflight.get("output_ids"))
-                required_outputs = _automatic_output_ids(project_data["physical_system"])
-                if not required_outputs.issubset(expected_outputs):
-                    raise ValueError("preflight omitted mandatory project outputs")
+                _verify_mesh_declarations(project_data["physical_system"], {m["id"]:m for m in preflight_meshes}, project)
+                _require_project_outputs(project_data["physical_system"], expected_outputs)
                 observations = _project_observation_ids(project_data, request)
                 if not observations.issubset(expected_outputs):
                     raise ValueError("preflight omitted requested project observations")
                 _execute(base + ["solve"] + common + ["--events", "ndjson", "--output", str(output / "upstream")],
                          Path(self.checkout), output / "solve.ndjson", timeout_s)
                 result = inspect_result(output / "upstream", request, self.backend,
-                                        _result_output_ids(project_data, expected_outputs), solve_kind)
+                                        _result_output_ids(project_data, expected_outputs), solve_kind, project)
                 if sha256(project) != project_hash or sha256(request_file) != report["request_sha256"]:
                     raise ValueError("project or request changed during evaluation")
                 manifest = _read_json(output / "upstream/manifest.json")
