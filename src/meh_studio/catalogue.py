@@ -46,6 +46,7 @@ class Catalogue:
         # Serialize writers so conflict-check + insert is atomic.
         self.connection.execute("BEGIN IMMEDIATE")
         try:
+            self.list()  # Reject displaced/corrupt keys before any new revision is inserted.
             row = self.connection.execute(
                 "SELECT hash FROM drivers WHERE id=? AND revision=?",
                 (driver.id, driver.revision)).fetchone()
@@ -64,11 +65,12 @@ class Catalogue:
 
     def list(self) -> list[DriverRevision]:
         records = []
-        for content_hash, raw in self.connection.execute(
-            "SELECT hash, record FROM drivers ORDER BY id, revision"
+        for driver_id, revision, content_hash, raw in self.connection.execute(
+            "SELECT id, revision, hash, record FROM drivers ORDER BY id, revision"
         ):
             record = DriverRevision.model_validate_json(raw)
-            if record.content_hash != content_hash:
+            if (record.content_hash != content_hash or record.id != driver_id
+                    or record.revision != revision):
                 raise ValueError("catalogue integrity mismatch")
             records.append(record)
         return records

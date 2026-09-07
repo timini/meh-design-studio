@@ -7,8 +7,8 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-Positive = Annotated[float, Field(gt=0, allow_inf_nan=False)]
-Nonnegative = Annotated[float, Field(ge=0, allow_inf_nan=False)]
+Positive = Annotated[float, Field(strict=True, gt=0, allow_inf_nan=False)]
+Nonnegative = Annotated[float, Field(strict=True, ge=0, allow_inf_nan=False)]
 Identifier = Annotated[str, Field(pattern=r"^[a-zA-Z0-9][a-zA-Z0-9._-]{0,95}$")]
 Digest = Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")]
 
@@ -52,6 +52,26 @@ class Printer(Record):
         return self
 
 
+class OperatingLevel(Record):
+    spl_db: Annotated[float, Field(strict=True, ge=0, le=150)]
+    distance_m: Positive
+    # Exact protocol identity: includes stimulus, duration and crest factor.
+    signal_definition: Annotated[str, Field(min_length=10)]
+
+
+class LevelQualification(Record):
+    min_spl_db: Annotated[float, Field(strict=True, ge=0, le=150)]
+    max_spl_db: Annotated[float, Field(strict=True, ge=0, le=150)]
+    distance_m: Positive
+    signal_definition: Annotated[str, Field(min_length=10)]
+
+    @model_validator(mode="after")
+    def ordered_levels(self):
+        if self.min_spl_db > self.max_spl_db:
+            raise ValueError("qualified SPL range must be ordered")
+        return self
+
+
 class DesignBrief(Record):
     id: Identifier
     band: Band
@@ -59,16 +79,21 @@ class DesignBrief(Record):
     driver_budget: Positive
     total_material_budget: Positive
     currency: Annotated[str, Field(pattern=r"^[A-Z]{3}$")]
-    target_spl_db: Annotated[float, Field(ge=0, le=150, allow_inf_nan=False)]
+    target_spl_db: Annotated[float, Field(strict=True, ge=0, le=150, allow_inf_nan=False)]
     distance_m: Positive
     level_definition: Annotated[str, Field(min_length=10)]
     response_tolerance_db: Positive
-    horizontal_coverage_deg: Annotated[float, Field(gt=0, le=180)]
-    vertical_coverage_deg: Annotated[float, Field(gt=0, le=180)]
+    horizontal_coverage_deg: Annotated[float, Field(strict=True, gt=0, le=180)]
+    vertical_coverage_deg: Annotated[float, Field(strict=True, gt=0, le=180)]
     coverage_control_from_hz: Positive
     assembled_envelope_m: tuple[Positive, Positive, Positive]
     printer: Printer
     topology_families: tuple[Literal["straight_3", "straight_5"], ...]
+
+    @property
+    def operating_level(self) -> OperatingLevel:
+        return OperatingLevel(spl_db=self.target_spl_db, distance_m=self.distance_m,
+                              signal_definition=self.level_definition)
 
     @model_validator(mode="after")
     def consistent(self):
@@ -110,6 +135,7 @@ class SourceModel(Record):
 
 class Qualification(Record):
     band: Band
+    level: LevelQualification
     mounting: Annotated[str, Field(min_length=1)]
     report_sha256: Digest
     reviewer: Annotated[str, Field(min_length=1)]
@@ -138,7 +164,7 @@ class DriverRevision(Record):
                 raise ValueError("synthetic records cannot be acoustically qualified")
         return self
 
-    def eligibility_reasons(self, band: Band, mounting: str) -> tuple[str, ...]:
+    def eligibility_reasons(self, band: Band, mounting: str, level: OperatingLevel) -> tuple[str, ...]:
         reasons = []
         if self.source_model is None:
             reasons.append("missing_source_model")
@@ -153,4 +179,12 @@ class DriverRevision(Record):
                 reasons.append("outside_qualified_band")
             if self.qualification.mounting != mounting:
                 reasons.append("mounting_mismatch")
+            conditions = self.qualification.level
+            if not conditions.min_spl_db <= level.spl_db <= conditions.max_spl_db:
+                reasons.append("outside_qualified_level")
+            # Do not extrapolate propagation or equate different test signals.
+            if conditions.distance_m != level.distance_m:
+                reasons.append("level_distance_mismatch")
+            if conditions.signal_definition != level.signal_definition:
+                reasons.append("signal_mismatch")
         return tuple(reasons)

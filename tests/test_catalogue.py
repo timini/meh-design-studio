@@ -48,3 +48,19 @@ def test_tampered_record_is_detected(tmp_path, driver):
     with Catalogue(path, readonly=True) as cat:
         with pytest.raises(ValueError, match="integrity"):
             cat.list()
+
+
+@pytest.mark.parametrize("column,value", [("id", "displaced"), ("revision", 99)])
+def test_displaced_keys_rejected_on_read_and_before_write(tmp_path, driver, column, value):
+    path = tmp_path / "displaced.sqlite"
+    with Catalogue.create(path) as cat:
+        cat.add(driver)
+    with sqlite3.connect(path) as con:
+        # Column names are restricted to the literal parametrized cases above.
+        con.execute(f"UPDATE drivers SET {column}=?", (value,))
+    with Catalogue(path) as cat:
+        with pytest.raises(ValueError, match="integrity"):
+            cat.list()
+        with pytest.raises(ValueError, match="integrity"):
+            cat.add(driver)
+        assert cat.connection.execute("SELECT count(*) FROM drivers").fetchone()[0] == 1

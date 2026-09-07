@@ -4,7 +4,7 @@ The foundation PR implements parts of B01 and the independent-reference infrastr
 
 ## Available
 
-- Immutable, versioned SI contracts for briefs, source models, driver records, provenance and declared band/mounting qualification; canonical content hashes.
+- Immutable, versioned SI contracts for briefs, source models, driver records, provenance and declared band/mounting/level qualification; canonical content hashes.
 - Explicit dry moving mass and source-data validation. Synthetic records cannot qualify. A declared qualification is user-supplied metadata, not independently verified evidence.
 - Private SQLite catalogue import/list with immutable revisions, idempotent insertion, conflict rejection, read-only access and content-integrity checking. No bundled driver data is claimed.
 - Independent rigid-box modal reference and coupled linear driver circuit reference with explicit RMS/phase/load conventions. Circuit tests cover known resonant impedance, mutual motion, reciprocity, power conservation and complex superposition.
@@ -20,7 +20,7 @@ meh catalogue add my-private-drivers.sqlite my-driver-record.json
 meh catalogue list my-private-drivers.sqlite
 ```
 
-Record structure is defined by `DriverRevision` in `src/meh_studio/domain.py`; `model_json_schema()` exposes its JSON schema. Driver geometry records use actual outer and cutout dimensions in metres, not a rounded commercial size. Source parameters are a minimal complete linear circuit, not a substitute for measured high-frequency transfer behaviour. Per-parameter provenance, offers, user-overlay composition and automatic evidence verification remain to implement.
+Record structure is defined by `DriverRevision` in `src/meh_studio/domain.py`; `model_json_schema()` exposes its JSON schema. Driver geometry records use actual outer and cutout dimensions in metres, not a rounded commercial size. Eligibility requires an explicit operating level, tested SPL range, identical measurement distance and identical signal/protocol definition. No distance scaling or signal equivalence is inferred; the SPL evidence applies only to the named mounting fixture and does not establish amplifier voltage limits or full-system summed output. Source parameters are a minimal complete linear circuit, not a substitute for measured high-frequency transfer behaviour. Per-parameter provenance, offers, user-overlay composition and automatic evidence verification remain to implement.
 
 The circuit accepts a prescribed mechanical load matrix in N·s/m. It does not derive that matrix from geometry. Zero voltage means a connected, zero-voltage source, not an open circuit. Loaded response must never be presented as a 3D horn simulation. The cavity command emits reference values without claiming a solver comparison passed.
 
