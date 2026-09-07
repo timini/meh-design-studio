@@ -198,16 +198,23 @@ def read_measurement(output: Path):
         manifest=_decode_declaration(read_bounded(output/'manifest.json',max_bytes=MAX_MANIFEST_BYTES))
     except RecursionError as exc:
         raise ValueError('measurement manifest exceeds nesting limit') from exc
-    if (set(manifest)!={'schema_version','kind','status','evidence','metadata_hash','files'}
+    if (not isinstance(manifest,dict) or set(manifest)!={'schema_version','kind','status','evidence','metadata_hash','files'}
             or type(manifest['schema_version']) is not int or manifest['schema_version'] != 1 or manifest['kind'] != 'single_complex_measurement'
             or manifest['status'] != 'complete' or manifest['evidence'] != 'imported_not_qualified'):
         raise ValueError("unsupported measurement bundle")
+    if not isinstance(manifest['files'],dict):
+        raise ValueError('measurement files must be an object')
     names=set(manifest['files'])
     required={'raw.csv','metadata.json','trace.npz'}
     if names not in (required,required|{'calibration.bin'}):
         raise ValueError("measurement bundle has missing or unexpected files")
     payloads={}
     for name in names:
+        entry=manifest['files'][name]
+        if (not isinstance(entry,dict) or set(entry)!={'sha256','size_bytes'}
+                or type(entry['size_bytes']) is not int or entry['size_bytes']<0
+                or not isinstance(entry['sha256'],str)):
+            raise ValueError('invalid measurement artifact record')
         path=output/name
         if path.is_symlink(): raise ValueError("measurement bundle files cannot be symlinks")
         data=read_bounded(path,max_bytes=MAX_METADATA_BYTES if name=='metadata.json' else MAX_INPUT_BYTES)

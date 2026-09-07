@@ -324,3 +324,22 @@ def test_duplicate_metadata_keys_rejected(inputs,inspection):
     with pytest.raises(ValueError,match='duplicate JSON'):
         if inspection:read_measurement(out)
         else:import_measurement(csv,meta,out)
+
+
+@pytest.mark.parametrize('value',[True,False,1.0,'1',None,-1])
+def test_artifact_size_requires_nonnegative_integer(inputs,value):
+    csv,meta,_,out=inputs;import_measurement(csv,meta,out)
+    manifest=json.loads((out/'manifest.json').read_text())
+    if value==1.0 and type(value) is float:
+        value=float(manifest['files']['raw.csv']['size_bytes'])
+    manifest['files']['raw.csv']['size_bytes']=value
+    (out/'manifest.json').write_text(json.dumps(manifest))
+    with pytest.raises(ValueError,match='artifact record'):read_measurement(out)
+
+
+@pytest.mark.parametrize('entry',[None,[],{}, {'size_bytes':1}, {'size_bytes':1,'sha256':None}])
+def test_malformed_artifact_records_rejected(inputs,entry):
+    csv,meta,_,out=inputs;import_measurement(csv,meta,out)
+    manifest=json.loads((out/'manifest.json').read_text());manifest['files']['raw.csv']=entry
+    (out/'manifest.json').write_text(json.dumps(manifest))
+    with pytest.raises(ValueError,match='artifact record'):read_measurement(out)
