@@ -266,6 +266,9 @@ def _termination_guard(report):
             state["requested"] = signum
             return
         state["cancelling"] = True
+        # Select cancellation before unwinding, including an interrupt inside
+        # the exception-reporting handler rather than its protected try body.
+        report.update(status="cancelled", error=f"signal {signum} requested cancellation")
         raise EvaluationCancelled(f"signal {signum} requested cancellation")
     def activate():
         state["reserving"] = False

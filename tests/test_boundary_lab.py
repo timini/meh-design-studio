@@ -820,3 +820,19 @@ def test_float_bem_connectivity_is_rejected(tmp_path):
     meshes={'mesh:a':{'file':str(source),'purpose':'bem_surface','sha256':sha256(source)}}
     with pytest.raises(ValueError,match='face count'):
         load_domains(tmp_path,manifest,system,meshes)
+
+
+@pytest.mark.skipif(sys.platform == 'win32',reason='POSIX signal delivery')
+def test_cancellation_while_classifying_failure_cannot_leave_running(tmp_path,monkeypatch):
+    import builtins
+    from meh_studio import boundary_lab as a
+    def failure(self): raise ValueError('original failure')
+    monkeypatch.setattr(BoundaryLabRuntime,'verify',failure)
+    def classify(value,kind):
+        if kind is subprocess.TimeoutExpired: a.signal.raise_signal(a.signal.SIGTERM)
+        return builtins.isinstance(value,kind)
+    monkeypatch.setattr(a,'isinstance',classify,raising=False)
+    runtime=BoundaryLabRuntime(tmp_path,Path(sys.executable),tmp_path/'julia')
+    with pytest.raises(a.EvaluationCancelled):
+        runtime.solve(tmp_path/'project.json',SolveRequest(frequencies_hz=(1000,)),tmp_path/'output')
+    assert json.loads((tmp_path/'output/evaluation.json').read_text())['status'] == 'cancelled'
