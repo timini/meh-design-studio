@@ -285,6 +285,8 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
     if manifest.get("backend_id") != backend or manifest.get("phasor_convention") != "exp(-i omega t)":
         raise ValueError("backend or phasor convention mismatch")
     system, meshes = _result_project(root, manifest)
+    from .result_domains import load_domains, check_quantity_domain
+    domains = load_domains(root, manifest, system, meshes)
     frequencies = list(request.frequencies_hz)
     if manifest.get("frequencies_hz") != frequencies:
         raise ValueError("result frequency grid differs from request")
@@ -355,6 +357,7 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
                     raise ValueError("quantity excitation count mismatch")
                 _quantity_dimensions(quantity, values, len(excitations))
                 _field_identity(quantity, system, meshes)
+                check_quantity_domain(quantity, values, domains)
         contract = {q["id"]: {k: v for k, v in q.items() if k != "key"} for q in quantities}
         if first_contract is not None and contract != first_contract:
             raise ValueError("physical quantity inventories changed across frequencies")
@@ -446,6 +449,8 @@ class BoundaryLabRuntime:
     def solve(self, project: Path, request: SolveRequest, output: Path, *, timeout_s: float = 1800) -> dict:
         if not math.isfinite(timeout_s) or timeout_s <= 0:
             raise ValueError("timeout must be positive and finite")
+        if os.name != "nt" and threading.current_thread() is not threading.main_thread():
+            raise ValueError("run the solver adapter in a worker process, not a background thread")
         project, output = Path(project).resolve(), Path(output).resolve()
         output.mkdir(parents=True, exist_ok=False)
         request_file = output / "request.json"

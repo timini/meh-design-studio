@@ -18,7 +18,7 @@ def artifact(tmp_path):
     np.savez(root / "frequencies/000000.npz", q0000=values)
     metadata = {"freq_hz": 1000, "excitation_port_ids": ["voltage:a"], "arrays_file": "000000.npz",
                 "quantities": [{"key": "q0000", "id": "pressure", "quantity": "fem_nodal_pressure", "unit": "Pa",
-                                "axes": ["excitation", "fem_node"], "shape": [1, 2], "dtype": "complex64",
+                                "target_id": "domain:fem-volume", "axes": ["excitation", "fem_node"], "shape": [1, 2], "dtype": "complex64",
                                 "metadata": {"mesh_ids": ["mesh:a"], "region_ids": ["region:a"],
                                              "node_counts": [2], "node_offsets": [0]}}]}
     (root / "frequencies/000000.json").write_text(json.dumps(metadata), encoding="utf-8")
@@ -29,13 +29,17 @@ def artifact(tmp_path):
                 "results": [{"freq_hz": 1000, "metadata_file": "frequencies/000000.json",
                              "arrays_file": "frequencies/000000.npz"}]}
     source = root / "fixture.msh"
-    source.write_bytes(b"synthetic artifact contract fixture")
+    source.write_text("$MeshFormat\n2.2 0 8\n$EndMeshFormat\n$Nodes\n2\n1 0 0 0\n2 0 0 1\n$EndNodes\n$Elements\n0\n$EndElements\n")
     project = {"physical_system": {"meshes": [{"id": "mesh:a", "purpose": "fem_volume"}],
         "regions": [{"id": "region:a", "kind": "bounded_air", "mesh_ids": ["mesh:a"]}],
         "components": [], "excitation_ports": [{"id": "voltage:a"}]}}
     snapshot = root / "project.snapshot.blab.json"
     snapshot.write_text(json.dumps(project))
-    manifest.update(project_file=snapshot.name, project_sha256=sha256(snapshot), meshes=[{
+    np.savez(root / "domains.npz", points=np.array([[0.,0.,0.],[0.,0.,1.]]))
+    (root / "domains.json").write_text(json.dumps({"domains": [{"id": "domain:fem-volume",
+        "coordinates": {"points_m": "points"}, "topology": {}, "metadata": {
+            "mesh_ids": ["mesh:a"], "node_counts": [2]}}]}))
+    manifest.update(domains_file="domains.npz", domains_metadata_file="domains.json", project_file=snapshot.name, project_sha256=sha256(snapshot), meshes=[{
         "id": "mesh:a", "file": str(source), "purpose": "fem_volume", "sha256": sha256(source),
         "size_bytes": source.stat().st_size}])
     (root / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
@@ -445,7 +449,7 @@ def test_frequency_axis_contract_cannot_change(artifact):
     manifest.update(frequencies_hz=[1000,2000], completion_mask=[True,True])
     manifest["results"].append({"freq_hz":2000,"metadata_file":"frequencies/000001.json","arrays_file":"frequencies/000001.npz"})
     (root / "manifest.json").write_text(json.dumps(manifest))
-    with pytest.raises(ValueError, match="changed across"):
+    with pytest.raises(ValueError, match="changed across|physical domain|source mesh"):
         inspect_result(root, SolveRequest(frequencies_hz=(1000,2000)), "beat_cpu")
 
 
@@ -458,3 +462,50 @@ def test_cancellation_during_runtime_verification_is_recorded(tmp_path, monkeypa
         BoundaryLabRuntime(tmp_path, Path(sys.executable), tmp_path/'julia').solve(
             tmp_path/'project.json', SolveRequest(frequencies_hz=(1000,)), tmp_path/'output')
     assert json.loads((tmp_path/'output/evaluation.json').read_text())["status"] == "cancelled"
+
+
+def test_self_consistent_truncation_cannot_override_source_mesh(artifact):
+    root, _ = artifact
+    path = root / "frequencies/000000.json"
+    metadata = json.loads(path.read_text())
+    metadata["quantities"][0].update(shape=[1,1])
+    metadata["quantities"][0]["metadata"]["node_counts"] = [1]
+    path.write_text(json.dumps(metadata))
+    np.savez(root / "frequencies/000000.npz", q0000=np.ones((1,1), dtype=np.complex64))
+    domain = json.loads((root / "domains.json").read_text())
+    domain["domains"][0]["metadata"]["node_counts"] = [1]
+    (root / "domains.json").write_text(json.dumps(domain))
+    np.savez(root / "domains.npz", points=np.zeros((1,3)))
+    with pytest.raises(ValueError, match="hashed source mesh"):
+        inspect_result(root, SolveRequest(frequencies_hz=(1000,)), "beat_cpu")
+
+
+def test_background_thread_rejection_leaves_no_running_evaluation(tmp_path):
+    from concurrent.futures import ThreadPoolExecutor
+    if sys.platform == "win32": pytest.skip("POSIX signal thread guard")
+    runtime = BoundaryLabRuntime(tmp_path, Path(sys.executable), tmp_path/'julia')
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        future = pool.submit(runtime.solve, tmp_path/'project', SolveRequest(frequencies_hz=(1000,)), tmp_path/'output')
+        with pytest.raises(ValueError, match="worker process"):
+            future.result()
+    assert not (tmp_path/'output').exists()
+
+
+@pytest.mark.parametrize("target,count", [(None,73), ("observation:vertical-polar",73), ("observation:horizontal-polar",1)])
+def test_observation_grid_identity_and_count_are_required(target, count):
+    from meh_studio.result_domains import check_quantity_domain
+    q = {"quantity":"exterior_pressure", "id":"acoustic:pressure:horizontal-polar", "target_id":target}
+    domains = {"observation:horizontal-polar": {"coordinates": {"points_m":np.zeros((73,3))}}}
+    with pytest.raises(ValueError):
+        check_quantity_domain(q, np.zeros((1,count),dtype=complex), domains)
+
+
+def test_radiator_order_is_bound_to_project_components(tmp_path):
+    from meh_studio.result_domains import load_domains
+    (tmp_path/'domains.json').write_text(json.dumps({"domains":[{"id":"components:radiators", "coordinates":{"component_id":"ids"}, "topology":{}, "metadata":{}}]}))
+    np.savez(tmp_path/'domains.npz', ids=np.array(['b','a']))
+    (tmp_path/"project.json").write_text("{}")
+    manifest = {"domains_metadata_file":"domains.json", "domains_file":"domains.npz", "project_file":"project.json"}
+    system = {"components":[{"id":"a"},{"id":"b"}],"meshes":[]}
+    with pytest.raises(ValueError, match="component identities"):
+        load_domains(tmp_path, manifest, system, {})
