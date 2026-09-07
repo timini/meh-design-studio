@@ -211,3 +211,38 @@ def test_corrupt_zstandard_is_structured_error(inputs,capsys):
     (out/'manifest.json').write_text(json.dumps(manifest))
     assert main(['inspect',str(out)])==2
     assert 'invalid measurement array archive' in json.loads(capsys.readouterr().err)['error']
+
+
+@pytest.mark.parametrize('forged_count',[False,True])
+@pytest.mark.parametrize('entry_count',[5,100])
+def test_directory_entries_rejected_before_zipfile_allocation(inputs,monkeypatch,forged_count,entry_count):
+    import zipfile,struct
+    csv,meta,_,out=inputs;import_measurement(csv,meta,out)
+    with zipfile.ZipFile(out/'trace.npz','w') as archive:
+        for i in range(entry_count):archive.writestr(str(i),b'')
+    data=bytearray((out/'trace.npz').read_bytes())
+    if forged_count:
+        struct.pack_into('<HH',data,len(data)-14,4,4)
+    (out/'trace.npz').write_bytes(data)
+    manifest=json.loads((out/'manifest.json').read_text())
+    manifest['files']['trace.npz']={'sha256':digest(data),'size_bytes':len(data)}
+    (out/'manifest.json').write_text(json.dumps(manifest))
+    def forbidden(*args,**kwargs):pytest.fail('ZipFile allocated before directory bounds check')
+    monkeypatch.setattr(zipfile,'ZipFile',forbidden)
+    with pytest.raises(ValueError,match='archive directory'):read_measurement(out)
+
+
+@pytest.mark.parametrize('method',[12,14,93])
+def test_unbounded_compression_rejected_before_open(inputs,monkeypatch,method):
+    import zipfile,struct
+    csv,meta,_,out=inputs;import_measurement(csv,meta,out)
+    data=bytearray((out/'trace.npz').read_bytes())
+    central=data.index(b'PK\x01\x02')
+    struct.pack_into('<H',data,central+10,method)
+    (out/'trace.npz').write_bytes(data)
+    manifest=json.loads((out/'manifest.json').read_text())
+    manifest['files']['trace.npz']={'sha256':digest(data),'size_bytes':len(data)}
+    (out/'manifest.json').write_text(json.dumps(manifest))
+    def forbidden(*args,**kwargs):pytest.fail('unsafe compressed stream was opened')
+    monkeypatch.setattr(zipfile.ZipFile,'open',forbidden)
+    with pytest.raises(ValueError,match='archive compression'):read_measurement(out)

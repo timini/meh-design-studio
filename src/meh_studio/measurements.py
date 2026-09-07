@@ -10,6 +10,7 @@ import zipfile
 import zlib
 import lzma
 import stat
+import struct
 
 try:
     from compression.zstd import ZstdError
@@ -153,6 +154,32 @@ def import_measurement(csv_path: Path, metadata_path: Path, output: Path, *, cal
     return manifest
 
 
+def _check_array_directory(data: bytes, count: int):
+    """Bound directory work before ZipFile can allocate per-entry objects.
+
+    Bundles use a small, single-disk directory with no archive comment or
+    ZIP64 directory. NumPy's local ZIP64 size headers remain supported.
+    """
+    if len(data)<22:
+        raise ValueError("invalid measurement array archive")
+    signature,disk,start_disk,on_disk,total,size,offset,comment=struct.unpack_from('<4s4H2IH',data,len(data)-22)
+    if (signature!=b'PK\x05\x06' or disk or start_disk or comment
+            or on_disk!=count or total!=count or size>4096
+            or offset+size!=len(data)-22):
+        raise ValueError("invalid measurement array archive directory")
+    cursor=offset
+    end=offset+size
+    for _ in range(count):
+        if cursor+46>end or data[cursor:cursor+4]!=b'PK\x01\x02':
+            raise ValueError("invalid measurement array archive directory")
+        name,extra,note=struct.unpack_from('<3H',data,cursor+28)
+        cursor+=46+name+extra+note
+        if cursor>end:
+            raise ValueError("invalid measurement array archive directory")
+    if cursor!=end:
+        raise ValueError("invalid measurement array archive directory")
+
+
 def read_measurement(output: Path):
     """Verify copied evidence and recompute arrays from raw CSV before use."""
     output=Path(output)
@@ -185,6 +212,7 @@ def read_measurement(output: Path):
     if (None if calibration is None else digest(calibration)) != metadata.calibration_sha256:
         raise ValueError("measurement calibration identity mismatch")
     expected=parse_trace(payloads['raw.csv'],metadata)
+    _check_array_directory(payloads['trace.npz'],len(expected))
     try:
         with zipfile.ZipFile(io.BytesIO(payloads['trace.npz'])) as archive:
             expected_names={name+'.npy' for name in expected}
@@ -194,6 +222,10 @@ def read_measurement(output: Path):
                 info=archive.getinfo(name+'.npy')
                 if info.file_size>values.nbytes+1024:
                     raise ValueError("measurement array exceeds expected byte size")
+                # ZipExtFile bounds DEFLATE output with max_length. BZIP2,
+                # LZMA and Zstandard do not share that guarantee across runtimes.
+                if info.compress_type not in (zipfile.ZIP_STORED,zipfile.ZIP_DEFLATED):
+                    raise ValueError("invalid measurement array archive compression")
                 with archive.open(info) as stream:
                     if np.lib.format.read_magic(stream)!=(1,0):
                         raise ValueError("unsupported measurement array encoding")
