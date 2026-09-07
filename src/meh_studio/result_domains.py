@@ -119,7 +119,7 @@ def load_domains(root: Path, manifest: dict, system: dict, meshes: dict) -> dict
                         raise ValueError("FEM topology inventory differs from source meshes")
                 if identity == "domain:bem-boundary":
                     triangles = topology["triangles"]
-                    if triangles.shape != (face_count, 3) or not np.array_equal(triangles, np.vstack(expected_faces)):
+                    if triangles.dtype.kind not in "iu" or triangles.shape != (face_count, 3) or not np.array_equal(triangles, np.vstack(expected_faces)):
                         raise ValueError("result domain face count differs from the source mesh")
                     entry["face_count"] = face_count
                     entry["face_counts"] = face_counts
