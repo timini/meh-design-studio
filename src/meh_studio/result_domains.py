@@ -19,9 +19,10 @@ OBSERVATIONS = {"acoustic:pressure:horizontal-polar": "observation:horizontal-po
                 "acoustic:pressure:sphere": "observation:sphere"}
 
 
-def load_domains(root: Path, manifest: dict, system: dict, meshes: dict) -> dict:
+def load_domains(root: Path, manifest: dict, system: dict, meshes: dict, *, project: dict | None = None) -> dict:
     from .boundary_lab import _contained, _read_json, sha256
-    project = _read_json(_contained(root, manifest["project_file"]))
+    if project is None:
+        project = _read_json(_contained(root, manifest["project_file"]))
     preferences = project.get("project_preferences", {})
     metadata = _read_json(_contained(root, manifest["domains_metadata_file"]))
     items = metadata["domains"]
@@ -33,6 +34,8 @@ def load_domains(root: Path, manifest: dict, system: dict, meshes: dict) -> dict
     with np.load(_contained(root, manifest["domains_file"]), allow_pickle=False) as arrays:
         result = {}
         for identity, domain in domains.items():
+            if any(not isinstance(domain.get(key),dict) for key in ("coordinates","topology","metadata")):
+                raise ValueError("domain coordinates, topology and metadata must be objects")
             coordinates = {k: arrays[v] for k, v in domain["coordinates"].items()}
             topology = {k: arrays[v] for k, v in domain["topology"].items()}
             for values in (*(v for k, v in coordinates.items() if k in {"points_m", "angle_deg"}), *topology.values()):
