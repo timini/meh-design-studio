@@ -12,6 +12,8 @@ The source air meshes must already exist, as described in the [generated-system 
 
 Solve the resulting `project.blab.json` using the normal adapter. A request with `include_project_observations: true` retains horizontal and vertical complex polar pressures; requesting `bem_boundary_traces` and `fem_nodal_pressure` additionally preserves the boundary and interior fields. A source remains connected when another source is driven.
 
+A later run using `examples/radiation-smoke-request.json` completed 500, 1000 and 2000 Hz through the adapter’s independent source-mesh/domain checks. Its full evaluation is included in the report. This establishes execution and artifact integrity at those points, not acoustic qualification.
+
 ## Executed evidence and unresolved validation
 
 The [integration report](../validation/reports/coupled-radiation-integration.json) records a real three-source coupled solve at 1 kHz. The conformed exterior had 1,621 nodes, 3,246 triangles and no open edges or orientation errors. The solver produced interior pressure, BEM pressure/normal derivative, driver velocity/current and two polar pressure sets.

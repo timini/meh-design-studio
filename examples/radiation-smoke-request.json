@@ -1,0 +1,6 @@
+{
+  "schema_version": 1,
+  "frequencies_hz": [500.0, 1000.0, 2000.0],
+  "include_project_observations": true,
+  "retain": ["fem_nodal_pressure", "bem_boundary_traces"]
+}
