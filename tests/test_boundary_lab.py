@@ -563,8 +563,8 @@ def test_domain_mutation_during_inspection_is_rejected(artifact, monkeypatch):
     import meh_studio.result_domains as domains
     root, _ = artifact
     original = domains.load_domains
-    def mutate(*args):
-        result = original(*args)
+    def mutate(*args,**kwargs):
+        result = original(*args,**kwargs)
         path = root/'domains.json'
         path.write_text(path.read_text()+'\n')
         return result
@@ -910,3 +910,59 @@ def test_cli_returns_structured_cancellation(tmp_path,monkeypatch,capsys,signum,
         '--checkout',str(tmp_path),'--python',sys.executable,'--julia','julia','--output',str(tmp_path/'output')])
     assert result==code
     assert json.loads(capsys.readouterr().err)=={'status':'cancelled','error':'cancelled test'}
+
+
+@pytest.mark.parametrize('kind',['exterior_bem','coupled_bem_fem'])
+def test_standalone_inspection_derives_topology_from_saved_project(artifact,kind):
+    root,manifest=artifact;manifest['solve_kind']=kind
+    (root/'manifest.json').write_text(json.dumps(manifest))
+    with pytest.raises(ValueError,match='saved project topology'):
+        inspect_result(root,SolveRequest(frequencies_hz=(1000,)),'beat_cpu')
+
+
+@pytest.mark.parametrize('field',['coordinates','topology','metadata'])
+@pytest.mark.parametrize('value',[[],None,'bad'])
+def test_nested_domain_mappings_are_required_objects(artifact,field,value):
+    root,_=artifact;path=root/'domains.json';document=json.loads(path.read_text())
+    document['domains'][0][field]=value;path.write_text(json.dumps(document))
+    with pytest.raises(ValueError,match='must be objects'):
+        inspect_result(root,SolveRequest(frequencies_hz=(1000,)),'beat_cpu')
+
+
+def test_snapshot_changed_after_verification_cannot_complete(artifact,monkeypatch):
+    from meh_studio import result_domains as d
+    root,_=artifact;original=d.load_domains
+    def mutate(*args,**kwargs):
+        result=original(*args,**kwargs)
+        (root/'project.snapshot.blab.json').write_text('{}')
+        return result
+    monkeypatch.setattr(d,'load_domains',mutate)
+    with pytest.raises(ValueError,match='snapshot changed'):
+        inspect_result(root,SolveRequest(frequencies_hz=(1000,)),'beat_cpu')
+
+
+def test_deep_artifact_json_is_structured_validation_failure(artifact):
+    root,_=artifact;(root/'manifest.json').write_text('{"nested":'+'['*10000+'0'+']'*10000+'}')
+    with pytest.raises(ValueError):
+        inspect_result(root,SolveRequest(frequencies_hz=(1000,)),'beat_cpu')
+
+
+def test_json_decoder_recursion_is_normalized(tmp_path,monkeypatch):
+    from meh_studio import boundary_lab as a
+    path=tmp_path/'document.json';path.write_text('{}')
+    def fail(*args,**kwargs):raise RecursionError('decoder depth')
+    with monkeypatch.context() as patch:
+        patch.setattr(a.json,'loads',fail)
+        with pytest.raises(ValueError,match='nesting limit'):a._read_json(path)
+
+
+def test_source_mesh_changed_after_domain_read_is_rejected(artifact,monkeypatch):
+    from meh_studio import result_domains as d
+    root,manifest=artifact;original=d.load_domains
+    def mutate(*args,**kwargs):
+        result=original(*args,**kwargs)
+        path=Path(manifest['meshes'][0]['file']);path.write_bytes(path.read_bytes()+b'\n')
+        return result
+    monkeypatch.setattr(d,'load_domains',mutate)
+    with pytest.raises(ValueError,match='source mesh changed during inspection'):
+        inspect_result(root,SolveRequest(frequencies_hz=(1000,)),'beat_cpu')
