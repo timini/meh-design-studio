@@ -1,0 +1,455 @@
+{
+  "schema_version": 1,
+  "evidence": "exterior_mesh_sensitivity_only",
+  "qualified": false,
+  "null_policy": "Exclude reference or candidate amplitude <= 0.001 times each source reference peak; report excluded count. No fitted gain/phase.",
+  "limitations": [
+    "Only exterior mesh refined; FEM discretisation fixed",
+    "Three frequencies and fixed polar cuts only",
+    "No independent acoustic solver or physical measurement",
+    "No absolute RMS/SPL normalisation",
+    "Strict circuit/reciprocity failures remain failures"
+  ],
+  "runs": [
+    {
+      "evaluation": "/Users/timrichardson/Documents/Codex/2026-09-06/i/meh-radiation/runs/exterior-current-20mm-solve",
+      "evaluation_sha256": "742b0b689610d383c8e7eaf84992d05650f5087f7672a4cf23cefada2d268e34",
+      "project_sha256": "eba91b12ff5ae3f6c68de220ebde2b683b97cd0e42845879f91b495107adb676",
+      "mesh_inventory": [
+        {
+          "file": "/Users/timrichardson/Documents/Codex/2026-09-06/i/meh-radiation/runs/coupled-production-system/meshes/rear_entry_0_positive.msh",
+          "id": "mesh:rear_entry_0_positive",
+          "name": "rear_entry_0_positive",
+          "purpose": "fem_volume",
+          "sha256": "0e78ca9e900142d09d9e91e4fe9a9565a0d969e13711fba33f56700a2eb2798b",
+          "size_bytes": 64144
+        },
+        {
+          "file": "/Users/timrichardson/Documents/Codex/2026-09-06/i/meh-radiation/runs/coupled-production-system/meshes/rear_entry_0_negative.msh",
+          "id": "mesh:rear_entry_0_negative",
+          "name": "rear_entry_0_negative",
+          "purpose": "fem_volume",
+          "sha256": "5aa1eddfc7801d7b9c354a6f791668a25333c2b47f397d0135b4eb51adb317d5",
+          "size_bytes": 64873
+        },
+        {
+          "file": "/Users/timrichardson/Documents/Codex/2026-09-06/i/meh-radiation/runs/coupled-production-system/meshes/front.msh",
+          "id": "mesh:front",
+          "name": "front",
+          "purpose": "fem_volume",
+          "sha256": "7db95c1126f7f646338a13cb2e78fbd386919f9ec34b2e1cd408341f688a600d",
+          "size_bytes": 1318523
+        },
+        {
+          "file": "/Users/timrichardson/Documents/Codex/2026-09-06/i/meh-radiation/runs/coupled-production-system/meshes/exterior.msh",
+          "id": "mesh:exterior",
+          "name": "exterior",
+          "purpose": "bem_surface",
+          "sha256": "1e7573dffcd50f03bbf73bb64217b92f0ce1c02285ace4bb766885fa3bb535c7",
+          "size_bytes": 210146
+        }
+      ],
+      "electrical_checks": {
+        "schema_version": 1,
+        "evidence": "independent_equation_consistency",
+        "passed": false,
+        "project_sha256": "eba91b12ff5ae3f6c68de220ebde2b683b97cd0e42845879f91b495107adb676",
+        "evaluation_sha256": "742b0b689610d383c8e7eaf84992d05650f5087f7672a4cf23cefada2d268e34",
+        "rows": [
+          {
+            "frequency_hz": 500.0,
+            "passed": false,
+            "circuit_voltage_relative_residual": 3.921461694617944e-08,
+            "electrical_reciprocity_relative_residual": 1.0423471508147486e-07,
+            "minimum_hermitian_admittance_eigenvalue_s": 0.05618283897638321
+          },
+          {
+            "frequency_hz": 1000.0,
+            "passed": false,
+            "circuit_voltage_relative_residual": 5.894190794662268e-08,
+            "electrical_reciprocity_relative_residual": 1.5082812865330197e-07,
+            "minimum_hermitian_admittance_eigenvalue_s": 0.017745787277817726
+          },
+          {
+            "frequency_hz": 2000.0,
+            "passed": false,
+            "circuit_voltage_relative_residual": 1.3530893549763671e-07,
+            "electrical_reciprocity_relative_residual": 2.8943147878379705e-09,
+            "minimum_hermitian_admittance_eigenvalue_s": 0.09520933032035828
+          }
+        ],
+        "relative_tolerance": 1e-08,
+        "acoustic_accuracy_validated": false,
+        "limitations": [
+          "Circuit consistency cannot establish acoustic field accuracy",
+          "No measured driver or speaker comparison",
+          "No RMS or absolute SPL qualification"
+        ]
+      }
+    },
+    {
+      "evaluation": "/Users/timrichardson/Documents/Codex/2026-09-06/i/meh-radiation/runs/exterior-current-15mm-solve",
+      "evaluation_sha256": "c5f93ccc22ed219e9af67b711d12957a9ef7c47c8b2b38a60904231c7fe698db",
+      "project_sha256": "eba91b12ff5ae3f6c68de220ebde2b683b97cd0e42845879f91b495107adb676",
+      "mesh_inventory": [
+        {
+          "file": "/Users/timrichardson/Documents/Codex/2026-09-06/i/meh-radiation/runs/exterior-refinement-15mm/meshes/rear_entry_0_positive.msh",
+          "id": "mesh:rear_entry_0_positive",
+          "name": "rear_entry_0_positive",
+          "purpose": "fem_volume",
+          "sha256": "0e78ca9e900142d09d9e91e4fe9a9565a0d969e13711fba33f56700a2eb2798b",
+          "size_bytes": 64144
+        },
+        {
+          "file": "/Users/timrichardson/Documents/Codex/2026-09-06/i/meh-radiation/runs/exterior-refinement-15mm/meshes/rear_entry_0_negative.msh",
+          "id": "mesh:rear_entry_0_negative",
+          "name": "rear_entry_0_negative",
+          "purpose": "fem_volume",
+          "sha256": "5aa1eddfc7801d7b9c354a6f791668a25333c2b47f397d0135b4eb51adb317d5",
+          "size_bytes": 64873
+        },
+        {
+          "file": "/Users/timrichardson/Documents/Codex/2026-09-06/i/meh-radiation/runs/exterior-refinement-15mm/meshes/front.msh",
+          "id": "mesh:front",
+          "name": "front",
+          "purpose": "fem_volume",
+          "sha256": "7db95c1126f7f646338a13cb2e78fbd386919f9ec34b2e1cd408341f688a600d",
+          "size_bytes": 1318523
+        },
+        {
+          "file": "/Users/timrichardson/Documents/Codex/2026-09-06/i/meh-radiation/runs/exterior-refinement-15mm/meshes/exterior.msh",
+          "id": "mesh:exterior",
+          "name": "exterior",
+          "purpose": "bem_surface",
+          "sha256": "5825220e84f76913ab1e19262d73e9c6a095e7963f05606cf3bbb482754f505f",
+          "size_bytes": 249790
+        }
+      ],
+      "electrical_checks": {
+        "schema_version": 1,
+        "evidence": "independent_equation_consistency",
+        "passed": false,
+        "project_sha256": "eba91b12ff5ae3f6c68de220ebde2b683b97cd0e42845879f91b495107adb676",
+        "evaluation_sha256": "c5f93ccc22ed219e9af67b711d12957a9ef7c47c8b2b38a60904231c7fe698db",
+        "rows": [
+          {
+            "frequency_hz": 500.0,
+            "passed": false,
+            "circuit_voltage_relative_residual": 7.416220461462602e-08,
+            "electrical_reciprocity_relative_residual": 1.768343338426348e-07,
+            "minimum_hermitian_admittance_eigenvalue_s": 0.056181374937295914
+          },
+          {
+            "frequency_hz": 1000.0,
+            "passed": false,
+            "circuit_voltage_relative_residual": 5.5158905250753474e-08,
+            "electrical_reciprocity_relative_residual": 9.23937193419988e-08,
+            "minimum_hermitian_admittance_eigenvalue_s": 0.017743879929184914
+          },
+          {
+            "frequency_hz": 2000.0,
+            "passed": false,
+            "circuit_voltage_relative_residual": 6.861134368183241e-08,
+            "electrical_reciprocity_relative_residual": 1.0263621952333324e-08,
+            "minimum_hermitian_admittance_eigenvalue_s": 0.09520874917507172
+          }
+        ],
+        "relative_tolerance": 1e-08,
+        "acoustic_accuracy_validated": false,
+        "limitations": [
+          "Circuit consistency cannot establish acoustic field accuracy",
+          "No measured driver or speaker comparison",
+          "No RMS or absolute SPL qualification"
+        ]
+      }
+    },
+    {
+      "evaluation": "/Users/timrichardson/Documents/Codex/2026-09-06/i/meh-radiation/runs/exterior-current-10mm-solve",
+      "evaluation_sha256": "d6c6d124b58af41ab5f65576e1f5f8bf76f8339e0e08a515b53731f4d1286b84",
+      "project_sha256": "eba91b12ff5ae3f6c68de220ebde2b683b97cd0e42845879f91b495107adb676",
+      "mesh_inventory": [
+        {
+          "file": "/Users/timrichardson/Documents/Codex/2026-09-06/i/meh-radiation/runs/exterior-refinement-10mm/meshes/rear_entry_0_positive.msh",
+          "id": "mesh:rear_entry_0_positive",
+          "name": "rear_entry_0_positive",
+          "purpose": "fem_volume",
+          "sha256": "0e78ca9e900142d09d9e91e4fe9a9565a0d969e13711fba33f56700a2eb2798b",
+          "size_bytes": 64144
+        },
+        {
+          "file": "/Users/timrichardson/Documents/Codex/2026-09-06/i/meh-radiation/runs/exterior-refinement-10mm/meshes/rear_entry_0_negative.msh",
+          "id": "mesh:rear_entry_0_negative",
+          "name": "rear_entry_0_negative",
+          "purpose": "fem_volume",
+          "sha256": "5aa1eddfc7801d7b9c354a6f791668a25333c2b47f397d0135b4eb51adb317d5",
+          "size_bytes": 64873
+        },
+        {
+          "file": "/Users/timrichardson/Documents/Codex/2026-09-06/i/meh-radiation/runs/exterior-refinement-10mm/meshes/front.msh",
+          "id": "mesh:front",
+          "name": "front",
+          "purpose": "fem_volume",
+          "sha256": "7db95c1126f7f646338a13cb2e78fbd386919f9ec34b2e1cd408341f688a600d",
+          "size_bytes": 1318523
+        },
+        {
+          "file": "/Users/timrichardson/Documents/Codex/2026-09-06/i/meh-radiation/runs/exterior-refinement-10mm/meshes/exterior.msh",
+          "id": "mesh:exterior",
+          "name": "exterior",
+          "purpose": "bem_surface",
+          "sha256": "0cda60de1279d62b5f77198abdb5073ae2d4c51726f06908761178dd11d3b14e",
+          "size_bytes": 395392
+        }
+      ],
+      "electrical_checks": {
+        "schema_version": 1,
+        "evidence": "independent_equation_consistency",
+        "passed": false,
+        "project_sha256": "eba91b12ff5ae3f6c68de220ebde2b683b97cd0e42845879f91b495107adb676",
+        "evaluation_sha256": "d6c6d124b58af41ab5f65576e1f5f8bf76f8339e0e08a515b53731f4d1286b84",
+        "rows": [
+          {
+            "frequency_hz": 500.0,
+            "passed": false,
+            "circuit_voltage_relative_residual": 2.6900999552878247e-08,
+            "electrical_reciprocity_relative_residual": 1.3764238815383578e-07,
+            "minimum_hermitian_admittance_eigenvalue_s": 0.056179121136665344
+          },
+          {
+            "frequency_hz": 1000.0,
+            "passed": false,
+            "circuit_voltage_relative_residual": 1.077417366467272e-07,
+            "electrical_reciprocity_relative_residual": 1.4099887835072877e-07,
+            "minimum_hermitian_admittance_eigenvalue_s": 0.01774195022881031
+          },
+          {
+            "frequency_hz": 2000.0,
+            "passed": false,
+            "circuit_voltage_relative_residual": 1.1232904500518898e-07,
+            "electrical_reciprocity_relative_residual": 6.554361497990158e-09,
+            "minimum_hermitian_admittance_eigenvalue_s": 0.09520868957042694
+          }
+        ],
+        "relative_tolerance": 1e-08,
+        "acoustic_accuracy_validated": false,
+        "limitations": [
+          "Circuit consistency cannot establish acoustic field accuracy",
+          "No measured driver or speaker comparison",
+          "No RMS or absolute SPL qualification"
+        ]
+      }
+    }
+  ],
+  "successive_comparisons": [
+    {
+      "from": "/Users/timrichardson/Documents/Codex/2026-09-06/i/meh-radiation/runs/exterior-current-20mm-solve",
+      "to": "/Users/timrichardson/Documents/Codex/2026-09-06/i/meh-radiation/runs/exterior-current-15mm-solve",
+      "rows": [
+        {
+          "frequency_hz": 500.0,
+          "quantities": {
+            "mechanical:diaphragm-velocity": {
+              "relative_matrix_norm_change": 0.00038505744305439293,
+              "compared_samples": 9,
+              "excluded_null_samples": 0,
+              "maximum_absolute_magnitude_change_db": 0.018542222678661346,
+              "maximum_absolute_phase_change_deg": 0.06345677375793457
+            },
+            "electrical:voice-coil-current": {
+              "relative_matrix_norm_change": 0.00010950417345156893,
+              "compared_samples": 9,
+              "excluded_null_samples": 0,
+              "maximum_absolute_magnitude_change_db": 0.018543779850006104,
+              "maximum_absolute_phase_change_deg": 0.06346246600151062
+            },
+            "acoustic:pressure:horizontal-polar": {
+              "relative_matrix_norm_change": 0.0019577008206397295,
+              "compared_samples": 219,
+              "excluded_null_samples": 0,
+              "maximum_absolute_magnitude_change_db": 0.022350719198584557,
+              "maximum_absolute_phase_change_deg": 0.07674246281385422
+            },
+            "acoustic:pressure:vertical-polar": {
+              "relative_matrix_norm_change": 0.0019499603658914566,
+              "compared_samples": 219,
+              "excluded_null_samples": 0,
+              "maximum_absolute_magnitude_change_db": 0.022380825132131577,
+              "maximum_absolute_phase_change_deg": 0.07687661051750183
+            }
+          }
+        },
+        {
+          "frequency_hz": 1000.0,
+          "quantities": {
+            "mechanical:diaphragm-velocity": {
+              "relative_matrix_norm_change": 5.279033939586952e-05,
+              "compared_samples": 9,
+              "excluded_null_samples": 0,
+              "maximum_absolute_magnitude_change_db": 0.004888128023594618,
+              "maximum_absolute_phase_change_deg": 0.07165583968162537
+            },
+            "electrical:voice-coil-current": {
+              "relative_matrix_norm_change": 2.3723776394035667e-05,
+              "compared_samples": 9,
+              "excluded_null_samples": 0,
+              "maximum_absolute_magnitude_change_db": 0.004887610673904419,
+              "maximum_absolute_phase_change_deg": 0.07165560871362686
+            },
+            "acoustic:pressure:horizontal-polar": {
+              "relative_matrix_norm_change": 0.0010443563805893064,
+              "compared_samples": 219,
+              "excluded_null_samples": 0,
+              "maximum_absolute_magnitude_change_db": 0.020342733711004257,
+              "maximum_absolute_phase_change_deg": 0.19085821509361267
+            },
+            "acoustic:pressure:vertical-polar": {
+              "relative_matrix_norm_change": 0.0010848992969840765,
+              "compared_samples": 219,
+              "excluded_null_samples": 0,
+              "maximum_absolute_magnitude_change_db": 0.021323056891560555,
+              "maximum_absolute_phase_change_deg": 0.1907861828804016
+            }
+          }
+        },
+        {
+          "frequency_hz": 2000.0,
+          "quantities": {
+            "mechanical:diaphragm-velocity": {
+              "relative_matrix_norm_change": 6.4188088799710386e-06,
+              "compared_samples": 5,
+              "excluded_null_samples": 4,
+              "maximum_absolute_magnitude_change_db": 0.0042318422347307205,
+              "maximum_absolute_phase_change_deg": 0.049941305071115494
+            },
+            "electrical:voice-coil-current": {
+              "relative_matrix_norm_change": 3.1185472835204564e-06,
+              "compared_samples": 3,
+              "excluded_null_samples": 6,
+              "maximum_absolute_magnitude_change_db": 5.850248635397293e-05,
+              "maximum_absolute_phase_change_deg": 5.0721471779979765e-05
+            },
+            "acoustic:pressure:horizontal-polar": {
+              "relative_matrix_norm_change": 0.001061589689925313,
+              "compared_samples": 219,
+              "excluded_null_samples": 0,
+              "maximum_absolute_magnitude_change_db": 0.044575925916433334,
+              "maximum_absolute_phase_change_deg": 0.5081018209457397
+            },
+            "acoustic:pressure:vertical-polar": {
+              "relative_matrix_norm_change": 0.0010018199682235718,
+              "compared_samples": 219,
+              "excluded_null_samples": 0,
+              "maximum_absolute_magnitude_change_db": 0.05424429476261139,
+              "maximum_absolute_phase_change_deg": 0.42472225427627563
+            }
+          }
+        }
+      ]
+    },
+    {
+      "from": "/Users/timrichardson/Documents/Codex/2026-09-06/i/meh-radiation/runs/exterior-current-15mm-solve",
+      "to": "/Users/timrichardson/Documents/Codex/2026-09-06/i/meh-radiation/runs/exterior-current-10mm-solve",
+      "rows": [
+        {
+          "frequency_hz": 500.0,
+          "quantities": {
+            "mechanical:diaphragm-velocity": {
+              "relative_matrix_norm_change": 0.0007083524251356721,
+              "compared_samples": 9,
+              "excluded_null_samples": 0,
+              "maximum_absolute_magnitude_change_db": 0.03845837339758873,
+              "maximum_absolute_phase_change_deg": 0.058519601821899414
+            },
+            "electrical:voice-coil-current": {
+              "relative_matrix_norm_change": 0.00020135972590651363,
+              "compared_samples": 9,
+              "excluded_null_samples": 0,
+              "maximum_absolute_magnitude_change_db": 0.03845733404159546,
+              "maximum_absolute_phase_change_deg": 0.01521544810384512
+            },
+            "acoustic:pressure:horizontal-polar": {
+              "relative_matrix_norm_change": 0.0035578592214733362,
+              "compared_samples": 219,
+              "excluded_null_samples": 0,
+              "maximum_absolute_magnitude_change_db": 0.040343642234802246,
+              "maximum_absolute_phase_change_deg": 0.11351343244314194
+            },
+            "acoustic:pressure:vertical-polar": {
+              "relative_matrix_norm_change": 0.0035532996989786625,
+              "compared_samples": 219,
+              "excluded_null_samples": 0,
+              "maximum_absolute_magnitude_change_db": 0.040177199989557266,
+              "maximum_absolute_phase_change_deg": 0.11351343244314194
+            }
+          }
+        },
+        {
+          "frequency_hz": 1000.0,
+          "quantities": {
+            "mechanical:diaphragm-velocity": {
+              "relative_matrix_norm_change": 0.00010525456309551373,
+              "compared_samples": 9,
+              "excluded_null_samples": 0,
+              "maximum_absolute_magnitude_change_db": 0.006851900834590197,
+              "maximum_absolute_phase_change_deg": 0.15564601123332977
+            },
+            "electrical:voice-coil-current": {
+              "relative_matrix_norm_change": 4.7323399485321715e-05,
+              "compared_samples": 9,
+              "excluded_null_samples": 0,
+              "maximum_absolute_magnitude_change_db": 0.0068487972021102905,
+              "maximum_absolute_phase_change_deg": 0.1556461900472641
+            },
+            "acoustic:pressure:horizontal-polar": {
+              "relative_matrix_norm_change": 0.002336380537599325,
+              "compared_samples": 219,
+              "excluded_null_samples": 0,
+              "maximum_absolute_magnitude_change_db": 0.023089881986379623,
+              "maximum_absolute_phase_change_deg": 0.3531970977783203
+            },
+            "acoustic:pressure:vertical-polar": {
+              "relative_matrix_norm_change": 0.002331526717171073,
+              "compared_samples": 219,
+              "excluded_null_samples": 0,
+              "maximum_absolute_magnitude_change_db": 0.022728079929947853,
+              "maximum_absolute_phase_change_deg": 0.35294264554977417
+            }
+          }
+        },
+        {
+          "frequency_hz": 2000.0,
+          "quantities": {
+            "mechanical:diaphragm-velocity": {
+              "relative_matrix_norm_change": 9.787489943846595e-06,
+              "compared_samples": 5,
+              "excluded_null_samples": 4,
+              "maximum_absolute_magnitude_change_db": 0.00960976630449295,
+              "maximum_absolute_phase_change_deg": 0.03133215010166168
+            },
+            "electrical:voice-coil-current": {
+              "relative_matrix_norm_change": 4.697179974755272e-06,
+              "compared_samples": 3,
+              "excluded_null_samples": 6,
+              "maximum_absolute_magnitude_change_db": 5.7467041187919676e-05,
+              "maximum_absolute_phase_change_deg": 0.00044963619438931346
+            },
+            "acoustic:pressure:horizontal-polar": {
+              "relative_matrix_norm_change": 0.0015229209093376994,
+              "compared_samples": 219,
+              "excluded_null_samples": 0,
+              "maximum_absolute_magnitude_change_db": 0.03089594468474388,
+              "maximum_absolute_phase_change_deg": 0.6792609691619873
+            },
+            "acoustic:pressure:vertical-polar": {
+              "relative_matrix_norm_change": 0.0014928987948223948,
+              "compared_samples": 219,
+              "excluded_null_samples": 0,
+              "maximum_absolute_magnitude_change_db": 0.042485278099775314,
+              "maximum_absolute_phase_change_deg": 0.5763655304908752
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
