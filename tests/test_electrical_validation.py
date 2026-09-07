@@ -19,7 +19,7 @@ def circuit_artifact(tmp_path):
         "re_ohm": source.re_ohm, "le_h": source.le_h, "bl_n_per_a": source.bl_n_a}} for name in ids]
     project = tmp_path / "project.json"
     project.write_text(json.dumps({"physical_system": {"meshes": [{"id": "mesh:a", "purpose": "fem_volume", "file": str(tmp_path / "evaluation/upstream/fixture.msh")}],
-        "regions": [{"id": "region:a", "kind": "bounded_air", "mesh_ids": ["mesh:a"]}], "components": components,
+        "regions": [{"id": "region:a", "kind": "bounded_air", "mesh_ids": ["mesh:a"], "volume_groups":[{"mesh_id":"mesh:a","tag":1}]}], "components": components,
         "excitation_ports": [{"id": name, "component_id": name, "kind": "voltage"} for name in ids]}}))
     root = tmp_path / "evaluation"
     upstream = root / "upstream"
@@ -44,11 +44,11 @@ def circuit_artifact(tmp_path):
     (upstream / "metadata.json").write_text(json.dumps({"freq_hz": 1000, "excitation_port_ids": ids,
         "arrays_file": "arrays.npz", "quantities": quantities,
         "diagnostics": {"transducer_reference_voltage_v": 2.83}}))
-    np.savez(upstream / "domains.npz", ids=np.array(ids), points=np.array([[0.,0.,0.],[1.,0.,0.],[0.,1.,0.],[0.,0.,1.]]))
+    np.savez(upstream / "domains.npz", ids=np.array(ids), points=np.array([[0.,0.,0.],[1.,0.,0.],[0.,1.,0.],[0.,0.,1.]]),tetra=np.array([[0,1,2,3]]))
     (upstream / "domains.json").write_text(json.dumps({"domains": [{
         "id": "components:electrodynamic-transducers", "coordinates": {"component_id": "ids"},
         "topology": {}, "metadata": {}}, {"id":"domain:fem-volume", "coordinates":{"points_m":"points"},
-        "topology":{}, "metadata":{"mesh_ids":["mesh:a"],"node_counts":[4]}}]}))
+        "topology":{"tetrahedra":"tetra"}, "metadata":{"mesh_ids":["mesh:a"],"node_counts":[4],"tetra_counts":[1],"tetra_offsets":[0],"element_order":1}}]}))
     (upstream / "project.snapshot.blab.json").write_bytes(project.read_bytes())
     mesh_file = upstream / "fixture.msh"
     mesh_file.write_text("$MeshFormat\n2.2 0 8\n$EndMeshFormat\n$Nodes\n4\n1 0 0 0\n2 1 0 0\n3 0 1 0\n4 0 0 1\n$EndNodes\n$Elements\n1\n1 4 2 1 1 1 2 3 4\n$EndElements\n")
@@ -61,9 +61,10 @@ def circuit_artifact(tmp_path):
         "excitation_port_ids": ids, "completion_mask": [True],
         "results": [{"freq_hz": 1000, "metadata_file": "metadata.json", "arrays_file": "arrays.npz"}]}))
     def publish():
+        (root / "preflight.json").write_text("{}")
         (root / "evaluation.json").write_text(json.dumps({"status": "complete",
             "project_sha256": sha256(project), "request_sha256": sha256(root / "request.json"),
-            "runtime": {"backend": "beat_cpu"}, "result": inspect_result(upstream, request, "beat_cpu")}))
+            "preflight_sha256":sha256(root/"preflight.json"), "runtime": {"backend": "beat_cpu"}, "result": inspect_result(upstream, request, "beat_cpu")}))
     publish()
     return project, root, arrays, publish
 
@@ -91,3 +92,10 @@ def test_changed_artifacts_are_rejected_before_equation_checks(circuit_artifact)
     np.savez(root / "upstream/arrays.npz", **arrays)
     with pytest.raises(ValueError, match="differ"):
         validate_electrical_basis(project, root)
+
+
+def test_changed_preflight_rejected(circuit_artifact):
+    project,root,*_=circuit_artifact
+    (root/'preflight.json').write_text('{"changed":true}')
+    with pytest.raises(ValueError,match='preflight contract'):
+        validate_electrical_basis(project,root)

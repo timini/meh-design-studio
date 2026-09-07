@@ -18,6 +18,8 @@ def validate_electrical_basis(project_path: Path, evaluation_directory: Path) ->
         raise ValueError("validation requires a complete evaluation of this project")
     if "artifact_hashes" not in evaluation["result"]:
         raise ValueError("saved evaluation predates domain integrity checks; rerun the solver")
+    if evaluation.get("preflight_sha256") != sha256(root / "preflight.json"):
+        raise ValueError("preflight contract identity mismatch or missing historical evidence")
     request_path = root / "request.json"
     if sha256(request_path) != evaluation["request_sha256"]:
         raise ValueError("request identity mismatch")
