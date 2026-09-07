@@ -643,3 +643,25 @@ raise SystemExit({exit_code})
         _execute(command,tmp_path,tmp_path/'process.log',10)
     time.sleep(1.2)
     assert (tmp_path/'ready').exists() and not (tmp_path/'survived').exists()
+
+
+@pytest.mark.parametrize('snapshot',['123 Z\n456 S\n','456 S\n'])
+def test_darwin_empty_or_zombie_group_does_not_fail_cleanup(monkeypatch,snapshot):
+    from meh_studio import boundary_lab as module
+    monkeypatch.setattr(module.sys,'platform','darwin')
+    monkeypatch.setattr(module.signal,'SIGKILL',9,raising=False)
+    def denied(*_): raise PermissionError('simulated Darwin zombie-group EPERM')
+    monkeypatch.setattr(module.os,'killpg',denied,raising=False)
+    monkeypatch.setattr(module.subprocess,'check_output',lambda *a,**k:snapshot)
+    module._kill_process_group(123)
+
+
+def test_darwin_live_child_permission_failure_is_not_hidden(monkeypatch):
+    from meh_studio import boundary_lab as module
+    monkeypatch.setattr(module.sys,'platform','darwin')
+    monkeypatch.setattr(module.signal,'SIGKILL',9,raising=False)
+    def denied(*_): raise PermissionError('live child')
+    monkeypatch.setattr(module.os,'killpg',denied,raising=False)
+    monkeypatch.setattr(module.subprocess,'check_output',lambda *a,**k:'123 Z\n123 S\n')
+    with pytest.raises(PermissionError,match='live child'):
+        module._kill_process_group(123)
