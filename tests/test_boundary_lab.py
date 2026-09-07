@@ -18,7 +18,9 @@ def artifact(tmp_path):
     np.savez(root / "frequencies/000000.npz", q0000=values)
     metadata = {"freq_hz": 1000, "excitation_port_ids": ["voltage:a"], "arrays_file": "000000.npz",
                 "quantities": [{"key": "q0000", "id": "pressure", "quantity": "fem_nodal_pressure", "unit": "Pa",
-                                "axes": ["excitation", "node"], "shape": [1, 2], "dtype": "complex64"}]}
+                                "axes": ["excitation", "fem_node"], "shape": [1, 2], "dtype": "complex64",
+                                "metadata": {"mesh_ids": ["mesh:a"], "region_ids": ["region:a"],
+                                             "node_counts": [2], "node_offsets": [0]}}]}
     (root / "frequencies/000000.json").write_text(json.dumps(metadata), encoding="utf-8")
     manifest = {"schema": "boundary-lab-headless-result", "schema_version": 2, "status": "complete",
                 "backend_id": "beat_cpu", "phasor_convention": "exp(-i omega t)",
@@ -341,7 +343,7 @@ def test_preflight_contract_failure_stops_before_solver(tmp_path, monkeypatch, o
     calls = []
     def execute(command, cwd, log, timeout, **kwargs):
         calls.append(command)
-        log.write_text(json.dumps({"valid": True, "output_ids": output_ids, "meshes": [{
+        log.write_text(json.dumps({"valid": True, "solve_kind": "exterior_bem", "output_ids": output_ids, "meshes": [{
             "id": "air", "file": str(mesh), "purpose": "fem_volume", "sha256": sha256(mesh),
             "size_bytes": mesh.stat().st_size}]}))
     monkeypatch.setattr(adapter, "_execute", execute)
@@ -352,3 +354,39 @@ def test_preflight_contract_failure_stops_before_solver(tmp_path, monkeypatch, o
                       tmp_path / "output")
     assert len(calls) == 1
     assert json.loads((tmp_path / "output/evaluation.json").read_text())["status"] == "failed"
+
+
+@pytest.mark.parametrize("patch", [
+    {"axes": ["excitation", "transducer"]},
+    {"metadata": {"mesh_ids": ["m"], "region_ids": ["r"], "node_counts": [3], "node_offsets": [0]}},
+    {"metadata": {"mesh_ids": ["m"], "region_ids": ["r"], "node_counts": [2], "node_offsets": [1]}},
+    {"metadata": {}},
+])
+def test_field_axes_and_mesh_inventory_are_required(artifact, patch):
+    root, _ = artifact
+    path = root / "frequencies/000000.json"
+    metadata = json.loads(path.read_text())
+    metadata["quantities"][0].update(patch)
+    path.write_text(json.dumps(metadata))
+    with pytest.raises(ValueError):
+        inspect_result(root, SolveRequest(frequencies_hz=(1000,)), "beat_cpu")
+
+
+@pytest.mark.parametrize("kind", [None, "unknown", "exterior_bem"])
+def test_solve_kind_matches_expected_topology(artifact, kind):
+    root, manifest = artifact
+    manifest["solve_kind"] = kind
+    (root / "manifest.json").write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match="solve kind"):
+        inspect_result(root, SolveRequest(frequencies_hz=(1000,)), "beat_cpu", expected_solve_kind="interior_fem")
+
+
+@pytest.mark.parametrize("name,axes,shape", [
+    ("radiation_impedance", [], ()), ("radiation_impedance", ["radiator"], (0,)),
+    ("fem_nodal_pressure", ["excitation", "fem_node"], (1, 0)),
+    ("diaphragm_velocity", ["excitation", "transducer"], (1, 2)),
+])
+def test_empty_or_unindexed_physical_dimensions_fail(name, axes, shape):
+    from meh_studio.boundary_lab import _quantity_dimensions
+    with pytest.raises(ValueError):
+        _quantity_dimensions({"quantity": name, "axes": axes}, np.zeros(shape, dtype=complex), 1)

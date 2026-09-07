@@ -89,6 +89,59 @@ OUTPUT_QUANTITIES = {
 }
 
 
+QUANTITY_AXES = {
+    "fem_nodal_pressure": ["excitation", "fem_node"],
+    "bem_boundary_pressure": ["excitation", "bem_node"],
+    "bem_boundary_neumann": ["excitation", "bem_face"],
+    "exterior_pressure": ["excitation", "observation"],
+    "diaphragm_velocity": ["excitation", "transducer"],
+    "voice_coil_current": ["excitation", "transducer"],
+    # The pinned upstream publishes one self impedance per radiator, not a matrix.
+    "radiation_impedance": ["radiator"],
+}
+SOLVE_KINDS = {"interior_fem", "exterior_bem", "coupled_bem_fem"}
+
+
+def _project_solve_kind(project: dict) -> str:
+    regions = project.get("physical_system", {}).get("regions")
+    if not isinstance(regions, list) or not regions:
+        raise ValueError("explicit physical-system regions are required")
+    kinds = [r.get("kind") for r in regions]
+    if any(k not in {"bounded_air", "unbounded_air"} for k in kinds) or kinds.count("unbounded_air") > 1:
+        raise ValueError("unsupported acoustic region topology")
+    return ("interior_fem" if "unbounded_air" not in kinds else
+            "exterior_bem" if "bounded_air" not in kinds else "coupled_bem_fem")
+
+
+def _quantity_dimensions(quantity: dict, values: np.ndarray, excitation_count: int):
+    name = quantity["quantity"]
+    if quantity["axes"] != QUANTITY_AXES[name] or any(n <= 0 for n in values.shape):
+        raise ValueError("quantity axes or dimensions differ from the physical contract")
+    metadata = quantity.get("metadata", {})
+    if not isinstance(metadata, dict):
+        raise ValueError("quantity metadata must be an object")
+    if name in {"diaphragm_velocity", "voice_coil_current"}:
+        if len(_output_ids(metadata.get("component_ids"))) != values.shape[1]:
+            raise ValueError("transducer dimension differs from component inventory")
+    if name == "radiation_impedance" and values.shape[0] != excitation_count:
+        raise ValueError("radiator dimension differs from the full excitation basis")
+    counts_key = {"fem_nodal_pressure": "node_counts", "bem_boundary_pressure": "vertex_counts",
+                  "bem_boundary_neumann": "face_counts"}.get(name)
+    if counts_key and (name == "fem_nodal_pressure" or counts_key in metadata):
+        counts = metadata.get(counts_key)
+        if (not isinstance(counts, list) or not counts or
+                any(type(n) is not int or n <= 0 for n in counts) or sum(counts) != values.shape[1]):
+            raise ValueError("field dimension differs from mesh node/face inventory")
+        if len(_output_ids(metadata.get("mesh_ids"))) != len(counts):
+            raise ValueError("field inventory differs from mesh identities")
+        offset_key = {"node_counts": "node_offsets", "vertex_counts": "vertex_offsets",
+                      "face_counts": "face_offsets"}[counts_key]
+        if metadata.get(offset_key) != [sum(counts[:i]) for i in range(len(counts))]:
+            raise ValueError("field offsets differ from mesh inventory")
+        if name == "fem_nodal_pressure" and len(_output_ids(metadata.get("region_ids"))) != len(counts):
+            raise ValueError("field inventory differs from region identities")
+
+
 def _output_ids(ids) -> tuple[str, ...]:
     if (not isinstance(ids, (list, tuple)) or not ids
             or any(not isinstance(item, str) or not item for item in ids)
@@ -165,7 +218,8 @@ def _termination_guard():
 
 
 def _inspect_result(root: Path, request: SolveRequest, backend: str,
-                    expected_output_ids: tuple[str, ...] | None = None) -> dict:
+                    expected_output_ids: tuple[str, ...] | None = None,
+                    expected_solve_kind: str | None = None) -> dict:
     """Reject partial runs and retain raw complex quantities without DSP synthesis."""
     if expected_output_ids is not None:
         expected_output_ids = _output_ids(expected_output_ids)
@@ -174,6 +228,9 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
     if (manifest.get("schema") != "boundary-lab-headless-result"
             or manifest.get("schema_version") != 2):
         raise ValueError("unsupported Boundary Lab result schema")
+    if manifest.get("solve_kind") not in SOLVE_KINDS or (
+            expected_solve_kind is not None and manifest["solve_kind"] != expected_solve_kind):
+        raise ValueError("result solve kind differs from the physical contract")
     if manifest.get("status") != "complete":
         raise ValueError("upstream result is not complete")
     if manifest.get("backend_id") != backend or manifest.get("phasor_convention") != "exp(-i omega t)":
@@ -242,6 +299,7 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
                     raise ValueError("quantity requires an excitation axis")
                 if "excitation" in axes and values.shape[axes.index("excitation")] != len(excitations):
                     raise ValueError("quantity excitation count mismatch")
+                _quantity_dimensions(quantity, values, len(excitations))
         inventory.append({"frequency_hz": frequency, "metadata_sha256": sha256(metadata_path),
                           "arrays_sha256": sha256(array_path), "quantities": quantities})
     return {"evidence": "predicted", "solve_kind": manifest.get("solve_kind"),
@@ -250,9 +308,10 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
 
 
 def inspect_result(root: Path, request: SolveRequest, backend: str,
-                   expected_output_ids: tuple[str, ...] | None = None) -> dict:
+                   expected_output_ids: tuple[str, ...] | None = None,
+                    expected_solve_kind: str | None = None) -> dict:
     try:
-        return _inspect_result(root, request, backend, expected_output_ids)
+        return _inspect_result(root, request, backend, expected_output_ids, expected_solve_kind)
     except (KeyError, TypeError, OSError, IndexError, zipfile.BadZipFile) as exc:
         raise ValueError(f"invalid or missing result artifact: {exc}") from exc
 
@@ -349,6 +408,9 @@ class BoundaryLabRuntime:
             preflight = _read_json(output / "preflight.json")
             if preflight.get("valid") is not True:
                 raise ValueError("upstream preflight did not confirm validity")
+            solve_kind = _project_solve_kind(_read_json(project))
+            if preflight.get("solve_kind") != solve_kind:
+                raise ValueError("preflight solve kind differs from project topology")
             preflight_meshes = _mesh_inventory(preflight)
             expected_outputs = _output_ids(preflight.get("output_ids"))
             observations = _project_observation_ids(_read_json(project), request)
@@ -357,7 +419,7 @@ class BoundaryLabRuntime:
             _execute(base + ["solve"] + common + ["--events", "ndjson", "--output", str(output / "upstream")],
                      Path(self.checkout), output / "solve.ndjson", timeout_s)
             result = inspect_result(output / "upstream", request, self.backend,
-                                    expected_outputs)
+                                    expected_outputs, solve_kind)
             if sha256(project) != project_hash or sha256(request_file) != report["request_sha256"]:
                 raise ValueError("project or request changed during evaluation")
             manifest = _read_json(output / "upstream/manifest.json")
