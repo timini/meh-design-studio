@@ -25,7 +25,7 @@ The throat is an ideal piston without a modelled rear acoustic load or compressi
 
 ## Independent consistency checks
 
-Historical evaluation records without domain-file hashes must be rerun before this validator will accept them; archived reports retain their original provenance.
+Historical evaluation records without domain-file or preflight hashes must be rerun before this validator will accept them; archived reports retain their original provenance.
 
 `validate-electrical` verifies the full voltage basis against the saved project and hashed evaluation, preserves component ordering and checks the explicit native 2.83 V convention. For each frequency it evaluates the independent electrical equation `V = (Re - iωLe)I + Bl·v`, symmetry of the electrical admittance matrix and nonnegative Hermitian admittance. Relative residual tolerance is `1e-8`; passivity permits numerical error of `1e-8` times the admittance norm. There is no conversion to RMS or SPL.
 
