@@ -11,6 +11,7 @@ import os
 from pathlib import Path
 import signal
 import subprocess
+import sys
 import threading
 import time
 import zipfile
@@ -431,6 +432,25 @@ def inspect_result(root: Path, request: SolveRequest, backend: str,
         raise ValueError(f"invalid or missing result artifact: {exc}") from exc
 
 
+def _kill_process_group(pgid: int):
+    try:
+        os.killpg(pgid, signal.SIGKILL)
+    except ProcessLookupError:
+        pass
+    except PermissionError:
+        if sys.platform != "darwin":
+            raise
+        # Darwin can return EPERM when only zombie members remain. Never
+        # swallow a permission failure for a live group member. Inspect the
+        # whole group, not merely the already-reaped parent PID.
+        snapshot = subprocess.check_output(
+            ["/bin/ps", "-A", "-o", "pgid=,stat="], text=True, timeout=5)
+        for line in snapshot.splitlines():
+            group, state = line.split()
+            if int(group) == pgid and not state.startswith("Z"):
+                raise
+
+
 def _execute(command: list[str], cwd: Path, log: Path, timeout_s: float,
              stderr_log: Path | None = None) -> None:
     if not math.isfinite(timeout_s) or timeout_s <= 0:
@@ -453,16 +473,15 @@ def _execute(command: list[str], cwd: Path, log: Path, timeout_s: float,
         finally:
             # A parent can exit before its solver children. Cleanup applies to
             # successful/nonzero exits as well as timeout and cancellation.
-            if job is not None:
-                job.close()
-            else:
-                try:
-                    os.killpg(process.pid, signal.SIGKILL)
-                except ProcessLookupError:
-                    pass
-            if process.poll() is None:
-                process.kill()
-            process.wait()
+            try:
+                if job is not None:
+                    job.close()
+                else:
+                    _kill_process_group(process.pid)
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                process.wait()
     if code:
         raise ValueError(f"Boundary Lab exited with code {code}; see {log.name}")
 
