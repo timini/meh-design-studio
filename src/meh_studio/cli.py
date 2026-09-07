@@ -5,6 +5,7 @@ import argparse
 import json
 from pathlib import Path
 import sqlite3
+import subprocess
 import sys
 
 from .catalogue import Catalogue
@@ -30,9 +31,23 @@ def main(argv=None) -> int:
     ref.add_argument("--lengths-m", nargs=3, required=True, type=float)
     ref.add_argument("--max-hz", required=True, type=float)
     ref.add_argument("--sound-speed-m-s", type=float, default=343.0)
+    solve = commands.add_parser("solve-project", help="run the pinned external Boundary Lab solver")
+    solve.add_argument("project", type=Path)
+    solve.add_argument("--request", type=Path, required=True)
+    solve.add_argument("--checkout", type=Path, required=True)
+    solve.add_argument("--python", type=Path, required=True, help="Boundary Lab environment Python")
+    solve.add_argument("--julia", type=Path, required=True)
+    solve.add_argument("--output", type=Path, required=True, help="new evaluation directory")
+    solve.add_argument("--backend", choices=["beat_cpu", "beat_cuda", "beat_rocm"], default="beat_cpu")
+    solve.add_argument("--timeout-per-stage-s", type=float, default=1800)
     args = parser.parse_args(argv)
     try:
-        if args.command == "validate-brief":
+        if args.command == "solve-project":
+            from .boundary_lab import BoundaryLabRuntime, SolveRequest
+            request = SolveRequest.model_validate_json(args.request.read_text(encoding="utf-8"))
+            runtime = BoundaryLabRuntime(args.checkout, args.python, args.julia, args.backend)
+            result = runtime.solve(args.project, request, args.output, timeout_s=args.timeout_per_stage_s)
+        elif args.command == "validate-brief":
             record = DesignBrief.model_validate_json(args.path.read_text(encoding="utf-8"))
             result = {"valid": True, "brief_hash": record.content_hash,
                       "acoustic_feasibility": "not_evaluated", "brief": record.model_dump(mode="json")}
@@ -57,7 +72,7 @@ def main(argv=None) -> int:
                       "modes": cavity_modes(tuple(args.lengths_m), args.max_hz, args.sound_speed_m_s)}
         print(json.dumps(result, indent=2, allow_nan=False))
         return 0
-    except (ValueError, OSError, sqlite3.Error) as exc:
+    except (ValueError, OSError, sqlite3.Error, subprocess.SubprocessError) as exc:
         print(json.dumps({"error": str(exc)}), file=sys.stderr)
         return 2
 
