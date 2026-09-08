@@ -178,6 +178,7 @@ def test_analytic_tube_fixture_binds_generated_mesh(tmp_path):
     subprocess.run([sys.executable,str(script),str(output),'--mesh-size-m','0.02'],check=True,capture_output=True)
     project = json.loads((output/'project.blab.json').read_text())
     assert project['physical_system']['metadata']['generated_mesh_sha256'] == {'mesh:tube':sha256(output/'tube.msh')}
+    assert project['physical_system']['metadata']['analytic_reference_sha256'] == sha256(output/'reference.json')
 
 
 def test_radiating_cancellation_during_interior_copy_is_terminal(generated, monkeypatch):
@@ -198,3 +199,18 @@ def test_radiating_cancellation_during_interior_copy_is_terminal(generated, monk
         compile_radiating_system(root, sources, output, Runtime())
     assert json.loads((output/'compilation.json').read_text())['status'] == 'cancelled'
     assert signal.getsignal(signal.SIGTERM) == previous
+
+
+def test_analytic_reference_identity_rejects_changed_load(tmp_path):
+    import importlib.util
+    import hashlib
+    spec = importlib.util.spec_from_file_location('tube_comparison', Path(__file__).resolve().parents[1]/'validation/fixtures/compare_plane_wave_tube.py')
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    path = tmp_path/'reference.json'
+    path.write_text('{"area_m2":0.0016}')
+    project = {'physical_system':{'metadata':{'analytic_reference_sha256':hashlib.sha256(path.read_bytes()).hexdigest()}}}
+    assert module.bound_reference(path,project)['area_m2'] == .0016
+    path.write_text('{"area_m2":0.1}')
+    with pytest.raises(ValueError,match='fixture identity'):
+        module.bound_reference(path,project)

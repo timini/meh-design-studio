@@ -129,3 +129,17 @@ def test_complex64_storage_cannot_fail_strict_physical_consistency(circuit_artif
     publish()
     with pytest.raises(ValueError, match='requires complex128'):
         validate_electrical_basis(project, root)
+
+
+def test_electrical_validation_rechecks_arrays_after_metrics(circuit_artifact, monkeypatch):
+    import meh_studio.validation as validation
+    project, root, arrays, _ = circuit_artifact
+    original = validation.np.linalg.eigvalsh
+    def change_after_calculation(matrix):
+        result = original(matrix)
+        arrays['current'] *= 2
+        np.savez(root/'upstream/arrays.npz', **arrays)
+        return result
+    monkeypatch.setattr(validation.np.linalg,'eigvalsh',change_after_calculation)
+    with pytest.raises(ValueError):
+        validate_electrical_basis(project,root)

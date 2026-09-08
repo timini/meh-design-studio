@@ -62,7 +62,9 @@ project = {"schema_version": 9, "physical_system": system, "symmetry": "off", "s
            "project_preferences": {"freq_min_hz": 500, "freq_max_hz": 2000, "freq_count": 3,
                                    "polar_angle_step_deg": 5.0, "polar_observation_distance_m": 1.0,
                                    "spherical_sampling_enabled": False}}
-(args.output / "project.blab.json").write_text(json.dumps(project, indent=2), encoding="utf-8")
 (args.output / "reference.json").write_text(json.dumps({"kind": "analytic_uniform_tube", "area_m2": .0016,
     "density_kg_m3": 1.21, "sound_speed_m_s": 343.0, "mechanical_load_ns_m": 1.21*343*.0016,
     "mesh_size_m": args.mesh_size_m, "source_parameters": parameters}, indent=2), encoding="utf-8")
+
+project["physical_system"]["metadata"]["analytic_reference_sha256"] = hashlib.sha256((args.output/"reference.json").read_bytes()).hexdigest()
+(args.output / "project.blab.json").write_text(json.dumps(project, indent=2), encoding="utf-8")
