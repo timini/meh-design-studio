@@ -101,3 +101,49 @@ def test_cancellation_during_execution_stops_worker(tmp_path,monkeypatch):
         assert not thread.is_alive() and not errors
         assert queue.get(job)['status']=='cancelled'
         assert not (lease.output_directory/'completion.json').exists()
+
+
+def test_unsupported_claimed_spec_fails_immediately(tmp_path):
+    from meh_studio.jobs import JobSpec
+    with JobQueue.create(tmp_path/'jobs.sqlite',tmp_path/'artifacts') as queue:
+        job=queue.enqueue(JobSpec(kind='geometry',input_digest='0'*64,parameters_json='{"unsupported":true}'))
+        lease=queue.claim('test')
+        run_geometry(queue,lease,tmp_path/'missing')
+        assert queue.get(job)['status']=='failed'
+        assert 'unsupported geometry worker job' in queue.get(job)['error']
+        assert not lease.output_directory.exists()
+
+
+def _fake_export(design,directory):
+    from meh_studio.geometry import HornGeometry
+    root=Path(directory)/'geometry';root.mkdir()
+    (root/'part.stl').write_bytes(b'synthetic publication fixture')
+    (root/'geometry.json').write_text(json.dumps({'status':'complete','design_hash':HornGeometry.model_validate_json(design).content_hash}))
+
+
+def test_lease_renewed_during_inventory_and_queue_verification(tmp_path,monkeypatch):
+    import meh_studio.geometry_worker as worker
+    import meh_studio.jobs as jobs
+    queue,job,lease=setup_job(tmp_path)
+    clock=[time.time()];queue.clock=lambda:clock[0]
+    monkeypatch.setattr(worker,'_export',_fake_export)
+    original=jobs.file_digest
+    calls=[]
+    def slow_hash(path):
+        # Each hash advances near the lease expiry, then permits the independent
+        # renewal connection to extend it. Repeated hashes exceed the initial
+        # publication lease without spending a minute in the test suite.
+        before=queue.get(job)['deadline']
+        clock[0]=before-1
+        deadline=time.monotonic()+3
+        while queue.get(job)['deadline']<=before:
+            assert time.monotonic()<deadline,'lease was not renewed while hashing'
+            time.sleep(.02)
+        calls.append(str(path))
+        return original(path)
+    monkeypatch.setattr(worker,'file_digest',slow_hash)
+    monkeypatch.setattr(jobs,'file_digest',slow_hash)
+    with queue:
+        run_geometry(queue,lease,tmp_path/'snapshot')
+        assert queue.get(job)['status']=='succeeded',queue.get(job)['error']
+        assert len(calls)>=4

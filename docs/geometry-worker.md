@@ -22,3 +22,5 @@ Local integration tests execute the real geometry exporter through spawn and req
 - Native Windows and Linux execution of these worker tests remains required. Current local execution is on macOS; configured hosted CI remains blocked by account billing restrictions.
 
 Do not promote this draft as completed B04 or enable unattended production execution until those boundaries have tests and implementations. The CLI/desktop service integration follows the worker contract rather than duplicating CAD logic in the UI.
+
+Publication renews the lease from a dedicated thread using its own SQLite connection while the parent inventories files and the queue independently verifies them. Renewal failure is checked before completion, and queue lease fencing remains the final authority. Unsupported claimed geometry specifications now fail the attempt immediately with their diagnostic instead of waiting for lease expiry.

@@ -1,6 +1,8 @@
 """One leased geometry task in a spawned process; no solver execution."""
 from __future__ import annotations
 
+from contextlib import contextmanager
+import threading
 import hashlib
 import json
 import math
@@ -30,11 +32,11 @@ def run_geometry(queue: JobQueue, lease: Lease, snapshot_directory: Path, *, tim
     """
     if isinstance(timeout_s,bool) or not math.isfinite(timeout_s) or not 0<timeout_s<=3600:
         raise ValueError('worker timeout must be positive and at most one hour')
-    if lease.spec != geometry_spec(lease.spec.input_digest,max_attempts=lease.spec.max_attempts):
-        raise ValueError('unsupported geometry worker job')
     process=None
     started=time.monotonic()
     try:
+        if lease.spec != geometry_spec(lease.spec.input_digest,max_attempts=lease.spec.max_attempts):
+            raise ValueError('unsupported geometry worker job')
         if queue.heartbeat(lease,lease_seconds=30):
             queue.acknowledge_cancel(lease)
             return
@@ -72,23 +74,25 @@ def run_geometry(queue: JobQueue, lease: Lease, snapshot_directory: Path, *, tim
         if queue.heartbeat(lease,lease_seconds=30):
             queue.acknowledge_cancel(lease)
             return
-        root=lease.output_directory
-        report=json.loads((root/'geometry/geometry.json').read_text())
-        if report.get('status')!='complete' or report.get('design_hash')!=design.content_hash:
-            raise ValueError('geometry worker did not produce a matching complete report')
-        files=[]
-        for path in sorted((root/'geometry').rglob('*')):
-            if path.is_symlink():
-                raise ValueError('worker output cannot contain symlinks')
-            if path.is_file():
-                files.append(Artifact(path=path.relative_to(root).as_posix(),
-                                      sha256=file_digest(path),size_bytes=path.stat().st_size))
-        record=Completion(job_id=lease.job_id,attempt_token=lease.token,
-                          evidence='experimental_geometry',files=tuple(files))
-        temporary=root/'completion.json.tmp'
-        temporary.write_text(record.canonical_json(),encoding='utf-8')
-        temporary.replace(root/'completion.json')
-        queue.complete(lease)
+        with _publication_lease(queue,lease) as check_renewal:
+            root=lease.output_directory
+            report=json.loads((root/'geometry/geometry.json').read_text())
+            if report.get('status')!='complete' or report.get('design_hash')!=design.content_hash:
+                raise ValueError('geometry worker did not produce a matching complete report')
+            files=[]
+            for path in sorted((root/'geometry').rglob('*')):
+                if path.is_symlink():
+                    raise ValueError('worker output cannot contain symlinks')
+                if path.is_file():
+                    files.append(Artifact(path=path.relative_to(root).as_posix(),
+                                          sha256=file_digest(path),size_bytes=path.stat().st_size))
+            record=Completion(job_id=lease.job_id,attempt_token=lease.token,
+                              evidence='experimental_geometry',files=tuple(files))
+            temporary=root/'completion.json.tmp'
+            temporary.write_text(record.canonical_json(),encoding='utf-8')
+            temporary.replace(root/'completion.json')
+            check_renewal()
+            queue.complete(lease)
     except Exception as exc:
         if process is not None:
             _stop(process)
@@ -105,3 +109,27 @@ def _stop(process):
         if process.is_alive():
             process.kill()
         process.join()
+
+
+@contextmanager
+def _publication_lease(queue, lease):
+    """Renew using a separate SQLite connection while the caller hashes files."""
+    stopped=threading.Event()
+    errors=[]
+    def renew():
+        try:
+            with JobQueue(queue.path,clock=queue.clock) as connection:
+                while not stopped.wait(.5):
+                    connection.heartbeat(lease,lease_seconds=30)
+        except Exception as exc:
+            errors.append(exc)
+    thread=threading.Thread(target=renew,name='geometry-publication-lease',daemon=True)
+    thread.start()
+    def check():
+        if errors:
+            raise RuntimeError('publication lease renewal failed') from errors[0]
+    try:
+        yield check
+    finally:
+        stopped.set()
+        thread.join()
