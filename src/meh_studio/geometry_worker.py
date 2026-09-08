@@ -12,6 +12,7 @@ import math
 import multiprocessing
 from pathlib import Path
 import time
+import warnings
 
 from .geometry import HornGeometry, export_geometry
 from .jobs import Artifact, Completion, JobQueue, JobSpec, Lease, file_digest
@@ -42,10 +43,16 @@ def _export(design_json: str, directory: str, expected_runtime: dict):
         if json.loads(json.dumps(geometry_runtime()))!=expected_runtime:
             raise ValueError('geometry child runtime differs from queued identity')
     check()
+    wall_started=time.monotonic()
+    cpu_started=time.process_time()
     export_geometry(HornGeometry.model_validate_json(design_json),Path(directory)/'geometry')
     check()
     (Path(directory)/'geometry/runtime.json').write_text(
         json.dumps(expected_runtime,sort_keys=True,indent=2),encoding='utf-8')
+    (Path(directory)/'geometry/execution.json').write_text(json.dumps({
+        'schema_version':1,'stage':'cad_export','wall_elapsed_s':time.monotonic()-wall_started,
+        'process_cpu_s':time.process_time()-cpu_started,
+        'peak_memory_bytes':None,'memory_status':'not_measured'},allow_nan=False),encoding='utf-8')
 
 
 def run_geometry(queue: JobQueue, lease: Lease, snapshot_directory: Path, *, timeout_s=600):
@@ -55,6 +62,9 @@ def run_geometry(queue: JobQueue, lease: Lease, snapshot_directory: Path, *, tim
     kinds and parameters are rejected before launch. Storage is caller-owned.
     """
     process=None
+    reserved=False
+    outcome="interrupted"
+    diagnostic=None
     started=time.monotonic()
     try:
         if isinstance(timeout_s,bool) or not math.isfinite(timeout_s) or not 0<timeout_s<=3600:
@@ -63,6 +73,7 @@ def run_geometry(queue: JobQueue, lease: Lease, snapshot_directory: Path, *, tim
             raise ValueError('unsupported geometry worker job')
         if queue.heartbeat(lease,lease_seconds=30):
             queue.acknowledge_cancel(lease)
+            outcome="cancelled"
             return
         snapshot=read_snapshot_manifest(snapshot_directory,lease.spec.input_digest)
         if len(snapshot.files)!=1 or snapshot.files[0].name!='design':
@@ -73,6 +84,8 @@ def run_geometry(queue: JobQueue, lease: Lease, snapshot_directory: Path, *, tim
         payload=read_snapshot_payload(snapshot_directory,entry,max_bytes=1024*1024)
         design=HornGeometry.model_validate_json(payload)
         lease.output_directory.mkdir(parents=True,exist_ok=False)
+        reserved=True
+        _attempt_record(lease,started,"running",None,None)
         process=multiprocessing.get_context('spawn').Process(
             target=_export,args=(design.canonical_json(),str(lease.output_directory),
                                  json.loads(lease.spec.parameters_json)['runtime']),daemon=True)
@@ -84,6 +97,7 @@ def run_geometry(queue: JobQueue, lease: Lease, snapshot_directory: Path, *, tim
                 if queue.heartbeat(lease,lease_seconds=30):
                     _stop(process)
                     queue.acknowledge_cancel(lease)
+                    outcome="cancelled"
                     return
                 next_heartbeat=now+1
             if now-started>=timeout_s:
@@ -95,6 +109,7 @@ def run_geometry(queue: JobQueue, lease: Lease, snapshot_directory: Path, *, tim
             raise RuntimeError(f'geometry worker exited with code {process.exitcode}')
         if queue.heartbeat(lease,lease_seconds=30):
             queue.acknowledge_cancel(lease)
+            outcome="cancelled"
             return
         with _publication_lease(queue,lease) as check_renewal:
             root=lease.output_directory
@@ -115,7 +130,12 @@ def run_geometry(queue: JobQueue, lease: Lease, snapshot_directory: Path, *, tim
             temporary.replace(root/'completion.json')
             check_renewal()
             queue.complete(lease,check=check_renewal)
+            outcome="succeeded"
     except Exception as exc:
+        diagnostic=f"{type(exc).__name__}: {exc}"
+        outcome="timed_out" if isinstance(exc,TimeoutError) else "error"
+        if isinstance(exc,PublicationCancelled):
+            outcome="cancelled"
         if process is not None:
             _stop(process)
         # A stale lease cannot mutate a newer attempt. Preserve the original
@@ -127,6 +147,11 @@ def run_geometry(queue: JobQueue, lease: Lease, snapshot_directory: Path, *, tim
     finally:
         if process is not None:
             _stop(process)
+        if reserved:
+            try:
+                _attempt_record(lease,started,outcome,None if process is None else process.exitcode,diagnostic)
+            except OSError as error:
+                warnings.warn(f'Could not save worker accounting: {error}',RuntimeWarning)
 
 
 def _stop(process):
@@ -154,7 +179,7 @@ def _publication_lease(queue, lease):
     thread.start()
     def check():
         if cancelled.is_set():
-            raise RuntimeError('geometry publication cancelled')
+            raise PublicationCancelled('geometry publication cancelled')
         if errors:
             raise RuntimeError('publication lease renewal failed') from errors[0]
     try:
@@ -162,3 +187,19 @@ def _publication_lease(queue, lease):
     finally:
         stopped.set()
         thread.join()
+
+
+class PublicationCancelled(RuntimeError):
+    pass
+
+
+def _attempt_record(lease, started, outcome, exitcode, diagnostic):
+    # Operational diagnostics are separate from immutable completion evidence.
+    record={'schema_version':1,'job_id':lease.job_id,'attempt_token':lease.token,
+            'worker_outcome':outcome,'wall_elapsed_s':time.monotonic()-started,
+            'child_exitcode':exitcode,'diagnostic':diagnostic,
+            'child_cpu_s':None,'child_cpu_status':'see verified geometry/execution.json on successful export'}
+    path=lease.output_directory/'worker-execution.json'
+    temporary=path.with_suffix('.json.tmp')
+    temporary.write_text(json.dumps(record,allow_nan=False,indent=2),encoding='utf-8')
+    temporary.replace(path)

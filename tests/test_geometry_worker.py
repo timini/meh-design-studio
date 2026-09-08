@@ -64,6 +64,10 @@ def test_timeout_kills_child(tmp_path,monkeypatch):
         assert time.monotonic()-started<5
         assert queue.get(job)['status']=='failed'
         assert 'time limit' in queue.get(job)['error']
+        accounting=json.loads((lease.output_directory/'worker-execution.json').read_text())
+        assert accounting['worker_outcome']=='timed_out'
+        assert accounting['child_exitcode'] is not None
+        assert accounting['wall_elapsed_s']>=.5
 
 
 @pytest.mark.cad
@@ -81,6 +85,12 @@ def test_real_geometry_job_publishes_verified_files(tmp_path):
         assert any(file.path=='geometry/runtime.json' for file in result.files)
         runtime=json.loads((lease.output_directory/'geometry/runtime.json').read_text())
         assert runtime==json.loads(lease.spec.parameters_json)['runtime']
+        execution=json.loads((lease.output_directory/'geometry/execution.json').read_text())
+        assert execution['wall_elapsed_s']>0 and execution['process_cpu_s']>0
+        assert execution['peak_memory_bytes'] is None
+        assert any(file.path=='geometry/execution.json' for file in result.files)
+        accounting=json.loads((lease.output_directory/'worker-execution.json').read_text())
+        assert accounting['worker_outcome']=='succeeded' and accounting['child_exitcode']==0
 
 
 def test_cancellation_during_execution_stops_worker(tmp_path,monkeypatch):
@@ -104,6 +114,8 @@ def test_cancellation_during_execution_stops_worker(tmp_path,monkeypatch):
         assert not thread.is_alive() and not errors
         assert queue.get(job)['status']=='cancelled'
         assert not (lease.output_directory/'completion.json').exists()
+        accounting=json.loads((lease.output_directory/'worker-execution.json').read_text())
+        assert accounting['worker_outcome']=='cancelled'
 
 
 def test_unsupported_claimed_spec_fails_immediately(tmp_path):

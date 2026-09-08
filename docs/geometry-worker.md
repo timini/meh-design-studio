@@ -14,7 +14,7 @@ Local integration tests execute the real geometry exporter through spawn and req
 
 ## Draft limits before production worker support
 
-- No operating-system memory or disk quota, worker resource scheduler, bounded log collection or persisted runtime accounting.
+- No operating-system memory or disk quota, worker resource scheduler or bounded log collection. Basic wall/CPU timing is recorded as described below; peak memory remains unmeasured.
 - Queue-requested cancellation is covered; launch-time signal handling and abrupt parent-process death still need the shared process supervisor and dedicated tests. A daemon multiprocessing child is not an operating-system guarantee against an orphan after forced parent termination.
 - No automatic restart loop. Expired leases can be recovered through the queue API, but orphan process cleanup is not yet integrated.
 - Snapshot and attempt storage remain caller-controlled. The worker does not protect against another process modifying its output files while publication hashes them.
@@ -32,3 +32,10 @@ Design payloads use the snapshot reader with regular-file, no-symlink, nonblocki
 The CAD workflow now runs both geometry and worker tests with native CAD dependencies installed, so the real spawned-export integration test is not silently skipped there. If lease fencing rejects failure recording, the caller receives the original worker exception with the fencing error chained as its cause; stale attempts still cannot modify queue state.
 
 Operation version 2 includes the runtime fingerprint in JobSpec parameters. The parent rejects an older or different runtime before launch; the spawned child checks the fingerprint before and after export and preserves runtime.json among the hashed completion artifacts. A runtime change produces a distinct job identity instead of silently reusing queued work.
+
+
+## Execution accounting
+
+Successful real exports include `geometry/execution.json` in the immutable hashed completion inventory. It records elapsed monotonic wall time and child process CPU time for the export stage, including runtime rechecking and runtime record creation. CPU time excludes process startup and is not total host CPU consumption. Peak memory is explicitly null with `not_measured` status.
+
+Once an attempt directory is reserved, a separate `worker-execution.json` operational record starts as running and is atomically replaced on normal cleanup with the worker outcome, elapsed wall time, child exit code and available diagnostic. Tests check real success, timeout and cancellation records. This file is deliberately outside immutable completion evidence and does not override the queue state: an error may coincide with a queue cancellation, and forced parent death can leave the record running. A diagnostic-write failure warns without replacing the original worker outcome. Early input rejection creates no attempt directory or accounting file. These measurements support future resource budgeting; they do not enforce quotas or qualify output quality.
