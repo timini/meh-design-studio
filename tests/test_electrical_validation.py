@@ -99,3 +99,18 @@ def test_changed_preflight_rejected(circuit_artifact):
     (root/'preflight.json').write_text('{"changed":true}')
     with pytest.raises(ValueError,match='preflight contract'):
         validate_electrical_basis(project,root)
+
+
+@pytest.mark.parametrize("field", ["project_sha256", "result", "request_sha256", "runtime"])
+def test_missing_evaluation_fields_return_cli_artifact_error(circuit_artifact, capsys, field):
+    from meh_studio.cli import main
+
+    project, root, *_ = circuit_artifact
+    path = root / "evaluation.json"
+    evaluation = json.loads(path.read_text())
+    del evaluation[field]
+    path.write_text(json.dumps(evaluation))
+    assert main(["validate-electrical", str(project), str(root)]) == 2
+    captured = capsys.readouterr()
+    assert not captured.out
+    assert "invalid electrical validation artifact" in json.loads(captured.err)["error"]
