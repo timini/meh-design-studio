@@ -36,17 +36,35 @@ def surface_integrity(path: Path) -> dict:
         signs = np.where(edges[:, 0] < edges[:, 1], 1, -1)
         if np.any(counts != 2) or np.any(np.bincount(inverse, weights=signs) != 0):
             raise ValueError("exterior surface is open, nonmanifold or inconsistently oriented")
-        # A closed disconnected shell can satisfy edge counts but is not this envelope.
-        parent = list(range(len(points)))
-        def find(node):
-            while parent[node] != node:
-                parent[node] = parent[parent[node]]
-                node = parent[node]
-            return node
-        for left, right in edges:
-            parent[find(int(left))] = find(int(right))
-        if len({find(int(node)) for node in np.unique(faces)}) != 1:
-            raise ValueError("exterior surface must be connected")
+        # Faces must connect through edges, and each vertex must have one fan.
+        edge_faces = {}
+        vertex_faces = {}
+        for face_id, face in enumerate(faces):
+            for vertex in face:
+                vertex_faces.setdefault(int(vertex), set()).add(face_id)
+            for left, right in zip(face, np.roll(face, -1)):
+                edge_faces.setdefault(tuple(sorted((int(left), int(right)))), []).append(face_id)
+        adjacent = [set() for _ in faces]
+        vertex_adjacent = {vertex: {} for vertex in vertex_faces}
+        for edge, (left, right) in edge_faces.items():
+            adjacent[left].add(right)
+            adjacent[right].add(left)
+            for vertex in edge:
+                vertex_adjacent[vertex].setdefault(left, set()).add(right)
+                vertex_adjacent[vertex].setdefault(right, set()).add(left)
+        def connected(members, links):
+            seen, pending = set(), [next(iter(members))]
+            while pending:
+                current = pending.pop()
+                if current not in seen:
+                    seen.add(current)
+                    pending.extend(links[current] - seen)
+            return seen == members
+        if not connected(set(range(len(faces))), adjacent):
+            raise ValueError("exterior surface must be connected through shared edges")
+        if any(not connected(members, vertex_adjacent[vertex])
+               for vertex, members in vertex_faces.items()):
+            raise ValueError("exterior contains a nonmanifold vertex")
         a, b, c = (points[faces[:, i]] for i in range(3))
         if np.any(np.linalg.norm(np.cross(b-a, c-a), axis=1) <= 1e-14):
             raise ValueError("exterior contains degenerate triangles")
@@ -64,7 +82,8 @@ def export_exterior(design: HornGeometry, output: Path, mesh_size_m: float = .02
 
     These rigid fills model an ideal mounting package; they are not print parts.
     """
-    import cadquery as cq
+    from .cad_runtime import load_cadquery
+    cq = load_cadquery()
     import gmsh
     if not math.isfinite(mesh_size_m) or not .01 <= mesh_size_m <= .05:
         raise ValueError("exterior mesh target must be between 10 and 50 mm")

@@ -19,7 +19,7 @@ def test_closed_exterior_has_one_mouth_and_positive_volume(tmp_path):
 
 
 @pytest.mark.cad
-@pytest.mark.parametrize("fault", [None, "open", "mixed_orientation", "inward", "disconnected"])
+@pytest.mark.parametrize("fault", [None, "open", "mixed_orientation", "inward", "disconnected", "pinched"])
 def test_bem_topology_checks_reject_invalid_surfaces(tmp_path, fault):
     pytest.importorskip("gmsh")
     nodes = [(0,0,0), (1,0,0), (0,1,0), (0,0,1)]
@@ -30,6 +30,10 @@ def test_bem_topology_checks_reject_invalid_surfaces(tmp_path, fault):
     if fault == "disconnected":
         nodes += [(x+2,y,z) for x,y,z in nodes[:]]
         faces += [tuple(node+4 for node in face) for face in faces[:]]
+    if fault == "pinched":
+        nodes += [(-1,0,0), (0,-1,0), (0,0,-1)]
+        mapping = {1:1, 2:5, 3:6, 4:7}
+        faces += [tuple(mapping[n] for n in reversed(face)) for face in faces[:]]
     lines = ["$MeshFormat", "2.2 0 8", "$EndMeshFormat", "$Nodes", str(len(nodes))]
     lines += [f"{i} {x} {y} {z}" for i,(x,y,z) in enumerate(nodes,1)]
     lines += ["$EndNodes", "$Elements", str(len(faces))]
@@ -41,3 +45,12 @@ def test_bem_topology_checks_reject_invalid_surfaces(tmp_path, fault):
         with pytest.raises(ValueError): surface_integrity(path)
     else:
         assert surface_integrity(path)["enclosed_volume_m3"] == pytest.approx(1/6)
+
+
+def test_radiating_command_imports_and_reports_invalid_runtime(tmp_path, monkeypatch, capsys):
+    from meh_studio.radiating_system import compile_radiating_system
+    class InvalidRuntime:
+        def verify(self):
+            raise ValueError("invalid runtime")
+    with pytest.raises(ValueError, match="invalid runtime"):
+        compile_radiating_system(tmp_path, None, tmp_path / "output", InvalidRuntime())

@@ -10,6 +10,7 @@ from meh_studio.validation import validate_electrical_basis
 def load(project, evaluation):
     checks = validate_electrical_basis(project,evaluation)
     manifest = _read_json(evaluation/'upstream/manifest.json')
+    identity = exterior_identity(project, manifest)
     rows = []
     for result in manifest['results']:
         metadata = _read_json(_contained(evaluation/'upstream',result['metadata_file']))
@@ -18,7 +19,28 @@ def load(project, evaluation):
                          if q['quantity'] in {'exterior_pressure','diaphragm_velocity','voice_coil_current'}})
     return {'evaluation':str(evaluation.resolve()),'evaluation_sha256':sha256(evaluation/'evaluation.json'),
             'project_sha256':sha256(project),'mesh_inventory':manifest['meshes'],
+            'exterior_identity':identity,
             'electrical_checks':checks},manifest,rows
+
+
+def exterior_identity(project, manifest):
+    """Bind a compared surface to the CAD and design recorded at compilation."""
+    compilation = _read_json(project.parent / 'compilation.json')
+    exterior = _read_json(project.parent / 'exterior/exterior.json')
+    cad_hash = sha256(project.parent / 'exterior/envelope.step')
+    identity = {'design_hash': exterior.get('design_hash'), 'cad_sha256': cad_hash}
+    if (compilation.get('status') != 'complete' or exterior.get('status') != 'complete'
+            or not identity['design_hash']
+            or compilation.get('project_sha256') != sha256(project)
+            or compilation.get('geometry_hash') != identity['design_hash']
+            or exterior.get('cad_sha256') != cad_hash
+            or compilation.get('exterior_identity') != identity):
+        raise ValueError('missing or changed exterior design/CAD identity')
+    surfaces = [mesh for mesh in manifest['meshes'] if mesh['purpose'] == 'bem_surface']
+    if (len(surfaces) != 1 or surfaces[0]['id'] != 'mesh:exterior'
+            or surfaces[0]['sha256'] != compilation.get('exterior_surface', {}).get('sha256')):
+        raise ValueError('evaluated exterior mesh differs from its compilation')
+    return identity
 
 
 def compare(reference,candidate,relative_null_floor=.001):
@@ -51,6 +73,8 @@ def main():
     ports=loaded[0][1]['excitation_port_ids']
     fem_inputs={m['id']:m['sha256'] for m in loaded[0][1]['meshes'] if m['purpose']=='fem_volume'}
     for record,manifest,_ in loaded[1:]:
+        if record['exterior_identity'] != loaded[0][0]['exterior_identity']:
+            raise ValueError('exterior design/CAD changed across refinement runs')
         if record['project_sha256'] != loaded[0][0]['project_sha256']:
             raise ValueError('project definitions must match exactly for exterior-only refinement')
         if {m['id']:m['sha256'] for m in manifest['meshes'] if m['purpose']=='fem_volume'} != fem_inputs:

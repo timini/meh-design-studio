@@ -43,3 +43,9 @@ Across horizontal and vertical polar cuts and all three separately excited sourc
 All three runs still fail the existing strict electrical consistency criterion. The interior discretisation and angular grids were fixed, only three frequencies were sampled, and no independent acoustic solver or physical speaker was compared. This study does not establish full-band convergence or qualification. Earlier runs that finished frequency output but failed macOS process cleanup remain failed; the study uses fresh completed evaluations.
 
 Reproduce the comparison with `validation/fixtures/compare_exterior_refinement.py`, passing three `--run PROJECT EVALUATION` pairs in coarse-to-fine order and a new `--output REPORT` path. It checks current evaluation integrity and requires identical project definitions, FEM mesh hashes, backend, phase, frequency and excitation identities. It refuses to overwrite an existing report. Independent tests verify that known gain/phase changes are retained and that weak sources are not hidden by louder sources in the null policy.
+
+Refinement comparisons now require matching originating design and CAD identities,
+with the evaluated exterior mesh bound to its compilation report. Runs must reuse
+the same STEP artifact when refining its mesh. Historical reports without this
+evidence remain historical experimental observations and cannot pass the current
+comparison gate; regenerate the compilation evidence before a new comparison.
