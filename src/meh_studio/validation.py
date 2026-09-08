@@ -20,6 +20,8 @@ def validate_electrical_basis(project_path: Path, evaluation_directory: Path) ->
 
 def _validate_electrical_basis(project_path: Path, evaluation_directory: Path) -> dict:
     project_path, root = Path(project_path), Path(evaluation_directory)
+    evaluation_hash = sha256(root / "evaluation.json")
+    project_hash = sha256(project_path)
     evaluation = _read_json(root / "evaluation.json")
     if evaluation.get("status") != "complete" or evaluation["project_sha256"] != sha256(project_path):
         raise ValueError("validation requires a complete evaluation of this project")
@@ -84,6 +86,12 @@ def _validate_electrical_basis(project_path: Path, evaluation_directory: Path) -
                      "circuit_voltage_relative_residual": kvl_relative,
                      "electrical_reciprocity_relative_residual": reciprocity_relative,
                      "minimum_hermitian_admittance_eigenvalue_s": passive_min})
+    if (inspect_result(root / "upstream", request, backend, project_path=project_path) != result
+            or sha256(root / "evaluation.json") != evaluation_hash
+            or sha256(project_path) != project_hash
+            or sha256(root / "preflight.json") != evaluation["preflight_sha256"]
+            or sha256(request_path) != evaluation["request_sha256"]):
+        raise ValueError("electrical validation artifacts changed during calculation")
     return {"schema_version": 1, "evidence": "independent_equation_consistency",
             "passed": all(r["passed"] for r in rows), "project_sha256": sha256(project_path),
             "evaluation_sha256": sha256(root / "evaluation.json"), "rows": rows,
