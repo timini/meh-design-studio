@@ -36,12 +36,12 @@ def test_refinement_requires_bound_cad_identity(tmp_path, fault):
     exterior = tmp_path / 'exterior'
     exterior.mkdir()
     cad = exterior / 'envelope.step'
-    cad.write_text('original CAD')
-    identity = {'design_hash': 'design-a', 'cad_sha256': sha256(cad)}
+    cad.write_text('ISO-10303-21;\nHEADER; old timestamp; ENDSEC;\nDATA;\n#1=SHAPE();\nENDSEC;\nEND-ISO-10303-21;')
+    identity = {'design_hash': 'design-a', 'cad_geometry_sha256': module.step_geometry_sha256(cad)}
     compilation = {'status': 'complete', 'geometry_hash': 'design-a',
                    'project_sha256': sha256(project), 'exterior_identity': identity,
                    'exterior_surface': {'sha256': 'surface-a'}}
-    report = {'status': 'complete', 'mesh_size_m': .02, **identity}
+    report = {'status': 'complete', 'mesh_size_m': .02, 'cad_sha256':sha256(cad), **identity}
     (exterior/'exterior.json').write_text(json.dumps(report))
     compilation.update(exterior_mesh_size_m=.02, exterior_report_sha256=sha256(exterior/'exterior.json'))
     if fault == 'target': report['mesh_size_m'] = .01
@@ -134,3 +134,18 @@ def test_comparison_rejects_different_dependency_runtime(tmp_path, monkeypatch):
     with pytest.raises(ValueError, match='runtime changed'):
         module.main()
     assert not (tmp_path/'report.json').exists()
+
+
+def test_report_publication_preserves_existing_and_leaves_no_partial(tmp_path, monkeypatch):
+    path = tmp_path/'report.json'
+    module.publish_report(path, {'complete':True})
+    original = path.read_bytes()
+    with pytest.raises(FileExistsError): module.publish_report(path, {'replacement':True})
+    assert path.read_bytes() == original
+    failed = tmp_path/'failed.json'
+    with pytest.raises(ValueError): module.publish_report(failed, {'invalid':float('nan')})
+    assert not failed.exists()
+    def interrupt(*args): raise KeyboardInterrupt()
+    monkeypatch.setattr(module.os,'link',interrupt)
+    with pytest.raises(KeyboardInterrupt): module.publish_report(failed, {'complete':True})
+    assert not failed.exists() and not list(tmp_path.glob('.meh-report-*'))

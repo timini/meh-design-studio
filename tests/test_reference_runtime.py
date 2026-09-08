@@ -30,3 +30,15 @@ def test_reference_python_inventory_and_version_gate(monkeypatch):
     monkeypatch.setattr(module.sys, 'version_info', (3, 12, 0))
     with pytest.raises(ValueError, match='Python 3.11'):
         module.python_identity()
+
+
+def test_reference_failure_is_finalized_despite_cleanup_error():
+    class Session:
+        def stop(self): raise RuntimeError('cleanup failed')
+    class Writer:
+        def finish(self, **kwargs): self.result = kwargs
+    writer = Writer()
+    error = ValueError('original solve failed')
+    module.finish_failed_reference(Session(), writer, error)
+    assert writer.result == {'status':'failed','error':'original solve failed'}
+    assert 'cleanup failed' in error.__notes__[0]

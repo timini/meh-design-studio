@@ -45,8 +45,10 @@ All three runs still fail the existing strict electrical consistency criterion. 
 Reproduce the comparison with `validation/fixtures/compare_exterior_refinement.py`, passing three `--run PROJECT EVALUATION` pairs in coarse-to-fine order and a new `--output REPORT` path. It checks current evaluation integrity and requires identical project definitions, FEM mesh hashes, backend, phase, frequency and excitation identities. It refuses to overwrite an existing report. Independent tests verify that known gain/phase changes are retained and that weak sources are not hidden by louder sources in the null policy.
 
 Refinement comparisons now require matching originating design and CAD identities,
-with the evaluated exterior mesh bound to its compilation report. Runs must reuse
-the same STEP artifact when refining its mesh. Historical reports without this
+with the evaluated exterior mesh bound to its compilation report. Each run retains its full STEP byte hash for integrity, while cross-run identity
+uses the STEP data section with timestamp-bearing headers and OCCT-generated
+product-label counters excluded. Geometry entities and coordinates remain hashed. The standard
+compilation workflow can therefore regenerate the same geometry for each level. Historical reports without this
 evidence remain historical experimental observations and cannot pass the current
 comparison gate; regenerate the compilation evidence before a new comparison.
 

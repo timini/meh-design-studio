@@ -27,6 +27,19 @@ def python_identity():
                                for d in importlib.metadata.distributions())}
 
 
+def finish_failed_reference(session, writer, error):
+    try:
+        if session is not None:
+            session.stop()
+    except BaseException as cleanup_error:
+        error.add_note(f'reference cleanup also failed: {cleanup_error}')
+    finally:
+        try:
+            writer.finish(status='failed', error=str(error))
+        except BaseException as report_error:
+            error.add_note(f'failure report could not be finalized: {report_error}')
+
+
 def main():
     import blab
     from blab.headless import load_headless_project, load_headless_solve_spec, prepare_headless_solve, HeadlessResultWriter
@@ -64,9 +77,7 @@ def main():
             writer.write_result(canonicalize_observation_result(prepared, result))
         writer.finish(status="complete")
     except BaseException as exc:
-        if session is not None:
-            session.stop()
-        writer.finish(status="failed", error=str(exc))
+        finish_failed_reference(session, writer, exc)
         raise
     print(json.dumps({"status": "complete", "backend": "coupled_reference", "precision": "float64",
                       "revision": revision, "runtime": runtime_identity, "output": str(args.output.resolve())}))

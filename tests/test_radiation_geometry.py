@@ -121,3 +121,26 @@ def test_conformed_mouth_facets_must_match_fem(tmp_path):
     write(exterior, [99,10,99,99], names)
     with pytest.raises(ValueError, match='triangle membership'):
         verify_exterior_groups(exterior, front)
+
+
+def test_step_geometry_identity_ignores_only_header(tmp_path):
+    from meh_studio.radiation_geometry import step_geometry_sha256
+    path = tmp_path/'shape.step'
+    path.write_text('HEADER; timestamp A; ENDSEC; DATA; #1=POINT(1,2,3); ENDSEC;')
+    original = step_geometry_sha256(path)
+    path.write_text('HEADER; timestamp B; ENDSEC; DATA; #1=POINT(1,2,3); ENDSEC;')
+    assert step_geometry_sha256(path) == original
+    path.write_text('HEADER; timestamp B; ENDSEC; DATA; #1=POINT(9,2,3); ENDSEC;')
+    assert step_geometry_sha256(path) != original
+
+
+@pytest.mark.cad
+def test_regenerated_exterior_has_stable_geometry_identity(tmp_path):
+    import importlib.util
+    if importlib.util.find_spec('cadquery') is None or importlib.util.find_spec('gmsh') is None:
+        pytest.skip('CAD runtimes unavailable')
+    design = HornGeometry.model_validate_json((Path(__file__).resolve().parents[1]/'examples/three-driver-geometry.json').read_text())
+    coarse = export_exterior(design, tmp_path/'coarse', .02)
+    fine = export_exterior(design, tmp_path/'fine', .015)
+    assert coarse['cad_geometry_sha256'] == fine['cad_geometry_sha256']
+    assert coarse['surface']['sha256'] != fine['surface']['sha256']

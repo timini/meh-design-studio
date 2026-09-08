@@ -2,12 +2,29 @@
 from __future__ import annotations
 
 import math
+import hashlib
+import re
 from pathlib import Path
 
 import numpy as np
 
 from .boundary_lab import _write_json, sha256
 from .geometry import HornGeometry, build_geometry
+
+
+def step_geometry_sha256(path: Path) -> str:
+    """Hash the STEP data section, excluding timestamp-bearing header metadata."""
+    payload = path.read_text(encoding='utf-8')
+    if payload.count('DATA;') != 1:
+        raise ValueError('expected a single STEP data section')
+    data = payload.split('DATA;', 1)[1]
+    if 'ENDSEC;' not in data:
+        raise ValueError('unterminated STEP data section')
+    data = data.split('ENDSEC;', 1)[0].strip()
+    # OCCT also increments a process-local counter in its default product labels.
+    data = re.sub(r"'Open CASCADE STEP translator ([0-9.]+) [0-9]+'",
+                  r"'Open CASCADE STEP translator \1'", data)
+    return hashlib.sha256(data.encode()).hexdigest()
 
 
 def surface_integrity(path: Path) -> dict:
@@ -193,6 +210,7 @@ def export_exterior(design: HornGeometry, output: Path, mesh_size_m: float = .02
             raise ValueError("exterior surface volume differs from CAD by more than 2 percent")
         report.update(status="complete", surface=integrity, cad_volume_m3=exact_volume,
                       cad_sha256=sha256(output / "envelope.step"),
+                      cad_geometry_sha256=step_geometry_sha256(output / "envelope.step"),
                       limitations=["Ideal rigid driver package fills, not detailed driver geometry",
                                    "Surface topology checks do not establish acoustic convergence",
                                    "Envelope is an acoustic domain, not a printable material part"])

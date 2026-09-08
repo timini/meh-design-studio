@@ -67,7 +67,7 @@ def _compile_radiating_system(geometry_directory, sources, output, runtime, *, e
         report.update(status="complete", project_sha256=sha256(output / "project.blab.json"),
             exterior_surface=integrity, exterior_mesh_size_m=exterior_mesh_size_m,
             exterior_report_sha256=sha256(output / "exterior/exterior.json"), exterior_identity={"design_hash": design.content_hash,
-                "cad_sha256": exterior["cad_sha256"]}, limitations=[
+                "cad_geometry_sha256": exterior["cad_geometry_sha256"]}, limitations=[
                 "Ideal rigid mounting package, not measured driver geometry",
                 "Throat piston has no rear acoustic load or compression-driver internals",
                 "FEM/BEM and frequency refinement remain unqualified",

@@ -3,10 +3,13 @@ import argparse
 import json
 import math
 import hashlib
+import os
+import tempfile
 from pathlib import Path
 import numpy as np
 from meh_studio.boundary_lab import _contained, _read_json, sha256
 from meh_studio.validation import validate_electrical_basis
+from meh_studio.radiation_geometry import step_geometry_sha256
 
 
 def load(project, evaluation):
@@ -48,12 +51,14 @@ def exterior_identity(project, manifest):
     compilation = _read_json(project.parent / 'compilation.json')
     exterior = _read_json(project.parent / 'exterior/exterior.json')
     cad_hash = sha256(project.parent / 'exterior/envelope.step')
-    identity = {'design_hash': exterior.get('design_hash'), 'cad_sha256': cad_hash}
+    identity = {'design_hash': exterior.get('design_hash'),
+                'cad_geometry_sha256': step_geometry_sha256(project.parent/'exterior/envelope.step')}
     if (compilation.get('status') != 'complete' or exterior.get('status') != 'complete'
             or not identity['design_hash']
             or compilation.get('project_sha256') != sha256(project)
             or compilation.get('geometry_hash') != identity['design_hash']
             or exterior.get('cad_sha256') != cad_hash
+            or exterior.get('cad_geometry_sha256') != identity['cad_geometry_sha256']
             or compilation.get('exterior_identity') != identity
             or compilation.get('exterior_report_sha256') != sha256(project.parent/'exterior/exterior.json')
             or compilation.get('exterior_mesh_size_m') != exterior.get('mesh_size_m')):
@@ -107,6 +112,23 @@ def compare(reference,candidate,relative_null_floor=.001):
             'maximum_absolute_phase_change_deg':float(np.max(abs(phase))) if count else None}
 
 
+def publish_report(path, report):
+    payload = json.dumps(report, indent=2, allow_nan=False) + '\n'
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', dir=path.parent,
+                                         prefix='.meh-report-', delete=False) as stream:
+            temporary = Path(stream.name)
+            stream.write(payload)
+            stream.flush()
+            os.fsync(stream.fileno())
+        # Hard-link publication is atomic and refuses to replace existing evidence.
+        os.link(temporary, path)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+
+
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--run',nargs=2,type=Path,action='append',required=True,metavar=('PROJECT','EVALUATION'))
@@ -146,10 +168,7 @@ def main():
                       'No independent acoustic solver or physical measurement','No absolute RMS/SPL normalisation',
                       'Strict circuit/reciprocity failures remain failures'],
         'runs':[r for r,_,_ in loaded],'successive_comparisons':pairs}
-    # Refuse overwrite of previous evidence.
-    with args.output.open('x',encoding='utf-8') as stream:
-        json.dump(report,stream,indent=2,allow_nan=False)
-        stream.write('\n')
+    publish_report(args.output, report)
     print(args.output)
 
 
