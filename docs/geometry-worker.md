@@ -28,3 +28,5 @@ Publication renews the lease from a dedicated thread using its own SQLite connec
 The worker first validates the bounded snapshot manifest and enforces the single-design/1-MiB contract, then verifies the bytes it reads against that manifest. It does not hash unrelated or oversized generic snapshot inputs. Publication heartbeats communicate cancellation to chunk-level hash checks in both inventory creation and queue completion verification. Invalid configured timeouts fail the already-claimed attempt with their diagnostic.
 
 Design payloads use the snapshot reader with regular-file, no-symlink, nonblocking POSIX open and before/after descriptor checks, while retaining the 1 MiB worker limit. Replacing a payload with a FIFO or symlink fails the claimed attempt before a blocking read or child launch.
+
+The CAD workflow now runs both geometry and worker tests with native CAD dependencies installed, so the real spawned-export integration test is not silently skipped there. If lease fencing rejects failure recording, the caller receives the original worker exception with the fencing error chained as its cause; stale attempts still cannot modify queue state.

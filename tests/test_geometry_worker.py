@@ -220,3 +220,19 @@ def test_special_design_file_rejected_before_blocking_open(tmp_path,monkeypatch,
         assert queue.get(job)['status']=='failed'
         assert 'regular non-symlink file' in queue.get(job)['error']
         assert not lease.output_directory.exists()
+
+
+def test_original_error_preserved_when_failure_lease_expires(tmp_path,monkeypatch):
+    queue,job,lease=setup_job(tmp_path)
+    original=queue.fail
+    def expire_before_finish(lease,error):
+        queue.clock=lambda:time.time()+3600
+        return original(lease,error)
+    monkeypatch.setattr(queue,'fail',expire_before_finish)
+    with queue:
+        with pytest.raises(ValueError,match='worker timeout must be positive') as caught:
+            run_geometry(queue,lease,tmp_path/'snapshot',timeout_s=0)
+        assert isinstance(caught.value.__cause__,ValueError)
+        assert 'stale or inactive' in str(caught.value.__cause__)
+        assert queue.get(job)['status']=='running'
+        assert not lease.output_directory.exists()

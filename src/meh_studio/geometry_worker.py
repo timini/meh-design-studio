@@ -94,7 +94,10 @@ def run_geometry(queue: JobQueue, lease: Lease, snapshot_directory: Path, *, tim
             _stop(process)
         # A stale lease cannot mutate a newer attempt. Preserve the original
         # diagnostic locally by re-raising if the queue rejects this finish.
-        queue.fail(lease,f'{type(exc).__name__}: {exc}')
+        try:
+            queue.fail(lease,f'{type(exc).__name__}: {exc}')
+        except Exception as finish_error:
+            raise exc from finish_error
     finally:
         if process is not None:
             _stop(process)
