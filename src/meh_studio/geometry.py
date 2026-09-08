@@ -68,7 +68,8 @@ class HornGeometry(Record):
 
 def build_geometry(design: HornGeometry):
     """Return experimental air regions, material parts and semantic source locations."""
-    import cadquery as cq
+    from .cad_runtime import load_cadquery
+    cq = load_cadquery()
 
     mm = 1000.0
     length, throat, mouth, wall = (v * mm for v in (
@@ -113,7 +114,8 @@ def build_geometry(design: HornGeometry):
 
 def export_geometry(design: HornGeometry, output: Path) -> dict:
     """Export assembly-coordinate CAD and triangle meshes; no print verification claim."""
-    import cadquery as cq
+    from .cad_runtime import load_cadquery
+    cq = load_cadquery()
 
     output = Path(output).resolve()
     output.mkdir(parents=True, exist_ok=False)
