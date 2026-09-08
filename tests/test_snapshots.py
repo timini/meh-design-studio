@@ -205,12 +205,14 @@ def test_final_directory_swap_cannot_redirect_writes(tmp_path,monkeypatch):
     def swap(path,**kwargs):
         nonlocal swapped
         if not swapped:
-            out.rename(moved);out.symlink_to(target,target_is_directory=True);swapped=True
+            stage=path.parent
+            stage.rename(moved);stage.symlink_to(target,target_is_directory=True);swapped=True
         return original(path,**kwargs)
     monkeypatch.setattr(module,'_private_output',swap)
-    snapshot=capture_inputs({'x':source},out)
+    with pytest.raises(ValueError,match='staging directory was replaced'):
+        capture_inputs({'x':source},out)
     assert list(target.iterdir())==[]
-    assert verify_snapshot(moved,snapshot.content_hash)==snapshot
+    assert not out.exists()
 
 
 @pytest.mark.skipif(os.name!='nt',reason='Windows directory sharing lock')
@@ -220,9 +222,58 @@ def test_windows_directory_cannot_be_renamed_until_publication(tmp_path,monkeypa
     out=tmp_path/'out';moved=tmp_path/'moved'
     original=module._private_output
     def try_rename(path,**kwargs):
-        with pytest.raises(OSError):out.rename(moved)
+        with pytest.raises(OSError):path.parent.rename(moved)
         return original(path,**kwargs)
     monkeypatch.setattr(module,'_private_output',try_rename)
     snapshot=capture_inputs({'x':source},out)
     out.rename(moved)
     assert verify_snapshot(moved,snapshot.content_hash)==snapshot
+
+
+def test_replacement_between_staging_creation_and_open_is_rejected(tmp_path,monkeypatch):
+    import meh_studio.snapshots as module
+    from contextlib import contextmanager
+    source=tmp_path/'source';source.write_bytes(b'private input')
+    original=module._output_directory
+    replacements=[]
+    @contextmanager
+    def substitute(path):
+        path.rename(tmp_path/'original-stage')
+        path.mkdir();replacements.append(path)
+        with original(path) as descriptor:yield descriptor
+    monkeypatch.setattr(module,'_output_directory',substitute)
+    with pytest.raises(ValueError,match='replaced before opening'):
+        capture_inputs({'x':source},tmp_path/'out')
+    assert list(replacements[0].iterdir())==[]
+    assert not (tmp_path/'out').exists()
+
+
+def test_final_install_never_replaces_existing_directory(tmp_path,monkeypatch):
+    import meh_studio.snapshots as module
+    source=tmp_path/'source';source.write_bytes(b'private input')
+    out=tmp_path/'out';original=module._install_directory
+    def race(stage,destination):
+        destination.mkdir()
+        return original(stage,destination)
+    monkeypatch.setattr(module,'_install_directory',race)
+    with pytest.raises(OSError):capture_inputs({'x':source},out)
+    assert list(out.iterdir())==[]
+
+
+@pytest.mark.skipif(os.name!='nt',reason='Windows native source handle')
+def test_windows_source_reparse_swap_after_precheck_is_rejected(tmp_path,monkeypatch):
+    import meh_studio.snapshots as module
+    source=tmp_path/'source';source.write_bytes(b'original')
+    target=tmp_path/'target';target.write_bytes(b'sensitive replacement')
+    probe=tmp_path/'probe'
+    try:probe.symlink_to(target);probe.unlink()
+    except OSError:pytest.skip('symlinks unavailable')
+    original=module._windows_handle
+    def swap(path,*,directory):
+        if path==source:
+            source.unlink();source.symlink_to(target)
+        return original(path,directory=directory)
+    monkeypatch.setattr(module,'_windows_handle',swap)
+    with pytest.raises(ValueError,match='reparse point'):
+        capture_inputs({'x':source},tmp_path/'out')
+    assert not (tmp_path/'out').exists()
