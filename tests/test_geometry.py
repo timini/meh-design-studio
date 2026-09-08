@@ -85,7 +85,9 @@ def test_steep_flare_cannot_consume_source_disk(geometry_data):
 
 @pytest.mark.cad
 def test_cad_runtime_exits_cleanly_in_fresh_process():
-    pytest.importorskip('cadquery')
+    import importlib.util
+    if importlib.util.find_spec('cadquery') is None:
+        pytest.skip('cadquery is unavailable')
     import subprocess,sys
     result=subprocess.run([sys.executable,'-c',
         'from meh_studio.cad_runtime import load_cadquery; cq=load_cadquery(); assert cq.Workplane().box(1,1,1).val().isValid()'],
