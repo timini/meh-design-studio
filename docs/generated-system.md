@@ -33,7 +33,7 @@ These checks catch missing phase, incorrect voltage scaling, some source-sign er
 
 ## Executed evidence
 
-The [machine-readable report](../validation/reports/generated-interior-integration.json) retains historical results for both meshes. The refined run lacks the current preflight and domain-artifact hashes; subsequent complete-contract rechecks cover only the coarse mesh. A fresh refined solve is still required before this comparison can serve as current-contract evidence. The 8 mm mesh contained 32,733 tetrahedra; the 4 mm mesh contained 239,894. The relative matrix-norm changes from coarse to fine were:
+The [machine-readable report](../validation/reports/generated-interior-integration.json) retains historical results for both meshes. The refined run lacks preflight and domain-artifact hashes. Later coarse rechecks added those checks but predate the compiled-mesh identity binding. Both levels require newly compiled projects and fresh solves before this comparison can serve as current-contract evidence. The 8 mm mesh contained 32,733 tetrahedra; the 4 mm mesh contained 239,894. The relative matrix-norm changes from coarse to fine were:
 
 | Frequency | Diaphragm velocity | Voice-coil current |
 |---|---:|---:|
@@ -41,7 +41,7 @@ The [machine-readable report](../validation/reports/generated-interior-integrati
 | 1000 Hz | 0.4497% | 0.1728% |
 | 2000 Hz | 0.0987% | 0.0472% |
 
-Historical checks reported electrical conservation, reciprocity and passivity passes at both levels; the refined result has not passed the current artifact-provenance gate. Two mesh levels at three sparse frequencies are a sensitivity study, not a convergence or band qualification. Repeat by copying the geometry input, changing `mesh_size_m` from `0.008` to `0.004`, and generating/compiling/solving into fresh directories. Compare complex velocity/current arrays in the preserved excitation and transducer order.
+Historical checks reported electrical conservation, reciprocity and passivity passes at both levels; neither level has passed the current compiled-mesh provenance gate. Two mesh levels at three sparse frequencies are a sensitivity study, not a convergence or band qualification. Repeat by copying the geometry input, changing `mesh_size_m` from `0.008` to `0.004`, and generating/compiling/solving into fresh directories. Compare complex velocity/current arrays in the preserved excitation and transducer order.
 
 Next numerical work must add exterior radiation, independent acoustic reference comparisons, denser adaptive frequency sampling and at least three refinement levels with declared observable-specific tolerances. Physical driver qualification and speaker measurements remain separate release gates.
 
@@ -49,4 +49,4 @@ Next numerical work must add exterior radiation, independent acoustic reference 
 
 `validation/fixtures/generate_plane_wave_tube.py runs/tube` creates a square, constant-area tube with a uniform piston and matched plane-wave termination. Its exact input mechanical load is `rho * c * area = 0.664048 N·s/m`, independent of tube length. Coupling that load to the independent driver circuit gives a reference for the solver's complex velocity and current.
 
-The [executed comparison](../validation/reports/analytic-tube-comparison.json) at 10 mm mesh spacing found velocity errors of 0.0028%, 0.0032% and 0.0141% at 500, 1000 and 2000 Hz. Current errors were below 0.0006%. This is an independent acoustic input-load comparison, with a deliberately simpler geometry than the horn. It does not qualify the horn's field accuracy or real drivers. The fixture generator uses original synthetic parameters and creates its own mesh; it redistributes no third-party mesh data.
+The [historical comparison](../validation/reports/analytic-tube-comparison.json) at 10 mm mesh spacing found velocity errors of 0.0028%, 0.0032% and 0.0141% at 500, 1000 and 2000 Hz. Current errors were below 0.0006%. This archived evaluation lacks the current preflight/domain hashes and generated-mesh binding; it cannot pass the current comparison gate and requires regeneration and a fresh solve. This is an independent acoustic input-load comparison, with a deliberately simpler geometry than the horn. It does not qualify the horn's field accuracy or real drivers. The fixture generator uses original synthetic parameters and creates its own mesh; it redistributes no third-party mesh data.

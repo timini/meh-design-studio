@@ -6,6 +6,7 @@ is rho*c*area. A square cross section avoids curved-surface area approximation.
 import argparse
 from pathlib import Path
 import json
+import hashlib
 
 import gmsh
 
@@ -43,7 +44,7 @@ parameters = {"re_ohm": 6.0, "le_h": .0001, "bl_n_per_a": 4.0, "mmd_kg": .005,
               "motion_axis": [0, 0, 1], "motion_profile": "rigid_translation"}
 mesh_id, region_id = "mesh:tube", "region:tube"
 system = {"id": "system:analytic-tube", "name": "Independent uniform tube reference", "model_version": 1,
-    "metadata": {}, "interfaces": [],
+    "metadata": {"generated_mesh_sha256": {mesh_id: hashlib.sha256((args.output/"tube.msh").read_bytes()).hexdigest()}}, "interfaces": [],
     "meshes": [{"id": mesh_id, "name": "tube", "file": "tube.msh", "purpose": "fem_volume",
                 "scale_to_m": 1.0, "translation_m": [0, 0, 0]}],
     "regions": [{"id": region_id, "name": "tube", "kind": "bounded_air", "mesh_ids": [mesh_id],

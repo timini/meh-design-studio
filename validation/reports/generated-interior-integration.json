@@ -1196,8 +1196,8 @@
     }
   },
   "current_contract_status": {
-    "refined_run": "requires_rerun",
+    "status": "historical_requires_rerun",
     "qualified": false,
-    "reason": "Historical refined evaluation lacks artifact_hashes and preflight_sha256; current complete-contract rechecks contain the coarse mesh only."
+    "reason": "Both coarse and refined runs predate compiled-mesh identity binding; regenerate and solve both levels. Refined provenance also lacks preflight and artifact hashes."
   }
 }
