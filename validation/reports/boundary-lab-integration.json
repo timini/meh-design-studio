@@ -1,0 +1,434 @@
+{
+  "schema_version": 1,
+  "evidence_kind": "executed_integration_smoke_test",
+  "acoustic_qualification": "not_established",
+  "date": "2026-09-07",
+  "upstream_revision": "8cb166226e412877d3f71f2845918e479b97aa85",
+  "platform": {
+    "system": "Darwin",
+    "machine": "arm64",
+    "os_release": "25.6.0"
+  },
+  "runtime": {
+    "revision": "8cb166226e412877d3f71f2845918e479b97aa85",
+    "backend": "beat_cpu",
+    "python": "3.11.15 (main, Mar  3 2026, 00:52:57) [Clang 21.0.0 (clang-2100.0.123.102)]",
+    "julia": "julia version 1.12.6",
+    "packages": {
+      "kiwisolver": "1.5.1",
+      "setuptools": "82.0.1",
+      "packaging": "26.3",
+      "Pygments": "2.21.0",
+      "rich": "15.0.0",
+      "contourpy": "1.3.3",
+      "numpy": "2.4.6",
+      "pytools": "2026.1.1",
+      "matplotlib": "3.11.1",
+      "bempp-cl": "0.4.2",
+      "llvmlite": "0.49.0",
+      "mdurl": "0.1.2",
+      "python-dateutil": "2.9.0.post0",
+      "numba": "0.67.0",
+      "fonttools": "4.64.0",
+      "scipy": "1.17.1",
+      "pyopencl": "2026.1.4",
+      "platformdirs": "4.11.7",
+      "cycler": "0.12.1",
+      "gmsh": "4.15.2",
+      "pyparsing": "3.3.2",
+      "markdown-it-py": "4.2.0",
+      "siphash24": "1.8",
+      "meshio": "5.3.5",
+      "pip": "26.1.2",
+      "typing_extensions": "4.16.0",
+      "pillow": "12.3.0",
+      "six": "1.17.0",
+      "boundary-lab": "0.4.2"
+    }
+  },
+  "project": "examples/compression_driver/compression_driver.blab.json",
+  "project_sha256": "234a65ccd29f698bb1c1b83b1adace9315ae78baf18bfd42ed336908c6ac80cf",
+  "julia_manifest_sha256": "d64f57e6d048622c144ee254718e11a93d5d732a789723620cf74e57e509e2ee",
+  "runs": [
+    {
+      "name": "compression-driver-1000hz",
+      "frequencies_hz": [
+        1000.0
+      ],
+      "elapsed_s": 45.13208491599653,
+      "inventory": [
+        {
+          "frequency_hz": 1000.0,
+          "metadata_sha256": "af290854565a50ace9301f37a8b967f41447b4fb1727c4703745ec2e82858aca",
+          "arrays_sha256": "49954337ceaf2c8b9e169bd6881824992d0889c181b886b37030e7fbe7f47683",
+          "quantities": [
+            {
+              "axes": [
+                "excitation",
+                "fem_node"
+              ],
+              "dtype": "complex128",
+              "id": "acoustic:pressure:fem-nodes",
+              "key": "q0000",
+              "metadata": {
+                "mesh_ids": [
+                  "mesh:front",
+                  "mesh:rear"
+                ],
+                "node_counts": [
+                  1027,
+                  638
+                ],
+                "node_offsets": [
+                  0,
+                  1027
+                ],
+                "region_ids": [
+                  "region:front",
+                  "region:rear"
+                ]
+              },
+              "quantity": "fem_nodal_pressure",
+              "shape": [
+                1,
+                1665
+              ],
+              "target_id": "domain:fem-volume",
+              "unit": "Pa"
+            },
+            {
+              "axes": [
+                "excitation",
+                "transducer"
+              ],
+              "dtype": "complex128",
+              "id": "mechanical:diaphragm-velocity",
+              "key": "q0001",
+              "metadata": {
+                "component_ids": [
+                  "component:compression-driver"
+                ]
+              },
+              "quantity": "diaphragm_velocity",
+              "shape": [
+                1,
+                1
+              ],
+              "target_id": "components:electrodynamic-transducers",
+              "unit": "m/s"
+            },
+            {
+              "axes": [
+                "excitation",
+                "transducer"
+              ],
+              "dtype": "complex128",
+              "id": "electrical:voice-coil-current",
+              "key": "q0002",
+              "metadata": {
+                "component_ids": [
+                  "component:compression-driver"
+                ]
+              },
+              "quantity": "voice_coil_current",
+              "shape": [
+                1,
+                1
+              ],
+              "target_id": "components:electrodynamic-transducers",
+              "unit": "A"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "compression-driver-three-frequencies",
+      "frequencies_hz": [
+        500.0,
+        1000.0,
+        2000.0
+      ],
+      "elapsed_s": 20.599686292000115,
+      "inventory": [
+        {
+          "frequency_hz": 500.0,
+          "metadata_sha256": "7498b4d1ed4c1a77ddcbfa8877ba95ec33aeec001b079207f31547b4e63d44c0",
+          "arrays_sha256": "7b5ad42ef5066b4d0fa56da518f45c0fd9b4c7cc088432d0bf94e192dca400dc",
+          "quantities": [
+            {
+              "axes": [
+                "excitation",
+                "fem_node"
+              ],
+              "dtype": "complex128",
+              "id": "acoustic:pressure:fem-nodes",
+              "key": "q0000",
+              "metadata": {
+                "mesh_ids": [
+                  "mesh:front",
+                  "mesh:rear"
+                ],
+                "node_counts": [
+                  1027,
+                  638
+                ],
+                "node_offsets": [
+                  0,
+                  1027
+                ],
+                "region_ids": [
+                  "region:front",
+                  "region:rear"
+                ]
+              },
+              "quantity": "fem_nodal_pressure",
+              "shape": [
+                1,
+                1665
+              ],
+              "target_id": "domain:fem-volume",
+              "unit": "Pa"
+            },
+            {
+              "axes": [
+                "excitation",
+                "transducer"
+              ],
+              "dtype": "complex128",
+              "id": "mechanical:diaphragm-velocity",
+              "key": "q0001",
+              "metadata": {
+                "component_ids": [
+                  "component:compression-driver"
+                ]
+              },
+              "quantity": "diaphragm_velocity",
+              "shape": [
+                1,
+                1
+              ],
+              "target_id": "components:electrodynamic-transducers",
+              "unit": "m/s"
+            },
+            {
+              "axes": [
+                "excitation",
+                "transducer"
+              ],
+              "dtype": "complex128",
+              "id": "electrical:voice-coil-current",
+              "key": "q0002",
+              "metadata": {
+                "component_ids": [
+                  "component:compression-driver"
+                ]
+              },
+              "quantity": "voice_coil_current",
+              "shape": [
+                1,
+                1
+              ],
+              "target_id": "components:electrodynamic-transducers",
+              "unit": "A"
+            }
+          ]
+        },
+        {
+          "frequency_hz": 1000.0,
+          "metadata_sha256": "dc71fd09f203df8b63835b12194eada61fc3074a053227f0eb1857a1c03fe8d3",
+          "arrays_sha256": "49954337ceaf2c8b9e169bd6881824992d0889c181b886b37030e7fbe7f47683",
+          "quantities": [
+            {
+              "axes": [
+                "excitation",
+                "fem_node"
+              ],
+              "dtype": "complex128",
+              "id": "acoustic:pressure:fem-nodes",
+              "key": "q0000",
+              "metadata": {
+                "mesh_ids": [
+                  "mesh:front",
+                  "mesh:rear"
+                ],
+                "node_counts": [
+                  1027,
+                  638
+                ],
+                "node_offsets": [
+                  0,
+                  1027
+                ],
+                "region_ids": [
+                  "region:front",
+                  "region:rear"
+                ]
+              },
+              "quantity": "fem_nodal_pressure",
+              "shape": [
+                1,
+                1665
+              ],
+              "target_id": "domain:fem-volume",
+              "unit": "Pa"
+            },
+            {
+              "axes": [
+                "excitation",
+                "transducer"
+              ],
+              "dtype": "complex128",
+              "id": "mechanical:diaphragm-velocity",
+              "key": "q0001",
+              "metadata": {
+                "component_ids": [
+                  "component:compression-driver"
+                ]
+              },
+              "quantity": "diaphragm_velocity",
+              "shape": [
+                1,
+                1
+              ],
+              "target_id": "components:electrodynamic-transducers",
+              "unit": "m/s"
+            },
+            {
+              "axes": [
+                "excitation",
+                "transducer"
+              ],
+              "dtype": "complex128",
+              "id": "electrical:voice-coil-current",
+              "key": "q0002",
+              "metadata": {
+                "component_ids": [
+                  "component:compression-driver"
+                ]
+              },
+              "quantity": "voice_coil_current",
+              "shape": [
+                1,
+                1
+              ],
+              "target_id": "components:electrodynamic-transducers",
+              "unit": "A"
+            }
+          ]
+        },
+        {
+          "frequency_hz": 2000.0,
+          "metadata_sha256": "d72dd7593bcbb5b2fe48410f6d4d45b0055a4fb5d3635820ef1c83103fdae1bd",
+          "arrays_sha256": "94bacca8005d3384f3f4f0be50e0fb2f7f2667bf69a1fa54b455a2b3d805dbb2",
+          "quantities": [
+            {
+              "axes": [
+                "excitation",
+                "fem_node"
+              ],
+              "dtype": "complex128",
+              "id": "acoustic:pressure:fem-nodes",
+              "key": "q0000",
+              "metadata": {
+                "mesh_ids": [
+                  "mesh:front",
+                  "mesh:rear"
+                ],
+                "node_counts": [
+                  1027,
+                  638
+                ],
+                "node_offsets": [
+                  0,
+                  1027
+                ],
+                "region_ids": [
+                  "region:front",
+                  "region:rear"
+                ]
+              },
+              "quantity": "fem_nodal_pressure",
+              "shape": [
+                1,
+                1665
+              ],
+              "target_id": "domain:fem-volume",
+              "unit": "Pa"
+            },
+            {
+              "axes": [
+                "excitation",
+                "transducer"
+              ],
+              "dtype": "complex128",
+              "id": "mechanical:diaphragm-velocity",
+              "key": "q0001",
+              "metadata": {
+                "component_ids": [
+                  "component:compression-driver"
+                ]
+              },
+              "quantity": "diaphragm_velocity",
+              "shape": [
+                1,
+                1
+              ],
+              "target_id": "components:electrodynamic-transducers",
+              "unit": "m/s"
+            },
+            {
+              "axes": [
+                "excitation",
+                "transducer"
+              ],
+              "dtype": "complex128",
+              "id": "electrical:voice-coil-current",
+              "key": "q0002",
+              "metadata": {
+                "component_ids": [
+                  "component:compression-driver"
+                ]
+              },
+              "quantity": "voice_coil_current",
+              "shape": [
+                1,
+                1
+              ],
+              "target_id": "components:electrodynamic-transducers",
+              "unit": "A"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "repeat_comparison": {
+    "frequency_hz": 1000,
+    "relative_tolerance": 1e-10,
+    "absolute_tolerance": 1e-12,
+    "maximum_absolute_difference_by_array": {
+      "q0000": 0.0,
+      "q0001": 0.0,
+      "q0002": 0.0
+    },
+    "passed": true
+  },
+  "sample_raw_1000hz": {
+    "diaphragm_velocity_m_s": {
+      "real": 0.23453682005579954,
+      "imag": -0.04592055847528571
+    },
+    "coil_current_a": {
+      "real": 0.09873307309426267,
+      "imag": 0.10059527936596394
+    }
+  },
+  "limitations": [
+    "Interior FEM fixture, not an exterior coupled MEH",
+    "No independent physics oracle or physical measurements compared",
+    "Timing includes process startup; not a scaling benchmark",
+    "GPU backends not exercised",
+    "Raw upstream-native excitation basis; no SPL or power conversion performed"
+  ]
+}
