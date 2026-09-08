@@ -145,3 +145,31 @@ def test_snapshot_creation_does_not_broaden_permissions(tmp_path):
     assert stat.S_IMODE(out.stat().st_mode)==0o700
     for path in out.iterdir():assert stat.S_IMODE(path.stat().st_mode)==0o600
     assert verify_snapshot(out,snapshot.content_hash)==snapshot
+
+
+def test_dangling_output_symlink_rejected(tmp_path):
+    source=tmp_path/'source';source.write_bytes(b'abc')
+    target=tmp_path/'target';out=tmp_path/'out'
+    try:out.symlink_to(target,target_is_directory=True)
+    except OSError:pytest.skip('symlinks unavailable')
+    with pytest.raises(ValueError,match='output cannot be a symlink'):
+        capture_inputs({'x':source},out)
+    assert not target.exists()
+
+
+def test_parent_retarget_after_validation_cannot_substitute_output(tmp_path,monkeypatch):
+    import meh_studio.snapshots as module
+    original_dir=tmp_path/'original';original_dir.mkdir()
+    (original_dir/'input-x.bin').write_bytes(b'original input')
+    alias=tmp_path/'alias';out=tmp_path/'out'
+    try:alias.symlink_to(original_dir,target_is_directory=True)
+    except OSError:pytest.skip('symlinks unavailable')
+    original=module._private_output
+    def retarget(path):
+        if alias.is_symlink():
+            alias.unlink();alias.symlink_to(out,target_is_directory=True)
+        return original(path)
+    monkeypatch.setattr(module,'_private_output',retarget)
+    snapshot=capture_inputs({'x':alias/'input-x.bin'},out)
+    assert (out/'input-x.bin').read_bytes()==b'original input'
+    assert verify_snapshot(out,snapshot.content_hash)==snapshot
