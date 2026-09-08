@@ -270,3 +270,18 @@ def test_child_rejects_runtime_mismatch_before_export(tmp_path):
     with pytest.raises(ValueError,match='child runtime differs'):
         worker._export('{}',str(tmp_path/'out'),{})
     assert not (tmp_path/'out').exists()
+
+
+def test_cad_loader_change_invalidates_runtime_and_job_identity(tmp_path, monkeypatch):
+    import meh_studio.geometry_worker as worker
+    from meh_studio import cad_runtime
+    before = worker.geometry_spec('a' * 64)
+    original = Path.read_bytes
+    loader = Path(cad_runtime.__file__).resolve()
+    def changed(path):
+        data = original(path)
+        return data + b'\n# changed loader\n' if path.resolve() == loader else data
+    monkeypatch.setattr(Path, 'read_bytes', changed)
+    after = worker.geometry_spec('a' * 64)
+    assert before.content_hash != after.content_hash
+    assert json.loads(before.parameters_json)['runtime']['code']['cad_runtime.py'] != json.loads(after.parameters_json)['runtime']['code']['cad_runtime.py']

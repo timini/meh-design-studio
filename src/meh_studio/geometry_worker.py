@@ -21,14 +21,14 @@ from .snapshots import read_snapshot_manifest, read_snapshot_payload
 
 def geometry_runtime() -> dict:
     """Fingerprint a trusted local installation, not an attestation of binaries."""
-    from . import geometry
+    package_root = Path(__file__).resolve().parent
     packages=sorted((distribution.metadata.get('Name',''),distribution.version)
                     for distribution in importlib.metadata.distributions())
     return {'python':sys.version,'implementation':platform.python_implementation(),
             'system':platform.system(),'release':platform.release(),'machine':platform.machine(),
             'packages':packages,
-            'code':{name:hashlib.sha256(Path(path).read_bytes()).hexdigest()
-                    for name,path in {'worker':__file__,'geometry':geometry.__file__}.items()}}
+            'code':{path.relative_to(package_root).as_posix():hashlib.sha256(path.read_bytes()).hexdigest()
+                    for path in sorted(package_root.rglob('*.py'))}}
 
 
 def geometry_spec(snapshot_digest: str, *, max_attempts=3) -> JobSpec:
