@@ -4,6 +4,7 @@ The foundation PR implements parts of B01 and the independent-reference infrastr
 
 ## Available
 
+- Input snapshot library with bounded dependency copies, portable content identities and verification against queued job input digests. See [input snapshots](input-snapshots.md). Worker execution and automatic dependency discovery remain to implement.
 - Pinned Boundary Lab subprocess adapter, preflight, explicit backend/runtime checks, preserved complex output, timeout/failure reports and result integrity checks.
 
 - Immutable, versioned SI contracts for briefs, source models, driver records, provenance and declared band/mounting/level qualification; canonical content hashes.
