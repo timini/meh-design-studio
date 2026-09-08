@@ -2,6 +2,10 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
+import hashlib
+import importlib.metadata
+import platform
+import sys
 import threading
 import json
 import math
@@ -14,13 +18,34 @@ from .jobs import Artifact, Completion, JobQueue, JobSpec, Lease, file_digest
 from .snapshots import read_snapshot_manifest, read_snapshot_payload
 
 
+def geometry_runtime() -> dict:
+    """Fingerprint a trusted local installation, not an attestation of binaries."""
+    from . import geometry
+    packages=sorted((distribution.metadata.get('Name',''),distribution.version)
+                    for distribution in importlib.metadata.distributions())
+    return {'python':sys.version,'implementation':platform.python_implementation(),
+            'system':platform.system(),'release':platform.release(),'machine':platform.machine(),
+            'packages':packages,
+            'code':{name:hashlib.sha256(Path(path).read_bytes()).hexdigest()
+                    for name,path in {'worker':__file__,'geometry':geometry.__file__}.items()}}
+
+
 def geometry_spec(snapshot_digest: str, *, max_attempts=3) -> JobSpec:
+    parameters={'operation':'export_geometry','version':2,'runtime':geometry_runtime()}
     return JobSpec(kind='geometry',input_digest=snapshot_digest,
-                   parameters_json='{"operation":"export_geometry","version":1}',max_attempts=max_attempts)
+                   parameters_json=json.dumps(parameters,sort_keys=True),max_attempts=max_attempts)
 
 
-def _export(design_json: str, directory: str):
+def _export(design_json: str, directory: str, expected_runtime: dict):
+    # JSON round-trip normalizes package tuples to the persisted representation.
+    def check():
+        if json.loads(json.dumps(geometry_runtime()))!=expected_runtime:
+            raise ValueError('geometry child runtime differs from queued identity')
+    check()
     export_geometry(HornGeometry.model_validate_json(design_json),Path(directory)/'geometry')
+    check()
+    (Path(directory)/'geometry/runtime.json').write_text(
+        json.dumps(expected_runtime,sort_keys=True,indent=2),encoding='utf-8')
 
 
 def run_geometry(queue: JobQueue, lease: Lease, snapshot_directory: Path, *, timeout_s=600):
@@ -49,7 +74,8 @@ def run_geometry(queue: JobQueue, lease: Lease, snapshot_directory: Path, *, tim
         design=HornGeometry.model_validate_json(payload)
         lease.output_directory.mkdir(parents=True,exist_ok=False)
         process=multiprocessing.get_context('spawn').Process(
-            target=_export,args=(design.canonical_json(),str(lease.output_directory)),daemon=True)
+            target=_export,args=(design.canonical_json(),str(lease.output_directory),
+                                 json.loads(lease.spec.parameters_json)['runtime']),daemon=True)
         process.start()
         next_heartbeat=0.
         while True:

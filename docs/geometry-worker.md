@@ -18,7 +18,7 @@ Local integration tests execute the real geometry exporter through spawn and req
 - Queue-requested cancellation is covered; launch-time signal handling and abrupt parent-process death still need the shared process supervisor and dedicated tests. A daemon multiprocessing child is not an operating-system guarantee against an orphan after forced parent termination.
 - No automatic restart loop. Expired leases can be recovered through the queue API, but orphan process cleanup is not yet integrated.
 - Snapshot and attempt storage remain caller-controlled. The worker does not protect against another process modifying its output files while publication hashes them.
-- Worker code/runtime identity is represented only by the versioned operation marker at this stage. Native CAD/runtime fingerprints must enter production job identity before reusable cross-runtime caching is enabled.
+- Runtime identity records Python, OS release and architecture, the installed distribution-version inventory, and SHA-256 hashes of worker and geometry source modules. This assumes a trusted installation: it does not attest every native binary, detect all in-place dependency edits or include unrecorded environment settings. Reusable production caching still needs a pinned installation and an explicit environment contract.
 - Native Windows and Linux execution of these worker tests remains required. Current local execution is on macOS; configured hosted CI remains blocked by account billing restrictions.
 
 Do not promote this draft as completed B04 or enable unattended production execution until those boundaries have tests and implementations. The CLI/desktop service integration follows the worker contract rather than duplicating CAD logic in the UI.
@@ -30,3 +30,5 @@ The worker first validates the bounded snapshot manifest and enforces the single
 Design payloads use the snapshot reader with regular-file, no-symlink, nonblocking POSIX open and before/after descriptor checks, while retaining the 1 MiB worker limit. Replacing a payload with a FIFO or symlink fails the claimed attempt before a blocking read or child launch.
 
 The CAD workflow now runs both geometry and worker tests with native CAD dependencies installed, so the real spawned-export integration test is not silently skipped there. If lease fencing rejects failure recording, the caller receives the original worker exception with the fencing error chained as its cause; stale attempts still cannot modify queue state.
+
+Operation version 2 includes the runtime fingerprint in JobSpec parameters. The parent rejects an older or different runtime before launch; the spawned child checks the fingerprint before and after export and preserves runtime.json among the hashed completion artifacts. A runtime change produces a distinct job identity instead of silently reusing queued work.

@@ -18,11 +18,11 @@ def setup_job(tmp_path):
     return queue,job,lease
 
 
-def _crash(design,directory):
+def _crash(design,directory,runtime):
     raise RuntimeError('synthetic worker crash')
 
 
-def _slow(design,directory):
+def _slow(design,directory,runtime):
     time.sleep(10)
 
 
@@ -78,6 +78,9 @@ def test_real_geometry_job_publishes_verified_files(tmp_path):
         assert any(file.path.endswith('.stl') for file in result.files)
         report=json.loads((lease.output_directory/'geometry/geometry.json').read_text())
         assert report['print_verified'] is False
+        assert any(file.path=='geometry/runtime.json' for file in result.files)
+        runtime=json.loads((lease.output_directory/'geometry/runtime.json').read_text())
+        assert runtime==json.loads(lease.spec.parameters_json)['runtime']
 
 
 def test_cancellation_during_execution_stops_worker(tmp_path,monkeypatch):
@@ -114,7 +117,7 @@ def test_unsupported_claimed_spec_fails_immediately(tmp_path):
         assert not lease.output_directory.exists()
 
 
-def _fake_export(design,directory):
+def _fake_export(design,directory,runtime):
     from meh_studio.geometry import HornGeometry
     root=Path(directory)/'geometry';root.mkdir()
     (root/'part.stl').write_bytes(b'synthetic publication fixture')
@@ -236,3 +239,22 @@ def test_original_error_preserved_when_failure_lease_expires(tmp_path,monkeypatc
         assert 'stale or inactive' in str(caught.value.__cause__)
         assert queue.get(job)['status']=='running'
         assert not lease.output_directory.exists()
+
+
+def test_runtime_change_changes_job_identity_and_rejects_old_lease(tmp_path,monkeypatch):
+    import meh_studio.geometry_worker as worker
+    queue,job,lease=setup_job(tmp_path)
+    original=worker.geometry_runtime
+    monkeypatch.setattr(worker,'geometry_runtime',lambda:original()|{'release':'different-test-runtime'})
+    assert worker.geometry_spec(lease.spec.input_digest).content_hash!=lease.spec.content_hash
+    with queue:
+        run_geometry(queue,lease,tmp_path/'snapshot')
+        assert queue.get(job)['status']=='failed'
+        assert not lease.output_directory.exists()
+
+
+def test_child_rejects_runtime_mismatch_before_export(tmp_path):
+    import meh_studio.geometry_worker as worker
+    with pytest.raises(ValueError,match='child runtime differs'):
+        worker._export('{}',str(tmp_path/'out'),{})
+    assert not (tmp_path/'out').exists()
