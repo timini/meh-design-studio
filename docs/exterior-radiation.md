@@ -18,7 +18,7 @@ A later run using `examples/radiation-smoke-request.json` completed 500, 1000 an
 
 The [integration report](../validation/reports/coupled-radiation-integration.json) records a real three-source coupled solve at 1 kHz. The conformed exterior had 1,621 nodes, 3,246 triangles and no open edges or orientation errors. The solver produced interior pressure, BEM pressure/normal derivative, driver velocity/current and two polar pressure sets.
 
-The pinned production BEM path uses FP32. Its independent circuit-voltage residual was about `5.4e-8` and electrical reciprocity residual about `1.5e-7`, so it **fails** the current strict `1e-8` consistency criterion. A separate FP64 reference run reduced the circuit residual to about `1.3e-16` but retained a reciprocity residual of `4.0e-8`, which **also fails** that criterion. This failure remains recorded. No tolerance was relaxed to obtain a pass.
+The pinned production BEM path uses FP32. Its independent circuit-voltage residual was about `5.4e-8` and electrical reciprocity residual about `1.5e-7`, so it **fails** the current strict `1e-8` consistency criterion. A historical FP64 reference run, produced by the older runner without a recorded Julia identity, reduced the circuit residual to about `1.3e-16` but retained a reciprocity residual of `4.0e-8`, which **also fails** that criterion. This failure remains recorded. No tolerance was relaxed to obtain a pass.
 
 The two paths differed by approximately 0.0026% in the polar-pressure matrix norm, 0.00049% in velocity and 0.032% in BEM normal derivative. Agreement between two precisions of the same formulation is not an independent acoustic accuracy comparison. Further mesh/quadrature/refinement analysis and declared observable-specific acceptance criteria are needed to determine the remaining reciprocity error.
 
@@ -49,3 +49,8 @@ with the evaluated exterior mesh bound to its compilation report. Runs must reus
 the same STEP artifact when refining its mesh. Historical reports without this
 evidence remain historical experimental observations and cannot pass the current
 comparison gate; regenerate the compilation evidence before a new comparison.
+
+The archived FP32/FP64 comparison is historical evidence only: its reference runner
+hash predates the current Julia identity gate. It is not current pinned-runtime
+evidence. A fresh reference run and regenerated comparison remain required;
+no new numerical result is claimed here.

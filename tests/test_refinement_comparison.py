@@ -27,7 +27,7 @@ def test_null_policy_retains_weak_sources_and_reports_excluded_samples():
     assert null['maximum_absolute_phase_change_deg'] is None
 
 
-@pytest.mark.parametrize('fault', [None, 'cad', 'design', 'surface', 'missing'])
+@pytest.mark.parametrize('fault', [None, 'cad', 'design', 'surface', 'missing', 'target'])
 def test_refinement_requires_bound_cad_identity(tmp_path, fault):
     import json
     from meh_studio.boundary_lab import sha256
@@ -41,7 +41,10 @@ def test_refinement_requires_bound_cad_identity(tmp_path, fault):
     compilation = {'status': 'complete', 'geometry_hash': 'design-a',
                    'project_sha256': sha256(project), 'exterior_identity': identity,
                    'exterior_surface': {'sha256': 'surface-a'}}
-    report = {'status': 'complete', **identity}
+    report = {'status': 'complete', 'mesh_size_m': .02, **identity}
+    (exterior/'exterior.json').write_text(json.dumps(report))
+    compilation.update(exterior_mesh_size_m=.02, exterior_report_sha256=sha256(exterior/'exterior.json'))
+    if fault == 'target': report['mesh_size_m'] = .01
     manifest = {'meshes': [{'id': 'mesh:exterior', 'purpose': 'bem_surface', 'sha256': 'surface-a'}]}
     if fault == 'cad': cad.write_text('different CAD')
     if fault == 'design': report['design_hash'] = 'different-design'
@@ -69,3 +72,65 @@ def test_distinct_decreasing_refinements_required():
     records[1]['mesh_inventory'] = records[0]['mesh_inventory']
     with pytest.raises(ValueError, match='distinct exterior'):
         module.validate_refinement_levels(records)
+
+
+def test_refinement_project_identity_only_allows_exterior_digest_changes(tmp_path):
+    import json
+    path = tmp_path/'project.json'
+    data = {'physical_system': {'metadata': {'generated_mesh_sha256': {'mesh:front':'a', 'mesh:exterior':'b'}}}}
+    path.write_text(json.dumps(data))
+    original = module.refinement_project_hash(path)
+    data['physical_system']['metadata']['generated_mesh_sha256']['mesh:exterior'] = 'c'
+    path.write_text(json.dumps(data))
+    assert module.refinement_project_hash(path) == original
+    data['physical_system']['metadata']['generated_mesh_sha256']['mesh:front'] = 'd'
+    path.write_text(json.dumps(data))
+    assert module.refinement_project_hash(path) != original
+
+
+@pytest.mark.parametrize('fault', [None, 'no_pressure', 'changed_artifact'])
+def test_load_requires_pressure_and_revalidates_artifacts(tmp_path, monkeypatch, fault):
+    import json
+    project = tmp_path/'project.json'
+    project.write_text('{}')
+    (tmp_path/'compilation.json').write_text('{"exterior_mesh_size_m":0.02}')
+    root = tmp_path/'evaluation'
+    upstream = root/'upstream'
+    upstream.mkdir(parents=True)
+    (root/'evaluation.json').write_text('{"runtime":{"python":"pinned"}}')
+    (upstream/'manifest.json').write_text(json.dumps({'meshes':[], 'results':[{'metadata_file':'metadata.json','arrays_file':'arrays.npz'}]}))
+    kind = 'voice_coil_current' if fault == 'no_pressure' else 'exterior_pressure'
+    (upstream/'metadata.json').write_text(json.dumps({'quantities':[{'id':'observable','key':'p','quantity':kind}]}))
+    np.savez(upstream/'arrays.npz',p=np.array([[1+1j]]))
+    calls = []
+    def validate(*args):
+        calls.append(True)
+        if fault == 'changed_artifact' and len(calls) == 2:
+            raise ValueError('artifact hash mismatch')
+        return {'passed':True}
+    monkeypatch.setattr(module,'validate_electrical_basis',validate)
+    monkeypatch.setattr(module,'exterior_identity',lambda *args:{'design':'same'})
+    if fault:
+        with pytest.raises(ValueError): module.load(project,root)
+    else:
+        record, _, rows = module.load(project,root)
+        assert record['pressure_ids'] == ['observable']
+        assert record['runtime'] == {'python':'pinned'}
+        assert len(calls) == 2 and len(rows) == 1
+
+
+def test_comparison_rejects_different_dependency_runtime(tmp_path, monkeypatch):
+    import sys
+    runs = []
+    for i, size in enumerate([.02,.015,.01]):
+        record = {'mesh_size_m':size, 'mesh_inventory':[{'purpose':'bem_surface','sha256':str(i)}],
+                  'runtime':{'packages':{'numpy':str(i)}}, 'exterior_identity':{'cad':'same'},
+                  'pressure_ids':['polar'], 'project_definition_sha256':'same'}
+        manifest = {'frequencies_hz':[1000], 'excitation_port_ids':['a'], 'meshes':[]}
+        runs.append((record, manifest, []))
+    monkeypatch.setattr(module, 'load', lambda *args: runs.pop(0))
+    monkeypatch.setattr(sys, 'argv', ['compare', '--run','p1','e1','--run','p2','e2',
+                                     '--run','p3','e3','--output',str(tmp_path/'report.json')])
+    with pytest.raises(ValueError, match='runtime changed'):
+        module.main()
+    assert not (tmp_path/'report.json').exists()

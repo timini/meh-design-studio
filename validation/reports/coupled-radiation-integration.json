@@ -1325,5 +1325,10 @@
       ]
     },
     "elapsed_s": 31.92355308299011
+  },
+  "current_reference_contract_status": {
+    "qualified": false,
+    "status": "requires_rerun",
+    "reason": "Archived FP64 result predates the current reference runner and lacks its required Julia runtime identity."
   }
 }

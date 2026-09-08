@@ -77,6 +77,30 @@ def surface_integrity(path: Path) -> dict:
         gmsh.finalize()
 
 
+def verify_exterior_groups(path: Path):
+    import contextlib
+    import io
+    import meshio
+    with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+        try:
+            mesh = meshio.read(path, file_format='gmsh')
+        except (meshio.ReadError, SystemExit) as exc:
+            raise ValueError('invalid conformed exterior mesh') from exc
+    expected = {'mouth_interface': (10, 2), 'rigid_exterior': (99, 2)}
+    if {name: tuple(map(int, value)) for name, value in mesh.field_data.items()} != expected:
+        raise ValueError('conformed exterior physical-group names/tags differ')
+    physical = mesh.cell_data.get('gmsh:physical', [])
+    if len(physical) != len(mesh.cells) or any(cell.type != 'triangle' for cell in mesh.cells):
+        raise ValueError('conformed exterior must cover only physical triangles')
+    used = set()
+    for cell, tags in zip(mesh.cells, physical):
+        if len(tags) != len(cell.data):
+            raise ValueError('conformed exterior physical coverage differs')
+        used.update(map(int, tags))
+    if used != {10, 99}:
+        raise ValueError('conformed exterior has missing or unexpected physical elements')
+
+
 def export_exterior(design: HornGeometry, output: Path, mesh_size_m: float = .02) -> dict:
     """Fill the omitted drivers to make a closed outer acoustic envelope.
 

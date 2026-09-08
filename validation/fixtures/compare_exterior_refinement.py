@@ -2,6 +2,7 @@
 import argparse
 import json
 import math
+import hashlib
 from pathlib import Path
 import numpy as np
 from meh_studio.boundary_lab import _contained, _read_json, sha256
@@ -9,19 +10,36 @@ from meh_studio.validation import validate_electrical_basis
 
 
 def load(project, evaluation):
+    evaluation_hash = sha256(evaluation/"evaluation.json")
     checks = validate_electrical_basis(project,evaluation)
+    runtime = _read_json(evaluation/"evaluation.json").get("runtime")
+    if not isinstance(runtime, dict) or not runtime:
+        raise ValueError("missing evaluated runtime identity")
     manifest = _read_json(evaluation/'upstream/manifest.json')
     identity = exterior_identity(project, manifest)
     rows = []
+    pressure_ids = None
     for result in manifest['results']:
         metadata = _read_json(_contained(evaluation/'upstream',result['metadata_file']))
+        current_ids = {q["id"] for q in metadata["quantities"] if q["quantity"] == "exterior_pressure"}
+        if not current_ids or (pressure_ids is not None and current_ids != pressure_ids):
+            raise ValueError("consistent exterior-pressure observables are required")
+        pressure_ids = current_ids
         with np.load(_contained(evaluation/'upstream',result['arrays_file']),allow_pickle=False) as archive:
             rows.append({q['id']:archive[q['key']] for q in metadata['quantities']
                          if q['quantity'] in {'exterior_pressure','diaphragm_velocity','voice_coil_current'}})
-    return {'evaluation':str(evaluation.resolve()),'evaluation_sha256':sha256(evaluation/'evaluation.json'),
+    if not rows:
+        raise ValueError('exterior-pressure observations are missing')
+    target = _read_json(project.parent/'compilation.json')['exterior_mesh_size_m']
+    if validate_electrical_basis(project, evaluation) != checks or sha256(evaluation/'evaluation.json') != evaluation_hash:
+        raise ValueError('evaluation artifacts changed while loading comparison arrays')
+    if exterior_identity(project, manifest) != identity:
+        raise ValueError('exterior evidence changed while loading comparison arrays')
+    return {'runtime': runtime, 'pressure_ids': sorted(pressure_ids or []),
+            'project_definition_sha256': refinement_project_hash(project), 'evaluation':str(evaluation.resolve()),'evaluation_sha256':sha256(evaluation/'evaluation.json'),
             'project_sha256':sha256(project),'mesh_inventory':manifest['meshes'],
             'exterior_identity':identity,
-            'mesh_size_m':_read_json(project.parent/'exterior/exterior.json').get('mesh_size_m'),
+            'mesh_size_m':target,
             'electrical_checks':checks},manifest,rows
 
 
@@ -36,13 +54,23 @@ def exterior_identity(project, manifest):
             or compilation.get('project_sha256') != sha256(project)
             or compilation.get('geometry_hash') != identity['design_hash']
             or exterior.get('cad_sha256') != cad_hash
-            or compilation.get('exterior_identity') != identity):
+            or compilation.get('exterior_identity') != identity
+            or compilation.get('exterior_report_sha256') != sha256(project.parent/'exterior/exterior.json')
+            or compilation.get('exterior_mesh_size_m') != exterior.get('mesh_size_m')):
         raise ValueError('missing or changed exterior design/CAD identity')
     surfaces = [mesh for mesh in manifest['meshes'] if mesh['purpose'] == 'bem_surface']
     if (len(surfaces) != 1 or surfaces[0]['id'] != 'mesh:exterior'
             or surfaces[0]['sha256'] != compilation.get('exterior_surface', {}).get('sha256')):
         raise ValueError('evaluated exterior mesh differs from its compilation')
     return identity
+
+
+def refinement_project_hash(project):
+    # Only the BEM mesh digest may vary; all other definitions remain identical.
+    data = _read_json(project)
+    hashes = data.get('physical_system', {}).get('metadata', {}).get('generated_mesh_sha256', {})
+    hashes.pop('mesh:exterior', None)
+    return hashlib.sha256(json.dumps(data, sort_keys=True, separators=(',', ':'), allow_nan=False).encode()).hexdigest()
 
 
 def validate_refinement_levels(records):
@@ -93,7 +121,11 @@ def main():
     for record,manifest,_ in loaded[1:]:
         if record['exterior_identity'] != loaded[0][0]['exterior_identity']:
             raise ValueError('exterior design/CAD changed across refinement runs')
-        if record['project_sha256'] != loaded[0][0]['project_sha256']:
+        if record['runtime'] != loaded[0][0]['runtime']:
+            raise ValueError('runtime changed across refinements')
+        if record['pressure_ids'] != loaded[0][0]['pressure_ids']:
+            raise ValueError('exterior-pressure observable identities differ')
+        if record['project_definition_sha256'] != loaded[0][0]['project_definition_sha256']:
             raise ValueError('project definitions must match exactly for exterior-only refinement')
         if {m['id']:m['sha256'] for m in manifest['meshes'] if m['purpose']=='fem_volume'} != fem_inputs:
             raise ValueError('FEM meshes changed in exterior-only refinement')

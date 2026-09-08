@@ -5,7 +5,7 @@ import threading
 from .boundary_lab import BoundaryLabRuntime, _execute, _read_json, _write_json, _termination_guard, sha256
 from .generated_system import HornSources, compile_interior_system
 from .geometry import HornGeometry
-from .radiation_geometry import export_exterior, surface_integrity
+from .radiation_geometry import export_exterior, surface_integrity, verify_exterior_groups
 
 
 def compile_radiating_system(geometry_directory: Path, sources: HornSources, output: Path,
@@ -32,10 +32,12 @@ def compile_radiating_system(geometry_directory: Path, sources: HornSources, out
                       "--fem-interface", "mouth_interface", "--bem-interface", "mouth_interface"],
                      Path(runtime.checkout), output / "conform-interface.log", timeout_s)
             integrity = surface_integrity(destination)
+            verify_exterior_groups(destination)
             if abs(integrity["enclosed_volume_m3"] / exterior["cad_volume_m3"] - 1) > .02:
                 raise ValueError("conforming changed the exterior volume beyond the supported tolerance")
             project = _read_json(output / "project.blab.json")
             system = project["physical_system"]
+            system["metadata"]["generated_mesh_sha256"]["mesh:exterior"] = integrity["sha256"]
             system["meshes"].append({"id": "mesh:exterior", "name": "exterior", "file": "meshes/exterior.msh",
                 "purpose": "bem_surface", "scale_to_m": 1.0, "translation_m": [0, 0, 0]})
             system["regions"].append({"id": "region:exterior", "name": "Exterior air", "kind": "unbounded_air",
@@ -55,7 +57,8 @@ def compile_radiating_system(geometry_directory: Path, sources: HornSources, out
                 raise ValueError("runtime changed during interface preparation")
             _write_json(output / "project.blab.json", project)
             report.update(status="complete", project_sha256=sha256(output / "project.blab.json"),
-                exterior_surface=integrity, exterior_identity={"design_hash": design.content_hash,
+                exterior_surface=integrity, exterior_mesh_size_m=exterior_mesh_size_m,
+                exterior_report_sha256=sha256(output / "exterior/exterior.json"), exterior_identity={"design_hash": design.content_hash,
                     "cad_sha256": exterior["cad_sha256"]}, limitations=[
                     "Ideal rigid mounting package, not measured driver geometry",
                     "Throat piston has no rear acoustic load or compression-driver internals",

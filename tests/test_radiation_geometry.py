@@ -64,3 +64,40 @@ def test_threaded_compilation_rejected_without_side_effects(tmp_path):
         with pytest.raises(ValueError, match='background thread'):
             result.result()
     assert not (tmp_path/'out').exists()
+
+
+@pytest.mark.parametrize('fault', [None, 'name', 'tag', 'coverage'])
+def test_conformed_exterior_physical_groups(tmp_path, fault):
+    from meh_studio.radiation_geometry import verify_exterior_groups
+    name = 'wrong_mouth' if fault == 'name' else 'mouth_interface'
+    tag = 11 if fault == 'tag' else 10
+    element_tag = 99 if fault == 'coverage' else tag
+    path = tmp_path/'surface.msh'
+    path.write_text(f'''$MeshFormat
+2.2 0 8
+$EndMeshFormat
+$PhysicalNames
+2
+2 {tag} "{name}"
+2 99 "rigid_exterior"
+$EndPhysicalNames
+$Nodes
+4
+1 0 0 0
+2 1 0 0
+3 0 1 0
+4 0 0 1
+$EndNodes
+$Elements
+4
+1 2 2 {element_tag} 1 1 3 2
+2 2 2 99 2 1 2 4
+3 2 2 99 2 1 4 3
+4 2 2 99 2 2 3 4
+$EndElements
+''')
+    if fault:
+        with pytest.raises(ValueError, match='physical'):
+            verify_exterior_groups(path)
+    else:
+        verify_exterior_groups(path)
