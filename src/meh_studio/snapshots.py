@@ -5,7 +5,7 @@ transactions; verify the expected identity immediately before consuming files.
 """
 from __future__ import annotations
 
-from contextlib import ExitStack
+from contextlib import ExitStack, contextmanager
 import hashlib
 import json
 import os
@@ -91,8 +91,49 @@ def _stream_handle(source, limit: int, destination=None):
     return digest.hexdigest(),size
 
 
-def _private_output(path: Path):
-    descriptor=os.open(path,os.O_WRONLY|os.O_CREAT|os.O_EXCL|getattr(os,'O_BINARY',0),0o600)
+@contextmanager
+def _output_directory(path: Path):
+    if os.name == 'nt':
+        import ctypes
+        from ctypes import wintypes
+        kernel=ctypes.WinDLL('kernel32',use_last_error=True)
+        create=kernel.CreateFileW
+        create.argtypes=[wintypes.LPCWSTR,wintypes.DWORD,wintypes.DWORD,ctypes.c_void_p,
+                         wintypes.DWORD,wintypes.DWORD,wintypes.HANDLE]
+        create.restype=wintypes.HANDLE
+        close=kernel.CloseHandle
+        close.argtypes=[wintypes.HANDLE];close.restype=wintypes.BOOL
+        # Share read/write, but not delete: the directory cannot be renamed
+        # or replaced while path-based writes and publication are in progress.
+        handle=create(str(path),0,3,None,3,0x02000000|0x00200000,None)
+        if handle==wintypes.HANDLE(-1).value:
+            raise ctypes.WinError(ctypes.get_last_error())
+        try:
+            class Attributes(ctypes.Structure):
+                _fields_=[('attributes',wintypes.DWORD),('tag',wintypes.DWORD)]
+            info=Attributes()
+            query=kernel.GetFileInformationByHandleEx
+            query.argtypes=[wintypes.HANDLE,ctypes.c_int,ctypes.c_void_p,wintypes.DWORD]
+            query.restype=wintypes.BOOL
+            if not query(handle,9,ctypes.byref(info),ctypes.sizeof(info)):
+                raise ctypes.WinError(ctypes.get_last_error())
+            if info.attributes & 0x400 or not info.attributes & 0x10:
+                raise ValueError('snapshot output must be a directory without reparse points')
+            yield None
+        finally:
+            close(handle)
+    else:
+        descriptor=os.open(path,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
+        try:
+            yield descriptor
+        finally:
+            os.close(descriptor)
+
+
+def _private_output(path: Path, *, directory_fd=None):
+    name=path.name if directory_fd is not None else path
+    descriptor=os.open(name,os.O_WRONLY|os.O_CREAT|os.O_EXCL|getattr(os,'O_BINARY',0),
+                       0o600,dir_fd=directory_fd)
     return os.fdopen(descriptor,'wb')
 
 
@@ -118,19 +159,23 @@ def capture_inputs(inputs: Mapping[str, Path], output: Path) -> InputSnapshot:
     with ExitStack() as stack:
         handles={name:stack.enter_context(_open_source(path)) for name,path in sources.items()}
         output.mkdir(mode=0o700,parents=True,exist_ok=False)
+        directory_fd=stack.enter_context(_output_directory(output))
         entries=[]
         total=0
         for entry in ordered:
-            with _private_output(output/entry.filename) as destination:
+            with _private_output(output/entry.filename,directory_fd=directory_fd) as destination:
                 digest,size=_stream_handle(handles[entry.name],min(MAX_FILE_BYTES,MAX_TOTAL_BYTES-total),destination)
             total+=size
             entries.append(SnapshotFile(name=entry.name,sha256=digest,size_bytes=size))
-    snapshot=InputSnapshot(files=tuple(entries))
-    temporary=output/'manifest.json.tmp'
-    with _private_output(temporary) as stream:
-        stream.write(snapshot.canonical_json().encode('utf-8'))
-    temporary.replace(output/'manifest.json')
-    return snapshot
+        snapshot=InputSnapshot(files=tuple(entries))
+        temporary=output/'manifest.json.tmp'
+        with _private_output(temporary,directory_fd=directory_fd) as stream:
+            stream.write(snapshot.canonical_json().encode('utf-8'))
+        if directory_fd is None:
+            temporary.replace(output/'manifest.json')
+        else:
+            os.replace(temporary.name,'manifest.json',src_dir_fd=directory_fd,dst_dir_fd=directory_fd)
+        return snapshot
 
 
 def verify_snapshot(output: Path, expected_digest: str) -> InputSnapshot:

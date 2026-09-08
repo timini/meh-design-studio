@@ -165,10 +165,10 @@ def test_parent_retarget_after_validation_cannot_substitute_output(tmp_path,monk
     try:alias.symlink_to(original_dir,target_is_directory=True)
     except OSError:pytest.skip('symlinks unavailable')
     original=module._private_output
-    def retarget(path):
+    def retarget(path,**kwargs):
         if alias.is_symlink():
             alias.unlink();alias.symlink_to(out,target_is_directory=True)
-        return original(path)
+        return original(path,**kwargs)
     monkeypatch.setattr(module,'_private_output',retarget)
     snapshot=capture_inputs({'x':alias/'input-x.bin'},out)
     assert (out/'input-x.bin').read_bytes()==b'original input'
@@ -193,3 +193,36 @@ def test_output_parent_retarget_cannot_redirect_publication(tmp_path,monkeypatch
     snapshot=capture_inputs({'x':source},alias/'out')
     assert list(other_out.iterdir())==[]
     assert verify_snapshot(original_parent/'out',snapshot.content_hash)==snapshot
+
+
+@pytest.mark.skipif(os.name=='nt',reason='POSIX directory-relative writes')
+def test_final_directory_swap_cannot_redirect_writes(tmp_path,monkeypatch):
+    import meh_studio.snapshots as module
+    source=tmp_path/'source';source.write_bytes(b'private input')
+    out=tmp_path/'out';moved=tmp_path/'moved';target=tmp_path/'target';target.mkdir()
+    original=module._private_output
+    swapped=False
+    def swap(path,**kwargs):
+        nonlocal swapped
+        if not swapped:
+            out.rename(moved);out.symlink_to(target,target_is_directory=True);swapped=True
+        return original(path,**kwargs)
+    monkeypatch.setattr(module,'_private_output',swap)
+    snapshot=capture_inputs({'x':source},out)
+    assert list(target.iterdir())==[]
+    assert verify_snapshot(moved,snapshot.content_hash)==snapshot
+
+
+@pytest.mark.skipif(os.name!='nt',reason='Windows directory sharing lock')
+def test_windows_directory_cannot_be_renamed_until_publication(tmp_path,monkeypatch):
+    import meh_studio.snapshots as module
+    source=tmp_path/'source';source.write_bytes(b'private input')
+    out=tmp_path/'out';moved=tmp_path/'moved'
+    original=module._private_output
+    def try_rename(path,**kwargs):
+        with pytest.raises(OSError):out.rename(moved)
+        return original(path,**kwargs)
+    monkeypatch.setattr(module,'_private_output',try_rename)
+    snapshot=capture_inputs({'x':source},out)
+    out.rename(moved)
+    assert verify_snapshot(moved,snapshot.content_hash)==snapshot
