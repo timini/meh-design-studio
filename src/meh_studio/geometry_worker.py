@@ -1,0 +1,107 @@
+"""One leased geometry task in a spawned process; no solver execution."""
+from __future__ import annotations
+
+import hashlib
+import json
+import math
+import multiprocessing
+from pathlib import Path
+import time
+
+from .geometry import HornGeometry, export_geometry
+from .jobs import Artifact, Completion, JobQueue, JobSpec, Lease, file_digest
+from .snapshots import verify_snapshot
+
+
+def geometry_spec(snapshot_digest: str, *, max_attempts=3) -> JobSpec:
+    return JobSpec(kind='geometry',input_digest=snapshot_digest,
+                   parameters_json='{"operation":"export_geometry","version":1}',max_attempts=max_attempts)
+
+
+def _export(design_json: str, directory: str):
+    export_geometry(HornGeometry.model_validate_json(design_json),Path(directory)/'geometry')
+
+
+def run_geometry(queue: JobQueue, lease: Lease, snapshot_directory: Path, *, timeout_s=600):
+    """Run a caller-claimed geometry lease, heartbeat it and publish verified files.
+
+    The snapshot must contain exactly one dependency named design. Other job
+    kinds and parameters are rejected before launch. Storage is caller-owned.
+    """
+    if isinstance(timeout_s,bool) or not math.isfinite(timeout_s) or not 0<timeout_s<=3600:
+        raise ValueError('worker timeout must be positive and at most one hour')
+    if lease.spec != geometry_spec(lease.spec.input_digest,max_attempts=lease.spec.max_attempts):
+        raise ValueError('unsupported geometry worker job')
+    process=None
+    started=time.monotonic()
+    try:
+        if queue.heartbeat(lease,lease_seconds=30):
+            queue.acknowledge_cancel(lease)
+            return
+        snapshot=verify_snapshot(snapshot_directory,lease.spec.input_digest)
+        if len(snapshot.files)!=1 or snapshot.files[0].name!='design':
+            raise ValueError('geometry worker requires one design dependency')
+        entry=snapshot.files[0]
+        if entry.size_bytes>1024*1024:
+            raise ValueError('geometry design exceeds 1 MiB')
+        with (Path(snapshot_directory)/entry.filename).open('rb') as source:
+            payload=source.read(1024*1024+1)
+        if len(payload)!=entry.size_bytes or hashlib.sha256(payload).hexdigest()!=entry.sha256:
+            raise ValueError('geometry design changed after snapshot verification')
+        design=HornGeometry.model_validate_json(payload)
+        lease.output_directory.mkdir(parents=True,exist_ok=False)
+        process=multiprocessing.get_context('spawn').Process(
+            target=_export,args=(design.canonical_json(),str(lease.output_directory)),daemon=True)
+        process.start()
+        next_heartbeat=0.
+        while True:
+            now=time.monotonic()
+            if now>=next_heartbeat:
+                if queue.heartbeat(lease,lease_seconds=30):
+                    _stop(process)
+                    queue.acknowledge_cancel(lease)
+                    return
+                next_heartbeat=now+1
+            if now-started>=timeout_s:
+                raise TimeoutError('geometry worker exceeded time limit')
+            process.join(timeout=.1)
+            if not process.is_alive():
+                break
+        if process.exitcode!=0:
+            raise RuntimeError(f'geometry worker exited with code {process.exitcode}')
+        if queue.heartbeat(lease,lease_seconds=30):
+            queue.acknowledge_cancel(lease)
+            return
+        root=lease.output_directory
+        report=json.loads((root/'geometry/geometry.json').read_text())
+        if report.get('status')!='complete' or report.get('design_hash')!=design.content_hash:
+            raise ValueError('geometry worker did not produce a matching complete report')
+        files=[]
+        for path in sorted((root/'geometry').rglob('*')):
+            if path.is_symlink():
+                raise ValueError('worker output cannot contain symlinks')
+            if path.is_file():
+                files.append(Artifact(path=path.relative_to(root).as_posix(),
+                                      sha256=file_digest(path),size_bytes=path.stat().st_size))
+        record=Completion(job_id=lease.job_id,attempt_token=lease.token,
+                          evidence='experimental_geometry',files=tuple(files))
+        temporary=root/'completion.json.tmp'
+        temporary.write_text(record.canonical_json(),encoding='utf-8')
+        temporary.replace(root/'completion.json')
+        queue.complete(lease)
+    except Exception as exc:
+        if process is not None:
+            _stop(process)
+        # A stale lease cannot mutate a newer attempt. Preserve the original
+        # diagnostic locally by re-raising if the queue rejects this finish.
+        queue.fail(lease,f'{type(exc).__name__}: {exc}')
+    finally:
+        if process is not None:
+            _stop(process)
+
+
+def _stop(process):
+    if process.pid is not None:
+        if process.is_alive():
+            process.kill()
+        process.join()
