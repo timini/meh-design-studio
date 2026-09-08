@@ -1,10 +1,11 @@
 # Implementation status
 
-The foundation PR implements parts of B01 and the independent-reference infrastructure for A05. It does **not** pass G0 or any physical release gate. A01's example brief is provisional; its measurement protocol has not been ratified. No upstream acoustic solver has been run by this implementation.
+The foundation PR implements parts of B01 and the independent-reference infrastructure for A05. It does **not** pass G0 or any physical release gate. A01's example brief is provisional; its measurement protocol has not been ratified. The pinned Boundary Lab CPU solver has now executed the interior compression-driver fixture at one and three frequencies; see the [adapter and evidence](boundary-lab-adapter.md). This demonstrates integration and repeatability, not independent accuracy or a complete MEH solve.
 
 ## Available
 
 - Input snapshot library with bounded dependency copies, portable content identities and verification against queued job input digests. See [input snapshots](input-snapshots.md). Worker execution and automatic dependency discovery remain to implement.
+- Pinned Boundary Lab subprocess adapter, preflight, explicit backend/runtime checks, preserved complex output, timeout/failure reports and result integrity checks.
 
 - Immutable, versioned SI contracts for briefs, source models, driver records, provenance and declared band/mounting/level qualification; canonical content hashes.
 - Explicit dry moving mass and source-data validation. Synthetic records cannot qualify. A declared qualification is user-supplied metadata, not independently verified evidence.
@@ -28,7 +29,7 @@ The circuit accepts a prescribed mechanical load matrix in N·s/m. It does not d
 
 ## Next reviewable increments
 
-1. Boundary Lab pinned adapter and executed headless validation/solve; archive full upstream result conventions and failure states (A02).
+1. Extend the executed adapter to generated geometry and full FEM/BEM radiation; establish independent acoustic accuracy and source normalisation checks (remaining A02/A05).
 2. Single-origin horn geometry with real source boundary tags, print solids and generated mesh validation (A04/B02).
 3. Generated geometry/source coupling, independent-oracle and mesh convergence comparisons; durable evaluations and metrics (A05/B03–B05).
 4. Supported mixed-variable search and manufacturing export, followed by measured qualification gates in the plan.
