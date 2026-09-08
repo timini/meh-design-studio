@@ -7,13 +7,14 @@ name = "meh-design-studio"
 version = "0.1.0.dev0"
 description = "Validation-first multiple entry horn design tools"
 requires-python = ">=3.11"
-dependencies = ["numpy>=2.0,<3", "pydantic>=2.10,<3"]
+dependencies = ["numpy>=2.0,<3", "meshio>=5.3,<6", "pydantic>=2.10,<3"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8,<10"]
 cad = ["cadquery>=2.6,<3", "gmsh>=4.14,<5"]
 
 [project.scripts]
+meh-measurements = "meh_studio.measurement_cli:main"
 meh = "meh_studio.cli:main"
 meh-geometry = "meh_studio.geometry_cli:main"
 

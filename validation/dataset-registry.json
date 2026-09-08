@@ -128,6 +128,19 @@
       "split": "unassigned",
       "limitations": "Frozen baseline and nominated improvement; additional build if needed",
       "report_path": null
+    },
+    {
+      "id": "OWN-BLAB-INTEGRATION",
+      "status": "executed_integration",
+      "kind": "numerical",
+      "source_url": "https://github.com/JWSound/boundary-lab/tree/8cb166226e412877d3f71f2845918e479b97aa85/examples/compression_driver",
+      "acoustic_qualification": "not_qualified",
+      "rights_status": "upstream_assets_not_redistributed",
+      "redistributed_assets": false,
+      "local_data_path": "runs/",
+      "split": "development",
+      "limitations": "Interior FEM integration and repeatability only; no independent physical accuracy established.",
+      "report_path": "validation/reports/boundary-lab-integration.json"
     }
   ]
 }
