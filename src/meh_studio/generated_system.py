@@ -22,6 +22,31 @@ class HornSources(Record):
 
 
 def compile_interior_system(geometry_directory: Path, sources: HornSources, output: Path) -> dict:
+    try:
+        return _compile_interior_system(geometry_directory, sources, output)
+    except (KeyError, TypeError, AttributeError, IndexError, EOFError) as exc:
+        raise ValueError(f"invalid geometry compilation artifact: {exc}") from exc
+
+
+def _verify_boundary_groups(path: Path, region: dict):
+    import contextlib
+    import io
+    import meshio
+    with contextlib.redirect_stdout(io.StringIO()):
+        mesh = meshio.read(path)
+    expected = {b["name"]: (b["tag"], 2) for b in region["boundaries"]}
+    expected["air_" + region["id"]] = (1, 3)
+    actual = {name: tuple(map(int, group)) for name, group in mesh.field_data.items()}
+    if actual != expected or len(set(expected.values())) != len(expected):
+        raise ValueError("mesh physical-group names/tags differ from boundary declarations")
+    used = set()
+    for cell, tags in zip(mesh.cells, mesh.cell_data.get("gmsh:physical", [])):
+        used.update((int(tag), cell.dim) for tag in tags)
+    if used != set(expected.values()):
+        raise ValueError("mesh physical groups have missing or undeclared elements")
+
+
+def _compile_interior_system(geometry_directory: Path, sources: HornSources, output: Path) -> dict:
     root = Path(geometry_directory).resolve()
     geometry = _read_json(root / "geometry.json")
     mesh = _read_json(root / "analysis/mesh.json")
@@ -55,6 +80,7 @@ def compile_interior_system(geometry_directory: Path, sources: HornSources, outp
         boundaries = region["boundaries"]
         if {b["name"] for b in boundaries} != expected or len(boundaries) != len(expected):
             raise ValueError("mesh boundary inventory differs from the selected family")
+        _verify_boundary_groups(paths[name], region)
     output = Path(output).resolve()
     output.mkdir(parents=True, exist_ok=False)
     report = {"schema_version": 1, "status": "running", "evidence": "experimental_prediction_input",
@@ -71,6 +97,7 @@ def compile_interior_system(geometry_directory: Path, sources: HornSources, outp
             shutil.copyfile(paths[name], output / relative)
             if sha256(output / relative) != region["sha256"]:
                 raise ValueError("mesh changed while copying")
+            _verify_boundary_groups(output / relative, region)
             mesh_id, region_id = f"mesh:{name}", f"region:{name}"
             system["meshes"].append({"id": mesh_id, "name": name, "file": relative,
                 "purpose": "fem_volume", "scale_to_m": 1.0, "translation_m": [0, 0, 0]})

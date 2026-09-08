@@ -23,10 +23,17 @@ def generated(tmp_path):
     regions = []
     for name in ("front", "rear_entry_0_positive", "rear_entry_0_negative"):
         mesh_path = root / "analysis" / (name + ".msh")
-        mesh_path.write_bytes(b"contract fixture, not a solver mesh")
         labels = (["throat_source", "mouth_interface", "entry_0_positive_front_source", "entry_0_negative_front_source"]
                   if name == "front" else [name.removeprefix("rear_") + "_rear_source"])
         labels += ["rigid_walls"]
+        physical = [f'2 {tag} "{label}"' for tag, label in enumerate(labels, 10)]
+        physical += [f'3 1 "air_{name}"']
+        lines = ['$MeshFormat', '2.2 0 8', '$EndMeshFormat', '$PhysicalNames', str(len(physical)),
+                 *physical, '$EndPhysicalNames', '$Nodes', '4', '1 0 0 0', '2 1 0 0', '3 0 1 0',
+                 '4 0 0 1', '$EndNodes', '$Elements', str(len(labels) + 1)]
+        lines += [f'{i} 2 2 {tag} 1 1 2 3' for i, tag in enumerate(range(10, 10+len(labels)), 1)]
+        lines += [f'{len(labels)+1} 4 2 1 1 1 2 3 4', '$EndElements']
+        mesh_path.write_text('\n'.join(lines) + '\n')
         regions.append({"id": name, "path": str(mesh_path.relative_to(root)), "sha256": sha256(mesh_path),
                         "boundaries": [{"name": label, "tag": tag} for tag, label in enumerate(labels, 10)]})
     mesh = {"status": "complete", "design_hash": design.content_hash, "units": "m", "regions": regions}
@@ -76,3 +83,49 @@ def test_incomplete_or_changed_mesh_cannot_compile(generated, fault):
     with pytest.raises(ValueError):
         compile_interior_system(root, sources, output)
     assert not output.exists()
+
+
+@pytest.mark.parametrize('field', ['design', 'sources', 'regions', 'boundaries'])
+def test_missing_geometry_fields_are_structured_cli_errors(generated, field, capsys):
+    from meh_studio.cli import main
+    root, sources, output = generated
+    path = root / ('geometry.json' if field in {'design', 'sources'} else 'analysis/mesh.json')
+    data = json.loads(path.read_text())
+    if field == 'boundaries': del data['regions'][0][field]
+    else: del data[field]
+    path.write_text(json.dumps(data))
+    source_path = root / 'sources.json'
+    source_path.write_text(sources.model_dump_json())
+    assert main(['compile-interior', str(root), '--sources', str(source_path), '--output', str(output)]) == 2
+    assert 'invalid geometry compilation artifact' in json.loads(capsys.readouterr().err)['error']
+    assert not output.exists()
+
+
+@pytest.mark.parametrize('fault', ['wrong', 'duplicate', 'swapped'])
+def test_boundary_tags_must_match_mesh_bytes(generated, fault):
+    root, sources, output = generated
+    path = root / 'analysis/mesh.json'
+    data = json.loads(path.read_text())
+    boundaries = data['regions'][0]['boundaries']
+    if fault == 'wrong': boundaries[0]['tag'] = 999
+    if fault == 'duplicate': boundaries[0]['tag'] = boundaries[1]['tag']
+    if fault == 'swapped': boundaries[0]['tag'], boundaries[1]['tag'] = boundaries[1]['tag'], boundaries[0]['tag']
+    path.write_text(json.dumps(data))
+    with pytest.raises(ValueError, match='physical-group'):
+        compile_interior_system(root, sources, output)
+    assert not output.exists()
+
+
+@pytest.mark.cad
+def test_real_generated_mesh_groups_compile(tmp_path):
+    import importlib.util
+    if importlib.util.find_spec('cadquery') is None or importlib.util.find_spec('gmsh') is None:
+        pytest.skip('CAD runtimes unavailable')
+    from meh_studio.geometry import export_geometry, mesh_geometry
+    examples = Path(__file__).resolve().parents[1] / 'examples'
+    design = HornGeometry.model_validate_json((examples/'three-driver-geometry.json').read_text())
+    sources = HornSources.model_validate_json((examples/'synthetic-horn-sources.json').read_text())
+    root = tmp_path/'geometry'
+    export_geometry(design, root)
+    mesh_geometry(root)
+    assert compile_interior_system(root, sources, tmp_path/'compiled')['status'] == 'complete'
