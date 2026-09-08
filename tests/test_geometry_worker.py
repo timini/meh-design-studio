@@ -129,7 +129,7 @@ def test_lease_renewed_during_inventory_and_queue_verification(tmp_path,monkeypa
     monkeypatch.setattr(worker,'_export',_fake_export)
     original=jobs.file_digest
     calls=[]
-    def slow_hash(path):
+    def slow_hash(path,**kwargs):
         # Each hash advances near the lease expiry, then permits the independent
         # renewal connection to extend it. Repeated hashes exceed the initial
         # publication lease without spending a minute in the test suite.
@@ -140,10 +140,58 @@ def test_lease_renewed_during_inventory_and_queue_verification(tmp_path,monkeypa
             assert time.monotonic()<deadline,'lease was not renewed while hashing'
             time.sleep(.02)
         calls.append(str(path))
-        return original(path)
+        return original(path,**kwargs)
     monkeypatch.setattr(worker,'file_digest',slow_hash)
     monkeypatch.setattr(jobs,'file_digest',slow_hash)
     with queue:
         run_geometry(queue,lease,tmp_path/'snapshot')
         assert queue.get(job)['status']=='succeeded',queue.get(job)['error']
         assert len(calls)>=4
+
+
+@pytest.mark.parametrize('timeout',[0,-1,True,float('nan'),3601])
+def test_invalid_timeout_fails_claimed_job(tmp_path,timeout):
+    queue,job,lease=setup_job(tmp_path)
+    with queue:
+        run_geometry(queue,lease,tmp_path/'snapshot',timeout_s=timeout)
+        assert queue.get(job)['status']=='failed'
+        assert 'timeout' in queue.get(job)['error']
+        assert not lease.output_directory.exists()
+
+
+def test_oversized_design_rejected_without_reading_contents(tmp_path,monkeypatch):
+    from meh_studio.snapshots import InputSnapshot,SnapshotFile
+    snapshot=InputSnapshot(files=(SnapshotFile(name='design',size_bytes=2*1024*1024,sha256='0'*64),))
+    directory=tmp_path/'snapshot';directory.mkdir()
+    (directory/'manifest.json').write_text(snapshot.canonical_json())
+    # The absent file must not be opened; the bounded manifest suffices to reject.
+    with JobQueue.create(tmp_path/'jobs.sqlite',tmp_path/'artifacts') as queue:
+        job=queue.enqueue(geometry_spec(snapshot.content_hash));lease=queue.claim('test')
+        run_geometry(queue,lease,directory)
+        assert 'design exceeds 1 MiB' in queue.get(job)['error']
+
+
+@pytest.mark.parametrize('during_queue',[False,True])
+def test_cancellation_interrupts_publication_hashing(tmp_path,monkeypatch,during_queue):
+    import meh_studio.geometry_worker as worker
+    import meh_studio.jobs as jobs
+    queue,job,lease=setup_job(tmp_path)
+    monkeypatch.setattr(worker,'_export',_fake_export)
+    original=jobs.file_digest
+    reached=[]
+    def cancelled_hash(path,*,check=None):
+        with JobQueue(tmp_path/'jobs.sqlite') as other:other.cancel(job)
+        deadline=time.monotonic()+3
+        while time.monotonic()<deadline:
+            try:check()
+            except RuntimeError:
+                reached.append(True)
+                raise
+            time.sleep(.02)
+        pytest.fail('publication did not observe cancellation')
+    monkeypatch.setattr(jobs if during_queue else worker,'file_digest',cancelled_hash)
+    with queue:
+        run_geometry(queue,lease,tmp_path/'snapshot')
+        assert reached
+        assert queue.get(job)['status']=='cancelled'
+        with pytest.raises(ValueError):queue.result(job)

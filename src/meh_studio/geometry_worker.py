@@ -12,7 +12,7 @@ import time
 
 from .geometry import HornGeometry, export_geometry
 from .jobs import Artifact, Completion, JobQueue, JobSpec, Lease, file_digest
-from .snapshots import verify_snapshot
+from .snapshots import read_snapshot_manifest
 
 
 def geometry_spec(snapshot_digest: str, *, max_attempts=3) -> JobSpec:
@@ -30,17 +30,17 @@ def run_geometry(queue: JobQueue, lease: Lease, snapshot_directory: Path, *, tim
     The snapshot must contain exactly one dependency named design. Other job
     kinds and parameters are rejected before launch. Storage is caller-owned.
     """
-    if isinstance(timeout_s,bool) or not math.isfinite(timeout_s) or not 0<timeout_s<=3600:
-        raise ValueError('worker timeout must be positive and at most one hour')
     process=None
     started=time.monotonic()
     try:
+        if isinstance(timeout_s,bool) or not math.isfinite(timeout_s) or not 0<timeout_s<=3600:
+            raise ValueError('worker timeout must be positive and at most one hour')
         if lease.spec != geometry_spec(lease.spec.input_digest,max_attempts=lease.spec.max_attempts):
             raise ValueError('unsupported geometry worker job')
         if queue.heartbeat(lease,lease_seconds=30):
             queue.acknowledge_cancel(lease)
             return
-        snapshot=verify_snapshot(snapshot_directory,lease.spec.input_digest)
+        snapshot=read_snapshot_manifest(snapshot_directory,lease.spec.input_digest)
         if len(snapshot.files)!=1 or snapshot.files[0].name!='design':
             raise ValueError('geometry worker requires one design dependency')
         entry=snapshot.files[0]
@@ -85,14 +85,14 @@ def run_geometry(queue: JobQueue, lease: Lease, snapshot_directory: Path, *, tim
                     raise ValueError('worker output cannot contain symlinks')
                 if path.is_file():
                     files.append(Artifact(path=path.relative_to(root).as_posix(),
-                                          sha256=file_digest(path),size_bytes=path.stat().st_size))
+                                          sha256=file_digest(path,check=check_renewal),size_bytes=path.stat().st_size))
             record=Completion(job_id=lease.job_id,attempt_token=lease.token,
                               evidence='experimental_geometry',files=tuple(files))
             temporary=root/'completion.json.tmp'
             temporary.write_text(record.canonical_json(),encoding='utf-8')
             temporary.replace(root/'completion.json')
             check_renewal()
-            queue.complete(lease)
+            queue.complete(lease,check=check_renewal)
     except Exception as exc:
         if process is not None:
             _stop(process)
@@ -116,16 +116,20 @@ def _publication_lease(queue, lease):
     """Renew using a separate SQLite connection while the caller hashes files."""
     stopped=threading.Event()
     errors=[]
+    cancelled=threading.Event()
     def renew():
         try:
             with JobQueue(queue.path,clock=queue.clock) as connection:
                 while not stopped.wait(.5):
-                    connection.heartbeat(lease,lease_seconds=30)
+                    if connection.heartbeat(lease,lease_seconds=30):
+                        cancelled.set()
         except Exception as exc:
             errors.append(exc)
     thread=threading.Thread(target=renew,name='geometry-publication-lease',daemon=True)
     thread.start()
     def check():
+        if cancelled.is_set():
+            raise RuntimeError('geometry publication cancelled')
         if errors:
             raise RuntimeError('publication lease renewal failed') from errors[0]
     try:

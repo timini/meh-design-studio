@@ -178,8 +178,8 @@ def capture_inputs(inputs: Mapping[str, Path], output: Path) -> InputSnapshot:
         return snapshot
 
 
-def verify_snapshot(output: Path, expected_digest: str) -> InputSnapshot:
-    """Rehash every copied dependency against an identity held by the caller."""
+def read_snapshot_manifest(output: Path, expected_digest: str) -> InputSnapshot:
+    """Validate bounded manifest identity only; does not verify file contents."""
     output=Path(output)
     # Stream into a bounded buffer only for the small manifest.
     import io
@@ -198,6 +198,13 @@ def verify_snapshot(output: Path, expected_digest: str) -> InputSnapshot:
         raise ValueError('snapshot manifest exceeds nesting limit') from exc
     if snapshot.content_hash!=expected_digest:
         raise ValueError('snapshot identity mismatch')
+    return snapshot
+
+
+def verify_snapshot(output: Path, expected_digest: str) -> InputSnapshot:
+    """Rehash every copied dependency against an identity held by the caller."""
+    output=Path(output)
+    snapshot=read_snapshot_manifest(output,expected_digest)
     for entry in snapshot.files:
         digest,size=_stream_file(output/entry.filename,entry.size_bytes)
         if digest!=entry.sha256 or size!=entry.size_bytes:
