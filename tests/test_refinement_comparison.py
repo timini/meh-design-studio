@@ -53,3 +53,19 @@ def test_refinement_requires_bound_cad_identity(tmp_path, fault):
         with pytest.raises(ValueError): module.exterior_identity(project, manifest)
     else:
         assert module.exterior_identity(project, manifest) == identity
+
+
+@pytest.mark.parametrize('sizes', [[.01,.02,.03], [.02,.02,.01], [.03,float('nan'),.01], [.03,0,.01]])
+def test_invalid_refinement_order_or_sizes_rejected(sizes):
+    records = [{'mesh_size_m': size, 'mesh_inventory':[{'purpose':'bem_surface','sha256':str(i)}]}
+               for i, size in enumerate(sizes)]
+    with pytest.raises(ValueError): module.validate_refinement_levels(records)
+
+
+def test_distinct_decreasing_refinements_required():
+    records = [{'mesh_size_m': size, 'mesh_inventory':[{'purpose':'bem_surface','sha256':str(i)}]}
+               for i, size in enumerate([.02,.015,.01])]
+    module.validate_refinement_levels(records)
+    records[1]['mesh_inventory'] = records[0]['mesh_inventory']
+    with pytest.raises(ValueError, match='distinct exterior'):
+        module.validate_refinement_levels(records)

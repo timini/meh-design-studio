@@ -1,6 +1,7 @@
 """Compare declared exterior refinements without gain/phase fitting or RMS inference."""
 import argparse
 import json
+import math
 from pathlib import Path
 import numpy as np
 from meh_studio.boundary_lab import _contained, _read_json, sha256
@@ -20,6 +21,7 @@ def load(project, evaluation):
     return {'evaluation':str(evaluation.resolve()),'evaluation_sha256':sha256(evaluation/'evaluation.json'),
             'project_sha256':sha256(project),'mesh_inventory':manifest['meshes'],
             'exterior_identity':identity,
+            'mesh_size_m':_read_json(project.parent/'exterior/exterior.json').get('mesh_size_m'),
             'electrical_checks':checks},manifest,rows
 
 
@@ -41,6 +43,21 @@ def exterior_identity(project, manifest):
             or surfaces[0]['sha256'] != compilation.get('exterior_surface', {}).get('sha256')):
         raise ValueError('evaluated exterior mesh differs from its compilation')
     return identity
+
+
+def validate_refinement_levels(records):
+    if len(records) < 3:
+        raise ValueError('at least three refinement levels required')
+    sizes = [record.get('mesh_size_m') for record in records]
+    if any(isinstance(size, bool) or not isinstance(size, (int, float))
+           or not math.isfinite(size) or size <= 0 for size in sizes):
+        raise ValueError('refinement targets must be positive finite mesh sizes')
+    if any(fine >= coarse for coarse, fine in zip(sizes, sizes[1:])):
+        raise ValueError('refinement targets must be distinct and strictly decreasing')
+    hashes = [tuple(sorted(mesh['sha256'] for mesh in record['mesh_inventory']
+                           if mesh['purpose'] == 'bem_surface')) for record in records]
+    if any(not identity for identity in hashes) or len(set(hashes)) != len(hashes):
+        raise ValueError('refinement requires distinct exterior meshes')
 
 
 def compare(reference,candidate,relative_null_floor=.001):
@@ -69,6 +86,7 @@ def main():
     args=parser.parse_args()
     if len(args.run)<3: raise ValueError('at least three declared refinement runs required')
     loaded=[load(*run) for run in args.run]
+    validate_refinement_levels([record for record, _, _ in loaded])
     frequencies=loaded[0][1]['frequencies_hz']
     ports=loaded[0][1]['excitation_port_ids']
     fem_inputs={m['id']:m['sha256'] for m in loaded[0][1]['meshes'] if m['purpose']=='fem_volume'}

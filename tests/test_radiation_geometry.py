@@ -54,3 +54,13 @@ def test_radiating_command_imports_and_reports_invalid_runtime(tmp_path, monkeyp
             raise ValueError("invalid runtime")
     with pytest.raises(ValueError, match="invalid runtime"):
         compile_radiating_system(tmp_path, None, tmp_path / "output", InvalidRuntime())
+
+
+def test_threaded_compilation_rejected_without_side_effects(tmp_path):
+    from concurrent.futures import ThreadPoolExecutor
+    from meh_studio.radiating_system import compile_radiating_system
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        result = executor.submit(compile_radiating_system, tmp_path, None, tmp_path/'out', None)
+        with pytest.raises(ValueError, match='background thread'):
+            result.result()
+    assert not (tmp_path/'out').exists()

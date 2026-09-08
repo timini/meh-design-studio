@@ -1,5 +1,6 @@
 """Compile a generated horn plus ideal rigid exterior for FEM/BEM experiments."""
 from pathlib import Path
+import threading
 
 from .boundary_lab import BoundaryLabRuntime, _execute, _read_json, _write_json, _termination_guard, sha256
 from .generated_system import HornSources, compile_interior_system
@@ -10,6 +11,8 @@ from .radiation_geometry import export_exterior, surface_integrity
 def compile_radiating_system(geometry_directory: Path, sources: HornSources, output: Path,
                              runtime: BoundaryLabRuntime, *, exterior_mesh_size_m: float = .02,
                              timeout_s: float = 600) -> dict:
+    if threading.current_thread() is not threading.main_thread():
+        raise ValueError("run radiating compilation in a worker process, not a background thread")
     runtime_identity = runtime.verify()
     output = Path(output).resolve()
     report = compile_interior_system(geometry_directory, sources, output)
