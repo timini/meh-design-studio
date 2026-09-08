@@ -110,6 +110,8 @@ def capture_inputs(inputs: Mapping[str, Path], output: Path) -> InputSnapshot:
     output=Path(output).absolute()
     if output.is_symlink():
         raise ValueError('snapshot output cannot be a symlink')
+    # Resolve parent aliases once; keep the final entry exclusive and unfollowed.
+    output=output.parent.resolve()/output.name
     sources={entry.name:Path(inputs[entry.name]) for entry in ordered}
     if any(path.resolve().is_relative_to(output.resolve()) for path in sources.values()):
         raise ValueError('snapshot sources cannot be inside the output directory')

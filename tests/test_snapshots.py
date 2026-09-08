@@ -173,3 +173,23 @@ def test_parent_retarget_after_validation_cannot_substitute_output(tmp_path,monk
     snapshot=capture_inputs({'x':alias/'input-x.bin'},out)
     assert (out/'input-x.bin').read_bytes()==b'original input'
     assert verify_snapshot(out,snapshot.content_hash)==snapshot
+
+
+def test_output_parent_retarget_cannot_redirect_publication(tmp_path,monkeypatch):
+    source=tmp_path/'source';source.write_bytes(b'original input')
+    original_parent=tmp_path/'original';original_parent.mkdir()
+    other_parent=tmp_path/'other';other_parent.mkdir()
+    other_out=other_parent/'out';other_out.mkdir()
+    alias=tmp_path/'alias'
+    try:alias.symlink_to(original_parent,target_is_directory=True)
+    except OSError:pytest.skip('symlinks unavailable')
+    original_mkdir=Path.mkdir
+    def retarget(path,*args,**kwargs):
+        result=original_mkdir(path,*args,**kwargs)
+        if path.name=='out':
+            alias.unlink();alias.symlink_to(other_parent,target_is_directory=True)
+        return result
+    monkeypatch.setattr(Path,'mkdir',retarget)
+    snapshot=capture_inputs({'x':source},alias/'out')
+    assert list(other_out.iterdir())==[]
+    assert verify_snapshot(original_parent/'out',snapshot.content_hash)==snapshot
