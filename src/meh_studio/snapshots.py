@@ -1,0 +1,261 @@
+"""Bounded input copies with portable identities for queued jobs.
+
+Callers enumerate dependencies. Captures are sequential, not filesystem-wide
+transactions; verify the expected identity immediately before consuming files.
+"""
+from __future__ import annotations
+
+from contextlib import ExitStack, contextmanager
+import hashlib
+import json
+import os
+from pathlib import Path
+import stat
+import sys
+import tempfile
+from typing import Annotated, Mapping, Literal
+
+from pydantic import Field, model_validator
+
+from .domain import Digest, Record
+
+MAX_FILES = 128
+MAX_FILE_BYTES = 256 * 1024 * 1024
+MAX_TOTAL_BYTES = 1024 * 1024 * 1024
+MAX_MANIFEST_BYTES = 64 * 1024
+Name = Annotated[str, Field(pattern=r'^[a-z][a-z0-9_-]{0,63}$')]
+
+
+class SnapshotFile(Record):
+    name: Name
+    sha256: Digest
+    size_bytes: Annotated[int, Field(strict=True, ge=0, le=MAX_FILE_BYTES)]
+
+    @property
+    def filename(self):
+        return f'input-{self.name}.bin'
+
+
+class InputSnapshot(Record):
+    schema_version: Annotated[int, Field(strict=True)] = 1
+    kind: Literal['input_snapshot'] = 'input_snapshot'
+    files: Annotated[tuple[SnapshotFile, ...], Field(min_length=1, max_length=MAX_FILES)]
+
+    @model_validator(mode='after')
+    def contract(self):
+        if self.schema_version != 1:
+            raise ValueError('unsupported snapshot schema')
+        names=[entry.name for entry in self.files]
+        if names != sorted(set(names)):
+            raise ValueError('snapshot names must be unique and sorted')
+        if sum(entry.size_bytes for entry in self.files)>MAX_TOTAL_BYTES:
+            raise ValueError('snapshot exceeds total byte limit')
+        return self
+
+
+def _open_source(path: Path):
+    path=Path(path)
+    if path.is_symlink() or not stat.S_ISREG(path.stat().st_mode):
+        raise ValueError('snapshot input must be a regular non-symlink file')
+    if os.name=='nt':
+        import msvcrt
+        handle,close=_windows_handle(path,directory=False)
+        try:
+            descriptor=msvcrt.open_osfhandle(handle,os.O_RDONLY|os.O_BINARY)
+        except BaseException:
+            close(handle)
+            raise
+        return os.fdopen(descriptor,'rb')
+    flags=os.O_RDONLY|getattr(os,'O_BINARY',0)|getattr(os,'O_NONBLOCK',0)|getattr(os,'O_NOFOLLOW',0)
+    descriptor=os.open(path,flags)
+    return os.fdopen(descriptor,'rb')
+
+
+def _stream_file(path: Path, limit: int, destination=None):
+    with _open_source(path) as source:
+        return _stream_handle(source,limit,destination)
+
+
+def _stream_handle(source, limit: int, destination=None):
+    before=os.fstat(source.fileno())
+    if not stat.S_ISREG(before.st_mode):
+        raise ValueError('snapshot input must be a regular file')
+    if before.st_size>limit:
+        raise ValueError('snapshot byte limit exceeded')
+    size=0
+    digest=hashlib.sha256()
+    while True:
+        chunk=source.read(min(1024*1024,limit-size+1))
+        if not chunk:
+            break
+        size+=len(chunk)
+        if size>limit:
+            raise ValueError('snapshot byte limit exceeded')
+        digest.update(chunk)
+        if destination is not None:
+            destination.write(chunk)
+    after=os.fstat(source.fileno())
+    def state(value):
+        return value.st_dev,value.st_ino,value.st_size,value.st_mtime_ns,value.st_ctime_ns
+    if state(before)!=state(after) or size!=before.st_size:
+        raise ValueError('snapshot input changed during capture')
+    return digest.hexdigest(),size
+
+
+def _windows_handle(path: Path, *, directory: bool):
+    import ctypes
+    from ctypes import wintypes
+    kernel=ctypes.WinDLL('kernel32',use_last_error=True)
+    create=kernel.CreateFileW
+    create.argtypes=[wintypes.LPCWSTR,wintypes.DWORD,wintypes.DWORD,ctypes.c_void_p,
+                     wintypes.DWORD,wintypes.DWORD,wintypes.HANDLE]
+    create.restype=wintypes.HANDLE
+    close=kernel.CloseHandle
+    close.argtypes=[wintypes.HANDLE];close.restype=wintypes.BOOL
+    flags=0x00200000|(0x02000000 if directory else 0)
+    handle=create(str(path),0x80000000,3 if directory else 1,None,3,flags,None)
+    if handle==wintypes.HANDLE(-1).value:
+        raise ctypes.WinError(ctypes.get_last_error())
+    try:
+        class Attributes(ctypes.Structure):
+            _fields_=[('attributes',wintypes.DWORD),('tag',wintypes.DWORD)]
+        info=Attributes()
+        query=kernel.GetFileInformationByHandleEx
+        query.argtypes=[wintypes.HANDLE,ctypes.c_int,ctypes.c_void_p,wintypes.DWORD]
+        query.restype=wintypes.BOOL
+        if not query(handle,9,ctypes.byref(info),ctypes.sizeof(info)):
+            raise ctypes.WinError(ctypes.get_last_error())
+        if info.attributes & 0x400 or bool(info.attributes & 0x10)!=directory:
+            raise ValueError('snapshot handle has an unexpected type or reparse point')
+        return handle,close
+    except BaseException:
+        close(handle)
+        raise
+
+
+@contextmanager
+def _output_directory(path: Path):
+    if os.name=='nt':
+        handle,close=_windows_handle(path,directory=True)
+        try:
+            yield None
+        finally:
+            close(handle)
+    else:
+        descriptor=os.open(path,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
+        try:
+            yield descriptor
+        finally:
+            os.close(descriptor)
+
+
+def _install_directory(source: Path, destination: Path):
+    """Atomically install without replacing any existing destination entry."""
+    import ctypes
+    if os.name=='nt':
+        from ctypes import wintypes
+        move=ctypes.WinDLL('kernel32',use_last_error=True).MoveFileW
+        move.argtypes=[wintypes.LPCWSTR,wintypes.LPCWSTR];move.restype=wintypes.BOOL
+        if not move(str(source),str(destination)):
+            raise ctypes.WinError(ctypes.get_last_error())
+    else:
+        library=ctypes.CDLL(None,use_errno=True)
+        if sys.platform=='darwin':
+            move=library.renamex_np
+            move.argtypes=[ctypes.c_char_p,ctypes.c_char_p,ctypes.c_uint]
+            result=move(os.fsencode(source),os.fsencode(destination),4)  # RENAME_EXCL
+        elif sys.platform.startswith('linux'):
+            move=library.renameat2
+            move.argtypes=[ctypes.c_int,ctypes.c_char_p,ctypes.c_int,ctypes.c_char_p,ctypes.c_uint]
+            result=move(-100,os.fsencode(source),-100,os.fsencode(destination),1)  # NOREPLACE
+        else:
+            raise ValueError('atomic snapshot installation is unsupported on this platform')
+        if result:
+            error=ctypes.get_errno()
+            raise OSError(error,os.strerror(error),str(destination))
+
+
+def _private_output(path: Path, *, directory_fd=None):
+    name=path.name if directory_fd is not None else path
+    descriptor=os.open(name,os.O_WRONLY|os.O_CREAT|os.O_EXCL|getattr(os,'O_BINARY',0),
+                       0o600,dir_fd=directory_fd)
+    return os.fdopen(descriptor,'wb')
+
+
+def capture_inputs(inputs: Mapping[str, Path], output: Path) -> InputSnapshot:
+    """Reserve a new directory; publish the manifest last, never overwrite.
+
+    A failed capture can leave a partial directory without a manifest. Such a
+    directory is never accepted; retry into a new directory.
+    """
+    if not 1<=len(inputs)<=MAX_FILES:
+        raise ValueError('snapshot requires 1 to 128 named inputs')
+    # Validate all names before creating anything. Names cannot be paths.
+    placeholders=[SnapshotFile(name=name,sha256='0'*64,size_bytes=0) for name in inputs]
+    ordered=sorted(placeholders,key=lambda entry:entry.name)
+    output=Path(output).absolute()
+    if output.is_symlink():
+        raise ValueError('snapshot output cannot be a symlink')
+    # Resolve parent aliases once; keep the final entry exclusive and unfollowed.
+    output=output.parent.resolve()/output.name
+    sources={entry.name:Path(inputs[entry.name]) for entry in ordered}
+    if any(path.resolve().is_relative_to(output.resolve()) for path in sources.values()):
+        raise ValueError('snapshot sources cannot be inside the output directory')
+    with ExitStack() as stack:
+        handles={name:stack.enter_context(_open_source(path)) for name,path in sources.items()}
+        if output.exists():
+            raise FileExistsError(str(output))
+        output.parent.mkdir(parents=True,exist_ok=True)
+        staging=Path(tempfile.mkdtemp(prefix='.meh-snapshot-',dir=output.parent))
+        identity=staging.stat()
+        directory_fd=stack.enter_context(_output_directory(staging))
+        opened=staging.stat() if directory_fd is None else os.fstat(directory_fd)
+        if (opened.st_dev,opened.st_ino)!=(identity.st_dev,identity.st_ino):
+            raise ValueError('snapshot staging directory was replaced before opening')
+        entries=[]
+        total=0
+        for entry in ordered:
+            with _private_output(staging/entry.filename,directory_fd=directory_fd) as destination:
+                digest,size=_stream_handle(handles[entry.name],min(MAX_FILE_BYTES,MAX_TOTAL_BYTES-total),destination)
+            total+=size
+            entries.append(SnapshotFile(name=entry.name,sha256=digest,size_bytes=size))
+        snapshot=InputSnapshot(files=tuple(entries))
+        temporary=staging/'manifest.json.tmp'
+        with _private_output(temporary,directory_fd=directory_fd) as stream:
+            stream.write(snapshot.canonical_json().encode('utf-8'))
+        if directory_fd is None:
+            temporary.replace(staging/'manifest.json')
+        else:
+            os.replace(temporary.name,'manifest.json',src_dir_fd=directory_fd,dst_dir_fd=directory_fd)
+        current=staging.lstat()
+        if (current.st_dev,current.st_ino)!=(identity.st_dev,identity.st_ino) or not stat.S_ISDIR(current.st_mode):
+            raise ValueError('snapshot staging directory was replaced')
+    _install_directory(staging,output)
+    return snapshot
+
+
+def verify_snapshot(output: Path, expected_digest: str) -> InputSnapshot:
+    """Rehash every copied dependency against an identity held by the caller."""
+    output=Path(output)
+    # Stream into a bounded buffer only for the small manifest.
+    import io
+    buffer=io.BytesIO()
+    _stream_file(output/'manifest.json',MAX_MANIFEST_BYTES,buffer)
+    def unique(pairs):
+        result={}
+        for key,value in pairs:
+            if key in result:
+                raise ValueError('duplicate snapshot manifest key')
+            result[key]=value
+        return result
+    try:
+        snapshot=InputSnapshot.model_validate(json.loads(buffer.getvalue(),object_pairs_hook=unique))
+    except RecursionError as exc:
+        raise ValueError('snapshot manifest exceeds nesting limit') from exc
+    if snapshot.content_hash!=expected_digest:
+        raise ValueError('snapshot identity mismatch')
+    for entry in snapshot.files:
+        digest,size=_stream_file(output/entry.filename,entry.size_bytes)
+        if digest!=entry.sha256 or size!=entry.size_bytes:
+            raise ValueError('snapshot input integrity mismatch')
+    return snapshot
