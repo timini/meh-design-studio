@@ -81,3 +81,13 @@ def test_steep_flare_cannot_consume_source_disk(geometry_data):
             "entry_positions_m": [.05], "front_radius_m": .01, "wall_m": .0005,
             "port_radius_m": .0005, "port_length_m": .001, "front_depth_m": .001,
             "mesh_size_m": .0005})
+
+
+@pytest.mark.cad
+def test_cad_runtime_exits_cleanly_in_fresh_process():
+    pytest.importorskip('cadquery')
+    import subprocess,sys
+    result=subprocess.run([sys.executable,'-c',
+        'from meh_studio.cad_runtime import load_cadquery; cq=load_cadquery(); assert cq.Workplane().box(1,1,1).val().isValid()'],
+        capture_output=True,text=True,timeout=60)
+    assert result.returncode==0,result.stderr
