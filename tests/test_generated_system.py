@@ -129,3 +129,40 @@ def test_real_generated_mesh_groups_compile(tmp_path):
     export_geometry(design, root)
     mesh_geometry(root)
     assert compile_interior_system(root, sources, tmp_path/'compiled')['status'] == 'complete'
+
+
+def test_malformed_matching_hash_mesh_is_a_cli_error(generated, capsys):
+    from meh_studio.cli import main
+    root, sources, output = generated
+    path = root/'analysis/mesh.json'
+    data = json.loads(path.read_text())
+    mesh_path = root/data['regions'][0]['path']
+    mesh_path.write_text('not a mesh')
+    data['regions'][0]['sha256'] = sha256(mesh_path)
+    path.write_text(json.dumps(data))
+    source_path = root/'sources.json'
+    source_path.write_text(sources.model_dump_json())
+    assert main(['compile-interior',str(root),'--sources',str(source_path),'--output',str(output)]) == 2
+    captured = capsys.readouterr()
+    assert not captured.out
+    assert 'invalid generated mesh artifact' in json.loads(captured.err)['error']
+
+
+def test_compiled_mesh_identity_rejects_replacement(generated):
+    from meh_studio.boundary_lab import _verify_mesh_declarations
+    root, sources, output = generated
+    compile_interior_system(root, sources, output)
+    project = output/'project.blab.json'
+    system = json.loads(project.read_text())['physical_system']
+    inventory = {}
+    for mesh in system['meshes']:
+        path = output/mesh['file']
+        inventory[mesh['id']] = {'file':str(path),'purpose':mesh['purpose'],
+                                'sha256':sha256(path),'size_bytes':path.stat().st_size}
+    _verify_mesh_declarations(system, inventory, project)
+    first = next(iter(inventory.values()))
+    path = Path(first['file'])
+    path.write_bytes(path.read_bytes()+b'\n')
+    first.update(sha256=sha256(path),size_bytes=path.stat().st_size)
+    with pytest.raises(ValueError, match='compiled geometry identity'):
+        _verify_mesh_declarations(system, inventory, project)

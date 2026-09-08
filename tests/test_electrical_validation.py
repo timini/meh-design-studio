@@ -114,3 +114,18 @@ def test_missing_evaluation_fields_return_cli_artifact_error(circuit_artifact, c
     captured = capsys.readouterr()
     assert not captured.out
     assert "invalid electrical validation artifact" in json.loads(captured.err)["error"]
+
+
+def test_complex64_storage_cannot_fail_strict_physical_consistency(circuit_artifact):
+    project, root, arrays, publish = circuit_artifact
+    for name in ('current','velocity'):
+        arrays[name] = arrays[name].astype(np.complex64)
+    np.savez(root/'upstream/arrays.npz', **arrays)
+    path = root/'upstream/metadata.json'
+    metadata = json.loads(path.read_text())
+    for quantity in metadata['quantities']:
+        if quantity['key'] in {'current','velocity'}: quantity['dtype'] = 'complex64'
+    path.write_text(json.dumps(metadata))
+    publish()
+    with pytest.raises(ValueError, match='requires complex128'):
+        validate_electrical_basis(project, root)

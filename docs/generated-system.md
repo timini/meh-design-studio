@@ -27,13 +27,13 @@ The throat is an ideal piston without a modelled rear acoustic load or compressi
 
 Historical evaluation records without domain-file or preflight hashes must be rerun before this validator will accept them; archived reports retain their original provenance.
 
-`validate-electrical` verifies the full voltage basis against the saved project and hashed evaluation, preserves component ordering and checks the explicit native 2.83 V convention. For each frequency it evaluates the independent electrical equation `V = (Re - iωLe)I + Bl·v`, symmetry of the electrical admittance matrix and nonnegative Hermitian admittance. Relative residual tolerance is `1e-8`; passivity permits numerical error of `1e-8` times the admittance norm. There is no conversion to RMS or SPL.
+`validate-electrical` verifies the full voltage basis against the saved project and hashed evaluation, preserves component ordering and checks the explicit native 2.83 V convention. For each frequency it evaluates the independent electrical equation `V = (Re - iωLe)I + Bl·v`, symmetry of the electrical admittance matrix and nonnegative Hermitian admittance. This strict validator requires complex128 current/velocity storage; complex64 results remain inspectable but cannot be assessed at this tolerance. Relative residual tolerance is `1e-8`; passivity permits numerical error of `1e-8` times the admittance norm. There is no conversion to RMS or SPL.
 
 These checks catch missing phase, incorrect voltage scaling, some source-sign errors and nonreciprocal/nonpassive responses. They cannot establish acoustic discretisation accuracy: an incorrect but reciprocal acoustic load can still pass. Tests deliberately damage otherwise internally consistent arrays to verify that failures are detected.
 
 ## Executed evidence
 
-The [machine-readable report](../validation/reports/generated-interior-integration.json) records complete refined-solve provenance and consistency results for both meshes. The 8 mm mesh contained 32,733 tetrahedra; the 4 mm mesh contained 239,894. The relative matrix-norm changes from coarse to fine were:
+The [machine-readable report](../validation/reports/generated-interior-integration.json) retains historical results for both meshes. The refined run lacks the current preflight and domain-artifact hashes; subsequent complete-contract rechecks cover only the coarse mesh. A fresh refined solve is still required before this comparison can serve as current-contract evidence. The 8 mm mesh contained 32,733 tetrahedra; the 4 mm mesh contained 239,894. The relative matrix-norm changes from coarse to fine were:
 
 | Frequency | Diaphragm velocity | Voice-coil current |
 |---|---:|---:|
@@ -41,7 +41,7 @@ The [machine-readable report](../validation/reports/generated-interior-integrati
 | 1000 Hz | 0.4497% | 0.1728% |
 | 2000 Hz | 0.0987% | 0.0472% |
 
-Both levels passed electrical conservation, reciprocity and passivity checks. Two mesh levels at three sparse frequencies are a sensitivity study, not a convergence or band qualification. Repeat by copying the geometry input, changing `mesh_size_m` from `0.008` to `0.004`, and generating/compiling/solving into fresh directories. Compare complex velocity/current arrays in the preserved excitation and transducer order.
+Historical checks reported electrical conservation, reciprocity and passivity passes at both levels; the refined result has not passed the current artifact-provenance gate. Two mesh levels at three sparse frequencies are a sensitivity study, not a convergence or band qualification. Repeat by copying the geometry input, changing `mesh_size_m` from `0.008` to `0.004`, and generating/compiling/solving into fresh directories. Compare complex velocity/current arrays in the preserved excitation and transducer order.
 
 Next numerical work must add exterior radiation, independent acoustic reference comparisons, denser adaptive frequency sampling and at least three refinement levels with declared observable-specific tolerances. Physical driver qualification and speaker measurements remain separate release gates.
 

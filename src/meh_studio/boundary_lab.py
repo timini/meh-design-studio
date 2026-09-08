@@ -184,6 +184,12 @@ def _verify_mesh_declarations(system: dict, meshes: dict, project_path: Path | N
     declared = {m["id"]: m for m in system["meshes"]}
     if set(meshes) != set(declared):
         raise ValueError("solved mesh inventory differs from the project")
+    bound_hashes = system.get("metadata", {}).get("generated_mesh_sha256")
+    if bound_hashes is not None:
+        if not isinstance(bound_hashes, dict) or set(bound_hashes) != set(declared):
+            raise ValueError("generated mesh identity inventory differs from project")
+        if any(bound_hashes[identity] != mesh["sha256"] for identity, mesh in meshes.items()):
+            raise ValueError("evaluated mesh differs from compiled geometry identity")
     for identity, mesh in meshes.items():
         source = Path(declared[identity]["file"])
         if not source.is_absolute():

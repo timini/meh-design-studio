@@ -67,7 +67,10 @@ def _validate_electrical_basis(project_path: Path, evaluation_directory: Path) -
                     raise ValueError("response component identities do not match the voltage basis")
                 if q["axes"] != ["excitation", "transducer"]:
                     raise ValueError("unsupported response axis order")
-                arrays[name] = archive[q["key"]][:, [ids.index(c) for c in component_ids]]
+                values = archive[q["key"]]
+                if values.dtype.kind != "c" or values.dtype.itemsize < 16:
+                    raise ValueError("electrical consistency at 1e-8 requires complex128 response storage")
+                arrays[name] = values[:, [ids.index(c) for c in component_ids]]
         current, velocity = arrays["voice_coil_current"], arrays["diaphragm_velocity"]
         voltage = reference_v * np.eye(len(component_ids))
         ze = re - 1j * 2 * np.pi * row["freq_hz"] * le
