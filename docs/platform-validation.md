@@ -25,3 +25,5 @@ For each supported OS and CPU architecture, record the exact OS, architecture, P
 6. Test the packaged UI separately: worker failure must not close it, progress and cancellation must reflect durable job state, and 3D previews must match exported geometry.
 
 CPU is the first reference backend. GPU backends require separate hardware-specific evidence; a successful CPU run does not qualify them. Physical acoustic accuracy also remains a separate validation gate, irrespective of operating-system coverage.
+
+Windows pip wheels for CasADi and NLopt can share a SWIG type table across incompatible native allocators, causing a shutdown access violation even after all assertions pass ([upstream issue](https://github.com/CadQuery/cadquery/issues/1911), [proposed fix](https://github.com/CadQuery/cadquery/pull/2092)). The CadQuery loader registers a Windows/CPython-only exit handler for their shared SWIG v5 capsule. It leaves that small table for OS reclamation at process exit. Exit failures remain test failures; a fresh-process CAD test verifies clean shutdown. Remove this compatibility code after adopting a validated upstream release fixing the issue.
