@@ -105,7 +105,7 @@ def _output_directory(path: Path):
         close.argtypes=[wintypes.HANDLE];close.restype=wintypes.BOOL
         # Share read/write, but not delete: the directory cannot be renamed
         # or replaced while path-based writes and publication are in progress.
-        handle=create(str(path),0,3,None,3,0x02000000|0x00200000,None)
+        handle=create(str(path),0x80000000,3,None,3,0x02000000|0x00200000,None)
         if handle==wintypes.HANDLE(-1).value:
             raise ctypes.WinError(ctypes.get_last_error())
         try:
