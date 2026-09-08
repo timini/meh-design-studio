@@ -53,6 +53,7 @@ def test_export_mesh_units_and_source_tags(geometry_data, tmp_path):
     design = HornGeometry.model_validate(geometry_data)
     report = export_geometry(design, tmp_path / "export")
     assert report["status"] == "complete" and report["print_verified"] is False
+    assert all("\\" not in item["path"] for item in report["files"])
     assert report["driver_count"] == 3
     with zipfile.ZipFile(tmp_path / "export/parts/horn.3mf") as archive:
         model = next(name for name in archive.namelist() if name.endswith('.model'))
