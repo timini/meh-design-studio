@@ -11,6 +11,8 @@ import json
 import os
 from pathlib import Path
 import stat
+import sys
+import tempfile
 from typing import Annotated, Mapping, Literal
 
 from pydantic import Field, model_validator
@@ -55,6 +57,15 @@ def _open_source(path: Path):
     path=Path(path)
     if path.is_symlink() or not stat.S_ISREG(path.stat().st_mode):
         raise ValueError('snapshot input must be a regular non-symlink file')
+    if os.name=='nt':
+        import msvcrt
+        handle,close=_windows_handle(path,directory=False)
+        try:
+            descriptor=msvcrt.open_osfhandle(handle,os.O_RDONLY|os.O_BINARY)
+        except BaseException:
+            close(handle)
+            raise
+        return os.fdopen(descriptor,'rb')
     flags=os.O_RDONLY|getattr(os,'O_BINARY',0)|getattr(os,'O_NONBLOCK',0)|getattr(os,'O_NOFOLLOW',0)
     descriptor=os.open(path,flags)
     return os.fdopen(descriptor,'rb')
@@ -91,34 +102,42 @@ def _stream_handle(source, limit: int, destination=None):
     return digest.hexdigest(),size
 
 
+def _windows_handle(path: Path, *, directory: bool):
+    import ctypes
+    from ctypes import wintypes
+    kernel=ctypes.WinDLL('kernel32',use_last_error=True)
+    create=kernel.CreateFileW
+    create.argtypes=[wintypes.LPCWSTR,wintypes.DWORD,wintypes.DWORD,ctypes.c_void_p,
+                     wintypes.DWORD,wintypes.DWORD,wintypes.HANDLE]
+    create.restype=wintypes.HANDLE
+    close=kernel.CloseHandle
+    close.argtypes=[wintypes.HANDLE];close.restype=wintypes.BOOL
+    flags=0x00200000|(0x02000000 if directory else 0)
+    handle=create(str(path),0x80000000,3 if directory else 1,None,3,flags,None)
+    if handle==wintypes.HANDLE(-1).value:
+        raise ctypes.WinError(ctypes.get_last_error())
+    try:
+        class Attributes(ctypes.Structure):
+            _fields_=[('attributes',wintypes.DWORD),('tag',wintypes.DWORD)]
+        info=Attributes()
+        query=kernel.GetFileInformationByHandleEx
+        query.argtypes=[wintypes.HANDLE,ctypes.c_int,ctypes.c_void_p,wintypes.DWORD]
+        query.restype=wintypes.BOOL
+        if not query(handle,9,ctypes.byref(info),ctypes.sizeof(info)):
+            raise ctypes.WinError(ctypes.get_last_error())
+        if info.attributes & 0x400 or bool(info.attributes & 0x10)!=directory:
+            raise ValueError('snapshot handle has an unexpected type or reparse point')
+        return handle,close
+    except BaseException:
+        close(handle)
+        raise
+
+
 @contextmanager
 def _output_directory(path: Path):
-    if os.name == 'nt':
-        import ctypes
-        from ctypes import wintypes
-        kernel=ctypes.WinDLL('kernel32',use_last_error=True)
-        create=kernel.CreateFileW
-        create.argtypes=[wintypes.LPCWSTR,wintypes.DWORD,wintypes.DWORD,ctypes.c_void_p,
-                         wintypes.DWORD,wintypes.DWORD,wintypes.HANDLE]
-        create.restype=wintypes.HANDLE
-        close=kernel.CloseHandle
-        close.argtypes=[wintypes.HANDLE];close.restype=wintypes.BOOL
-        # Share read/write, but not delete: the directory cannot be renamed
-        # or replaced while path-based writes and publication are in progress.
-        handle=create(str(path),0x80000000,3,None,3,0x02000000|0x00200000,None)
-        if handle==wintypes.HANDLE(-1).value:
-            raise ctypes.WinError(ctypes.get_last_error())
+    if os.name=='nt':
+        handle,close=_windows_handle(path,directory=True)
         try:
-            class Attributes(ctypes.Structure):
-                _fields_=[('attributes',wintypes.DWORD),('tag',wintypes.DWORD)]
-            info=Attributes()
-            query=kernel.GetFileInformationByHandleEx
-            query.argtypes=[wintypes.HANDLE,ctypes.c_int,ctypes.c_void_p,wintypes.DWORD]
-            query.restype=wintypes.BOOL
-            if not query(handle,9,ctypes.byref(info),ctypes.sizeof(info)):
-                raise ctypes.WinError(ctypes.get_last_error())
-            if info.attributes & 0x400 or not info.attributes & 0x10:
-                raise ValueError('snapshot output must be a directory without reparse points')
             yield None
         finally:
             close(handle)
@@ -128,6 +147,32 @@ def _output_directory(path: Path):
             yield descriptor
         finally:
             os.close(descriptor)
+
+
+def _install_directory(source: Path, destination: Path):
+    """Atomically install without replacing any existing destination entry."""
+    import ctypes
+    if os.name=='nt':
+        from ctypes import wintypes
+        move=ctypes.WinDLL('kernel32',use_last_error=True).MoveFileW
+        move.argtypes=[wintypes.LPCWSTR,wintypes.LPCWSTR];move.restype=wintypes.BOOL
+        if not move(str(source),str(destination)):
+            raise ctypes.WinError(ctypes.get_last_error())
+    else:
+        library=ctypes.CDLL(None,use_errno=True)
+        if sys.platform=='darwin':
+            move=library.renamex_np
+            move.argtypes=[ctypes.c_char_p,ctypes.c_char_p,ctypes.c_uint]
+            result=move(os.fsencode(source),os.fsencode(destination),4)  # RENAME_EXCL
+        elif sys.platform.startswith('linux'):
+            move=library.renameat2
+            move.argtypes=[ctypes.c_int,ctypes.c_char_p,ctypes.c_int,ctypes.c_char_p,ctypes.c_uint]
+            result=move(-100,os.fsencode(source),-100,os.fsencode(destination),1)  # NOREPLACE
+        else:
+            raise ValueError('atomic snapshot installation is unsupported on this platform')
+        if result:
+            error=ctypes.get_errno()
+            raise OSError(error,os.strerror(error),str(destination))
 
 
 def _private_output(path: Path, *, directory_fd=None):
@@ -158,24 +203,35 @@ def capture_inputs(inputs: Mapping[str, Path], output: Path) -> InputSnapshot:
         raise ValueError('snapshot sources cannot be inside the output directory')
     with ExitStack() as stack:
         handles={name:stack.enter_context(_open_source(path)) for name,path in sources.items()}
-        output.mkdir(mode=0o700,parents=True,exist_ok=False)
-        directory_fd=stack.enter_context(_output_directory(output))
+        if output.exists():
+            raise FileExistsError(str(output))
+        output.parent.mkdir(parents=True,exist_ok=True)
+        staging=Path(tempfile.mkdtemp(prefix='.meh-snapshot-',dir=output.parent))
+        identity=staging.stat()
+        directory_fd=stack.enter_context(_output_directory(staging))
+        opened=staging.stat() if directory_fd is None else os.fstat(directory_fd)
+        if (opened.st_dev,opened.st_ino)!=(identity.st_dev,identity.st_ino):
+            raise ValueError('snapshot staging directory was replaced before opening')
         entries=[]
         total=0
         for entry in ordered:
-            with _private_output(output/entry.filename,directory_fd=directory_fd) as destination:
+            with _private_output(staging/entry.filename,directory_fd=directory_fd) as destination:
                 digest,size=_stream_handle(handles[entry.name],min(MAX_FILE_BYTES,MAX_TOTAL_BYTES-total),destination)
             total+=size
             entries.append(SnapshotFile(name=entry.name,sha256=digest,size_bytes=size))
         snapshot=InputSnapshot(files=tuple(entries))
-        temporary=output/'manifest.json.tmp'
+        temporary=staging/'manifest.json.tmp'
         with _private_output(temporary,directory_fd=directory_fd) as stream:
             stream.write(snapshot.canonical_json().encode('utf-8'))
         if directory_fd is None:
-            temporary.replace(output/'manifest.json')
+            temporary.replace(staging/'manifest.json')
         else:
             os.replace(temporary.name,'manifest.json',src_dir_fd=directory_fd,dst_dir_fd=directory_fd)
-        return snapshot
+        current=staging.lstat()
+        if (current.st_dev,current.st_ino)!=(identity.st_dev,identity.st_ino) or not stat.S_ISDIR(current.st_mode):
+            raise ValueError('snapshot staging directory was replaced')
+    _install_directory(staging,output)
+    return snapshot
 
 
 def read_snapshot_manifest(output: Path, expected_digest: str) -> InputSnapshot:
