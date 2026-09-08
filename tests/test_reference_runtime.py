@@ -21,3 +21,12 @@ def test_reference_requires_exact_julia_runtime(tmp_path, monkeypatch, version):
         with pytest.raises(ValueError, match='pinned Julia'):
             module.verify_julia(path)
     assert calls == [[str(path), '--version']]
+
+
+def test_reference_python_inventory_and_version_gate(monkeypatch):
+    monkeypatch.setattr(module.sys, 'version_info', (3, 11, 15))
+    identity = module.python_identity()
+    assert identity['python'] and identity['python_executable'] and identity['packages']
+    monkeypatch.setattr(module.sys, 'version_info', (3, 12, 0))
+    with pytest.raises(ValueError, match='Python 3.11'):
+        module.python_identity()

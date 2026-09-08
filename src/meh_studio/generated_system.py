@@ -21,9 +21,9 @@ class HornSources(Record):
     sound_speed_m_s: Positive = 343.0
 
 
-def compile_interior_system(geometry_directory: Path, sources: HornSources, output: Path) -> dict:
+def compile_interior_system(geometry_directory: Path, sources: HornSources, output: Path, *, _report=None, _activate=None) -> dict:
     try:
-        return _compile_interior_system(geometry_directory, sources, output)
+        return _compile_interior_system(geometry_directory, sources, output, _report=_report, _activate=_activate)
     except (KeyError, TypeError, AttributeError, IndexError, EOFError) as exc:
         raise ValueError(f"invalid geometry compilation artifact: {exc}") from exc
 
@@ -50,7 +50,7 @@ def _verify_boundary_groups(path: Path, region: dict):
         raise ValueError("mesh physical groups have missing or undeclared elements")
 
 
-def _compile_interior_system(geometry_directory: Path, sources: HornSources, output: Path) -> dict:
+def _compile_interior_system(geometry_directory: Path, sources: HornSources, output: Path, *, _report=None, _activate=None) -> dict:
     root = Path(geometry_directory).resolve()
     geometry = _read_json(root / "geometry.json")
     mesh = _read_json(root / "analysis/mesh.json")
@@ -87,11 +87,14 @@ def _compile_interior_system(geometry_directory: Path, sources: HornSources, out
         _verify_boundary_groups(paths[name], region)
     output = Path(output).resolve()
     output.mkdir(parents=True, exist_ok=False)
-    report = {"schema_version": 1, "status": "running", "evidence": "experimental_prediction_input",
+    report = {} if _report is None else _report
+    report.update({"schema_version": 1, "status": "running", "evidence": "experimental_prediction_input",
               "geometry_hash": design.content_hash, "sources_hash": sources.content_hash,
               "qualified": False, "mouth_load": "plane_wave_tube_termination",
-              "throat_rear_load": "none", "mesh_accuracy": "not_converged"}
+              "throat_rear_load": "none", "mesh_accuracy": "not_converged"})
     try:
+        if _activate is not None:
+            _activate()
         (output / "meshes").mkdir()
         system = {"id": "system:generated-meh", "name": "Experimental generated MEH interior",
                   "model_version": 1, "metadata": {}, "meshes": [], "regions": [],
@@ -145,7 +148,8 @@ def _compile_interior_system(geometry_directory: Path, sources: HornSources, out
                           "Ideal source disks, no breakup, nonlinear or measured qualification",
                           "Mesh convergence and independent accuracy remain unestablished"])
     except BaseException as exc:
-        report.update(status="failed", error=f"{type(exc).__name__}: {exc}")
+        if report["status"] != "cancelled":
+            report.update(status="failed", error=f"{type(exc).__name__}: {exc}")
         raise
     finally:
         _write_json(output / "compilation.json", report)

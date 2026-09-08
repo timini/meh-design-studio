@@ -451,5 +451,10 @@
         }
       ]
     }
-  ]
+  ],
+  "current_contract_status": {
+    "status": "historical_requires_rerun",
+    "qualified": false,
+    "reason": "Predates runtime, observable, compiled-mesh, CAD and refinement target identity gates. Regenerate before current-contract comparison."
+  }
 }

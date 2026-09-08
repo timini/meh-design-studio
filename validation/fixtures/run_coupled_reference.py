@@ -8,6 +8,8 @@ from dataclasses import replace
 from pathlib import Path
 import json
 import subprocess
+import sys
+import importlib.metadata
 
 def verify_julia(executable):
     path = str(Path(executable).absolute())
@@ -15,6 +17,14 @@ def verify_julia(executable):
     if version != 'julia version 1.12.6':
         raise ValueError('FP64 reference requires pinned Julia 1.12.6')
     return {'julia_executable': path, 'julia_version': version}
+
+
+def python_identity():
+    if sys.version_info[:2] != (3, 11):
+        raise ValueError('FP64 reference requires the production Python 3.11 runtime')
+    return {'python': sys.version, 'python_executable': sys.executable,
+            'packages': sorted((d.metadata.get('Name', ''), d.version)
+                               for d in importlib.metadata.distributions())}
 
 
 def main():
@@ -36,6 +46,7 @@ def main():
     if subprocess.check_output(["git", "-C", str(checkout), "diff", "HEAD", "--name-only"], text=True).strip():
         raise ValueError("upstream tracked files have changed")
     julia_identity = verify_julia(args.julia)
+    runtime_identity = {**julia_identity, **python_identity()}
     project = load_headless_project(args.project)
     spec = load_headless_solve_spec(args.request)
     prepared = prepare_headless_solve(project, spec, backend_id="beat_cpu")
@@ -44,7 +55,7 @@ def main():
     prepared = replace(prepared, request=request)
     writer = HeadlessResultWriter(args.output, project=project, prepared=prepared,
         backend_id="coupled_reference", public_request=json.loads(args.request.read_text()))
-    (args.output / "runtime.json").write_text(json.dumps({"revision": revision, **julia_identity}, indent=2) + "\n", encoding="utf-8")
+    (args.output / "runtime.json").write_text(json.dumps({"revision": revision, **runtime_identity}, indent=2) + "\n", encoding="utf-8")
     backend = CoupledReferenceBackend(julia_executable=args.julia, julia_threads="4", persistent_worker=False)
     session = None
     try:
@@ -58,7 +69,7 @@ def main():
         writer.finish(status="failed", error=str(exc))
         raise
     print(json.dumps({"status": "complete", "backend": "coupled_reference", "precision": "float64",
-                      "revision": revision, "runtime": julia_identity, "output": str(args.output.resolve())}))
+                      "revision": revision, "runtime": runtime_identity, "output": str(args.output.resolve())}))
 
 
 if __name__ == '__main__':

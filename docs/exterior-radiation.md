@@ -36,11 +36,11 @@ The source circuits remain synthetic. Driver internals, actual frames/motors and
 
 ## Exterior mesh sensitivity
 
-A three-level study held the FEM source meshes and project definitions fixed while reducing exterior target spacing from 20 to 15 to 10 mm. The conformed surfaces contained 3,246, 3,834 and 5,990 triangles. Fresh runs at 500/1,000/2,000 Hz passed the current preflight, original-mesh and full FEM-connectivity integrity checks. The [machine-readable study](../validation/reports/exterior-refinement.json) preserves input mesh hashes, evaluation identities, independent electrical checks and per-quantity comparisons.
+A historical three-level study held the FEM source meshes and project definitions fixed while reducing exterior target spacing from 20 to 15 to 10 mm. The conformed surfaces contained 3,246, 3,834 and 5,990 triangles. Those runs at 500/1,000/2,000 Hz passed the checks available at the time, but predate the current runtime, CAD and compiled-mesh binding contract. The [machine-readable study](../validation/reports/exterior-refinement.json) preserves input mesh hashes, evaluation identities, independent electrical checks and per-quantity comparisons.
 
-Across horizontal and vertical polar cuts and all three separately excited sources, the largest successive magnitude changes were 0.0543 dB (20→15 mm) and 0.0425 dB (15→10 mm); phase changes were 0.509° and 0.680°. No gain or phase was fitted. The comparison excludes samples at or below 0.001 times each source's reference peak and reports their count; none of these polar samples was excluded. Smaller mesh spacing did not monotonically reduce every error estimate, so these differences are sensitivity observations, not a demonstrated asymptotic error bound.
+In that historical report, across horizontal and vertical polar cuts and all three separately excited sources, the largest successive magnitude changes were 0.0543 dB (20→15 mm) and 0.0425 dB (15→10 mm); phase changes were 0.509° and 0.680°. No gain or phase was fitted. The comparison excludes samples at or below 0.001 times each source's reference peak and reports their count; none of these polar samples was excluded. Smaller mesh spacing did not monotonically reduce every error estimate, so these differences are sensitivity observations, not a demonstrated asymptotic error bound.
 
-All three runs still fail the existing strict electrical consistency criterion. The interior discretisation and angular grids were fixed, only three frequencies were sampled, and no independent acoustic solver or physical speaker was compared. This study does not establish full-band convergence or qualification. Earlier runs that finished frequency output but failed macOS process cleanup remain failed; the study uses fresh completed evaluations.
+All three runs still fail the existing strict electrical consistency criterion. The interior discretisation and angular grids were fixed, only three frequencies were sampled, and no independent acoustic solver or physical speaker was compared. This study does not establish full-band convergence or qualification. Earlier runs that finished frequency output but failed macOS process cleanup remain failed; the historical study used completed evaluations that still require regeneration under the current contract.
 
 Reproduce the comparison with `validation/fixtures/compare_exterior_refinement.py`, passing three `--run PROJECT EVALUATION` pairs in coarse-to-fine order and a new `--output REPORT` path. It checks current evaluation integrity and requires identical project definitions, FEM mesh hashes, backend, phase, frequency and excitation identities. It refuses to overwrite an existing report. Independent tests verify that known gain/phase changes are retained and that weak sources are not hidden by louder sources in the null policy.
 
@@ -54,3 +54,11 @@ The archived FP32/FP64 comparison is historical evidence only: its reference run
 hash predates the current Julia identity gate. It is not current pinned-runtime
 evidence. A fresh reference run and regenerated comparison remain required;
 no new numerical result is claimed here.
+
+All numerical values in the archived exterior refinement report are historical.
+That report predates the current runtime, observable, compiled-mesh and CAD identity
+gates; its runs must be regenerated before it can support a current-contract
+mesh-sensitivity claim. The new reference runner requires Python 3.11 and records
+the complete installed package inventory, alongside Julia and checkout identity.
+Package inventories must match when comparing precision or refinement; the runner
+does not claim a fully locked Python environment.

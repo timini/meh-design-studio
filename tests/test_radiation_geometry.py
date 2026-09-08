@@ -101,3 +101,23 @@ $EndElements
             verify_exterior_groups(path)
     else:
         verify_exterior_groups(path)
+
+
+def test_conformed_mouth_facets_must_match_fem(tmp_path):
+    from meh_studio.radiation_geometry import verify_exterior_groups
+    import meshio
+    import numpy as np
+    points = np.array([[0.,0,0],[1.,0,0],[0,1.,0],[0,0,1.]])
+    faces = np.array([[0,2,1],[0,1,3],[0,3,2],[1,2,3]])
+    def write(path, tags, names):
+        meshio.write(path, meshio.Mesh(points, [('triangle', faces)],
+            cell_data={'gmsh:physical':[np.array(tags)],'gmsh:geometrical':[np.ones(4,dtype=int)]},
+            field_data=names), file_format='gmsh22', binary=False)
+    front, exterior = tmp_path/'front.msh', tmp_path/'exterior.msh'
+    write(front, [10,99,99,99], {'mouth_interface':[10,2], 'rigid_walls':[99,2]})
+    names = {'mouth_interface':[10,2], 'rigid_exterior':[99,2]}
+    write(exterior, [10,99,99,99], names)
+    verify_exterior_groups(exterior, front)
+    write(exterior, [99,10,99,99], names)
+    with pytest.raises(ValueError, match='triangle membership'):
+        verify_exterior_groups(exterior, front)

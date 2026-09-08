@@ -77,7 +77,7 @@ def surface_integrity(path: Path) -> dict:
         gmsh.finalize()
 
 
-def verify_exterior_groups(path: Path):
+def verify_exterior_groups(path: Path, front_mesh: Path | None = None):
     import contextlib
     import io
     import meshio
@@ -99,6 +99,28 @@ def verify_exterior_groups(path: Path):
         used.update(map(int, tags))
     if used != {10, 99}:
         raise ValueError('conformed exterior has missing or unexpected physical elements')
+    if front_mesh is not None:
+        from collections import Counter
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            try:
+                front = meshio.read(front_mesh, file_format='gmsh')
+            except (meshio.ReadError, SystemExit) as exc:
+                raise ValueError('invalid authoritative FEM mesh') from exc
+        mouth = front.field_data.get('mouth_interface')
+        if mouth is None or tuple(map(int, mouth))[1] != 2:
+            raise ValueError('authoritative FEM mouth group is missing')
+        def facets(surface, tag):
+            triangles = []
+            for cell, tags in zip(surface.cells, surface.cell_data.get('gmsh:physical', [])):
+                if cell.type == 'triangle':
+                    for face in cell.data[np.asarray(tags) == tag]:
+                        triangles.append(tuple(sorted(tuple(point) for point in np.round(surface.points[face], 12))))
+            return Counter(triangles)
+        expected = facets(front, int(mouth[0]))
+        selected = facets(mesh, 10)
+        if not expected or selected != expected or any(face in expected for face in facets(mesh, 99)):
+            raise ValueError('conformed mouth triangle membership differs from authoritative FEM interface')
+
 
 
 def export_exterior(design: HornGeometry, output: Path, mesh_size_m: float = .02) -> dict:

@@ -178,3 +178,23 @@ def test_analytic_tube_fixture_binds_generated_mesh(tmp_path):
     subprocess.run([sys.executable,str(script),str(output),'--mesh-size-m','0.02'],check=True,capture_output=True)
     project = json.loads((output/'project.blab.json').read_text())
     assert project['physical_system']['metadata']['generated_mesh_sha256'] == {'mesh:tube':sha256(output/'tube.msh')}
+
+
+def test_radiating_cancellation_during_interior_copy_is_terminal(generated, monkeypatch):
+    import os
+    import signal
+    import meh_studio.generated_system as interior
+    from meh_studio.radiating_system import compile_radiating_system
+    if os.name == 'nt':
+        pytest.skip('POSIX termination signal')
+    root, sources, output = generated
+    previous = signal.getsignal(signal.SIGTERM)
+    def terminate(*args):
+        os.kill(os.getpid(), signal.SIGTERM)
+    monkeypatch.setattr(interior.shutil, 'copyfile', terminate)
+    class Runtime:
+        def verify(self): return {}
+    with pytest.raises(KeyboardInterrupt):
+        compile_radiating_system(root, sources, output, Runtime())
+    assert json.loads((output/'compilation.json').read_text())['status'] == 'cancelled'
+    assert signal.getsignal(signal.SIGTERM) == previous
