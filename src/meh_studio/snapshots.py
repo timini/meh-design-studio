@@ -83,6 +83,11 @@ def _stream_file(path: Path, limit: int, destination=None):
     return digest.hexdigest(),size
 
 
+def _private_output(path: Path):
+    descriptor=os.open(path,os.O_WRONLY|os.O_CREAT|os.O_EXCL|getattr(os,'O_BINARY',0),0o600)
+    return os.fdopen(descriptor,'wb')
+
+
 def capture_inputs(inputs: Mapping[str, Path], output: Path) -> InputSnapshot:
     """Reserve a new directory; publish the manifest last, never overwrite.
 
@@ -94,19 +99,22 @@ def capture_inputs(inputs: Mapping[str, Path], output: Path) -> InputSnapshot:
     # Validate all names before creating anything. Names cannot be paths.
     placeholders=[SnapshotFile(name=name,sha256='0'*64,size_bytes=0) for name in inputs]
     ordered=sorted(placeholders,key=lambda entry:entry.name)
-    output=Path(output)
-    output.mkdir(parents=True,exist_ok=False)
+    output=Path(output).resolve()
+    sources={entry.name:Path(inputs[entry.name]) for entry in ordered}
+    if any(path.resolve().is_relative_to(output) for path in sources.values()):
+        raise ValueError('snapshot sources cannot be inside the output directory')
+    output.mkdir(mode=0o700,parents=True,exist_ok=False)
     entries=[]
     total=0
     for entry in ordered:
-        with (output/entry.filename).open('xb') as destination:
-            digest,size=_stream_file(inputs[entry.name],min(MAX_FILE_BYTES,MAX_TOTAL_BYTES-total),destination)
+        with _private_output(output/entry.filename) as destination:
+            digest,size=_stream_file(sources[entry.name],min(MAX_FILE_BYTES,MAX_TOTAL_BYTES-total),destination)
         total+=size
         entries.append(SnapshotFile(name=entry.name,sha256=digest,size_bytes=size))
     snapshot=InputSnapshot(files=tuple(entries))
     temporary=output/'manifest.json.tmp'
-    with temporary.open('x',encoding='utf-8') as stream:
-        stream.write(snapshot.canonical_json())
+    with _private_output(temporary) as stream:
+        stream.write(snapshot.canonical_json().encode('utf-8'))
     temporary.replace(output/'manifest.json')
     return snapshot
 

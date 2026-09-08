@@ -112,3 +112,36 @@ def test_change_during_capture_rejected(tmp_path,monkeypatch):
     monkeypatch.setattr(module.os,'fstat',changed)
     with pytest.raises(ValueError,match='changed during'):capture_inputs({'source':source},tmp_path/'out')
     assert not (tmp_path/'out/manifest.json').exists()
+
+
+@pytest.mark.parametrize('later',[False,True])
+def test_sources_cannot_alias_generated_files(tmp_path,later):
+    out=tmp_path/'out'
+    source=tmp_path/'source';source.write_bytes(b'abc')
+    inputs={'x':out/'input-x.bin'}
+    if later:inputs={'a':source,'z':out/'input-a.bin'}
+    with pytest.raises(ValueError,match='inside the output'):capture_inputs(inputs,out)
+    assert not out.exists()
+
+
+def test_source_alias_through_parent_symlink_rejected(tmp_path):
+    alias=tmp_path/'alias'
+    try:alias.symlink_to(tmp_path,target_is_directory=True)
+    except OSError:pytest.skip('symlinks unavailable')
+    out=tmp_path/'out'
+    with pytest.raises(ValueError,match='inside the output'):
+        capture_inputs({'x':alias/'out/input-x.bin'},out)
+    assert not out.exists()
+
+
+@pytest.mark.skipif(os.name=='nt',reason='POSIX permission bits')
+def test_snapshot_creation_does_not_broaden_permissions(tmp_path):
+    import stat
+    source=tmp_path/'source';source.write_bytes(b'private project');source.chmod(0o600)
+    previous=os.umask(0)
+    try:
+        out=tmp_path/'out';snapshot=capture_inputs({'source':source},out)
+    finally:os.umask(previous)
+    assert stat.S_IMODE(out.stat().st_mode)==0o700
+    for path in out.iterdir():assert stat.S_IMODE(path.stat().st_mode)==0o600
+    assert verify_snapshot(out,snapshot.content_hash)==snapshot
