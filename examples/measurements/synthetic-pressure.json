@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "id": "synthetic-pressure",
+  "declared_origin": "synthetic_fixture",
+  "source_description": "Invented values for software demonstration; no physical measurement",
+  "fixture_id": "synthetic-rig",
+  "signal_definition": "Invented single-trace sine example",
+  "processing_recipe": "No processing",
+  "quantity": "pressure",
+  "unit": "Pa",
+  "amplitude_convention": "unknown",
+  "phasor_convention": "exp(+i omega t)",
+  "valid_band": {
+    "schema_version": 1,
+    "low_hz": 100.0,
+    "high_hz": 200.0
+  },
+  "stimulus_rms_v": null,
+  "observation_xyz_m": [
+    0.0,
+    0.0,
+    1.0
+  ],
+  "calibration_sha256": null,
+  "uncertainty": {
+    "schema_version": 1,
+    "magnitude_db": null,
+    "phase_deg": null,
+    "interpretation": "unknown",
+    "coverage_factor": null
+  }
+}

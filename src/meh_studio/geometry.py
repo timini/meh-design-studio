@@ -132,7 +132,7 @@ def export_geometry(design: HornGeometry, output: Path) -> dict:
                     path = directory / f"{name}.{extension}"
                     cq.exporters.export(shape, str(path), tolerance=design.tessellation_tolerance_m * 1000,
                                         angularTolerance=0.1)
-                    files.append({"path": str(path.relative_to(output)),
+                    files.append({"path": path.relative_to(output).as_posix(),
                                   "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
                                   "size_bytes": path.stat().st_size})
         state.update(status="complete", design=design.model_dump(mode="json"),
@@ -241,7 +241,7 @@ def mesh_geometry(output: Path) -> dict:
                     raise ValueError("mesh contains inverted or degenerate tetrahedra")
                 path = directory / f"{region}.msh"
                 gmsh.write(str(path))
-                report["regions"].append({"id": region, "path": str(path.relative_to(output)),
+                report["regions"].append({"id": region, "path": path.relative_to(output).as_posix(),
                     "sha256": hashlib.sha256(path.read_bytes()).hexdigest(), "volume_m3": volume,
                     "tetrahedra": len(tetrahedra), "minimum_quality": float(min(qualities)), "boundaries": groups})
             finally:
