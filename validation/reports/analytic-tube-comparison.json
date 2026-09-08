@@ -322,5 +322,10 @@
     "Single mesh level and three frequencies",
     "Checks input acoustic loading, not full nodal field accuracy",
     "Synthetic piston, not a qualified purchased driver"
-  ]
+  ],
+  "current_contract_status": {
+    "status": "historical_requires_rerun",
+    "qualified": false,
+    "reason": "Historical tube evaluation lacks current preflight/domain hashes and compiled-mesh identity binding; regenerate the fixture and rerun before current-contract comparison."
+  }
 }

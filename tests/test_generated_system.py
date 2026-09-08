@@ -166,3 +166,15 @@ def test_compiled_mesh_identity_rejects_replacement(generated):
     first.update(sha256=sha256(path),size_bytes=path.stat().st_size)
     with pytest.raises(ValueError, match='compiled geometry identity'):
         _verify_mesh_declarations(system, inventory, project)
+
+
+@pytest.mark.cad
+def test_analytic_tube_fixture_binds_generated_mesh(tmp_path):
+    import subprocess
+    import sys
+    pytest.importorskip('gmsh')
+    script = Path(__file__).resolve().parents[1]/'validation/fixtures/generate_plane_wave_tube.py'
+    output = tmp_path/'tube'
+    subprocess.run([sys.executable,str(script),str(output),'--mesh-size-m','0.02'],check=True,capture_output=True)
+    project = json.loads((output/'project.blab.json').read_text())
+    assert project['physical_system']['metadata']['generated_mesh_sha256'] == {'mesh:tube':sha256(output/'tube.msh')}
