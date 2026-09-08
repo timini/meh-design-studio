@@ -195,3 +195,28 @@ def test_cancellation_interrupts_publication_hashing(tmp_path,monkeypatch,during
         assert reached
         assert queue.get(job)['status']=='cancelled'
         with pytest.raises(ValueError):queue.result(job)
+
+
+@pytest.mark.parametrize('replacement',['fifo','symlink'])
+def test_special_design_file_rejected_before_blocking_open(tmp_path,monkeypatch,replacement):
+    import os
+    if replacement=='fifo' and os.name=='nt':pytest.skip('POSIX FIFO')
+    queue,job,lease=setup_job(tmp_path)
+    payload=tmp_path/'snapshot/input-design.bin';payload.unlink()
+    if replacement=='fifo':os.mkfifo(payload)
+    else:
+        target=tmp_path/'target';target.write_bytes(b'{}')
+        try:payload.symlink_to(target)
+        except OSError:
+            queue.connection.close()
+            pytest.skip('symlinks unavailable')
+    original=Path.open
+    def no_blocking_open(path,*args,**kwargs):
+        if path==payload:pytest.fail('worker tried a blocking payload open')
+        return original(path,*args,**kwargs)
+    monkeypatch.setattr(Path,'open',no_blocking_open)
+    with queue:
+        run_geometry(queue,lease,tmp_path/'snapshot')
+        assert queue.get(job)['status']=='failed'
+        assert 'regular non-symlink file' in queue.get(job)['error']
+        assert not lease.output_directory.exists()

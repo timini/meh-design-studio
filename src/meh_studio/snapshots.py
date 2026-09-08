@@ -210,3 +210,17 @@ def verify_snapshot(output: Path, expected_digest: str) -> InputSnapshot:
         if digest!=entry.sha256 or size!=entry.size_bytes:
             raise ValueError('snapshot input integrity mismatch')
     return snapshot
+
+
+def read_snapshot_payload(output: Path, entry: SnapshotFile, *, max_bytes: int) -> bytes:
+    """Read one bounded regular dependency and check its declared identity."""
+    import io
+    if type(max_bytes) is not int or not 0<=max_bytes<=MAX_FILE_BYTES:
+        raise ValueError('invalid snapshot consumer byte limit')
+    if entry.size_bytes>max_bytes:
+        raise ValueError('snapshot payload exceeds consumer byte limit')
+    buffer=io.BytesIO()
+    digest,size=_stream_file(Path(output)/entry.filename,max_bytes,buffer)
+    if size!=entry.size_bytes or digest!=entry.sha256:
+        raise ValueError('snapshot input integrity mismatch')
+    return buffer.getvalue()

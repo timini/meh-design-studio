@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 import threading
-import hashlib
 import json
 import math
 import multiprocessing
@@ -12,7 +11,7 @@ import time
 
 from .geometry import HornGeometry, export_geometry
 from .jobs import Artifact, Completion, JobQueue, JobSpec, Lease, file_digest
-from .snapshots import read_snapshot_manifest
+from .snapshots import read_snapshot_manifest, read_snapshot_payload
 
 
 def geometry_spec(snapshot_digest: str, *, max_attempts=3) -> JobSpec:
@@ -46,10 +45,7 @@ def run_geometry(queue: JobQueue, lease: Lease, snapshot_directory: Path, *, tim
         entry=snapshot.files[0]
         if entry.size_bytes>1024*1024:
             raise ValueError('geometry design exceeds 1 MiB')
-        with (Path(snapshot_directory)/entry.filename).open('rb') as source:
-            payload=source.read(1024*1024+1)
-        if len(payload)!=entry.size_bytes or hashlib.sha256(payload).hexdigest()!=entry.sha256:
-            raise ValueError('geometry design changed after snapshot verification')
+        payload=read_snapshot_payload(snapshot_directory,entry,max_bytes=1024*1024)
         design=HornGeometry.model_validate_json(payload)
         lease.output_directory.mkdir(parents=True,exist_ok=False)
         process=multiprocessing.get_context('spawn').Process(
