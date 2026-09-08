@@ -53,6 +53,7 @@ def test_export_mesh_units_and_source_tags(geometry_data, tmp_path):
     design = HornGeometry.model_validate(geometry_data)
     report = export_geometry(design, tmp_path / "export")
     assert report["status"] == "complete" and report["print_verified"] is False
+    assert all("\\" not in item["path"] for item in report["files"])
     assert report["driver_count"] == 3
     with zipfile.ZipFile(tmp_path / "export/parts/horn.3mf") as archive:
         model = next(name for name in archive.namelist() if name.endswith('.model'))
@@ -80,3 +81,15 @@ def test_steep_flare_cannot_consume_source_disk(geometry_data):
             "entry_positions_m": [.05], "front_radius_m": .01, "wall_m": .0005,
             "port_radius_m": .0005, "port_length_m": .001, "front_depth_m": .001,
             "mesh_size_m": .0005})
+
+
+@pytest.mark.cad
+def test_cad_runtime_exits_cleanly_in_fresh_process():
+    import importlib.util
+    if importlib.util.find_spec('cadquery') is None:
+        pytest.skip('cadquery is unavailable')
+    import subprocess,sys
+    result=subprocess.run([sys.executable,'-c',
+        'from meh_studio.cad_runtime import load_cadquery; cq=load_cadquery(); assert cq.Workplane().box(1,1,1).val().isValid()'],
+        capture_output=True,text=True,timeout=60)
+    assert result.returncode==0,result.stderr
