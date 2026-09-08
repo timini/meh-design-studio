@@ -9,6 +9,7 @@ The generated interior experiment now connects synthetic three-source geometry t
 - Durable SQLite job leases, cancellation, one automatic recovery retry, bounded completion descriptors and integrity-checked publication. Worker execution and dependency-aware scheduling remain to implement.
 - Explicit RMS complex source synthesis, signed real electrical power, pressure-level null handling and full-sphere pressure quadrature. Native-solver amplitude calibration and evaluation-to-metrics integration remain to implement.
 
+- Input snapshot library with bounded dependency copies, portable content identities and verification against queued job input digests. See [input snapshots](input-snapshots.md). Worker execution and automatic dependency discovery remain to implement.
 - Pinned Boundary Lab subprocess adapter, preflight, explicit backend/runtime checks, preserved complex output, timeout/failure reports and result integrity checks.
 
 - Immutable, versioned SI contracts for briefs, source models, driver records, provenance and declared band/mounting/level qualification; canonical content hashes.
