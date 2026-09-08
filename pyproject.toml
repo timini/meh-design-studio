@@ -14,6 +14,7 @@ dev = ["pytest>=8,<10"]
 cad = ["cadquery>=2.6,<3", "gmsh>=4.14,<5"]
 
 [project.scripts]
+meh-measurements = "meh_studio.measurement_cli:main"
 meh = "meh_studio.cli:main"
 meh-geometry = "meh_studio.geometry_cli:main"
 
