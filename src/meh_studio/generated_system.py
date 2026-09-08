@@ -32,8 +32,12 @@ def _verify_boundary_groups(path: Path, region: dict):
     import contextlib
     import io
     import meshio
-    with contextlib.redirect_stdout(io.StringIO()):
-        mesh = meshio.read(path)
+    diagnostics = io.StringIO()
+    with contextlib.redirect_stdout(diagnostics), contextlib.redirect_stderr(diagnostics):
+        try:
+            mesh = meshio.read(path, file_format="gmsh")
+        except (meshio.ReadError, SystemExit) as exc:
+            raise ValueError("invalid generated mesh artifact: " + diagnostics.getvalue().strip()) from exc
     expected = {b["name"]: (b["tag"], 2) for b in region["boundaries"]}
     expected["air_" + region["id"]] = (1, 3)
     actual = {name: tuple(map(int, group)) for name, group in mesh.field_data.items()}
@@ -112,6 +116,8 @@ def _compile_interior_system(geometry_directory: Path, sources: HornSources, out
                 system["boundaries"].append({"id": f"boundary:{name}:{label}", "name": label,
                     "kind": kind, "region_id": region_id, "parameters": {},
                     "group": {"mesh_id": mesh_id, "dimension": 2, "name": label, "tag": boundary["tag"]}})
+        system["metadata"]["generated_mesh_sha256"] = {
+            f"mesh:{name}": region["sha256"] for name, region in regions.items()}
         assignments = [("throat", sources.throat, [0, 0, 1], ["boundary:front:throat_source"])]
         for name in sorted(expected_sources):
             assignments.append((name, sources.side, [1 if name.endswith("positive") else -1, 0, 0],
