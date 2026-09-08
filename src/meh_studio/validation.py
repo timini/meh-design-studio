@@ -12,6 +12,13 @@ from .boundary_lab import SolveRequest, _contained, _read_json, inspect_result, 
 
 
 def validate_electrical_basis(project_path: Path, evaluation_directory: Path) -> dict:
+    try:
+        return _validate_electrical_basis(project_path, evaluation_directory)
+    except (KeyError, TypeError, AttributeError, IndexError, EOFError) as exc:
+        raise ValueError(f"invalid electrical validation artifact: {exc}") from exc
+
+
+def _validate_electrical_basis(project_path: Path, evaluation_directory: Path) -> dict:
     project_path, root = Path(project_path), Path(evaluation_directory)
     evaluation = _read_json(root / "evaluation.json")
     if evaluation.get("status") != "complete" or evaluation["project_sha256"] != sha256(project_path):
