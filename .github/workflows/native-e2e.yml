@@ -41,7 +41,7 @@ jobs:
       fail-fast: false
       matrix:
         level: [baseline, '0', '1', '2']
-        chunk: [0, 1, 2, 3, 4, 5, 6, 7]
+        chunk: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-native

@@ -109,8 +109,8 @@ with a fresh search to obtain evidence under the current integrity contract.
 ### Partitioned native CI
 
 CI first runs the independent tube reference and the complete 17-frequency search.
-It then evaluates the baseline and three frozen-winner meshes in eight frequency
-partitions each (32 jobs, at most five frequencies per solve). A final job reads
+It then evaluates the baseline and three frozen-winner meshes in eleven frequency
+partitions each (44 jobs, three frequencies per solve). A final job reads
 and verifies every raw result, requires exact frequency coverage and identical
 mesh hashes within each level, and combines raw complex pressures before scoring.
 It never normalises individual partitions. The 33 frequencies, 8/6/4 mm meshes,
@@ -125,3 +125,6 @@ the separate stages. An assembled success requires all partitions to succeed.
 Artifact paths are restored under the same runner temporary directory because
 the pinned solver records absolute mesh paths; raw files are never rewritten to
 change those identities. The sequential local runner remains available.
+
+The evidence runners require a clean checkout and the same source commit across
+search, partition workers and assembly. Dirty or changed sources are rejected.
