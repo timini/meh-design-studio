@@ -16,7 +16,7 @@ from typing import Annotated
 import numpy as np
 from pydantic import Field, model_validator
 
-from .boundary_lab import BoundaryLabRuntime, SolveRequest, _read_json, _write_json, _contained, sha256, inspect_result
+from .boundary_lab import BoundaryLabRuntime, SolveRequest, _read_json, _write_json, _contained, sha256, inspect_result, _termination_guard
 from .catalogue import Catalogue
 from .domain import Record, Positive
 from .generated_system import HornSources
@@ -60,9 +60,15 @@ class SearchBrief(Record):
 
 
 def candidates(brief, base, drivers):
-    records = {d.id:d for d in drivers}
-    if len(records)!=len(drivers):
-        raise ValueError('select a catalogue containing one revision per driver ID')
+    selected=set(brief.throat_ids+brief.side_ids)
+    records={}
+    for driver in drivers:
+        if driver.id not in selected: continue
+        previous=records.get(driver.id)
+        if previous is not None and previous.revision==driver.revision and previous!=driver:
+            raise ValueError('conflicting selected driver revisions')
+        if previous is None or driver.revision>previous.revision:
+            records[driver.id]=driver
     if not set(brief.throat_ids+brief.side_ids).issubset(records):
         raise ValueError('selected driver absent from catalogue')
     rows = []
@@ -109,13 +115,22 @@ def verified_assessment(project, evaluation):
     return {'controls':controls,'result':result,'checks':checks}
 
 
+def relative_response(pressure):
+    values=np.asarray(pressure,dtype=complex)
+    if values.ndim!=1 or not values.size or not np.isfinite(values).all():
+        raise ValueError('finite pressure vector required')
+    magnitude=np.abs(values)
+    if np.any(magnitude==0): raise ValueError('relative response is undefined at an exact pressure null')
+    return 20*(np.log10(magnitude)-np.log10(magnitude.max()))
+
+
 def response_score(project, evaluation, gains):
     assessment=verified_assessment(project,evaluation)
     checks=assessment["checks"]
     root=evaluation/'upstream'
     manifest=_read_json(root/'manifest.json')
-    domains=_read_json(root/'domains.json')['domains']
-    with np.load(root/'domains.npz',allow_pickle=False) as archive:
+    domains=_read_json(_contained(root,manifest['domains_metadata_file']))['domains']
+    with np.load(_contained(root,manifest['domains_file']),allow_pickle=False) as archive:
         domain=next(d for d in domains if d['id']=='observation:horizontal-polar')
         angles=archive[domain['coordinates']['angle_deg']]
         axial=np.flatnonzero(angles==0)
@@ -139,8 +154,8 @@ def response_score(project, evaluation, gains):
     for gain in gains:
         weights=np.full(len(ports),gain);weights[throat[0]]=1
         pressure=basis@weights
-        if not np.isfinite(pressure).all() or np.any(abs(pressure)<=1e-12): continue
-        relative_db=20*np.log10(abs(pressure)/abs(pressure).max())
+        try: relative_db=relative_response(pressure)
+        except ValueError: continue
         options.append({'ripple_db':float(np.ptp(relative_db)),'side_gain':gain,
                         'relative_response_db':relative_db.tolist()})
     if not options: raise ValueError('all candidate responses contain null/nonfinite pressure')
@@ -172,21 +187,28 @@ def evaluate_candidate(candidate, root, runtime, brief, *, mesh_size=None, frequ
 
 
 def optimise(brief, base, catalogue_path, runtime, output):
+    report={'status':'running'}
+    with _termination_guard(report) as activate:
+        return _optimise(brief,base,catalogue_path,runtime,output,report,activate)
+
+
+def _optimise(brief, base, catalogue_path, runtime, output, report, activate):
     output=Path(output).absolute()
     with Catalogue(catalogue_path,readonly=True) as catalogue: drivers=catalogue.list()
     pool=candidates(brief,base,drivers)
     runtime_identity=runtime.verify()
     output.mkdir(parents=True,exist_ok=False)
-    report={'schema_version':1,'status':'running','kind':'experimental_fem_bem_search',
+    report.update({'schema_version':1,'status':'running','kind':'experimental_fem_bem_search',
         'qualified':False,'physical_validation':False,'runtime':runtime_identity,'trials':[],
         'limitations':['Synthetic/unqualified sources may be used only for pipeline experiments',
             'Relative on-axis ripple objective, not calibrated sensitivity or efficiency',
             'Driver-only prices exclude amplifier, material, printing and assembly',
-            'Straight conical family; finite sampled grid is not a global optimum']}
-    _write_json(output/'brief.json',brief.model_dump(mode='json'))
-    _write_json(output/'base-geometry.json',base.model_dump(mode='json'))
-    _write_json(output/'catalogue-snapshot.json',[d.model_dump(mode='json') for d in drivers])
+            'Straight conical family; finite sampled grid is not a global optimum']})
     try:
+        activate()
+        _write_json(output/'brief.json',brief.model_dump(mode='json'))
+        _write_json(output/'base-geometry.json',base.model_dump(mode='json'))
+        _write_json(output/'catalogue-snapshot.json',[d.model_dump(mode='json') for d in drivers])
         for i,candidate in enumerate(pool):
             trial={'index':i,'status':'running'};report['trials'].append(trial)
             _write_json(output/'search.json',report)
@@ -206,7 +228,10 @@ def optimise(brief, base, catalogue_path, runtime, output):
         # states geometric checks and explicitly excludes print qualification.
         shutil.copytree(output/f"trial-{winner['index']:03d}"/'geometry',output/'winner-geometry')
     except BaseException as exc:
-        report.update(status='failed',error=f'{type(exc).__name__}: {exc}')
+        status='cancelled' if isinstance(exc,KeyboardInterrupt) else 'failed'
+        report.update(status=status,error=f'{type(exc).__name__}: {exc}')
+        for trial in report['trials']:
+            if trial['status']=='running':trial.update(status=status,error=str(exc))
         raise
     finally:
         _write_json(output/'search.json',report)

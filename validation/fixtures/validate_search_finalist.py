@@ -18,8 +18,8 @@ def pressure(project, evaluation, gain):
     system=_read_json(project)['physical_system']
     ports={p['id']:p['component_id'] for p in system['excitation_ports']}
     weights=np.array([1. if ports[p]=='component:throat' else gain for p in manifest['excitation_port_ids']])
-    domain=next(d for d in _read_json(root/'domains.json')['domains'] if d['id']=='observation:horizontal-polar')
-    with np.load(root/'domains.npz',allow_pickle=False) as archive:
+    domain=next(d for d in _read_json(_contained(root,manifest['domains_metadata_file']))['domains'] if d['id']=='observation:horizontal-polar')
+    with np.load(_contained(root,manifest['domains_file']),allow_pickle=False) as archive:
         indices=np.flatnonzero(archive[domain['coordinates']['angle_deg']]==0)
     if len(indices)!=1: raise ValueError('missing unique on-axis observation')
     values=[]
@@ -60,7 +60,7 @@ def validate(search, output, runtime):
             root=output/f'level-{i}'
             score=evaluate_candidate(winner,root,runtime,frozen,mesh_size=size)
             values=pressure(root/'system/project.blab.json',root/'evaluation',gain)
-            if not np.isfinite(values).all() or np.any(abs(values)<=1e-12): raise ValueError('undefined finalist pressure comparison')
+            if not np.isfinite(values).all() or np.any(abs(values)==0): raise ValueError('undefined finalist pressure comparison')
             responses.append(values)
             report['levels'].append({'mesh_size_m':size,'score':score,
                 'export_checks':validate_export(root/'geometry'),
