@@ -80,7 +80,7 @@ def _validate(search, output, runtime, timeout_s, report, activate):
     report.update({'schema_version':1,'status':'running','search_sha256':original_hash,
         'input_sha256':control_hashes,'winner_index':result['winner_index'],'fixed_side_gain':gain,'frequencies_hz':frequencies,
         'runtime':runtime_identity,'per_level_solve_timeout_s':timeout_s,'mesh_sizes_m':sizes,'magnitude_change_limit_db':.5,'phase_change_limit_deg':5.,
-        'qualified':False,'physical_validation':False,'levels':[],
+        'qualified':False,'physical_validation':False,'levels':[],'successive_changes':[],
         'limitations':['FEM and conforming mouth interface refined; rigid-exterior target size fixed, not an independent full exterior convergence test','Pointwise pressure comparison, no gain/phase fitting',
                       'Additional geometric-midpoint frequencies rounded to whole hertz for native label precision','Finite frequency samples do not establish full-band convergence','Synthetic sources; no print or physical validation']})
     responses=[]
@@ -103,11 +103,15 @@ def _validate(search, output, runtime, timeout_s, report, activate):
             report['levels'].append({'mesh_size_m':size,'score':score,
                 'mesh_identity':identity,'export_checks':validate_export(root/'geometry'),
                 'pressure_real':values.real.tolist(),'pressure_imag':values.imag.tolist()})
+            if len(responses)>1:
+                before,after=responses[-2:]
+                change={'maximum_magnitude_change_db':float(np.max(abs(20*np.log10(abs(after)/abs(before))))),
+                    'maximum_phase_change_deg':float(np.max(abs(np.angle(after*before.conj(),deg=True))))}
+                report['successive_changes'].append(change)
+                if change['maximum_magnitude_change_db']>.5 or change['maximum_phase_change_deg']>5:
+                    raise ValueError('finalist mesh stability limits exceeded; remaining levels not run')
             _write_json(output/'validation.json',report)
-        comparisons=[]
-        for before,after in zip(responses,responses[1:]):
-            comparisons.append({'maximum_magnitude_change_db':float(np.max(abs(20*np.log10(abs(after)/abs(before))))),
-                'maximum_phase_change_deg':float(np.max(abs(np.angle(after*before.conj(),deg=True))))})
+        comparisons=report['successive_changes']
         report.update(status='complete',successive_changes=comparisons,
             refinement_passed=all(c['maximum_magnitude_change_db']<=.5 and c['maximum_phase_change_deg']<=5 for c in comparisons),
             electrical_consistency_passed=all(level['score']['electrical_validation']['passed'] for level in report['levels']))

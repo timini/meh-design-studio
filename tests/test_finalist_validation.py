@@ -10,7 +10,7 @@ module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 
 
-@pytest.mark.parametrize('changed_input',[False,True,'before','wide',pytest.param('cancel',marks=pytest.mark.skipif(__import__('sys').platform=='win32',reason='POSIX SIGTERM lifecycle'))])
+@pytest.mark.parametrize('changed_input',[False,True,'before','wide','unstable',pytest.param('cancel',marks=pytest.mark.skipif(__import__('sys').platform=='win32',reason='POSIX SIGTERM lifecycle'))])
 def test_finalist_replays_catalogue_array_and_freezes_gain(tmp_path, monkeypatch, changed_input):
     examples = Path(__file__).resolve().parents[1] / 'examples'
     search = tmp_path / 'search'
@@ -41,6 +41,14 @@ def test_finalist_replays_catalogue_array_and_freezes_gain(tmp_path, monkeypatch
     monkeypatch.setattr(module, 'validate_export', lambda *args: {'print_qualified': False})
     class Runtime:
         def verify(self): return {'revision':'test'}
+    if changed_input=='unstable':
+        monkeypatch.setattr(module,'pressure',lambda *args: np.ones(len(calls[-1][1]),dtype=complex)*len(calls))
+        with pytest.raises(ValueError,match='mesh stability limits exceeded'):
+            module.validate(search,tmp_path/'validation',Runtime())
+        report=json.loads((tmp_path/'validation/validation.json').read_text())
+        assert report['status']=='failed' and not report['refinement_passed']
+        assert len(calls)==2 and report['successive_changes'][0]['maximum_magnitude_change_db']>6
+        return
     if changed_input=='cancel':
         import signal
         def cancel(*args,**kwargs): signal.raise_signal(signal.SIGTERM)
