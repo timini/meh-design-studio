@@ -56,7 +56,7 @@ def test_request_preparation_uses_one_snapshot(tmp_path):
     assert digest != module.hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-@pytest.mark.parametrize('fault', [None, 'setup', 'runtime_write', 'request_change'])
+@pytest.mark.parametrize('fault', [None, 'setup', 'runtime_write', 'request_change', 'runtime_change'])
 def test_reference_setup_and_evidence_are_finalized(tmp_path, monkeypatch, fault):
     import json
     request = tmp_path/'input.json'
@@ -85,11 +85,14 @@ def test_reference_setup_and_evidence_are_finalized(tmp_path, monkeypatch, fault
     if fault == 'runtime_write': monkeypatch.setattr(Path,'write_bytes',fail_write)
     if fault:
         with pytest.raises((RuntimeError,ValueError,OSError)):
-            module.execute_reference(writer,output,{'python':'pinned'},request,digest,make_session,lambda r:r)
+            module.execute_reference(writer,output,{'python':'pinned'},request,digest,make_session,lambda r:r,
+                lambda: {'python':'changed' if fault=='runtime_change' else 'pinned'})
         assert writer.result['status'] == 'failed'
     else:
-        module.execute_reference(writer,output,{'python':'pinned'},request,digest,make_session,lambda r:r)
+        module.execute_reference(writer,output,{'python':'pinned'},request,digest,make_session,lambda r:r,
+                lambda: {'python':'changed' if fault=='runtime_change' else 'pinned'})
         assert writer.result['status'] == 'complete'
+        assert writer.manifest['reference_runner_sha256'] == module.hashlib.sha256(Path(module.__file__).read_bytes()).hexdigest()
         runtime = writer.manifest['reference_runtime']
         assert runtime['sha256'] == module.hashlib.sha256((output/'runtime.json').read_bytes()).hexdigest()
         assert runtime['identity'] == json.loads((output/'runtime.json').read_bytes())

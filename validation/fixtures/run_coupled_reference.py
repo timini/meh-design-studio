@@ -53,15 +53,18 @@ def request_snapshot(path, loader):
     return spec, json.loads(payload), hashlib.sha256(payload).hexdigest()
 
 
-def execute_reference(writer, output, runtime, request_path, request_digest, make_session, canonicalize):
+def execute_reference(writer, output, runtime, request_path, request_digest, make_session, canonicalize, probe_runtime):
     session = None
+    runner_path = Path(__file__)
     try:
+        runner_digest = hashlib.sha256(runner_path.read_bytes()).hexdigest()
         runtime_payload = (json.dumps(runtime, indent=2) + '\n').encode()
         runtime_path = output/'runtime.json'
         runtime_path.write_bytes(runtime_payload)
         writer.manifest['reference_runtime'] = {
             'file':'runtime.json', 'sha256':hashlib.sha256(runtime_payload).hexdigest(), 'identity':runtime}
         writer.manifest['source_request_sha256'] = request_digest
+        writer.manifest['reference_runner_sha256'] = runner_digest
         session = make_session()
         for result in session.solve_stream():
             writer.write_result(canonicalize(result))
@@ -69,10 +72,24 @@ def execute_reference(writer, output, runtime, request_path, request_digest, mak
             raise ValueError('source request changed during reference solve')
         if runtime_path.read_bytes() != runtime_payload:
             raise ValueError('reference runtime evidence changed during solve')
+        if probe_runtime() != runtime:
+            raise ValueError('reference runtime changed during solve')
+        if hashlib.sha256(runner_path.read_bytes()).hexdigest() != runner_digest:
+            raise ValueError('reference runner changed during solve')
         writer.finish(status='complete')
     except BaseException as exc:
         finish_failed_reference(session, writer, exc)
         raise
+
+
+def verify_runtime(checkout, julia):
+    revision = subprocess.check_output(["git", "-C", str(checkout), "rev-parse", "HEAD"], text=True).strip()
+    if revision != "8cb166226e412877d3f71f2845918e479b97aa85":
+        raise ValueError("unsupported upstream revision")
+    if subprocess.check_output(["git", "-C", str(checkout), "diff", "HEAD", "--name-only"], text=True).strip():
+        raise ValueError("upstream tracked files have changed")
+    julia_identity = verify_julia(julia)
+    return {"revision":revision, **julia_identity, **python_identity()}
 
 
 def main():
@@ -88,13 +105,8 @@ def main():
     parser.add_argument("--julia", required=True)
     args = parser.parse_args()
     checkout = Path(blab.__file__).resolve().parents[2]
-    revision = subprocess.check_output(["git", "-C", str(checkout), "rev-parse", "HEAD"], text=True).strip()
-    if revision != "8cb166226e412877d3f71f2845918e479b97aa85":
-        raise ValueError("unsupported upstream revision")
-    if subprocess.check_output(["git", "-C", str(checkout), "diff", "HEAD", "--name-only"], text=True).strip():
-        raise ValueError("upstream tracked files have changed")
-    julia_identity = verify_julia(args.julia)
-    runtime_identity = {**julia_identity, **python_identity()}
+    runtime_identity = verify_runtime(checkout, args.julia)
+    revision = runtime_identity["revision"]
     project = load_headless_project(args.project)
     spec, public_request, request_digest = request_snapshot(args.request, load_headless_solve_spec)
     prepared = prepare_headless_solve(project, spec, backend_id="beat_cpu")
@@ -107,7 +119,8 @@ def main():
         args.request, request_digest,
         lambda: CoupledReferenceBackend(julia_executable=args.julia, julia_threads="4",
             persistent_worker=False).create_system_session(request),
-        lambda result: canonicalize_observation_result(prepared, result))
+        lambda result: canonicalize_observation_result(prepared, result),
+        lambda: verify_runtime(checkout, args.julia))
     print(json.dumps({"status": "complete", "backend": "coupled_reference", "precision": "float64",
                       "revision": revision, "runtime": runtime_identity, "output": str(args.output.resolve())}))
 
