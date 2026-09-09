@@ -1,0 +1,35 @@
+"""Exercise saved-search replay without invoking the native solver."""
+import importlib.util
+import json
+from pathlib import Path
+import numpy as np
+import pytest
+
+spec = importlib.util.spec_from_file_location('finalist_runner', Path(__file__).resolve().parents[1] / 'validation/fixtures/validate_search_finalist.py')
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+
+
+def test_finalist_replays_catalogue_array_and_freezes_gain(tmp_path, monkeypatch):
+    examples = Path(__file__).resolve().parents[1] / 'examples'
+    search = tmp_path / 'search'
+    search.mkdir()
+    for source, target in [('synthetic-search-brief.json', 'brief.json'),
+                           ('three-driver-geometry.json', 'base-geometry.json'),
+                           ('synthetic-search-drivers.json', 'catalogue-snapshot.json')]:
+        (search / target).write_bytes((examples / source).read_bytes())
+    (search / 'search.json').write_text(json.dumps({'status': 'complete', 'winner_index': 0,
+                                                  'winner': {'side_gain': .5}}))
+    calls = []
+    def evaluate(candidate, root, runtime, brief, *, mesh_size):
+        calls.append((brief.side_gains, brief.frequencies_hz, mesh_size))
+        return {'electrical_validation': {'passed': False}}
+    monkeypatch.setattr(module, 'evaluate_candidate', evaluate)
+    monkeypatch.setattr(module, 'pressure', lambda *args: np.ones(5, dtype=complex))
+    monkeypatch.setattr(module, 'validate_export', lambda *args: {'print_qualified': False})
+    result = module.validate(search, tmp_path / 'validation', object())
+    assert result['status'] == 'complete' and result['refinement_passed']
+    assert not result['qualified'] and not result['electrical_consistency_passed']
+    assert len(calls) == 3
+    assert all(gain == (.5,) and len(frequencies) == 5 for gain, frequencies, _ in calls)
+    assert [call[2] for call in calls] == pytest.approx([.008, .006, .004])

@@ -39,10 +39,10 @@ def validate(search, output, runtime):
     if result['status']!='complete': raise ValueError('search must complete before finalist validation')
     brief=SearchBrief.model_validate_json((search/'brief.json').read_text())
     base=HornGeometry.model_validate_json((search/'base-geometry.json').read_text())
-    drivers=[DriverRevision.model_validate(d) for d in _read_json(search/'catalogue-snapshot.json')]
+    drivers=[DriverRevision.model_validate(d) for d in json.loads((search/'catalogue-snapshot.json').read_text())]
     winner=candidates(brief,base,drivers)[result['winner_index']]
     gain=result['winner']['side_gain']
-    frequencies=tuple(sorted(set(brief.frequencies_hz)|{math.sqrt(a*b) for a,b in zip(brief.frequencies_hz,brief.frequencies_hz[1:])}))
+    frequencies=tuple(sorted(set(brief.frequencies_hz)|{float(round(math.sqrt(a*b))) for a,b in zip(brief.frequencies_hz,brief.frequencies_hz[1:])}))
     frozen=SearchBrief.model_validate(brief.model_dump()|{'frequencies_hz':frequencies,'side_gains':(gain,)})
     sizes=(base.mesh_size_m,base.mesh_size_m*.75,base.mesh_size_m*.5)
     if min(sizes)<.0005: raise ValueError('refinement exceeds generator mesh limits')
@@ -52,7 +52,7 @@ def validate(search, output, runtime):
         'mesh_sizes_m':sizes,'magnitude_change_limit_db':.5,'phase_change_limit_deg':5.,
         'qualified':False,'physical_validation':False,'levels':[],
         'limitations':['Exterior mesh fixed; FEM refinement only','Pointwise pressure comparison, no gain/phase fitting',
-                      'Finite frequency samples do not establish full-band convergence','Synthetic sources; no print or physical validation']}
+                      'Additional geometric-midpoint frequencies rounded to whole hertz for native label precision','Finite frequency samples do not establish full-band convergence','Synthetic sources; no print or physical validation']}
     responses=[]
     try:
         for i,size in enumerate(sizes):
