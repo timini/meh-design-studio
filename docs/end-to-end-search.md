@@ -93,7 +93,10 @@ unit/CAD checks and is intentionally not triggered by every code push.
 `validation/fixtures/run_native_e2e.py` runs the same experiment locally with
 explicit checkout, Python and Julia paths. Its report separates pipeline success
 from coupled electrical and physical qualification. Native errors or the declared
-0.5 dB/5-degree mesh stability gate failing cause the job to fail. Partial outputs
+0.5 dB/5-degree mesh stability gate failing cause the job to fail. This particular
+synthetic benchmark also requires at least 1 dB less ripple than the equal-gain
+baseline on the held-out frequencies; this is an experiment criterion, not a
+claim of hi-fi flatness. Partial outputs
 are uploaded too, with seven-day artifact retention; archive important evidence
 before it expires. A successfully completed numerical job never marks the
 synthetic drivers or printed speaker as physically qualified.

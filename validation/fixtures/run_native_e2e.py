@@ -28,7 +28,7 @@ def main():
     runner_digest=sha256(Path(__file__))
     report={'schema_version':1,'status':'running','qualified':False,'physical_validation':False,
             'source_commit':source_commit,'runner_sha256':runner_digest,'runtime':identity,
-            'acceptance_limits':{'tube_relative_error':.005,'refinement_magnitude_db':.5,'refinement_phase_deg':5},
+            'acceptance_limits':{'tube_relative_error':.005,'refinement_magnitude_db':.5,'refinement_phase_deg':5,'minimum_heldout_ripple_improvement_db':1.0},
             'limitations':['Synthetic drivers and prices','No efficiency, continuous-band or physical qualification',
                            'Complex64 coupled electrical consistency remains unsupported']}
     with _termination_guard(report) as activate:
@@ -75,6 +75,8 @@ def main():
                 'coupled_electrical_consistency_passed':finalist['electrical_consistency_passed']}
             if runtime.verify()!=identity or sha256(Path(__file__))!=runner_digest:
                 raise ValueError('experiment runtime or runner changed')
+            improvement=report['results']['baseline_heldout_ripple_db']-report['results']['winner_heldout_ripple_db']
+            if improvement<1.0:raise ValueError('held-out ripple improvement is below the declared 1 dB gate')
             if not finalist['refinement_passed']:raise ValueError('finalist mesh stability gate failed')
             report.update(status='complete',stage='complete')
         except BaseException as exc:
