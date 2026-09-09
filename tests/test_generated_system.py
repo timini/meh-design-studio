@@ -181,6 +181,28 @@ def test_analytic_tube_fixture_binds_generated_mesh(tmp_path):
     assert project['physical_system']['metadata']['analytic_reference_sha256'] == sha256(output/'reference.json')
 
 
+def test_radiating_cancellation_during_interior_copy_is_terminal(generated, monkeypatch):
+    import os
+    import signal
+    import meh_studio.generated_system as interior
+    import meh_studio.radiating_system as radiation
+    monkeypatch.setattr(radiation,'require_cad_dependencies',lambda:None)
+    from meh_studio.radiating_system import compile_radiating_system
+    if os.name == 'nt':
+        pytest.skip('POSIX termination signal')
+    root, sources, output = generated
+    previous = signal.getsignal(signal.SIGTERM)
+    def terminate(*args):
+        os.kill(os.getpid(), signal.SIGTERM)
+    monkeypatch.setattr(interior.shutil, 'copyfile', terminate)
+    class Runtime:
+        def verify(self): return {}
+    with pytest.raises(KeyboardInterrupt):
+        compile_radiating_system(root, sources, output, Runtime())
+    assert json.loads((output/'compilation.json').read_text())['status'] == 'cancelled'
+    assert signal.getsignal(signal.SIGTERM) == previous
+
+
 def test_analytic_reference_identity_rejects_changed_load(tmp_path):
     import importlib.util
     import hashlib
@@ -194,3 +216,23 @@ def test_analytic_reference_identity_rejects_changed_load(tmp_path):
     path.write_text('{"area_m2":0.1}')
     with pytest.raises(ValueError,match='fixture identity'):
         module.bound_reference(path,project)
+
+
+def test_cancellation_at_interior_exterior_transition_is_retained(generated, monkeypatch):
+    import os
+    import signal
+    import meh_studio.radiating_system as radiation
+    monkeypatch.setattr(radiation,'require_cad_dependencies',lambda:None)
+    if os.name == 'nt': pytest.skip('POSIX termination')
+    root,sources,output=generated
+    original=radiation.compile_interior_system
+    def completed(*args, **kwargs):
+        result=original(*args, **kwargs)
+        assert result['status']=='running'
+        os.kill(os.getpid(),signal.SIGTERM)
+        return result
+    monkeypatch.setattr(radiation,'compile_interior_system',completed)
+    class Runtime:
+        def verify(self):return {}
+    with pytest.raises(KeyboardInterrupt):radiation.compile_radiating_system(root,sources,output,Runtime())
+    assert json.loads((output/'compilation.json').read_text())['status']=='cancelled'
