@@ -91,3 +91,26 @@ def test_scoring_follows_verified_domain_manifest_paths(tmp_path,monkeypatch):
     monkeypatch.setattr(search,'verified_assessment',lambda *args:{'checks':{'passed':True}})
     result=search.response_score(project,root.parent,(.5,1.))
     assert result['ripple_db']==pytest.approx(20*np.log10(3))
+
+
+def test_runtime_change_aborts_after_completed_trial(tmp_path, monkeypatch):
+    import meh_studio.optimisation as search
+    from meh_studio.catalogue import Catalogue
+    brief,base,drivers=inputs();database=tmp_path/'drivers.sqlite'
+    with Catalogue.create(database) as catalogue:
+        for driver in drivers:catalogue.add(driver)
+    class Runtime:
+        calls=0
+        def verify(self):
+            self.calls+=1
+            return {'revision':'first' if self.calls<=2 else 'changed'}
+    def complete(candidate,root,*args,**kwargs):
+        root.mkdir();(root/'candidate.json').write_text('{}');(root/'geometry').mkdir()
+        return {'objective':1.,'electrical_validation':{'passed':True}}
+    monkeypatch.setattr(search,'evaluate_candidate',complete)
+    output=tmp_path/'search'
+    with pytest.raises(ValueError,match='runtime changed'):
+        search.optimise(brief,base,database,Runtime(),output)
+    report=json.loads((output/'search.json').read_text())
+    assert report['status']=='failed' and 'winner' not in report
+    assert report['trials'][0]['status']=='complete'

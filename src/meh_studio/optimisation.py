@@ -164,14 +164,18 @@ def response_score(project, evaluation, gains):
     return min(options,key=lambda row:(row['ripple_db'],row['side_gain'])) | {'electrical_validation':checks}
 
 
+def candidate_record(candidate):
+    return {'design':candidate['design'].model_dump(mode='json'),
+        'sources':candidate['sources'].model_dump(mode='json'),'driver_cost':candidate['cost'],
+        'driver_revisions':[d.model_dump(mode='json') for d in candidate['drivers']]}
+
+
 def evaluate_candidate(candidate, root, runtime, brief, *, mesh_size=None, frequencies=None, timeout_s=1800):
     design=candidate['design']
     if mesh_size is not None:
         design=HornGeometry.model_validate(design.model_dump()|{'mesh_size_m':mesh_size})
     root.mkdir(parents=True,exist_ok=False)
-    _write_json(root/'candidate.json',{'design':design.model_dump(mode='json'),
-        'sources':candidate['sources'].model_dump(mode='json'),'driver_cost':candidate['cost'],
-        'driver_revisions':[d.model_dump(mode='json') for d in candidate['drivers']]})
+    _write_json(root/'candidate.json',candidate_record(candidate|{'design':design}))
     export_geometry(design,root/'geometry');mesh_geometry(root/'geometry')
     compile_radiating_system(root/'geometry',candidate['sources'],root/'system',runtime,
                              exterior_mesh_size_m=brief.exterior_mesh_size_m)
@@ -209,20 +213,26 @@ def _optimise(brief, base, catalogue_path, runtime, output, report, activate):
         _write_json(output/'brief.json',brief.model_dump(mode='json'))
         _write_json(output/'base-geometry.json',base.model_dump(mode='json'))
         _write_json(output/'catalogue-snapshot.json',[d.model_dump(mode='json') for d in drivers])
+        report['control_sha256']={name:sha256(output/name) for name in
+            ('brief.json','base-geometry.json','catalogue-snapshot.json')}
         for i,candidate in enumerate(pool):
             trial={'index':i,'status':'running'};report['trials'].append(trial)
             _write_json(output/'search.json',report)
+            if runtime.verify()!=runtime_identity: raise ValueError('search runtime changed')
             try:
-                if runtime.verify()!=runtime_identity: raise ValueError('search runtime changed')
                 score=evaluate_candidate(candidate,output/f'trial-{i:03d}',runtime,brief)
                 trial.update(status='complete',**score)
             except Exception as exc:
                 trial.update(status='failed',error=f'{type(exc).__name__}: {exc}')
             _write_json(output/'search.json',report)
+        if runtime.verify()!=runtime_identity: raise ValueError('search runtime changed')
+        if any(sha256(output/name)!=digest for name,digest in report['control_sha256'].items()):
+            raise ValueError('search controls changed during execution')
         successful=[t for t in report['trials'] if t['status']=='complete']
         if not successful: raise ValueError('no candidate completed a real coupled evaluation')
         winner=min(successful,key=lambda t:(t['objective'],t['index']))
         report.update(status='complete',winner_index=winner['index'],winner=winner,
+            winner_candidate_sha256=sha256(output/f"trial-{winner['index']:03d}"/'candidate.json'),
             numerical_consistency_passed=winner['electrical_validation']['passed'])
         # Preserve a complete generated geometry export; its existing report
         # states geometric checks and explicitly excludes print qualification.

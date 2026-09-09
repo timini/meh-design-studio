@@ -4,12 +4,12 @@ import json
 import math
 from pathlib import Path
 import numpy as np
-from meh_studio.boundary_lab import BoundaryLabRuntime, _read_json, _write_json, _contained, sha256
+from meh_studio.boundary_lab import BoundaryLabRuntime, _read_json, _write_json, _contained, sha256, _termination_guard
 from meh_studio.domain import DriverRevision
 from meh_studio.geometry import HornGeometry
 from meh_studio.export_validation import validate_export
 from meh_studio.radiation_geometry import step_geometry_sha256
-from meh_studio.optimisation import SearchBrief, candidates, evaluate_candidate, verified_assessment
+from meh_studio.optimisation import SearchBrief, candidates, candidate_record, evaluate_candidate, verified_assessment
 
 
 def pressure(project, evaluation, gain):
@@ -43,6 +43,12 @@ def mesh_identity(root):
 
 
 def validate(search, output, runtime, *, timeout_s=7200):
+    report={'status':'running'}
+    with _termination_guard(report) as activate:
+        return _validate(search,output,runtime,timeout_s,report,activate)
+
+
+def _validate(search, output, runtime, timeout_s, report, activate):
     if not math.isfinite(timeout_s) or not 0<timeout_s<=7200: raise ValueError('finalist timeout must be within (0, 7200] seconds')
     search=search.absolute();output=output.absolute()
     control_names=('search.json','brief.json','base-geometry.json','catalogue-snapshot.json')
@@ -50,30 +56,42 @@ def validate(search, output, runtime, *, timeout_s=7200):
     original_hash=control_hashes['search.json']
     result=_read_json(search/'search.json')
     if result['status']!='complete': raise ValueError('search must complete before finalist validation')
+    expected={name:digest for name,digest in control_hashes.items() if name!='search.json'}
+    if result.get('control_sha256')!=expected:
+        raise ValueError('search controls do not match completed search; legacy runs require a fresh search')
+    candidate_name=f"trial-{result['winner_index']:03d}/candidate.json"
+    candidate_file=search/candidate_name
+    if result.get('winner_candidate_sha256')!=sha256(candidate_file):
+        raise ValueError('winning candidate differs from completed search')
+    control_hashes[candidate_name]=result['winner_candidate_sha256']
     brief=SearchBrief.model_validate_json((search/'brief.json').read_text())
     base=HornGeometry.model_validate_json((search/'base-geometry.json').read_text())
     drivers=[DriverRevision.model_validate(d) for d in json.loads((search/'catalogue-snapshot.json').read_text())]
     winner=candidates(brief,base,drivers)[result['winner_index']]
+    if candidate_record(winner)!=_read_json(candidate_file):
+        raise ValueError('reconstructed winner differs from recorded candidate')
     gain=result['winner']['side_gain']
     frequencies=tuple(sorted(set(brief.frequencies_hz)|{float(round(math.sqrt(a*b))) for a,b in zip(brief.frequencies_hz,brief.frequencies_hz[1:])}))
-    frozen=SearchBrief.model_validate(brief.model_dump()|{'frequencies_hz':frequencies,'side_gains':(gain,)})
+    frozen=SearchBrief.model_validate(brief.model_dump()|{'side_gains':(gain,)})
     sizes=(base.mesh_size_m,base.mesh_size_m*.75,base.mesh_size_m*.5)
     if min(sizes)<.0005: raise ValueError('refinement exceeds generator mesh limits')
     runtime_identity=runtime.verify()
     output.mkdir(parents=True,exist_ok=False)
-    report={'schema_version':1,'status':'running','search_sha256':original_hash,
+    report.update({'schema_version':1,'status':'running','search_sha256':original_hash,
         'input_sha256':control_hashes,'winner_index':result['winner_index'],'fixed_side_gain':gain,'frequencies_hz':frequencies,
         'runtime':runtime_identity,'per_level_solve_timeout_s':timeout_s,'mesh_sizes_m':sizes,'magnitude_change_limit_db':.5,'phase_change_limit_deg':5.,
         'qualified':False,'physical_validation':False,'levels':[],
         'limitations':['FEM and conforming mouth interface refined; rigid-exterior target size fixed, not an independent full exterior convergence test','Pointwise pressure comparison, no gain/phase fitting',
-                      'Additional geometric-midpoint frequencies rounded to whole hertz for native label precision','Finite frequency samples do not establish full-band convergence','Synthetic sources; no print or physical validation']}
+                      'Additional geometric-midpoint frequencies rounded to whole hertz for native label precision','Finite frequency samples do not establish full-band convergence','Synthetic sources; no print or physical validation']})
     responses=[]
     try:
+        activate()
+        _write_json(output/'validation.json',report)
         for i,size in enumerate(sizes):
             print(f'Finalist refinement {i+1}/3: {size:g} m',flush=True)
             if runtime.verify()!=runtime_identity: raise ValueError('finalist runtime changed between levels')
             root=output/f'level-{i}'
-            score=evaluate_candidate(winner,root,runtime,frozen,mesh_size=size,timeout_s=timeout_s)
+            score=evaluate_candidate(winner,root,runtime,frozen,mesh_size=size,timeout_s=timeout_s,frequencies=frequencies)
             identity=mesh_identity(root)
             if report['levels']:
                 prior=report['levels'][0]['mesh_identity']
