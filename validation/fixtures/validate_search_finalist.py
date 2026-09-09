@@ -42,7 +42,8 @@ def mesh_identity(root):
             'exterior_mesh_size_m':record['exterior_mesh_size_m']}
 
 
-def validate(search, output, runtime):
+def validate(search, output, runtime, *, timeout_s=7200):
+    if not math.isfinite(timeout_s) or not 0<timeout_s<=7200: raise ValueError('finalist timeout must be within (0, 7200] seconds')
     search=search.absolute();output=output.absolute()
     control_names=('search.json','brief.json','base-geometry.json','catalogue-snapshot.json')
     control_hashes={name:sha256(search/name) for name in control_names}
@@ -62,7 +63,7 @@ def validate(search, output, runtime):
     output.mkdir(parents=True,exist_ok=False)
     report={'schema_version':1,'status':'running','search_sha256':original_hash,
         'input_sha256':control_hashes,'winner_index':result['winner_index'],'fixed_side_gain':gain,'frequencies_hz':frequencies,
-        'runtime':runtime_identity,'mesh_sizes_m':sizes,'magnitude_change_limit_db':.5,'phase_change_limit_deg':5.,
+        'runtime':runtime_identity,'per_level_solve_timeout_s':timeout_s,'mesh_sizes_m':sizes,'magnitude_change_limit_db':.5,'phase_change_limit_deg':5.,
         'qualified':False,'physical_validation':False,'levels':[],
         'limitations':['FEM and conforming mouth interface refined; rigid-exterior target size fixed, not an independent full exterior convergence test','Pointwise pressure comparison, no gain/phase fitting',
                       'Additional geometric-midpoint frequencies rounded to whole hertz for native label precision','Finite frequency samples do not establish full-band convergence','Synthetic sources; no print or physical validation']}
@@ -72,7 +73,7 @@ def validate(search, output, runtime):
             print(f'Finalist refinement {i+1}/3: {size:g} m',flush=True)
             if runtime.verify()!=runtime_identity: raise ValueError('finalist runtime changed between levels')
             root=output/f'level-{i}'
-            score=evaluate_candidate(winner,root,runtime,frozen,mesh_size=size)
+            score=evaluate_candidate(winner,root,runtime,frozen,mesh_size=size,timeout_s=timeout_s)
             identity=mesh_identity(root)
             if report['levels']:
                 prior=report['levels'][0]['mesh_identity']
@@ -107,8 +108,9 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('search',type=Path);parser.add_argument('output',type=Path)
     for name in ('checkout','python','julia'):parser.add_argument('--'+name,type=Path,required=True)
+    parser.add_argument('--solve-timeout-s',type=float,default=7200)
     args=parser.parse_args()
-    report=validate(args.search,args.output,BoundaryLabRuntime(args.checkout,args.python,args.julia))
+    report=validate(args.search,args.output,BoundaryLabRuntime(args.checkout,args.python,args.julia),timeout_s=args.solve_timeout_s)
     print(json.dumps(report,indent=2))
 
 

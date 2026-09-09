@@ -22,7 +22,7 @@ def test_finalist_replays_catalogue_array_and_freezes_gain(tmp_path, monkeypatch
     (search / 'search.json').write_text(json.dumps({'status': 'complete', 'winner_index': 0,
                                                   'winner': {'side_gain': .5}}))
     calls = []
-    def evaluate(candidate, root, runtime, brief, *, mesh_size):
+    def evaluate(candidate, root, runtime, brief, *, mesh_size, timeout_s):
         calls.append((brief.side_gains, brief.frequencies_hz, mesh_size))
         return {'electrical_validation': {'passed': False}}
     monkeypatch.setattr(module, 'evaluate_candidate', evaluate)

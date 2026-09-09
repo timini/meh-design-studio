@@ -70,3 +70,7 @@ not independent full exterior convergence. Canonical CAD identity is held fixed.
 independent closed-edge/orientation/volume checks of the exported STL parts,
 and the absence of physical or print qualification. A completed validation
 command can still contain failed acceptance gates; read `validation.json`.
+
+The finalist runner allows up to two hours per native solve by default; use
+`--solve-timeout-s` to set a shorter explicit limit. Fine conforming meshes can
+be much more expensive than the search mesh. A timeout remains a failed run.

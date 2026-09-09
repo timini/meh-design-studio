@@ -164,7 +164,7 @@ def response_score(project, evaluation, gains):
     return min(options,key=lambda row:(row['ripple_db'],row['side_gain'])) | {'electrical_validation':checks}
 
 
-def evaluate_candidate(candidate, root, runtime, brief, *, mesh_size=None, frequencies=None):
+def evaluate_candidate(candidate, root, runtime, brief, *, mesh_size=None, frequencies=None, timeout_s=1800):
     design=candidate['design']
     if mesh_size is not None:
         design=HornGeometry.model_validate(design.model_dump()|{'mesh_size_m':mesh_size})
@@ -177,7 +177,7 @@ def evaluate_candidate(candidate, root, runtime, brief, *, mesh_size=None, frequ
                              exterior_mesh_size_m=brief.exterior_mesh_size_m)
     request=SolveRequest(frequencies_hz=frequencies or brief.frequencies_hz,
         include_project_observations=True,retain=('fem_nodal_pressure','bem_boundary_traces'))
-    runtime.solve(root/'system/project.blab.json',request,root/'evaluation',timeout_s=1800)
+    runtime.solve(root/'system/project.blab.json',request,root/'evaluation',timeout_s=timeout_s)
     score=response_score(root/'system/project.blab.json',root/'evaluation',brief.side_gains)
     score['objective']=score['ripple_db']+brief.cost_weight_db*candidate['cost']/brief.max_driver_cost
     score.update(driver_count=design.driver_count,driver_cost=candidate['cost'],
