@@ -1,6 +1,7 @@
 """Compile a generated horn plus ideal rigid exterior for FEM/BEM experiments."""
 from pathlib import Path
 import threading
+import math
 
 from .boundary_lab import BoundaryLabRuntime, _execute, _read_json, _write_json, _termination_guard, sha256
 from .generated_system import HornSources, compile_interior_system
@@ -11,13 +12,25 @@ from .radiation_geometry import export_exterior, surface_integrity, verify_exter
 def compile_radiating_system(geometry_directory: Path, sources: HornSources, output: Path,
                              runtime: BoundaryLabRuntime, *, exterior_mesh_size_m: float = .02,
                              timeout_s: float = 600) -> dict:
+    if (not isinstance(exterior_mesh_size_m, (int,float)) or not math.isfinite(exterior_mesh_size_m)
+            or not .01 <= exterior_mesh_size_m <= .05):
+        raise ValueError('exterior mesh target must be between 10 and 50 mm')
+    if not isinstance(timeout_s, (int,float)) or not math.isfinite(timeout_s) or timeout_s <= 0:
+        raise ValueError('timeout must be positive and finite')
     if threading.current_thread() is not threading.main_thread():
         raise ValueError("run radiating compilation in a worker process, not a background thread")
     report = {'status': 'running'}
     with _termination_guard(report) as activate:
-        return _compile_radiating_system(geometry_directory, sources, output, runtime,
-            exterior_mesh_size_m=exterior_mesh_size_m, timeout_s=timeout_s,
-            report=report, activate=activate)
+        try:
+            return _compile_radiating_system(geometry_directory, sources, output, runtime,
+                exterior_mesh_size_m=exterior_mesh_size_m, timeout_s=timeout_s,
+                report=report, activate=activate)
+        except BaseException as exc:
+            if 'geometry_hash' in report:
+                if report['status'] != 'cancelled':
+                    report.update(status='failed', error=f'{type(exc).__name__}: {exc}')
+                _write_json(Path(output).resolve()/'compilation.json', report)
+            raise
 
 
 def _compile_radiating_system(geometry_directory, sources, output, runtime, *, exterior_mesh_size_m,

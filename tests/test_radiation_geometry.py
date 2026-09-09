@@ -144,3 +144,11 @@ def test_regenerated_exterior_has_stable_geometry_identity(tmp_path):
     fine = export_exterior(design, tmp_path/'fine', .015)
     assert coarse['cad_geometry_sha256'] == fine['cad_geometry_sha256']
     assert coarse['surface']['sha256'] != fine['surface']['sha256']
+
+
+@pytest.mark.parametrize('options',[{'exterior_mesh_size_m':.001},{'timeout_s':0},{'timeout_s':float('nan')}])
+def test_invalid_radiating_options_do_not_reserve_output(tmp_path, options):
+    from meh_studio.radiating_system import compile_radiating_system
+    with pytest.raises(ValueError):
+        compile_radiating_system(tmp_path,None,tmp_path/'out',None,**options)
+    assert not (tmp_path/'out').exists()

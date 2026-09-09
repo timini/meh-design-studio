@@ -141,7 +141,7 @@ def _compile_interior_system(geometry_directory: Path, sources: HornSources, out
                        "spherical_sampling_enabled": False}}
         _write_json(output / "project.blab.json", project)
         _write_json(output / "sources.json", sources.model_dump(mode="json"))
-        report.update(status="complete", project_sha256=sha256(output / "project.blab.json"),
+        report.update(status="complete" if _report is None else "running", project_sha256=sha256(output / "project.blab.json"),
                       driver_count=len(assignments), limitations=[
                           "Anechoic tube termination is not exterior horn radiation",
                           "Throat piston omits compression-driver internals and rear load",

@@ -165,9 +165,10 @@ def main():
         pairs.append({'from':a['evaluation'],'to':b['evaluation'],'rows':rows})
     report={'schema_version':1,'evidence':'exterior_mesh_sensitivity_only','qualified':False,
         'null_policy':'Exclude reference or candidate amplitude <= 0.001 times each source reference peak; report excluded count. No fitted gain/phase.',
-        'limitations':['Only exterior mesh refined; FEM discretisation fixed','Three frequencies and fixed polar cuts only',
+        'limitations':['Only exterior mesh refined; FEM discretisation fixed','Only supplied frequency samples and retained pressure observations',
                       'No independent acoustic solver or physical measurement','No absolute RMS/SPL normalisation',
                       'Strict circuit/reciprocity failures remain failures'],
+        'scope':{'frequencies_hz':frequencies,'pressure_outputs':loaded[0][0]['pressure_ids']},
         'runs':[r for r,_,_ in loaded],'successive_comparisons':pairs}
     publish_report(args.output, report)
     print(args.output)

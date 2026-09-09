@@ -214,3 +214,22 @@ def test_analytic_reference_identity_rejects_changed_load(tmp_path):
     path.write_text('{"area_m2":0.1}')
     with pytest.raises(ValueError,match='fixture identity'):
         module.bound_reference(path,project)
+
+
+def test_cancellation_at_interior_exterior_transition_is_retained(generated, monkeypatch):
+    import os
+    import signal
+    import meh_studio.radiating_system as radiation
+    if os.name == 'nt': pytest.skip('POSIX termination')
+    root,sources,output=generated
+    original=radiation.compile_interior_system
+    def completed(*args, **kwargs):
+        result=original(*args, **kwargs)
+        assert result['status']=='running'
+        os.kill(os.getpid(),signal.SIGTERM)
+        return result
+    monkeypatch.setattr(radiation,'compile_interior_system',completed)
+    class Runtime:
+        def verify(self):return {}
+    with pytest.raises(KeyboardInterrupt):radiation.compile_radiating_system(root,sources,output,Runtime())
+    assert json.loads((output/'compilation.json').read_text())['status']=='cancelled'
