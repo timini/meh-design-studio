@@ -84,10 +84,12 @@ class Lease:
     spec: JobSpec
 
 
-def file_digest(path: Path) -> str:
+def file_digest(path: Path, *, check=None) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as stream:
         for chunk in iter(lambda: stream.read(1024*1024), b""):
+            if check is not None:
+                check()
             digest.update(chunk)
     return digest.hexdigest()
 
@@ -265,7 +267,7 @@ class JobQueue:
                     self.connection.execute("UPDATE jobs SET status='queued',token=NULL,owner=NULL,automatic_retries=automatic_retries+1 WHERE id=?",(row["id"],))
             return len(rows)
 
-    def _verified_completion(self, row):
+    def _verified_completion(self, row, *, check=None):
         directory = (self.artifact_root/row["id"]/row["token"]).resolve()
         if not directory.is_relative_to(self.artifact_root.resolve()):
             raise ValueError("attempt directory escaped artifact root")
@@ -281,17 +283,17 @@ class JobQueue:
             file = (directory/artifact.path).resolve()
             if not file.is_relative_to(directory) or not file.is_file():
                 raise ValueError("artifact is missing or escaped the attempt directory")
-            if file.stat().st_size != artifact.size_bytes or file_digest(file) != artifact.sha256:
+            if file.stat().st_size != artifact.size_bytes or file_digest(file,check=check) != artifact.sha256:
                 raise ValueError("completion artifact integrity mismatch")
         if hashlib.sha256(completion_bytes(path)).hexdigest() != digest:
             raise ValueError("completion descriptor changed during verification")
         return record,digest
 
-    def complete(self, lease: Lease):
+    def complete(self, lease: Lease, *, check=None):
         row = self._active(lease)
         if row["status"] == "cancel_requested":
             raise ValueError("cancelled work cannot publish a successful result")
-        _,digest = self._verified_completion(row)
+        _,digest = self._verified_completion(row) if check is None else self._verified_completion(row,check=check)
         # Keep slow file hashing outside the writer lock so cancellation can win.
         with self._transaction():
             row = self._active(lease)
