@@ -190,20 +190,22 @@ def evaluate_candidate(candidate, root, runtime, brief, *, mesh_size=None, frequ
     return score
 
 
-def optimise(brief, base, catalogue_path, runtime, output):
+def optimise(brief, base, catalogue_path, runtime, output, *, trial_timeout_s=1800):
+    if not math.isfinite(trial_timeout_s) or not 0<trial_timeout_s<=7200:
+        raise ValueError('trial timeout must be within (0, 7200] seconds')
     report={'status':'running'}
     with _termination_guard(report) as activate:
-        return _optimise(brief,base,catalogue_path,runtime,output,report,activate)
+        return _optimise(brief,base,catalogue_path,runtime,output,report,activate,trial_timeout_s)
 
 
-def _optimise(brief, base, catalogue_path, runtime, output, report, activate):
+def _optimise(brief, base, catalogue_path, runtime, output, report, activate, trial_timeout_s):
     output=Path(output).absolute()
     with Catalogue(catalogue_path,readonly=True) as catalogue: drivers=catalogue.list()
     pool=candidates(brief,base,drivers)
     runtime_identity=runtime.verify()
     output.mkdir(parents=True,exist_ok=False)
     report.update({'schema_version':1,'status':'running','kind':'experimental_fem_bem_search',
-        'qualified':False,'physical_validation':False,'runtime':runtime_identity,'trials':[],
+        'qualified':False,'physical_validation':False,'runtime':runtime_identity,'trials':[],'per_trial_solve_timeout_s':trial_timeout_s,
         'limitations':['Synthetic/unqualified sources may be used only for pipeline experiments',
             'Relative on-axis ripple objective, not calibrated sensitivity or efficiency',
             'Driver-only prices exclude amplifier, material, printing and assembly',
@@ -220,7 +222,7 @@ def _optimise(brief, base, catalogue_path, runtime, output, report, activate):
             _write_json(output/'search.json',report)
             if runtime.verify()!=runtime_identity: raise ValueError('search runtime changed')
             try:
-                score=evaluate_candidate(candidate,output/f'trial-{i:03d}',runtime,brief)
+                score=evaluate_candidate(candidate,output/f'trial-{i:03d}',runtime,brief,timeout_s=trial_timeout_s)
                 trial.update(status='complete',**score)
             except Exception as exc:
                 trial.update(status='failed',error=f'{type(exc).__name__}: {exc}')

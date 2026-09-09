@@ -8,51 +8,90 @@ permissions:
 concurrency:
   group: native-e2e-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
+env:
+  JULIA_NUM_PRECOMPILE_TASKS: '1'
+  OPENBLAS_NUM_THREADS: '1'
+  OMP_NUM_THREADS: '1'
 jobs:
-  native-e2e:
+  search:
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'run-native-e2e'
     runs-on: ubuntu-latest
-    timeout-minutes: 300
-    env:
-      JULIA_NUM_PRECOMPILE_TASKS: '1'
-      OPENBLAS_NUM_THREADS: '1'
-      OMP_NUM_THREADS: '1'
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
-      - name: Set isolated Julia depot
-        run: printf 'JULIA_DEPOT_PATH=%s/julia-depot\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - uses: julia-actions/setup-julia@v2
-        with:
-          version: '1.12.6'
-      - name: Install native libraries and pinned solver checkout
+      - uses: ./.github/actions/setup-native
+      - name: Run reference and search
         run: |
-          sudo apt-get update
-          sudo apt-get install -y libglu1-mesa libgl1
-          git clone https://github.com/JWSound/boundary-lab.git "$RUNNER_TEMP/boundary-lab"
-          git -C "$RUNNER_TEMP/boundary-lab" checkout --detach 8cb166226e412877d3f71f2845918e479b97aa85
-          python -m venv "$RUNNER_TEMP/meh-env"
-          "$RUNNER_TEMP/meh-env/bin/python" -m pip install -e ".[dev,cad]" -e "$RUNNER_TEMP/boundary-lab"
-      - uses: actions/cache@v4
-        with:
-          path: ${{ runner.temp }}/julia-depot
-          key: native-julia-${{ runner.os }}-1.12.6-8cb166226e412877d3f71f2845918e479b97aa85-v1
-      - name: Instantiate the pinned Julia environment
-        run: julia --project="$RUNNER_TEMP/boundary-lab/src/blab/solvers/julia_local" -e 'using Pkg; Pkg.instantiate(); Pkg.precompile()'
-      - name: Run references, optimisation and frozen finalist validation
-        run: |
-          "$RUNNER_TEMP/meh-env/bin/python" validation/fixtures/run_native_e2e.py "$RUNNER_TEMP/horn-evidence" \
+          "$RUNNER_TEMP/meh-env/bin/python" validation/fixtures/run_native_e2e.py "$RUNNER_TEMP/horn-evidence" --search-only \
             --checkout "$RUNNER_TEMP/boundary-lab" --python "$RUNNER_TEMP/meh-env/bin/python" \
-            --julia "$(command -v julia)" 2>&1 | tee "$RUNNER_TEMP/native-e2e.log"
-      - name: Preserve evidence including failed attempts
+            --julia "$(command -v julia)" 2>&1 | tee "$RUNNER_TEMP/search.log"
+      - uses: actions/upload-artifact@v4
         if: always()
-        uses: actions/upload-artifact@v4
         with:
-          name: horn-evidence-${{ github.run_id }}
+          name: native-search
           path: |
             ${{ runner.temp }}/horn-evidence
-            ${{ runner.temp }}/native-e2e.log
+            ${{ runner.temp }}/search.log
           retention-days: 7
-          if-no-files-found: warn
+  validation:
+    needs: search
+    runs-on: ubuntu-latest
+    timeout-minutes: 160
+    strategy:
+      fail-fast: false
+      matrix:
+        level: [baseline, '0', '1', '2']
+        chunk: [0, 1, 2, 3, 4, 5, 6, 7]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-native
+      - uses: actions/download-artifact@v4
+        with:
+          name: native-search
+          path: ${{ runner.temp }}
+      - name: Solve independent frequency partition
+        env:
+          LEVEL: ${{ matrix.level }}
+          CHUNK: ${{ matrix.chunk }}
+        run: |
+          "$RUNNER_TEMP/meh-env/bin/python" validation/fixtures/native_partitions.py run \
+            "$RUNNER_TEMP/horn-evidence/search" "$RUNNER_TEMP/horn-partitions/$LEVEL-$CHUNK" \
+            --level "$LEVEL" --chunk "$CHUNK" --checkout "$RUNNER_TEMP/boundary-lab" \
+            --python "$RUNNER_TEMP/meh-env/bin/python" --julia "$(command -v julia)" \
+            2>&1 | tee "$RUNNER_TEMP/partition.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-partition-${{ matrix.level }}-${{ matrix.chunk }}
+          path: |
+            ${{ runner.temp }}/horn-partitions
+            ${{ runner.temp }}/partition.log
+          retention-days: 7
+  assemble:
+    needs: [search, validation]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-native
+      - uses: actions/download-artifact@v4
+        with:
+          name: native-search
+          path: ${{ runner.temp }}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: native-partition-*
+          merge-multiple: true
+          path: ${{ runner.temp }}
+      - name: Verify all raw partitions and apply unchanged acceptance gates
+        run: |
+          "$RUNNER_TEMP/meh-env/bin/python" validation/fixtures/native_partitions.py assemble \
+            "$RUNNER_TEMP/horn-evidence/search" "$RUNNER_TEMP/assembled" \
+            --parts "$RUNNER_TEMP/horn-partitions" --checkout "$RUNNER_TEMP/boundary-lab" \
+            --python "$RUNNER_TEMP/meh-env/bin/python" --julia "$(command -v julia)"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-assembled
+          path: ${{ runner.temp }}/assembled
+          retention-days: 7

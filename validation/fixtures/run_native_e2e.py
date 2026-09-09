@@ -17,6 +17,7 @@ from validate_search_finalist import validate
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('output',type=Path)
+    parser.add_argument('--search-only',action='store_true',help='Preserve the reference and search for partitioned CI validation')
     parser.add_argument('--checkout',type=Path,required=True)
     parser.add_argument('--python',type=Path,required=True)
     parser.add_argument('--julia',type=Path,required=True)
@@ -54,9 +55,14 @@ def main():
                 for driver in drivers:catalogue.add(driver)
             brief=SearchBrief.model_validate_json((repo/'examples/synthetic-dense-search-brief.json').read_text())
             base=HornGeometry.model_validate_json((repo/'examples/three-driver-geometry.json').read_text())
-            search=optimise(brief,base,output/'drivers.sqlite',runtime,output/'search')
+            search=optimise(brief,base,output/'drivers.sqlite',runtime,output/'search',trial_timeout_s=7200)
             baseline=response_score(output/'search/trial-000/system/project.blab.json',output/'search/trial-000/evaluation',(1.,))
             _write_json(output/'baseline-search-grid.json',baseline)
+            report['stage_sha256']={name:sha256(output/name) for name in ('analytic-comparison.json','baseline-search-grid.json','search/search.json')}
+            if args.search_only:
+                if runtime.verify()!=identity or sha256(Path(__file__))!=runner_digest:raise ValueError('search-stage runtime or runner changed')
+                report.update(status='search_complete',stage='search_complete')
+                return
             stage('baseline_validation_grid')
             frequencies=tuple(sorted(set(brief.frequencies_hz)|{float(round(math.sqrt(a*b))) for a,b in zip(brief.frequencies_hz,brief.frequencies_hz[1:])}))
             baseline_brief=SearchBrief.model_validate(brief.model_dump()|{'side_gains':(1.,)})

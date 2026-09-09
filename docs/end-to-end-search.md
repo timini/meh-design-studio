@@ -105,3 +105,23 @@ synthetic drivers or printed speaker as physically qualified.
 New searches bind saved controls and the selected candidate in `search.json`.
 The current finalist validator rejects older, unbound searches; reproduce them
 with a fresh search to obtain evidence under the current integrity contract.
+
+### Partitioned native CI
+
+CI first runs the independent tube reference and the complete 17-frequency search.
+It then evaluates the baseline and three frozen-winner meshes in eight frequency
+partitions each (32 jobs, at most five frequencies per solve). A final job reads
+and verifies every raw result, requires exact frequency coverage and identical
+mesh hashes within each level, and combines raw complex pressures before scoring.
+It never normalises individual partitions. The 33 frequencies, 8/6/4 mm meshes,
+0.5 dB / 5-degree limits and 1 dB held-out improvement requirement are unchanged.
+
+This avoids placing every fine-mesh frequency into one long CI job. The search
+stage permits two hours per trial and each partition permits two hours per solve;
+a timeout remains a failure. The general CLI defaults to 30 minutes per trial;
+`--timeout-per-trial-s` accepts an explicit limit up to 7200 seconds.
+The `native-search`, `native-partition-*` and `native-assembled` artifacts retain
+the separate stages. An assembled success requires all partitions to succeed.
+Artifact paths are restored under the same runner temporary directory because
+the pinned solver records absolute mesh paths; raw files are never rewritten to
+change those identities. The sequential local runner remains available.

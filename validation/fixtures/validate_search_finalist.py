@@ -42,15 +42,8 @@ def mesh_identity(root):
             'exterior_mesh_size_m':record['exterior_mesh_size_m'],'compiler_runtime':record['compiler_runtime']}
 
 
-def validate(search, output, runtime, *, timeout_s=7200):
-    report={'status':'running'}
-    with _termination_guard(report) as activate:
-        return _validate(search,output,runtime,timeout_s,report,activate)
-
-
-def _validate(search, output, runtime, timeout_s, report, activate):
-    if not math.isfinite(timeout_s) or not 0<timeout_s<=7200: raise ValueError('finalist timeout must be within (0, 7200] seconds')
-    search=search.absolute();output=output.absolute()
+def load_search(search):
+    search=Path(search).absolute()
     control_names=('search.json','brief.json','base-geometry.json','catalogue-snapshot.json')
     control_hashes={name:sha256(search/name) for name in control_names}
     original_hash=control_hashes['search.json']
@@ -75,6 +68,20 @@ def _validate(search, output, runtime, timeout_s, report, activate):
     frozen=SearchBrief.model_validate(brief.model_dump()|{'side_gains':(gain,)})
     sizes=(base.mesh_size_m,base.mesh_size_m*.75,base.mesh_size_m*.5)
     if min(sizes)<.0005: raise ValueError('refinement exceeds generator mesh limits')
+    return control_hashes,result,brief,base,winner,gain,frequencies,frozen,sizes
+
+
+def validate(search, output, runtime, *, timeout_s=7200):
+    report={'status':'running'}
+    with _termination_guard(report) as activate:
+        return _validate(search,output,runtime,timeout_s,report,activate)
+
+
+def _validate(search, output, runtime, timeout_s, report, activate):
+    if not math.isfinite(timeout_s) or not 0<timeout_s<=7200: raise ValueError('finalist timeout must be within (0, 7200] seconds')
+    search=search.absolute();output=output.absolute()
+    control_hashes,result,brief,base,winner,gain,frequencies,frozen,sizes=load_search(search)
+    original_hash=control_hashes['search.json']
     runtime_identity=runtime.verify()
     output.mkdir(parents=True,exist_ok=False)
     report.update({'schema_version':1,'status':'running','search_sha256':original_hash,
