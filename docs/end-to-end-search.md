@@ -69,8 +69,9 @@ mesh levels. The rigid-exterior target size is fixed, but the conforming BEM mou
 changes with the FEM mesh. This tests combined interior/interface sensitivity,
 not independent full exterior convergence. Canonical CAD identity is held fixed. The report separately records electrical validation,
 independent closed-edge/orientation/volume checks of the exported STL parts,
-and the absence of physical or print qualification. A completed validation
-command can still contain failed acceptance gates; read `validation.json`.
+and the absence of physical or print qualification. A failed mesh comparison stops the remaining levels and returns a failure, while
+preserving the completed levels and their differences in `validation.json`.
+Electrical consistency remains a separate reported gate.
 
 The finalist runner allows up to two hours per native solve by default; use
 `--solve-timeout-s` to set a shorter explicit limit. Fine conforming meshes can
