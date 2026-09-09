@@ -41,4 +41,9 @@ The circuit accepts a prescribed mechanical load matrix in N·s/m. It does not d
 
 Physical source/load acquisition, actual builds, calibrated measurements and rights-cleared catalogue release remain external evidence work. Reference tests passing cannot mark those items complete.
 
-Each increment is proposed through a pull request. Wait for review, address feedback and require passing checks plus approval before merging. A successful test run alone is not review approval.
+Each meaningful increment uses one review round. Address material findings, verify
+the fixes and merge under the maintainer’s standing authorisation when relevant
+checks pass. Routine fixes and evidence updates do not require another review or
+fresh approval on every commit. Defer non-blocking polish and speculative hardening.
+An unavailable automated reviewer does not create an indefinite merge block; inspect
+the change directly and record the limitation. See [repository working instructions](../AGENTS.md).
