@@ -34,7 +34,9 @@ def pressure(project, evaluation, gain):
 
 def validate(search, output, runtime):
     search=search.absolute();output=output.absolute()
-    original_hash=sha256(search/'search.json')
+    control_names=('search.json','brief.json','base-geometry.json','catalogue-snapshot.json')
+    control_hashes={name:sha256(search/name) for name in control_names}
+    original_hash=control_hashes['search.json']
     result=_read_json(search/'search.json')
     if result['status']!='complete': raise ValueError('search must complete before finalist validation')
     brief=SearchBrief.model_validate_json((search/'brief.json').read_text())
@@ -48,7 +50,7 @@ def validate(search, output, runtime):
     if min(sizes)<.0005: raise ValueError('refinement exceeds generator mesh limits')
     output.mkdir(parents=True,exist_ok=False)
     report={'schema_version':1,'status':'running','search_sha256':original_hash,
-        'winner_index':result['winner_index'],'fixed_side_gain':gain,'frequencies_hz':frequencies,
+        'input_sha256':control_hashes,'winner_index':result['winner_index'],'fixed_side_gain':gain,'frequencies_hz':frequencies,
         'mesh_sizes_m':sizes,'magnitude_change_limit_db':.5,'phase_change_limit_deg':5.,
         'qualified':False,'physical_validation':False,'levels':[],
         'limitations':['Exterior mesh fixed; FEM refinement only','Pointwise pressure comparison, no gain/phase fitting',
@@ -73,9 +75,11 @@ def validate(search, output, runtime):
         report.update(status='complete',successive_changes=comparisons,
             refinement_passed=all(c['maximum_magnitude_change_db']<=.5 and c['maximum_phase_change_deg']<=5 for c in comparisons),
             electrical_consistency_passed=all(level['score']['electrical_validation']['passed'] for level in report['levels']))
-        if sha256(search/'search.json')!=original_hash: raise ValueError('source search changed during validation')
+        if any(sha256(search/name)!=digest for name,digest in control_hashes.items()):
+            raise ValueError('source search controls changed during validation')
     except BaseException as exc:
-        report.update(status='failed',error=f'{type(exc).__name__}: {exc}')
+        report.update(status='cancelled' if isinstance(exc,KeyboardInterrupt) else 'failed',
+                      refinement_passed=False,electrical_consistency_passed=False,error=f'{type(exc).__name__}: {exc}')
         raise
     finally:
         _write_json(output/'validation.json',report)

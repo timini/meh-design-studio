@@ -1,0 +1,63 @@
+{
+  "frequencies_hz": [
+    500,
+    545,
+    595,
+    648,
+    707,
+    771,
+    841,
+    917,
+    1000,
+    1091,
+    1189,
+    1297,
+    1414,
+    1542,
+    1682,
+    1834,
+    2000
+  ],
+  "throat_ids": [
+    "synthetic-throat"
+  ],
+  "side_ids": [
+    "synthetic-side"
+  ],
+  "prices": {
+    "synthetic-throat": 8,
+    "synthetic-side": 3,
+    "synthetic-side-b": 4
+  },
+  "max_driver_cost": 25,
+  "max_drivers": 5,
+  "lengths_m": [
+    0.25,
+    0.24
+  ],
+  "mouth_radii_m": [
+    0.1
+  ],
+  "entry_fractions": [
+    [
+      0.36
+    ],
+    [
+      0.45
+    ]
+  ],
+  "side_gains": [
+    0.1,
+    0.2,
+    0.3,
+    0.4,
+    0.5,
+    0.6,
+    0.75,
+    1.0,
+    1.5,
+    2.0
+  ],
+  "trial_budget": 4,
+  "seed": 2026
+}
