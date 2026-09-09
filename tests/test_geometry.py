@@ -68,6 +68,8 @@ def test_export_mesh_units_and_source_tags(geometry_data, tmp_path):
     for region in mesh["regions"]:
         assert region["volume_m3"] == pytest.approx(report["air_volume_m3"][region["id"]], rel=1e-6)
         assert region["tetrahedra"] > 0 and region["minimum_quality"] > 0
+        assert region["source_area_checks"]
+        assert all(check["relative_area_error"]<=.01 for check in region["source_area_checks"])
     with pytest.raises(FileExistsError):
         export_geometry(design, tmp_path / "export")
     with pytest.raises(FileExistsError):
@@ -93,3 +95,50 @@ def test_cad_runtime_exits_cleanly_in_fresh_process():
         'from meh_studio.cad_runtime import load_cadquery; cq=load_cadquery(); assert cq.Workplane().box(1,1,1).val().isValid()'],
         capture_output=True,text=True,timeout=60)
     assert result.returncode==0,result.stderr
+
+
+@pytest.mark.parametrize('segments,passes',[(8,False),(48,True)])
+def test_curved_source_area_gate_rejects_underresolved_disk(tmp_path,segments,passes):
+    import math
+    import numpy as np
+    import meshio
+    from meh_studio.geometry import source_area_checks
+    angles=np.arange(segments)*2*math.pi/segments
+    points=np.vstack(([0,0,0],np.column_stack((np.cos(angles),np.sin(angles),np.zeros(segments)))))
+    faces=np.array([[0,i+1,(i+1)%segments+1] for i in range(segments)])
+    path=tmp_path/'disk.msh'
+    meshio.write(path,meshio.Mesh(points,[('triangle',faces)],
+        cell_data={'gmsh:physical':[np.full(segments,10)],'gmsh:geometrical':[np.full(segments,10)]},
+        field_data={'source':np.array([10,2])}),file_format='gmsh22',binary=False)
+    if passes:
+        checks=source_area_checks(path,{'source':1.})
+        assert checks[0]['relative_area_error']<.003
+    else:
+        with pytest.raises(ValueError,match='mesh area differs'):source_area_checks(path,{'source':1.})
+
+
+@pytest.mark.cad
+@pytest.mark.parametrize('length',[.12,.125])
+def test_compact_chambers_have_connected_material_back_walls(geometry_data,length):
+    pytest.importorskip('cadquery')
+    design=HornGeometry.model_validate(geometry_data|{'length_m':length,'mouth_radius_m':.05,
+        'entry_positions_m':[length*.45],'front_radius_m':.02})
+    air,parts,_=build_geometry(design)
+    from meh_studio.geometry import verify_front_chamber_back_walls
+    checks=verify_front_chamber_back_walls(design,air['front'],parts['horn'])
+    assert len(parts['horn'].Solids())==1 and len(checks)==2
+    assert all(c['required_volume_m3']>0 and c['missing_volume_m3']<1e-12 for c in checks)
+
+
+@pytest.mark.cad
+def test_missing_back_wall_is_rejected_even_for_closed_cad(geometry_data):
+    cq=pytest.importorskip('cadquery')
+    from meh_studio.geometry import verify_front_chamber_back_walls
+    design=HornGeometry.model_validate(geometry_data);air,parts,_=build_geometry(design)
+    z=design.entry_positions_m[0];radius=design.throat_radius_m+(design.mouth_radius_m-design.throat_radius_m)*z/design.length_m
+    cut=cq.Solid.makeCylinder(design.front_radius_m*1000,design.wall_m*1000,
+        cq.Vector((radius+design.port_length_m)*1000,0,z*1000),cq.Vector(1,0,0))
+    damaged=parts['horn'].cut(cut)
+    assert damaged.isValid()  # CAD validity/closure alone does not check acoustic wall coverage.
+    with pytest.raises(ValueError,match='back wall'):
+        verify_front_chamber_back_walls(design,air['front'],damaged)

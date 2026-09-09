@@ -92,7 +92,7 @@ def build_geometry(design: HornGeometry):
             front_air = front_air.fuse(tube, chamber)
             material = material.fuse(
                 cylinder(design.port_radius_m * mm + wall, 0, duct_end + wall),
-                cylinder(design.front_radius_m * mm + wall, duct_end, design.front_depth_m * mm + wall))
+                cylinder(design.front_radius_m * mm + wall, duct_end - wall, design.front_depth_m * mm + 2 * wall))
             # Open mounting aperture; the missing driver is an explicit reserved volume.
             material = material.cut(cylinder(design.front_radius_m * mm, diaphragm, wall * 2))
             rear_start = diaphragm + wall
@@ -109,7 +109,28 @@ def build_geometry(design: HornGeometry):
     for name, solid in {**parts, **air_regions}.items():
         if not solid.isValid() or solid.Volume() <= 0 or len(solid.Solids()) != 1:
             raise ValueError(f"geometry kernel produced an invalid or disconnected solid: {name}")
+    verify_front_chamber_back_walls(design, front_air, parts["horn"])
     return air_regions, parts, sources
+
+
+def verify_front_chamber_back_walls(design, front_air, horn):
+    """Check material behind the chamber back faces independently of STL closure."""
+    from .cad_runtime import load_cadquery
+    cq=load_cadquery();mm=1000.;wall=design.wall_m*mm
+    # Stay away from coincident faces while testing almost the entire wall thickness.
+    inset=min(wall/1000.,1e-3);depth=wall-2*inset;checks=[]
+    for pair,entry in enumerate(design.entry_positions_m):
+        local_radius=design.throat_radius_m+(design.mouth_radius_m-design.throat_radius_m)*entry/design.length_m
+        start=(local_radius+design.port_length_m)*mm+inset
+        for sign in (1,-1):
+            nominal=cq.Solid.makeCylinder(design.front_radius_m*mm,depth,cq.Vector(sign*start,0,entry*mm),cq.Vector(sign,0,0))
+            # The port and any intended intersection with horn air remain open.
+            required=nominal.cut(front_air);volume=required.Volume()
+            missing=required.cut(horn).Volume()
+            if volume<=1e-9 or missing>max(1e-6,volume*1e-7):
+                raise ValueError('front chamber back wall is not covered by material')
+            checks.append({'entry_pair':pair,'side':sign,'required_volume_m3':volume/1e9,'missing_volume_m3':missing/1e9})
+    return checks
 
 
 def export_geometry(design: HornGeometry, output: Path) -> dict:
@@ -139,6 +160,7 @@ def export_geometry(design: HornGeometry, output: Path) -> dict:
                                   "size_bytes": path.stat().st_size})
         state.update(status="complete", design=design.model_dump(mode="json"),
                      driver_count=design.driver_count, sources=sources, files=files,
+                     front_chamber_back_walls_verified=True,
                      air_volume_m3={name: solid.Volume() / 1e9 for name, solid in regions.items()},
                      material_volume_m3={name: solid.Volume() / 1e9 for name, solid in parts.items()},
                      limitations=["Ideal circular source interfaces, not qualified purchased-driver mounting geometry",
@@ -152,6 +174,53 @@ def export_geometry(design: HornGeometry, output: Path) -> dict:
         temporary.write_text(json.dumps(state, indent=2, allow_nan=False), encoding="utf-8")
         temporary.replace(manifest)
     return state
+
+
+CURVATURE_ELEMENTS = 48
+SOURCE_AREA_RELATIVE_TOLERANCE = .01
+
+
+def estimated_curved_tetrahedra(design, region, volume):
+    """Heuristic size-field estimate for the supported conical/cylindrical family."""
+    import math
+    h=design.mesh_size_m
+    local=lambda radius:min(h,2*math.pi*radius/CURVATURE_ELEMENTS)
+    if region!='front':return 6*volume/local(design.front_radius_m)**3
+    slope=(design.mouth_radius_m-design.throat_radius_m)/design.length_m
+    split=h*CURVATURE_ELEMENTS/(2*math.pi)
+    fine_high=min(design.mouth_radius_m,split)
+    cells=0.
+    if fine_high>design.throat_radius_m:
+        cells+=CURVATURE_ELEMENTS**3/(8*math.pi**2*slope)*math.log1p((fine_high-design.throat_radius_m)/design.throat_radius_m)
+    coarse_low=max(design.throat_radius_m,split)
+    if design.mouth_radius_m>coarse_low:
+        cells+=math.pi*((design.mouth_radius_m-coarse_low)*(design.mouth_radius_m**2+design.mouth_radius_m*coarse_low+coarse_low**2))/(3*slope*h**3)
+    count=2*len(design.entry_positions_m)
+    cells+=count*math.pi*design.front_radius_m**2*design.front_depth_m/local(design.front_radius_m)**3
+    port_length=design.port_length_m+design.wall_m+2*design.front_radius_m*slope
+    cells+=count*math.pi*design.port_radius_m**2*port_length/local(design.port_radius_m)**3
+    return max(6*cells,6*volume/h**3)
+
+
+def source_area_checks(path, radii):
+    """Independently measure saved linear facets against the circular CAD boundaries."""
+    import math
+    import meshio
+    import numpy as np
+    mesh=meshio.read(path)
+    checks=[]
+    for name,radius in radii.items():
+        tag=int(mesh.field_data[name][0]);area=0.
+        for cell,physical in zip(mesh.cells,mesh.cell_data['gmsh:physical']):
+            if cell.type=='triangle':
+                vertices=mesh.points[cell.data[np.asarray(physical)==tag]]
+                area+=float(np.linalg.norm(np.cross(vertices[:,1]-vertices[:,0],vertices[:,2]-vertices[:,0]),axis=1).sum()/2)
+        exact=math.pi*radius**2
+        error=abs(area/exact-1)
+        if not math.isfinite(error) or error>SOURCE_AREA_RELATIVE_TOLERANCE:
+            raise ValueError(f'{name} mesh area differs from CAD by more than one percent')
+        checks.append({'name':name,'cad_area_m2':exact,'mesh_area_m2':area,'relative_area_error':error})
+    return checks
 
 
 def mesh_geometry(output: Path) -> dict:
@@ -179,10 +248,15 @@ def mesh_geometry(output: Path) -> dict:
     directory = output / "analysis"
     directory.mkdir(exist_ok=False)
     report = {"schema_version": 1, "status": "running", "units": "m",
-              "design_hash": design.content_hash, "accuracy": "not_converged", "regions": []}
+              "design_hash": design.content_hash, "accuracy": "not_converged", "regions": [],
+              "size_policy":{"maximum_m":design.mesh_size_m,
+                  "minimum_m":min(design.mesh_size_m,math.pi*min(design.throat_radius_m,design.port_radius_m,design.front_radius_m)/CURVATURE_ELEMENTS),
+                  "curvature_elements_per_revolution":CURVATURE_ELEMENTS,
+                  "source_area_relative_tolerance":SOURCE_AREA_RELATIVE_TOLERANCE}}
     try:
         for region, expected_volume in geometry["air_volume_m3"].items():
-            if 6 * expected_volume / design.mesh_size_m**3 > 2_000_000:
+            estimated=estimated_curved_tetrahedra(design,region,expected_volume)
+            if estimated > 2_000_000:
                 raise ValueError("estimated tetrahedral workload exceeds this generator's mesh budget")
             gmsh.initialize()
             try:
@@ -229,13 +303,16 @@ def mesh_geometry(output: Path) -> dict:
                     groups.append({"name": name, "tag": physical_tag, "role": expected[name][2]})
                 gmsh.model.addPhysicalGroup(2, walls, 99, name="rigid_walls")
                 groups.append({"name": "rigid_walls", "tag": 99, "role": "rigid_wall"})
-                gmsh.option.setNumber("Mesh.MeshSizeMin", design.mesh_size_m)
+                gmsh.option.setNumber("Mesh.MeshSizeMin", report["size_policy"]["minimum_m"])
+                gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", CURVATURE_ELEMENTS)
                 gmsh.option.setNumber("Mesh.MeshSizeMax", design.mesh_size_m)
                 gmsh.option.setNumber("Mesh.ElementOrder", 1)
                 gmsh.option.setNumber("Mesh.MshFileVersion", 4.1)
                 gmsh.option.setNumber("Mesh.Binary", 0)
                 gmsh.model.mesh.generate(3)
                 tetrahedra, _ = gmsh.model.mesh.getElementsByType(4)
+                if len(tetrahedra)>2_000_000:
+                    raise ValueError("actual tetrahedral workload exceeds the mesh budget")
                 if not len(tetrahedra):
                     raise ValueError("mesher produced no tetrahedra")
                 qualities = gmsh.model.mesh.getElementQualities(tetrahedra)
@@ -243,7 +320,8 @@ def mesh_geometry(output: Path) -> dict:
                     raise ValueError("mesh contains inverted or degenerate tetrahedra")
                 path = directory / f"{region}.msh"
                 gmsh.write(str(path))
-                report["regions"].append({"id": region, "path": path.relative_to(output).as_posix(),
+                areas=source_area_checks(path,{name:values[1] for name,values in expected.items()})
+                report["regions"].append({"id": region, "estimated_tetrahedra":estimated, "source_area_checks":areas, "path": path.relative_to(output).as_posix(),
                     "sha256": hashlib.sha256(path.read_bytes()).hexdigest(), "volume_m3": volume,
                     "tetrahedra": len(tetrahedra), "minimum_quality": float(min(qualities)), "boundaries": groups})
             finally:

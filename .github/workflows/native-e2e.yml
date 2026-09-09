@@ -1,0 +1,115 @@
+name: Native horn end-to-end validation
+on:
+  workflow_dispatch:
+    inputs:
+      benchmark:
+        type: choice
+        description: Numerical horn benchmark
+        default: compact
+        options: [compact, full-size]
+  pull_request:
+    types: [labeled]
+defaults:
+  run:
+    shell: bash
+permissions:
+  contents: read
+concurrency:
+  group: native-e2e-${{ github.event.pull_request.number || github.ref }}-${{ github.event.label.name || github.event_name }}
+  cancel-in-progress: true
+env:
+  JULIA_NUM_PRECOMPILE_TASKS: '1'
+  OPENBLAS_NUM_THREADS: '1'
+  OMP_NUM_THREADS: '1'
+jobs:
+  search:
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'run-native-e2e'
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-native
+      - name: Run reference and search
+        env:
+          BENCHMARK: ${{ inputs.benchmark || 'compact' }}
+        run: |
+          set -o pipefail
+          case "$BENCHMARK" in
+            compact) brief_file=examples/synthetic-compact-search-brief.json; geometry_file=examples/compact-three-driver-geometry.json ;;
+            full-size) brief_file=examples/synthetic-dense-search-brief.json; geometry_file=examples/three-driver-geometry.json ;;
+            *) exit 2 ;;
+          esac
+          "$RUNNER_TEMP/meh-env/bin/python" validation/fixtures/run_native_e2e.py "$RUNNER_TEMP/horn-evidence" --search-only --brief "$brief_file" --geometry "$geometry_file" \
+            --checkout "$RUNNER_TEMP/boundary-lab" --python "$RUNNER_TEMP/meh-env/bin/python" \
+            --julia "$(command -v julia)" 2>&1 | tee "$RUNNER_TEMP/search.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-search
+          path: |
+            ${{ runner.temp }}/horn-evidence
+            ${{ runner.temp }}/search.log
+          retention-days: 7
+  validation:
+    needs: search
+    runs-on: ubuntu-latest
+    timeout-minutes: 160
+    strategy:
+      fail-fast: false
+      matrix:
+        level: [baseline, '0', '1', '2']
+        chunk: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-native
+      - uses: actions/download-artifact@v4
+        with:
+          name: native-search
+          path: ${{ runner.temp }}
+      - name: Solve independent frequency partition
+        env:
+          LEVEL: ${{ matrix.level }}
+          CHUNK: ${{ matrix.chunk }}
+        run: |
+          set -o pipefail
+          "$RUNNER_TEMP/meh-env/bin/python" validation/fixtures/native_partitions.py run \
+            "$RUNNER_TEMP/horn-evidence/search" "$RUNNER_TEMP/horn-partitions/$LEVEL-$CHUNK" \
+            --level "$LEVEL" --chunk "$CHUNK" --checkout "$RUNNER_TEMP/boundary-lab" \
+            --python "$RUNNER_TEMP/meh-env/bin/python" --julia "$(command -v julia)" \
+            2>&1 | tee "$RUNNER_TEMP/partition.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-partition-${{ matrix.level }}-${{ matrix.chunk }}
+          path: |
+            ${{ runner.temp }}/horn-partitions
+            ${{ runner.temp }}/partition.log
+          retention-days: 7
+  assemble:
+    needs: [search, validation]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-native
+      - uses: actions/download-artifact@v4
+        with:
+          name: native-search
+          path: ${{ runner.temp }}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: native-partition-*
+          merge-multiple: true
+          path: ${{ runner.temp }}
+      - name: Verify all raw partitions and apply unchanged acceptance gates
+        run: |
+          "$RUNNER_TEMP/meh-env/bin/python" validation/fixtures/native_partitions.py assemble \
+            "$RUNNER_TEMP/horn-evidence/search" "$RUNNER_TEMP/assembled" \
+            --parts "$RUNNER_TEMP/horn-partitions" --checkout "$RUNNER_TEMP/boundary-lab" \
+            --python "$RUNNER_TEMP/meh-env/bin/python" --julia "$(command -v julia)"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-assembled
+          path: ${{ runner.temp }}/assembled
+          retention-days: 7

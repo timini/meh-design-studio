@@ -55,9 +55,25 @@ def main(argv=None) -> int:
     radiating.add_argument("--python", type=Path, required=True)
     radiating.add_argument("--julia", type=Path, required=True)
     radiating.add_argument("--exterior-mesh-size-m", type=float, default=.02)
+    search = commands.add_parser('optimise', help='run experimental bounded FEM/BEM search')
+    search.add_argument('brief', type=Path)
+    search.add_argument('--geometry', type=Path, required=True)
+    search.add_argument('--database', type=Path, required=True)
+    search.add_argument('--output', type=Path, required=True)
+    search.add_argument('--checkout', type=Path, required=True)
+    search.add_argument('--python', type=Path, required=True)
+    search.add_argument('--julia', type=Path, required=True)
+    search.add_argument('--timeout-per-solver-stage-s',type=float,default=1800)
     args = parser.parse_args(argv)
     try:
-        if args.command == "compile-radiating":
+        if args.command == 'optimise':
+            from .optimisation import SearchBrief, optimise
+            from .geometry import HornGeometry
+            from .boundary_lab import BoundaryLabRuntime
+            result = optimise(SearchBrief.model_validate_json(args.brief.read_text()),
+                HornGeometry.model_validate_json(args.geometry.read_text()), args.database,
+                BoundaryLabRuntime(args.checkout,args.python,args.julia),args.output,solver_stage_timeout_s=args.timeout_per_solver_stage_s)
+        elif args.command == "compile-radiating":
             from .boundary_lab import BoundaryLabRuntime
             from .generated_system import HornSources
             from .radiating_system import compile_radiating_system
