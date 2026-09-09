@@ -9,6 +9,9 @@ on:
         options: [compact, full-size]
   pull_request:
     types: [labeled]
+defaults:
+  run:
+    shell: bash
 permissions:
   contents: read
 concurrency:
@@ -30,6 +33,7 @@ jobs:
         env:
           BENCHMARK: ${{ inputs.benchmark || 'compact' }}
         run: |
+          set -o pipefail
           case "$BENCHMARK" in
             compact) brief_file=examples/synthetic-compact-search-brief.json; geometry_file=examples/compact-three-driver-geometry.json ;;
             full-size) brief_file=examples/synthetic-dense-search-brief.json; geometry_file=examples/three-driver-geometry.json ;;
@@ -67,6 +71,7 @@ jobs:
           LEVEL: ${{ matrix.level }}
           CHUNK: ${{ matrix.chunk }}
         run: |
+          set -o pipefail
           "$RUNNER_TEMP/meh-env/bin/python" validation/fixtures/native_partitions.py run \
             "$RUNNER_TEMP/horn-evidence/search" "$RUNNER_TEMP/horn-partitions/$LEVEL-$CHUNK" \
             --level "$LEVEL" --chunk "$CHUNK" --checkout "$RUNNER_TEMP/boundary-lab" \

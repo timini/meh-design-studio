@@ -109,3 +109,28 @@ def test_native_runner_rejects_dirty_or_changed_source(tmp_path):
     with pytest.raises(ValueError,match='source changed'):runner.verify_source_revision(tmp_path,revision)
     git('add','.');git('-c','user.name=Test','-c','user.email=test@example.invalid','commit','-m','advance')
     with pytest.raises(ValueError,match='source changed'):runner.verify_source_revision(tmp_path,revision)
+
+
+@pytest.mark.parametrize('level',module.LEVELS)
+def test_partition_inputs_replay_real_catalogue_array(tmp_path,level):
+    import json
+    from meh_studio.optimisation import SearchBrief,candidates,candidate_record
+    from meh_studio.geometry import HornGeometry
+    from meh_studio.domain import DriverRevision
+    examples=fixtures.parents[1]/'examples';search=tmp_path/'search';search.mkdir()
+    for source,target in [('synthetic-compact-search-brief.json','brief.json'),('compact-three-driver-geometry.json','base-geometry.json'),('synthetic-search-drivers.json','catalogue-snapshot.json')]:
+        (search/target).write_bytes((examples/source).read_bytes())
+    brief=SearchBrief.model_validate_json((search/'brief.json').read_text());base=HornGeometry.model_validate_json((search/'base-geometry.json').read_text())
+    drivers=[DriverRevision.model_validate(d) for d in json.loads((search/'catalogue-snapshot.json').read_text())]
+    pool=candidates(brief,base,drivers);trial=search/'trial-000';trial.mkdir()
+    (trial/'candidate.json').write_text(json.dumps(candidate_record(pool[0])))
+    score={'side_gain':.3,'ripple_db':9.,'objective':9.};(trial/'score.json').write_text(json.dumps(score))
+    winner=score|{'index':0,'status':'complete'}
+    (search/'search.json').write_text(json.dumps({'status':'complete','winner_index':0,'winner':winner,'trials':[winner],
+        'winner_candidate_sha256':module.sha256(trial/'candidate.json'),'winner_score_sha256':module.sha256(trial/'score.json'),
+        'control_sha256':{name:module.sha256(search/name) for name in ('brief.json','base-geometry.json','catalogue-snapshot.json')}}))
+    _,candidate,frozen,size,frequencies,expected=module.inputs(search,level,0)
+    assert frozen.side_gains==((1.,) if level=='baseline' else (.3,))
+    assert frequencies==(1000.,1044.)
+    assert expected['design']['mesh_size_m']==size
+    assert candidate['drivers'][0].id=='synthetic-throat'

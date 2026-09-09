@@ -19,7 +19,7 @@ def inputs(search,level,chunk):
     if level not in LEVELS or not 0<=chunk<PARTS:raise ValueError('unknown validation partition')
     controls,result,brief,base,winner,gain,frequencies,frozen,sizes=load_search(search)
     if level=='baseline':
-        drivers=[DriverRevision.model_validate(d) for d in _read_json(search/'catalogue-snapshot.json')]
+        drivers=[DriverRevision.model_validate(d) for d in json.loads((search/'catalogue-snapshot.json').read_text())]
         winner=candidates(brief,base,drivers)[0];gain=1.;size=base.mesh_size_m
     else:size=sizes[int(level)]
     selected=tuple(float(f) for f in np.array_split(np.asarray(frequencies),PARTS)[chunk])
