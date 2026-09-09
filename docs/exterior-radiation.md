@@ -64,3 +64,10 @@ mesh-sensitivity claim. The new reference runner requires Python 3.11 and record
 the complete installed package inventory, alongside Julia and checkout identity.
 Package inventories must match when comparing precision or refinement; the runner
 does not claim a fully locked Python environment.
+
+New exterior compilations also record the host Python, CadQuery/OCP, Gmsh and
+NumPy versions and generator source digests. Exterior-only comparisons require
+these host identities to match, independently of the external solver runtime.
+Comparison reports bind project hashes to the checked snapshot and record the
+comparison runner digest. Older records without these fields require fresh runs
+before they can satisfy the current comparison contract.

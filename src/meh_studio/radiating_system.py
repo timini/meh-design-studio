@@ -6,7 +6,7 @@ import math
 from .boundary_lab import BoundaryLabRuntime, _execute, _read_json, _write_json, _termination_guard, sha256
 from .generated_system import HornSources, compile_interior_system
 from .geometry import HornGeometry
-from .radiation_geometry import export_exterior, surface_integrity, verify_exterior_groups
+from .radiation_geometry import export_exterior, surface_integrity, verify_exterior_groups, meshing_runtime_identity
 
 
 def compile_radiating_system(geometry_directory: Path, sources: HornSources, output: Path,
@@ -76,9 +76,11 @@ def _compile_radiating_system(geometry_directory, sources, output, runtime, *, e
             "unbounded_boundary_id": "boundary:exterior:mouth_interface", "coordinate_tolerance_m": 1e-8}]
         if runtime.verify() != runtime_identity:
             raise ValueError("runtime changed during interface preparation")
+        if meshing_runtime_identity()!=exterior["compiler_runtime"]:
+            raise ValueError("host meshing runtime changed during compilation")
         _write_json(output / "project.blab.json", project)
         report.update(status="complete", project_sha256=sha256(output / "project.blab.json"),
-            exterior_surface=integrity, exterior_mesh_size_m=exterior_mesh_size_m,
+            exterior_surface=integrity, exterior_mesh_size_m=exterior_mesh_size_m, compiler_runtime=exterior["compiler_runtime"],
             exterior_report_sha256=sha256(output / "exterior/exterior.json"), exterior_identity={"design_hash": design.content_hash,
                 "cad_geometry_sha256": exterior["cad_geometry_sha256"]}, limitations=[
                 "Ideal rigid mounting package, not measured driver geometry",

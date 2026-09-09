@@ -4,12 +4,20 @@ from __future__ import annotations
 import math
 import hashlib
 import re
+import sys
+import importlib.metadata
 from pathlib import Path
 
 import numpy as np
 
 from .boundary_lab import _write_json, sha256
 from .geometry import HornGeometry, build_geometry
+
+
+def meshing_runtime_identity():
+    return {'python':sys.version,
+        'packages':{name:importlib.metadata.version(name) for name in ('cadquery','cadquery-ocp','gmsh','numpy')},
+        'source_sha256':{name:sha256(Path(__file__).with_name(name)) for name in ('geometry.py','radiation_geometry.py')}}
 
 
 def step_geometry_sha256(path: Path) -> str:
@@ -152,11 +160,12 @@ def export_exterior(design: HornGeometry, output: Path, mesh_size_m: float = .02
         raise ValueError("exterior mesh target must be between 10 and 50 mm")
     if gmsh.isInitialized():
         raise ValueError("exterior generation requires an isolated Gmsh process")
+    compiler_runtime = meshing_runtime_identity()
     output = Path(output).resolve()
     output.mkdir(parents=True, exist_ok=False)
     report = {"schema_version": 1, "status": "running", "design_hash": design.content_hash,
               "mesh_size_m": mesh_size_m, "accuracy": "not_converged", "print_part": False,
-              "units": {"step": "mm", "mesh": "m"}}
+              "units": {"step": "mm", "mesh": "m"}, "compiler_runtime":compiler_runtime}
     _write_json(output / "exterior.json", report)
     try:
         air, parts, sources = build_geometry(design)
@@ -208,6 +217,8 @@ def export_exterior(design: HornGeometry, output: Path, mesh_size_m: float = .02
         integrity = surface_integrity(output / "exterior.msh")
         if not math.isclose(integrity["enclosed_volume_m3"], exact_volume, rel_tol=.02):
             raise ValueError("exterior surface volume differs from CAD by more than 2 percent")
+        if meshing_runtime_identity()!=compiler_runtime:
+            raise ValueError("host meshing runtime changed during export")
         report.update(status="complete", surface=integrity, cad_volume_m3=exact_volume,
                       cad_sha256=sha256(output / "envelope.step"),
                       cad_geometry_sha256=step_geometry_sha256(output / "envelope.step"),

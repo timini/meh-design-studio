@@ -13,6 +13,9 @@ from meh_studio.radiation_geometry import step_geometry_sha256
 
 
 def load(project, evaluation):
+    project_payload=project.read_bytes()
+    project_digest=hashlib.sha256(project_payload).hexdigest()
+    definition_digest=refinement_project_hash_bytes(project_payload)
     evaluation_hash = sha256(evaluation/"evaluation.json")
     checks = validate_electrical_basis(project,evaluation)
     runtime = _read_json(evaluation/"evaluation.json").get("runtime")
@@ -34,14 +37,20 @@ def load(project, evaluation):
                          if q['quantity'] in {'exterior_pressure','diaphragm_velocity','voice_coil_current'}})
     if not rows:
         raise ValueError('exterior-pressure observations are missing')
-    target = _read_json(project.parent/'compilation.json')['exterior_mesh_size_m']
+    compilation=_read_json(project.parent/'compilation.json')
+    target = compilation['exterior_mesh_size_m']
+    compiler_runtime=compilation.get('compiler_runtime')
+    if not isinstance(compiler_runtime,dict) or not compiler_runtime:
+        raise ValueError('missing host meshing runtime identity')
     if validate_electrical_basis(project, evaluation) != checks or sha256(evaluation/'evaluation.json') != evaluation_hash:
         raise ValueError('evaluation artifacts changed while loading comparison arrays')
     if exterior_identity(project, manifest) != identity or sha256(project.parent/'exterior/envelope.step') != step_digest:
         raise ValueError('exterior evidence changed while loading comparison arrays')
-    return {'cad_sha256': step_digest, 'runtime': runtime, 'pressure_ids': sorted(pressure_ids or []),
-            'project_definition_sha256': refinement_project_hash(project), 'evaluation':str(evaluation.resolve()),'evaluation_sha256':sha256(evaluation/'evaluation.json'),
-            'project_sha256':sha256(project),'mesh_inventory':manifest['meshes'],
+    if project.read_bytes()!=project_payload:
+        raise ValueError('project changed while loading comparison arrays')
+    return {'compiler_runtime':compiler_runtime,'cad_sha256': step_digest, 'runtime': runtime, 'pressure_ids': sorted(pressure_ids or []),
+            'project_definition_sha256': definition_digest, 'evaluation':str(evaluation.resolve()),'evaluation_sha256':evaluation_hash,
+            'project_sha256':project_digest,'mesh_inventory':manifest['meshes'],
             'exterior_identity':identity,
             'mesh_size_m':target,
             'electrical_checks':checks},manifest,rows
@@ -62,7 +71,9 @@ def exterior_identity(project, manifest):
             or exterior.get('cad_geometry_sha256') != identity['cad_geometry_sha256']
             or compilation.get('exterior_identity') != identity
             or compilation.get('exterior_report_sha256') != sha256(project.parent/'exterior/exterior.json')
-            or compilation.get('exterior_mesh_size_m') != exterior.get('mesh_size_m')):
+            or compilation.get('exterior_mesh_size_m') != exterior.get('mesh_size_m')
+            or not exterior.get('compiler_runtime')
+            or compilation.get('compiler_runtime') != exterior.get('compiler_runtime')):
         raise ValueError('missing or changed exterior design/CAD identity')
     surfaces = [mesh for mesh in manifest['meshes'] if mesh['purpose'] == 'bem_surface']
     if (len(surfaces) != 1 or surfaces[0]['id'] != 'mesh:exterior'
@@ -73,7 +84,11 @@ def exterior_identity(project, manifest):
 
 def refinement_project_hash(project):
     # Only the BEM mesh digest may vary; all other definitions remain identical.
-    data = _read_json(project)
+    return refinement_project_hash_bytes(project.read_bytes())
+
+
+def refinement_project_hash_bytes(payload):
+    data = json.loads(payload)
     hashes = data.get('physical_system', {}).get('metadata', {}).get('generated_mesh_sha256', {})
     hashes.pop('mesh:exterior', None)
     return hashlib.sha256(json.dumps(data, sort_keys=True, separators=(',', ':'), allow_nan=False).encode()).hexdigest()
@@ -136,6 +151,7 @@ def main():
     parser.add_argument('--output',type=Path,required=True)
     args=parser.parse_args()
     if len(args.run)<3: raise ValueError('at least three declared refinement runs required')
+    runner_digest=sha256(Path(__file__))
     loaded=[load(*run) for run in args.run]
     validate_refinement_levels([record for record, _, _ in loaded])
     frequencies=loaded[0][1]['frequencies_hz']
@@ -146,6 +162,8 @@ def main():
             raise ValueError('exterior design/CAD changed across refinement runs')
         if record['runtime'] != loaded[0][0]['runtime']:
             raise ValueError('runtime changed across refinements')
+        if record['compiler_runtime'] != loaded[0][0]['compiler_runtime']:
+            raise ValueError('host meshing runtime changed across refinements')
         if record['pressure_ids'] != loaded[0][0]['pressure_ids']:
             raise ValueError('exterior-pressure observable identities differ')
         if record['project_definition_sha256'] != loaded[0][0]['project_definition_sha256']:
@@ -163,13 +181,15 @@ def main():
             if old.keys()!=new.keys(): raise ValueError('output identities differ')
             rows.append({'frequency_hz':frequency,'quantities':{k:compare(old[k],new[k]) for k in old}})
         pairs.append({'from':a['evaluation'],'to':b['evaluation'],'rows':rows})
-    report={'schema_version':1,'evidence':'exterior_mesh_sensitivity_only','qualified':False,
+    report={'schema_version':1,'runner_sha256':runner_digest,'evidence':'exterior_mesh_sensitivity_only','qualified':False,
         'null_policy':'Exclude reference or candidate amplitude <= 0.001 times each source reference peak; report excluded count. No fitted gain/phase.',
         'limitations':['Only exterior mesh refined; FEM discretisation fixed','Only supplied frequency samples and retained pressure observations',
                       'No independent acoustic solver or physical measurement','No absolute RMS/SPL normalisation',
                       'Strict circuit/reciprocity failures remain failures'],
         'scope':{'frequencies_hz':frequencies,'pressure_outputs':loaded[0][0]['pressure_ids']},
         'runs':[r for r,_,_ in loaded],'successive_comparisons':pairs}
+    if sha256(Path(__file__))!=runner_digest:
+        raise ValueError('comparison runner changed before publication')
     publish_report(args.output, report)
     print(args.output)
 
