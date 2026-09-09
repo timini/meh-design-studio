@@ -59,5 +59,6 @@
     2.0
   ],
   "trial_budget": 4,
-  "seed": 2026
+  "seed": 2026,
+  "exterior_mesh_size_m": 0.01
 }

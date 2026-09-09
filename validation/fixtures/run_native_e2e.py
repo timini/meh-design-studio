@@ -70,7 +70,7 @@ def main():
                 for driver in drivers:catalogue.add(driver)
             brief=SearchBrief.model_validate_json((args.brief or repo/'examples/synthetic-dense-search-brief.json').read_text())
             base=HornGeometry.model_validate_json((args.geometry or repo/'examples/three-driver-geometry.json').read_text())
-            search=optimise(brief,base,output/'drivers.sqlite',runtime,output/'search',trial_timeout_s=7200)
+            search=optimise(brief,base,output/'drivers.sqlite',runtime,output/'search',solver_stage_timeout_s=7200)
             baseline=response_score(output/'search/trial-000/system/project.blab.json',output/'search/trial-000/evaluation',(1.,))
             _write_json(output/'baseline-search-grid.json',baseline)
             report['stage_sha256']={name:sha256(output/name) for name in ('analytic-comparison.json','baseline-search-grid.json','search/search.json')}

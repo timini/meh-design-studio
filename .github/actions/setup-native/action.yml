@@ -8,7 +8,7 @@ runs:
       run: printf 'JULIA_DEPOT_PATH=%s/julia-depot\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
     - uses: actions/setup-python@v5
       with:
-        python-version: '3.11'
+        python-version: '3.11.16'
     - uses: julia-actions/setup-julia@v2
       with:
         version: '1.12.6'
@@ -20,7 +20,8 @@ runs:
         git clone https://github.com/JWSound/boundary-lab.git "$RUNNER_TEMP/boundary-lab"
         git -C "$RUNNER_TEMP/boundary-lab" checkout --detach 8cb166226e412877d3f71f2845918e479b97aa85
         python -m venv "$RUNNER_TEMP/meh-env"
-        "$RUNNER_TEMP/meh-env/bin/python" -m pip install -e ".[dev,cad]" -e "$RUNNER_TEMP/boundary-lab"
+        "$RUNNER_TEMP/meh-env/bin/python" -m pip install "pip==24.0" "setuptools==79.0.1"
+        "$RUNNER_TEMP/meh-env/bin/python" -m pip install -c validation/runtime/native-linux-py311.txt -e ".[dev,cad]" -e "$RUNNER_TEMP/boundary-lab"
     - uses: actions/cache@v4
       with:
         path: ${{ runner.temp }}/julia-depot

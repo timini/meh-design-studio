@@ -10,7 +10,7 @@ module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 
 
-@pytest.mark.parametrize('changed_input',[False,True,'before','wide','unstable','gain','last_runtime',pytest.param('cancel',marks=pytest.mark.skipif(__import__('sys').platform=='win32',reason='POSIX SIGTERM lifecycle'))])
+@pytest.mark.parametrize('changed_input',[False,True,'before','wide','unstable','gain','both_gains','score_changed','last_runtime',pytest.param('cancel',marks=pytest.mark.skipif(__import__('sys').platform=='win32',reason='POSIX SIGTERM lifecycle'))])
 def test_finalist_replays_catalogue_array_and_freezes_gain(tmp_path, monkeypatch, changed_input):
     examples = Path(__file__).resolve().parents[1] / 'examples'
     search = tmp_path / 'search'
@@ -28,8 +28,9 @@ def test_finalist_replays_catalogue_array_and_freezes_gain(tmp_path, monkeypatch
         [module.DriverRevision.model_validate(d) for d in json.loads((search/'catalogue-snapshot.json').read_text())])
     candidate.write_text(json.dumps(module.candidate_record(pool[0])))
     winning_trial={'index':0,'status':'complete','side_gain':.5}
+    score=candidate.parent/'score.json';score.write_text(json.dumps({'side_gain':.5}))
     (search / 'search.json').write_text(json.dumps({'status': 'complete', 'winner_index': 0,
-        'winner':winning_trial,'trials':[winning_trial],'winner_candidate_sha256':module.sha256(candidate),
+        'winner':winning_trial,'trials':[winning_trial],'winner_candidate_sha256':module.sha256(candidate),'winner_score_sha256':module.sha256(score),
         'control_sha256':{name:module.sha256(search/name) for name in
             ('brief.json','base-geometry.json','catalogue-snapshot.json')}}))
     calls = []
@@ -42,6 +43,14 @@ def test_finalist_replays_catalogue_array_and_freezes_gain(tmp_path, monkeypatch
     monkeypatch.setattr(module, 'validate_export', lambda *args: {'print_qualified': False})
     class Runtime:
         def verify(self): return {'revision':'changed' if changed_input=='last_runtime' and len(calls)==3 else 'test'}
+    if changed_input in ('both_gains','score_changed'):
+        if changed_input=='both_gains':
+            result=json.loads((search/'search.json').read_text());result['winner']['side_gain']=.8;result['trials'][0]['side_gain']=.8
+            (search/'search.json').write_text(json.dumps(result))
+        else:score.write_text('{"side_gain":0.8}')
+        with pytest.raises(ValueError,match='scored artifact'):
+            module.validate(search,tmp_path/'validation',Runtime())
+        return
     if changed_input=='gain':
         result=json.loads((search/'search.json').read_text());result['winner']['side_gain']=.8
         (search/'search.json').write_text(json.dumps(result))

@@ -117,9 +117,9 @@ It never normalises individual partitions. The 33 frequencies, 8/6/4 mm meshes,
 0.5 dB / 5-degree limits and 1 dB held-out improvement requirement are unchanged.
 
 This avoids placing every fine-mesh frequency into one long CI job. The search
-stage permits two hours per trial and each partition permits two hours per solve;
-a timeout remains a failure. The general CLI defaults to 30 minutes per trial;
-`--timeout-per-trial-s` accepts an explicit limit up to 7200 seconds.
+stage permits two hours for each native solver stage, and each partition uses the same stage limit;
+a timeout remains a failure. The general CLI defaults to 30 minutes per solver stage;
+`--timeout-per-solver-stage-s` accepts an explicit limit up to 7200 seconds.
 The `native-search`, `native-partition-*` and `native-assembled` artifacts retain
 the separate stages. An assembled success requires all partitions to succeed.
 Artifact paths are restored under the same runner temporary directory because
@@ -140,3 +140,8 @@ benchmark, not a successful result for the larger 500–2000 Hz experiment.
 Manual workflow dispatch offers `full-size` for the larger benchmark. The local
 runner accepts `--brief` and `--geometry`; omitting them retains the original
 full-size defaults. The smaller case reduces the cost of complete pipeline testing.
+
+Solver timeouts apply separately to preflight and the native solve. They do not
+bound CAD generation, meshing, or total candidate wall time; CI job timeouts
+provide an outer bound. The compact benchmark uses a 10 mm exterior target after
+the initial 20 mm target failed the unchanged 2% CAD-volume agreement gate.

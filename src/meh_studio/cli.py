@@ -63,7 +63,7 @@ def main(argv=None) -> int:
     search.add_argument('--checkout', type=Path, required=True)
     search.add_argument('--python', type=Path, required=True)
     search.add_argument('--julia', type=Path, required=True)
-    search.add_argument('--timeout-per-trial-s',type=float,default=1800)
+    search.add_argument('--timeout-per-solver-stage-s',type=float,default=1800)
     args = parser.parse_args(argv)
     try:
         if args.command == 'optimise':
@@ -72,7 +72,7 @@ def main(argv=None) -> int:
             from .boundary_lab import BoundaryLabRuntime
             result = optimise(SearchBrief.model_validate_json(args.brief.read_text()),
                 HornGeometry.model_validate_json(args.geometry.read_text()), args.database,
-                BoundaryLabRuntime(args.checkout,args.python,args.julia),args.output,trial_timeout_s=args.timeout_per_trial_s)
+                BoundaryLabRuntime(args.checkout,args.python,args.julia),args.output,solver_stage_timeout_s=args.timeout_per_solver_stage_s)
         elif args.command == "compile-radiating":
             from .boundary_lab import BoundaryLabRuntime
             from .generated_system import HornSources

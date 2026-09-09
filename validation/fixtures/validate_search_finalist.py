@@ -52,6 +52,8 @@ def load_search(search):
     expected={name:digest for name,digest in control_hashes.items() if name!='search.json'}
     if result.get('control_sha256')!=expected:
         raise ValueError('search controls do not match completed search; legacy runs require a fresh search')
+    index=result['winner_index'];trials=result.get('trials',[])
+    if type(index) is not int or not 0<=index<len(trials):raise ValueError('missing indexed winning trial')
     candidate_name=f"trial-{result['winner_index']:03d}/candidate.json"
     candidate_file=search/candidate_name
     if result.get('winner_candidate_sha256')!=sha256(candidate_file):
@@ -63,11 +65,14 @@ def load_search(search):
     winner=candidates(brief,base,drivers)[result['winner_index']]
     if candidate_record(winner)!=_read_json(candidate_file):
         raise ValueError('reconstructed winner differs from recorded candidate')
-    index=result['winner_index'];trials=result.get('trials',[])
-    if type(index) is not int or not 0<=index<len(trials):raise ValueError('missing indexed winning trial')
     trial=trials[index]
     if trial.get('status')!='complete' or trial.get('index')!=index or result['winner']!=trial:
         raise ValueError('winner record differs from indexed completed trial')
+    score_name=f'trial-{index:03d}/score.json'
+    if result.get('winner_score_sha256')!=sha256(search/score_name):raise ValueError('winning scored artifact differs')
+    if {k:v for k,v in trial.items() if k not in ('index','status')}!=_read_json(search/score_name):
+        raise ValueError('winning trial differs from its scored artifact')
+    control_hashes[score_name]=result['winner_score_sha256']
     gain=trial['side_gain']
     frequencies=tuple(sorted(set(brief.frequencies_hz)|{float(round(math.sqrt(a*b))) for a,b in zip(brief.frequencies_hz,brief.frequencies_hz[1:])}))
     frozen=SearchBrief.model_validate(brief.model_dump()|{'side_gains':(gain,)})
