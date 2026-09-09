@@ -39,7 +39,7 @@ def mesh_identity(root):
     if digest!=record['exterior_identity']['cad_geometry_sha256']:
         raise ValueError('finalist CAD identity differs from compilation')
     return {'cad_geometry_sha256':digest,'exterior_surface':record['exterior_surface'],
-            'exterior_mesh_size_m':record['exterior_mesh_size_m']}
+            'exterior_mesh_size_m':record['exterior_mesh_size_m'],'compiler_runtime':record['compiler_runtime']}
 
 
 def validate(search, output, runtime, *, timeout_s=7200):
@@ -95,7 +95,7 @@ def _validate(search, output, runtime, timeout_s, report, activate):
             identity=mesh_identity(root)
             if report['levels']:
                 prior=report['levels'][0]['mesh_identity']
-                if any(identity[k]!=prior[k] for k in ('cad_geometry_sha256','exterior_mesh_size_m')):
+                if any(identity[k]!=prior[k] for k in ('cad_geometry_sha256','exterior_mesh_size_m','compiler_runtime')):
                     raise ValueError('finalist CAD or exterior target changed between levels')
             values=pressure(root/'system/project.blab.json',root/'evaluation',gain)
             if not np.isfinite(values).all() or np.any(abs(values)==0): raise ValueError('undefined finalist pressure comparison')

@@ -80,3 +80,24 @@ Finalist validation defaults to `--julia-threads 1` to reduce resource contentio
 on a desktop. The thread setting is recorded in each runtime identity and held
 constant across validation levels. The search runtime may use the upstream
 thread default; the validation repeats the coarse mesh with its own fixed setting.
+
+## Opt-in native GitHub validation
+
+The `Native horn end-to-end validation` workflow runs on Ubuntu when a maintainer
+adds the `run-native-e2e` label to a pull request. Once merged, it can also be
+started manually. It runs a fresh analytic tube comparison, the 17-frequency
+horn search, an equal-gain baseline on the validation grid, and the frozen winner
+at 33 frequencies and three mesh levels. This is separate from the fast platform
+unit/CAD checks and is intentionally not triggered by every code push.
+
+`validation/fixtures/run_native_e2e.py` runs the same experiment locally with
+explicit checkout, Python and Julia paths. Its report separates pipeline success
+from coupled electrical and physical qualification. Native errors or the declared
+0.5 dB/5-degree mesh stability gate failing cause the job to fail. Partial outputs
+are uploaded too, with seven-day artifact retention; archive important evidence
+before it expires. A successfully completed numerical job never marks the
+synthetic drivers or printed speaker as physically qualified.
+
+New searches bind saved controls and the selected candidate in `search.json`.
+The current finalist validator rejects older, unbound searches; reproduce them
+with a fresh search to obtain evidence under the current integrity contract.
