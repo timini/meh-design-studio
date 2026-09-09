@@ -40,8 +40,8 @@ def test_refinement_requires_bound_cad_identity(tmp_path, fault):
     identity = {'design_hash': 'design-a', 'cad_geometry_sha256': module.step_geometry_sha256(cad)}
     compilation = {'status': 'complete', 'geometry_hash': 'design-a',
                    'project_sha256': sha256(project), 'exterior_identity': identity,
-                   'exterior_surface': {'sha256': 'surface-a'}}
-    report = {'status': 'complete', 'mesh_size_m': .02, 'cad_sha256':sha256(cad), **identity}
+                   'exterior_surface': {'sha256': 'surface-a'},'compiler_runtime':{'cadquery':'test'}}
+    report = {'status': 'complete', 'compiler_runtime':{'cadquery':'test'}, 'mesh_size_m': .02, 'cad_sha256':sha256(cad), **identity}
     (exterior/'exterior.json').write_text(json.dumps(report))
     compilation.update(exterior_mesh_size_m=.02, exterior_report_sha256=sha256(exterior/'exterior.json'))
     if fault == 'target': report['mesh_size_m'] = .01
@@ -88,14 +88,14 @@ def test_refinement_project_identity_only_allows_exterior_digest_changes(tmp_pat
     assert module.refinement_project_hash(path) != original
 
 
-@pytest.mark.parametrize('fault', [None, 'no_pressure', 'changed_artifact'])
+@pytest.mark.parametrize('fault', [None, 'no_pressure', 'changed_artifact', 'changed_project'])
 def test_load_requires_pressure_and_revalidates_artifacts(tmp_path, monkeypatch, fault):
     import json
     project = tmp_path/'project.json'
     project.write_text('{}')
     (tmp_path/'exterior').mkdir()
     (tmp_path/'exterior/envelope.step').write_text('fixture CAD')
-    (tmp_path/'compilation.json').write_text('{"exterior_mesh_size_m":0.02}')
+    (tmp_path/'compilation.json').write_text('{"exterior_mesh_size_m":0.02,"compiler_runtime":{"gmsh":"test"}}')
     root = tmp_path/'evaluation'
     upstream = root/'upstream'
     upstream.mkdir(parents=True)
@@ -111,7 +111,12 @@ def test_load_requires_pressure_and_revalidates_artifacts(tmp_path, monkeypatch,
             raise ValueError('artifact hash mismatch')
         return {'passed':True}
     monkeypatch.setattr(module,'validate_electrical_basis',validate)
-    monkeypatch.setattr(module,'exterior_identity',lambda *args:{'design':'same'})
+    identities=[]
+    def identity(*args):
+        identities.append(True)
+        if fault=='changed_project' and len(identities)==2: project.write_text('{"changed":true}')
+        return {'design':'same'}
+    monkeypatch.setattr(module,'exterior_identity',identity)
     if fault:
         with pytest.raises(ValueError): module.load(project,root)
     else:
@@ -122,12 +127,14 @@ def test_load_requires_pressure_and_revalidates_artifacts(tmp_path, monkeypatch,
         assert len(calls) == 2 and len(rows) == 1
 
 
-def test_comparison_rejects_different_dependency_runtime(tmp_path, monkeypatch):
+@pytest.mark.parametrize('host',[False,True])
+def test_comparison_rejects_different_dependency_runtime(tmp_path, monkeypatch, host):
     import sys
     runs = []
     for i, size in enumerate([.02,.015,.01]):
         record = {'mesh_size_m':size, 'mesh_inventory':[{'purpose':'bem_surface','sha256':str(i)}],
-                  'runtime':{'packages':{'numpy':str(i)}}, 'exterior_identity':{'cad':'same'},
+                  'runtime':{'packages':{'numpy':str(0 if host else i)}},
+                  'compiler_runtime':{'gmsh':str(i if host else 0)}, 'exterior_identity':{'cad':'same'},
                   'pressure_ids':['polar'], 'project_definition_sha256':'same'}
         manifest = {'frequencies_hz':[1000], 'excitation_port_ids':['a'], 'meshes':[]}
         runs.append((record, manifest, []))
@@ -152,3 +159,29 @@ def test_report_publication_preserves_existing_and_leaves_no_partial(tmp_path, m
     monkeypatch.setattr(module.os,'link',interrupt)
     with pytest.raises(KeyboardInterrupt): module.publish_report(failed, {'complete':True})
     assert not failed.exists() and not list(tmp_path.glob('.meh-report-*'))
+
+
+@pytest.mark.parametrize('changed',[False,True])
+def test_comparison_records_and_rechecks_runner_identity(tmp_path,monkeypatch,changed):
+    import sys
+    loaded=[]
+    for i,size in enumerate([.02,.015,.01]):
+        record={'mesh_size_m':size,'mesh_inventory':[{'purpose':'bem_surface','sha256':str(i)}],
+                'runtime':{'python':'test'},'compiler_runtime':{'gmsh':'test'},
+                'exterior_identity':{'cad':'same'},'pressure_ids':['p'],
+                'project_definition_sha256':'same','evaluation':f'run-{i}'}
+        manifest={'frequencies_hz':[1000],'excitation_port_ids':['a'],'meshes':[],
+                  'backend_id':'test','phasor_convention':'test'}
+        loaded.append((record,manifest,[{'p':np.array([[1+1j]])}]))
+    monkeypatch.setattr(module,'load',lambda *args:loaded.pop(0))
+    hashes=iter(['a'*64,('b' if changed else 'a')*64])
+    monkeypatch.setattr(module,'sha256',lambda path:next(hashes))
+    monkeypatch.setattr(sys,'argv',['compare','--run','p1','e1','--run','p2','e2',
+                                   '--run','p3','e3','--output',str(tmp_path/'report.json')])
+    if changed:
+        with pytest.raises(ValueError,match='runner changed'):module.main()
+        assert not (tmp_path/'report.json').exists()
+    else:
+        module.main()
+        import json
+        assert json.loads((tmp_path/'report.json').read_text())['runner_sha256']=='a'*64
