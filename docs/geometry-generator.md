@@ -34,3 +34,19 @@ For acoustic meshes, source disks and the mouth must be identified uniquely by p
 The three-driver reference produced three air regions and valid positive-quality tetrahedra locally. Test coverage includes both driver counts, air/material separation, correct 3MF units, named source boundaries, STEP-to-metre conversion and overwrite refusal. A dedicated Linux CI job installs the real CAD kernels; the base test suite can skip CAD-specific tests when those optional tools are absent.
 
 Meshes are explicitly marked `not_converged`, and exports `print_verified: false`. The mouth is tagged for later radiation coupling; this increment does not generate an exterior BEM domain or solve the horn. The next task connects these domains and source interfaces to the adapter, then adds independent numerical comparisons and refinement studies before trusting a candidate's acoustic scores.
+
+## Curved acoustic boundaries
+
+The global mesh target is a maximum size. Small curved features use a curvature
+field targeting 48 elements per full revolution, with a lower local size floor.
+The saved linear triangles on every circular source and mouth boundary are
+independently checked against the CAD disk area; errors above 1% reject the mesh.
+The mesh report records the size policy, areas and workload estimates. Both the
+curvature estimate and actual generated tetrahedron count are bounded.
+
+This addresses an executed failure: an 8 mm uniform mesh understated a 25.4 mm
+throat piston area by 6.45%, changing to 3.32% at 6 mm and 1.64% at 4 mm. Refining
+that mesh therefore changed the effective source as well as the discretisation.
+The area gate is a geometry check, not a substitute for acoustic convergence.
+See [Gmsh's mesh-size rules](https://gmsh.info/doc/texinfo/#Specifying-mesh-element-sizes)
+for how curvature targets are constrained by minimum and maximum sizes.

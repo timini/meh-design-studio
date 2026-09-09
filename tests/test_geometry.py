@@ -68,6 +68,8 @@ def test_export_mesh_units_and_source_tags(geometry_data, tmp_path):
     for region in mesh["regions"]:
         assert region["volume_m3"] == pytest.approx(report["air_volume_m3"][region["id"]], rel=1e-6)
         assert region["tetrahedra"] > 0 and region["minimum_quality"] > 0
+        assert region["source_area_checks"]
+        assert all(check["relative_area_error"]<=.01 for check in region["source_area_checks"])
     with pytest.raises(FileExistsError):
         export_geometry(design, tmp_path / "export")
     with pytest.raises(FileExistsError):
@@ -93,3 +95,23 @@ def test_cad_runtime_exits_cleanly_in_fresh_process():
         'from meh_studio.cad_runtime import load_cadquery; cq=load_cadquery(); assert cq.Workplane().box(1,1,1).val().isValid()'],
         capture_output=True,text=True,timeout=60)
     assert result.returncode==0,result.stderr
+
+
+@pytest.mark.parametrize('segments,passes',[(8,False),(48,True)])
+def test_curved_source_area_gate_rejects_underresolved_disk(tmp_path,segments,passes):
+    import math
+    import numpy as np
+    import meshio
+    from meh_studio.geometry import source_area_checks
+    angles=np.arange(segments)*2*math.pi/segments
+    points=np.vstack(([0,0,0],np.column_stack((np.cos(angles),np.sin(angles),np.zeros(segments)))))
+    faces=np.array([[0,i+1,(i+1)%segments+1] for i in range(segments)])
+    path=tmp_path/'disk.msh'
+    meshio.write(path,meshio.Mesh(points,[('triangle',faces)],
+        cell_data={'gmsh:physical':[np.full(segments,10)],'gmsh:geometrical':[np.full(segments,10)]},
+        field_data={'source':np.array([10,2])}),file_format='gmsh22',binary=False)
+    if passes:
+        checks=source_area_checks(path,{'source':1.})
+        assert checks[0]['relative_area_error']<.003
+    else:
+        with pytest.raises(ValueError,match='mesh area differs'):source_area_checks(path,{'source':1.})
