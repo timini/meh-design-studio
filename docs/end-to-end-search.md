@@ -153,3 +153,14 @@ Solver timeouts apply separately to preflight and the native solve. They do not
 bound CAD generation, meshing, or total candidate wall time; CI job timeouts
 provide an outer bound. The compact benchmark uses a 10 mm exterior target after
 the initial 20 mm target failed the unchanged 2% CAD-volume agreement gate.
+
+### Recover completed native solves after a runner setup failure
+
+`Replay retained native horn evidence` downloads the original search and all
+partitions and runs only assembly. Supply the source run ID and the exact
+`source_commit` from its experiment report. It checks out that original source,
+restores the original runner paths and applies the original integrity and numerical
+gates. It does not rerun, rewrite or rescore the optimisation with new settings.
+The replay run and original run must both be cited when reporting the result.
+The initial replay defaults recover run 34370258164, whose assembly setup failed
+on an unrelated Chrome repository checksum mismatch after all solves completed.

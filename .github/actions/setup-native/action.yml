@@ -15,7 +15,8 @@ runs:
     - name: Install native libraries and pinned solver
       shell: bash
       run: |
-        sudo apt-get update
+        # Only Ubuntu packages are needed; unrelated browser mirrors must not block native jobs.
+        sudo apt-get update -o Dir::Etc::sourcelist="sources.list.d/ubuntu.sources" -o Dir::Etc::sourceparts="-"
         sudo apt-get install -y libglu1-mesa libgl1
         git clone https://github.com/JWSound/boundary-lab.git "$RUNNER_TEMP/boundary-lab"
         git -C "$RUNNER_TEMP/boundary-lab" checkout --detach 8cb166226e412877d3f71f2845918e479b97aa85

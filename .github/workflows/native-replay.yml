@@ -1,0 +1,67 @@
+name: Replay retained native horn evidence
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Original native run containing search and all partitions
+        required: true
+        default: '34370258164'
+      source_commit:
+        description: Exact source_commit recorded in the original experiment
+        required: true
+        default: ca3e8caf4f9c2437a8b3c3f22b5bee7cb54cb610
+  pull_request:
+    types: [labeled]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  replay:
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'replay-native-evidence'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      SOURCE_RUN: ${{ inputs.run_id || '34370258164' }}
+      JULIA_NUM_PRECOMPILE_TASKS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_commit || 'ca3e8caf4f9c2437a8b3c3f22b5bee7cb54cb610' }}
+      - name: Disable unused Chrome package source on the ephemeral runner
+        shell: bash
+        run: |
+          sudo python3 - <<'PY'
+          from pathlib import Path
+          for path in Path('/etc/apt/sources.list.d').iterdir():
+              if path.suffix in ('.list', '.sources') and 'dl.google.com/linux/chrome' in path.read_text():
+                  path.rename(path.with_suffix(path.suffix + '.disabled'))
+          PY
+      - uses: ./.github/actions/setup-native
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ env.SOURCE_RUN }}
+          github-token: ${{ github.token }}
+          name: native-search
+          path: ${{ runner.temp }}
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ env.SOURCE_RUN }}
+          github-token: ${{ github.token }}
+          pattern: native-partition-*
+          merge-multiple: true
+          path: ${{ runner.temp }}
+      - name: Verify retained evidence with the original source and acceptance gates
+        shell: bash
+        run: |
+          "$RUNNER_TEMP/meh-env/bin/python" validation/fixtures/native_partitions.py assemble \
+            "$RUNNER_TEMP/horn-evidence/search" "$RUNNER_TEMP/assembled" \
+            --parts "$RUNNER_TEMP/horn-partitions" --checkout "$RUNNER_TEMP/boundary-lab" \
+            --python "$RUNNER_TEMP/meh-env/bin/python" --julia "$(command -v julia)"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-assembled
+          path: ${{ runner.temp }}/assembled
+          retention-days: 7
