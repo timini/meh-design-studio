@@ -26,14 +26,15 @@ can inspect them experimentally, retaining that unsupported-precision outcome.
 Example (use the external runtime paths from the adapter guide):
 
 ```sh
-meh optimise examples/synthetic-search-brief.json \
+python validation/fixtures/create_synthetic_catalogue.py drivers.sqlite
+meh optimise examples/synthetic-dense-search-brief.json \
   --geometry examples/three-driver-geometry.json --database drivers.sqlite \
   --checkout /path/to/boundary-lab --python /path/to/blab-env/bin/python \
   --julia /path/to/julia --output runs/search
 ```
 
-Populate the private catalogue with the records in
-`examples/synthetic-search-drivers.json` using the catalogue API. Prices in the
+The catalogue helper creates a new database from the records in
+`examples/synthetic-search-drivers.json` and refuses to overwrite an existing database. Prices in the
 brief are all in its declared currency and exclude material, electronics and labour.
 Set `JULIA_DEPOT_PATH` to an absolute path when using a separate Julia depot.
 
@@ -74,3 +75,8 @@ command can still contain failed acceptance gates; read `validation.json`.
 The finalist runner allows up to two hours per native solve by default; use
 `--solve-timeout-s` to set a shorter explicit limit. Fine conforming meshes can
 be much more expensive than the search mesh. A timeout remains a failed run.
+
+Finalist validation defaults to `--julia-threads 1` to reduce resource contention
+on a desktop. The thread setting is recorded in each runtime identity and held
+constant across validation levels. The search runtime may use the upstream
+thread default; the validation repeats the coarse mesh with its own fixed setting.

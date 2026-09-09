@@ -1016,3 +1016,26 @@ def test_standalone_inspection_requires_declared_observation_outputs(artifact):
     (root/'manifest.json').write_text(json.dumps(manifest))
     with pytest.raises(ValueError,match='requested project observations'):
         inspect_result(root,SolveRequest(frequencies_hz=(1000,),include_project_observations=True),'beat_cpu')
+
+
+@pytest.mark.parametrize('threads', [0, 65, True, 1.5])
+def test_invalid_julia_thread_count_fails_before_runtime_probes(tmp_path, threads):
+    runtime=BoundaryLabRuntime(tmp_path,Path(sys.executable),tmp_path/'julia',julia_threads=threads)
+    with pytest.raises(ValueError,match='thread count'):
+        runtime.verify()
+
+
+def test_explicit_julia_thread_count_reaches_native_command(tmp_path, monkeypatch):
+    import meh_studio.boundary_lab as adapter
+    project=tmp_path/'project.json';project.write_text('{}')
+    monkeypatch.setattr(BoundaryLabRuntime,'verify',lambda self:{'julia_threads':self.julia_threads})
+    commands=[]
+    def capture(command,*args,**kwargs):
+        commands.append(command)
+        raise RuntimeError('captured preflight')
+    monkeypatch.setattr(adapter,'_execute',capture)
+    runtime=BoundaryLabRuntime(tmp_path,Path(sys.executable),tmp_path/'julia',julia_threads=1)
+    with pytest.raises(RuntimeError,match='captured preflight'):
+        runtime.solve(project,SolveRequest(frequencies_hz=(1000,)),tmp_path/'out')
+    index=commands[0].index('--julia-threads')
+    assert commands[0][index+1]=='1'

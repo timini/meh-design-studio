@@ -109,8 +109,9 @@ def main():
     parser.add_argument('search',type=Path);parser.add_argument('output',type=Path)
     for name in ('checkout','python','julia'):parser.add_argument('--'+name,type=Path,required=True)
     parser.add_argument('--solve-timeout-s',type=float,default=7200)
+    parser.add_argument('--julia-threads',type=int,default=1)
     args=parser.parse_args()
-    report=validate(args.search,args.output,BoundaryLabRuntime(args.checkout,args.python,args.julia),timeout_s=args.solve_timeout_s)
+    report=validate(args.search,args.output,BoundaryLabRuntime(args.checkout,args.python,args.julia,julia_threads=args.julia_threads),timeout_s=args.solve_timeout_s)
     print(json.dumps(report,indent=2))
 
 

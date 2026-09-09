@@ -596,8 +596,11 @@ class BoundaryLabRuntime:
     python: Path
     julia: Path
     backend: Literal["beat_cpu", "beat_cuda", "beat_rocm"] = "beat_cpu"
+    julia_threads: int | None = None
 
     def verify(self) -> dict:
+        if self.julia_threads is not None and (type(self.julia_threads) is not int or not 1 <= self.julia_threads <= 64):
+            raise ValueError("Julia thread count must be an integer in [1, 64]")
         if self.backend not in {"beat_cpu", "beat_cuda", "beat_rocm"}:
             raise ValueError("unsupported explicit backend")
         checkout = Path(self.checkout).resolve()
@@ -626,7 +629,8 @@ class BoundaryLabRuntime:
         if julia_version != "julia version 1.12.6":
             raise ValueError("pinned Boundary Lab dependencies require the manifest-matched Julia 1.12.6 runtime")
         return {"revision": revision, "backend": self.backend, "python": environment["python"],
-                "julia": julia_version, "packages": environment["packages"]}
+                "julia": julia_version, "packages": environment["packages"],
+                "julia_threads": self.julia_threads if self.julia_threads is not None else "upstream_default"}
 
     def solve(self, project: Path, request: SolveRequest, output: Path, *, timeout_s: float = 1800) -> dict:
         if not math.isfinite(timeout_s) or timeout_s <= 0:
@@ -649,6 +653,8 @@ class BoundaryLabRuntime:
                 common = [str(project), "--request", str(request_file), "--backend", self.backend,
                           "--julia-executable", str(Path(self.julia).absolute())]
                 runtime = self.verify()
+                if self.julia_threads is not None:
+                    common += ["--julia-threads", str(self.julia_threads)]
                 project_hash = sha256(project)
                 _write_json(request_file, request.model_dump(mode="json"))
                 report.update(runtime=runtime, project_sha256=project_hash, request_sha256=sha256(request_file))
