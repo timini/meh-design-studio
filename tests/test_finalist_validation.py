@@ -10,7 +10,8 @@ module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 
 
-def test_finalist_replays_catalogue_array_and_freezes_gain(tmp_path, monkeypatch):
+@pytest.mark.parametrize('changed_input',[False,True])
+def test_finalist_replays_catalogue_array_and_freezes_gain(tmp_path, monkeypatch, changed_input):
     examples = Path(__file__).resolve().parents[1] / 'examples'
     search = tmp_path / 'search'
     search.mkdir()
@@ -27,7 +28,19 @@ def test_finalist_replays_catalogue_array_and_freezes_gain(tmp_path, monkeypatch
     monkeypatch.setattr(module, 'evaluate_candidate', evaluate)
     monkeypatch.setattr(module, 'pressure', lambda *args: np.ones(5, dtype=complex))
     monkeypatch.setattr(module, 'validate_export', lambda *args: {'print_qualified': False})
-    result = module.validate(search, tmp_path / 'validation', object())
+    class Runtime:
+        def verify(self): return {'revision':'test'}
+    if changed_input:
+        def changed_pressure(*args):
+            (search / 'brief.json').write_text('{}')
+            return np.ones(5, dtype=complex)
+        monkeypatch.setattr(module, 'pressure', changed_pressure)
+        with pytest.raises(ValueError, match='controls changed'):
+            module.validate(search, tmp_path / 'validation', Runtime())
+        report=json.loads((tmp_path/'validation/validation.json').read_text())
+        assert report['status']=='failed' and not report['refinement_passed']
+        return
+    result = module.validate(search, tmp_path / 'validation', Runtime())
     assert result['status'] == 'complete' and result['refinement_passed']
     assert not result['qualified'] and not result['electrical_consistency_passed']
     assert len(calls) == 3

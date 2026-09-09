@@ -48,10 +48,11 @@ def validate(search, output, runtime):
     frozen=SearchBrief.model_validate(brief.model_dump()|{'frequencies_hz':frequencies,'side_gains':(gain,)})
     sizes=(base.mesh_size_m,base.mesh_size_m*.75,base.mesh_size_m*.5)
     if min(sizes)<.0005: raise ValueError('refinement exceeds generator mesh limits')
+    runtime_identity=runtime.verify()
     output.mkdir(parents=True,exist_ok=False)
     report={'schema_version':1,'status':'running','search_sha256':original_hash,
         'input_sha256':control_hashes,'winner_index':result['winner_index'],'fixed_side_gain':gain,'frequencies_hz':frequencies,
-        'mesh_sizes_m':sizes,'magnitude_change_limit_db':.5,'phase_change_limit_deg':5.,
+        'runtime':runtime_identity,'mesh_sizes_m':sizes,'magnitude_change_limit_db':.5,'phase_change_limit_deg':5.,
         'qualified':False,'physical_validation':False,'levels':[],
         'limitations':['Exterior mesh fixed; FEM refinement only','Pointwise pressure comparison, no gain/phase fitting',
                       'Additional geometric-midpoint frequencies rounded to whole hertz for native label precision','Finite frequency samples do not establish full-band convergence','Synthetic sources; no print or physical validation']}
@@ -59,6 +60,7 @@ def validate(search, output, runtime):
     try:
         for i,size in enumerate(sizes):
             print(f'Finalist refinement {i+1}/3: {size:g} m',flush=True)
+            if runtime.verify()!=runtime_identity: raise ValueError('finalist runtime changed between levels')
             root=output/f'level-{i}'
             score=evaluate_candidate(winner,root,runtime,frozen,mesh_size=size)
             values=pressure(root/'system/project.blab.json',root/'evaluation',gain)
