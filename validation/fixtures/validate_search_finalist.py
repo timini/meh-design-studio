@@ -63,7 +63,12 @@ def load_search(search):
     winner=candidates(brief,base,drivers)[result['winner_index']]
     if candidate_record(winner)!=_read_json(candidate_file):
         raise ValueError('reconstructed winner differs from recorded candidate')
-    gain=result['winner']['side_gain']
+    index=result['winner_index'];trials=result.get('trials',[])
+    if type(index) is not int or not 0<=index<len(trials):raise ValueError('missing indexed winning trial')
+    trial=trials[index]
+    if trial.get('status')!='complete' or trial.get('index')!=index or result['winner']!=trial:
+        raise ValueError('winner record differs from indexed completed trial')
+    gain=trial['side_gain']
     frequencies=tuple(sorted(set(brief.frequencies_hz)|{float(round(math.sqrt(a*b))) for a,b in zip(brief.frequencies_hz,brief.frequencies_hz[1:])}))
     frozen=SearchBrief.model_validate(brief.model_dump()|{'side_gains':(gain,)})
     sizes=(base.mesh_size_m,base.mesh_size_m*.75,base.mesh_size_m*.5)
@@ -118,6 +123,7 @@ def _validate(search, output, runtime, timeout_s, report, activate):
                 if change['maximum_magnitude_change_db']>.5 or change['maximum_phase_change_deg']>5:
                     raise ValueError('finalist mesh stability limits exceeded; remaining levels not run')
             _write_json(output/'validation.json',report)
+        if runtime.verify()!=runtime_identity:raise ValueError('finalist runtime changed before completion')
         comparisons=report['successive_changes']
         report.update(status='complete',successive_changes=comparisons,
             refinement_passed=all(c['maximum_magnitude_change_db']<=.5 and c['maximum_phase_change_deg']<=5 for c in comparisons),

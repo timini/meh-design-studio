@@ -9,6 +9,7 @@ from meh_studio.optimisation import candidates, candidate_record, evaluate_candi
 from meh_studio.domain import DriverRevision
 from meh_studio.geometry import HornGeometry
 from validate_search_finalist import load_search, pressure, mesh_identity
+from run_native_e2e import checked_source_revision, verify_source_revision
 
 PARTS=8
 LEVELS=('baseline','0','1','2')
@@ -34,8 +35,10 @@ def file_hashes(root):
 
 def run_partition(search,root,runtime,level,chunk):
     controls,candidate,brief,size,frequencies,expected=inputs(search,level,chunk)
+    repo=Path(__file__).resolve().parents[2];revision=checked_source_revision(repo)
+    if revision!=_read_json(search.parent/'experiment.json')['source_commit']:raise ValueError('partition source differs from search')
     report={'status':'running','qualified':False,'physical_validation':False,'level':level,'chunk':chunk,
-            'input_sha256':controls,'frequencies_hz':frequencies,'side_gain':brief.side_gains[0],'mesh_size_m':size,'runtime':runtime.verify(),'runner_sha256':sha256(Path(__file__))}
+            'source_commit':revision,'input_sha256':controls,'frequencies_hz':frequencies,'side_gain':brief.side_gains[0],'mesh_size_m':size,'runtime':runtime.verify(),'runner_sha256':sha256(Path(__file__))}
     if report['runtime']!=_read_json(search/'search.json')['runtime']:raise ValueError('partition runtime differs from search')
     with _termination_guard(report) as activate:
         root.mkdir(parents=True,exist_ok=False)
@@ -44,6 +47,7 @@ def run_partition(search,root,runtime,level,chunk):
             evaluate_candidate(candidate,root/'candidate',runtime,brief,mesh_size=size,frequencies=frequencies,timeout_s=7200)
             if _read_json(root/'candidate/candidate.json')!=expected:raise ValueError('partition candidate differs')
             if runtime.verify()!=report['runtime'] or load_search(search)[0]!=controls or sha256(Path(__file__))!=report['runner_sha256']:raise ValueError('partition inputs or runtime changed')
+            verify_source_revision(repo,revision)
             report.update(status='complete',artifact_sha256=file_hashes(root))
         except BaseException as exc:
             report.update(status='cancelled' if isinstance(exc,KeyboardInterrupt) else 'failed',error=str(exc));raise
@@ -54,7 +58,7 @@ def read_partition(search,root,level,chunk):
     controls,candidate,brief,size,frequencies,expected=inputs(search,level,chunk)
     digest=sha256(root/'partition.json');record=_read_json(root/'partition.json')
     if record.get('status')!='complete' or record.get('runner_sha256')!=sha256(Path(__file__)) or record.get('artifact_sha256')!=file_hashes(root):raise ValueError('partition artifacts differ or are incomplete')
-    required={'level':level,'chunk':chunk,'input_sha256':controls,'frequencies_hz':list(frequencies),'side_gain':brief.side_gains[0],'mesh_size_m':size}
+    required={'source_commit':_read_json(search.parent/'experiment.json')['source_commit'],'level':level,'chunk':chunk,'input_sha256':controls,'frequencies_hz':list(frequencies),'side_gain':brief.side_gains[0],'mesh_size_m':size}
     if any(record.get(k)!=v for k,v in required.items()):raise ValueError('partition does not match frozen inputs')
     path=root/'candidate';project=path/'system/project.blab.json';evaluation=path/'evaluation'
     if _read_json(path/'candidate.json')!=expected:raise ValueError('recorded partition candidate differs')
@@ -115,6 +119,8 @@ def combine(rows,frequencies,runtime):
 def assemble(search,parts,output,runtime):
     controls,result,brief,base,winner,gain,frequencies,frozen,sizes=load_search(search)
     original=_read_json(search.parent/'experiment.json')
+    repo=Path(__file__).resolve().parents[2];revision=checked_source_revision(repo)
+    if revision!=original['source_commit']:raise ValueError('assembly source differs from search')
     if original['status']!='search_complete':raise ValueError('a completed reference/search stage is required')
     for name,digest in original['stage_sha256'].items():
         if sha256(search.parent/name)!=digest:raise ValueError('reference/search evidence changed')
@@ -154,6 +160,7 @@ def assemble(search,parts,output,runtime):
                 part=parts/f"{row['level']}-{row['chunk']}"
                 if sha256(part/'partition.json')!=row['partition_sha256'] or file_hashes(part)!=_read_json(part/'partition.json')['artifact_sha256']:
                     raise ValueError('partition changed during assembly')
+            verify_source_revision(repo,revision)
             report.update(status='complete',stage='complete')
         except BaseException as exc:
             report.update(status='cancelled' if isinstance(exc,KeyboardInterrupt) else 'failed',error=str(exc));raise

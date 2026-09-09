@@ -14,6 +14,19 @@ from meh_studio.optimisation import SearchBrief, candidates, optimise, evaluate_
 from validate_search_finalist import validate
 
 
+def checked_source_revision(repo):
+    if subprocess.check_output(['git','status','--porcelain','--untracked-files=normal'],cwd=repo,text=True).strip():
+        raise ValueError('native evidence requires a clean source checkout')
+    return subprocess.check_output(['git','rev-parse','HEAD'],cwd=repo,text=True).strip()
+
+
+def verify_source_revision(repo,revision):
+    current=subprocess.check_output(['git','rev-parse','HEAD'],cwd=repo,text=True).strip()
+    changed=subprocess.run(['git','diff','--quiet','HEAD','--'],cwd=repo).returncode
+    untracked=subprocess.check_output(['git','ls-files','--others','--exclude-standard','--','src','validation/fixtures'],cwd=repo,text=True).strip()
+    if current!=revision or changed or untracked:raise ValueError('project source changed during experiment')
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('output',type=Path)
@@ -25,7 +38,7 @@ def main():
     repo=Path(__file__).resolve().parents[2];output=args.output.absolute()
     runtime=BoundaryLabRuntime(args.checkout,args.python,args.julia,julia_threads=1)
     identity=runtime.verify()
-    source_commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=repo,text=True).strip()
+    source_commit=checked_source_revision(repo)
     runner_digest=sha256(Path(__file__))
     report={'schema_version':1,'status':'running','qualified':False,'physical_validation':False,
             'source_commit':source_commit,'runner_sha256':runner_digest,'runtime':identity,
@@ -60,6 +73,7 @@ def main():
             _write_json(output/'baseline-search-grid.json',baseline)
             report['stage_sha256']={name:sha256(output/name) for name in ('analytic-comparison.json','baseline-search-grid.json','search/search.json')}
             if args.search_only:
+                verify_source_revision(repo,source_commit)
                 if runtime.verify()!=identity or sha256(Path(__file__))!=runner_digest:raise ValueError('search-stage runtime or runner changed')
                 report.update(status='search_complete',stage='search_complete')
                 return
@@ -79,6 +93,7 @@ def main():
                 'winner_heldout_ripple_db':float(np.ptp(np.asarray(coarse['relative_response_db'])[heldout])),
                 'refinement_passed':finalist['refinement_passed'],
                 'coupled_electrical_consistency_passed':finalist['electrical_consistency_passed']}
+            verify_source_revision(repo,source_commit)
             if runtime.verify()!=identity or sha256(Path(__file__))!=runner_digest:
                 raise ValueError('experiment runtime or runner changed')
             improvement=report['results']['baseline_heldout_ripple_db']-report['results']['winner_heldout_ripple_db']

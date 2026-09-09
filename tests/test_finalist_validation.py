@@ -10,7 +10,7 @@ module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 
 
-@pytest.mark.parametrize('changed_input',[False,True,'before','wide','unstable',pytest.param('cancel',marks=pytest.mark.skipif(__import__('sys').platform=='win32',reason='POSIX SIGTERM lifecycle'))])
+@pytest.mark.parametrize('changed_input',[False,True,'before','wide','unstable','gain','last_runtime',pytest.param('cancel',marks=pytest.mark.skipif(__import__('sys').platform=='win32',reason='POSIX SIGTERM lifecycle'))])
 def test_finalist_replays_catalogue_array_and_freezes_gain(tmp_path, monkeypatch, changed_input):
     examples = Path(__file__).resolve().parents[1] / 'examples'
     search = tmp_path / 'search'
@@ -27,8 +27,9 @@ def test_finalist_replays_catalogue_array_and_freezes_gain(tmp_path, monkeypatch
         module.HornGeometry.model_validate_json((search/'base-geometry.json').read_text()),
         [module.DriverRevision.model_validate(d) for d in json.loads((search/'catalogue-snapshot.json').read_text())])
     candidate.write_text(json.dumps(module.candidate_record(pool[0])))
+    winning_trial={'index':0,'status':'complete','side_gain':.5}
     (search / 'search.json').write_text(json.dumps({'status': 'complete', 'winner_index': 0,
-        'winner': {'side_gain': .5},'winner_candidate_sha256':module.sha256(candidate),
+        'winner':winning_trial,'trials':[winning_trial],'winner_candidate_sha256':module.sha256(candidate),
         'control_sha256':{name:module.sha256(search/name) for name in
             ('brief.json','base-geometry.json','catalogue-snapshot.json')}}))
     calls = []
@@ -40,7 +41,19 @@ def test_finalist_replays_catalogue_array_and_freezes_gain(tmp_path, monkeypatch
     monkeypatch.setattr(module, 'pressure', lambda *args: np.ones(len(calls[-1][1]), dtype=complex))
     monkeypatch.setattr(module, 'validate_export', lambda *args: {'print_qualified': False})
     class Runtime:
-        def verify(self): return {'revision':'test'}
+        def verify(self): return {'revision':'changed' if changed_input=='last_runtime' and len(calls)==3 else 'test'}
+    if changed_input=='gain':
+        result=json.loads((search/'search.json').read_text());result['winner']['side_gain']=.8
+        (search/'search.json').write_text(json.dumps(result))
+        with pytest.raises(ValueError,match='winner record differs'):
+            module.validate(search,tmp_path/'validation',Runtime())
+        return
+    if changed_input=='last_runtime':
+        with pytest.raises(ValueError,match='runtime changed before completion'):
+            module.validate(search,tmp_path/'validation',Runtime())
+        report=json.loads((tmp_path/'validation/validation.json').read_text())
+        assert report['status']=='failed' and not report['refinement_passed']
+        return
     if changed_input=='unstable':
         monkeypatch.setattr(module,'pressure',lambda *args: np.ones(len(calls[-1][1]),dtype=complex)*len(calls))
         with pytest.raises(ValueError,match='mesh stability limits exceeded'):

@@ -73,7 +73,9 @@ def test_assembly_persists_checked_report_and_rejects_changed_partition(tmp_path
         (root/'partition.json').write_text(json.dumps({'artifact_sha256':{}}))
         row['partition_sha256']=module.sha256(root/'partition.json');by_key[(row['level'],row['chunk'])]=row
     (search.parent/'baseline-search-grid.json').write_text('{"ripple_db":40}')
-    (search.parent/'experiment.json').write_text(json.dumps({'status':'search_complete','runtime':identity,'stage_sha256':{}}))
+    (search.parent/'experiment.json').write_text(json.dumps({'status':'search_complete','runtime':identity,'stage_sha256':{},'source_commit':'fixture'}))
+    monkeypatch.setattr(module,'checked_source_revision',lambda _: 'fixture')
+    monkeypatch.setattr(module,'verify_source_revision',lambda *args:None)
     brief=SimpleNamespace(frequencies_hz=f[::2]);result={'runtime':identity,'winner_index':0,'winner':{'ripple_db':0}}
     monkeypatch.setattr(module,'load_search',lambda _:({},result,brief,None,None,.5,f,None,[.008,.006,.004]))
     monkeypatch.setattr(module,'read_partition',lambda search,root,level,chunk:by_key[(level,chunk)])
@@ -89,3 +91,21 @@ def test_assembly_persists_checked_report_and_rejects_changed_partition(tmp_path
     with pytest.raises(ValueError,match='partition changed during assembly'):
         module.assemble(search,parts,tmp_path/'changed',Runtime())
     assert json.loads((tmp_path/'changed/experiment.json').read_text())['status']=='failed'
+
+
+def test_native_runner_rejects_dirty_or_changed_source(tmp_path):
+    import subprocess
+    sys.path.insert(0,str(fixtures))
+    try:
+        spec=importlib.util.spec_from_file_location('native_source_test',fixtures/'run_native_e2e.py')
+        runner=importlib.util.module_from_spec(spec);spec.loader.exec_module(runner)
+    finally:sys.path.remove(str(fixtures))
+    def git(*args):return subprocess.run(['git',*args],cwd=tmp_path,check=True,capture_output=True)
+    git('init');source=tmp_path/'source.py';source.write_text('original')
+    git('add','.');git('-c','user.name=Test','-c','user.email=test@example.invalid','commit','-m','fixture')
+    revision=runner.checked_source_revision(tmp_path);runner.verify_source_revision(tmp_path,revision)
+    source.write_text('changed')
+    with pytest.raises(ValueError,match='clean source'):runner.checked_source_revision(tmp_path)
+    with pytest.raises(ValueError,match='source changed'):runner.verify_source_revision(tmp_path,revision)
+    git('add','.');git('-c','user.name=Test','-c','user.email=test@example.invalid','commit','-m','advance')
+    with pytest.raises(ValueError,match='source changed'):runner.verify_source_revision(tmp_path,revision)
