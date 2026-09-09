@@ -40,9 +40,25 @@ def main(argv=None) -> int:
     solve.add_argument("--output", type=Path, required=True, help="new evaluation directory")
     solve.add_argument("--backend", choices=["beat_cpu", "beat_cuda", "beat_rocm"], default="beat_cpu")
     solve.add_argument("--timeout-per-stage-s", type=float, default=1800)
+    compile_system = commands.add_parser("compile-interior", help="compile experimental generated horn air meshes")
+    compile_system.add_argument("geometry", type=Path)
+    compile_system.add_argument("--sources", type=Path, required=True)
+    compile_system.add_argument("--output", type=Path, required=True)
+    validate_basis = commands.add_parser("validate-electrical", help="check full-basis circuit consistency")
+    validate_basis.add_argument("project", type=Path)
+    validate_basis.add_argument("evaluation", type=Path)
     args = parser.parse_args(argv)
     try:
-        if args.command == "solve-project":
+        if args.command == "validate-electrical":
+            from .validation import validate_electrical_basis
+            result = validate_electrical_basis(args.project, args.evaluation)
+            print(json.dumps(result, indent=2, allow_nan=False))
+            return 0 if result["passed"] else 1
+        elif args.command == "compile-interior":
+            from .generated_system import HornSources, compile_interior_system
+            sources = HornSources.model_validate_json(args.sources.read_text(encoding="utf-8"))
+            result = compile_interior_system(args.geometry, sources, args.output)
+        elif args.command == "solve-project":
             from .boundary_lab import BoundaryLabRuntime, SolveRequest
             request = SolveRequest.model_validate_json(args.request.read_text(encoding="utf-8"))
             runtime = BoundaryLabRuntime(args.checkout, args.python, args.julia, args.backend)
