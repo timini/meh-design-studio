@@ -95,7 +95,7 @@ def test_load_requires_pressure_and_revalidates_artifacts(tmp_path, monkeypatch,
     project.write_text('{}')
     (tmp_path/'exterior').mkdir()
     (tmp_path/'exterior/envelope.step').write_text('fixture CAD')
-    (tmp_path/'compilation.json').write_text('{"exterior_mesh_size_m":0.02,"compiler_runtime":{"gmsh":"test"}}')
+    (tmp_path/'compilation.json').write_text('{"exterior_mesh_size_m":0.02,"compiler_runtime":{"gmsh":"test"},"runtime":{"python":"conforming"}}')
     root = tmp_path/'evaluation'
     upstream = root/'upstream'
     upstream.mkdir(parents=True)
@@ -127,14 +127,15 @@ def test_load_requires_pressure_and_revalidates_artifacts(tmp_path, monkeypatch,
         assert len(calls) == 2 and len(rows) == 1
 
 
-@pytest.mark.parametrize('host',[False,True])
+@pytest.mark.parametrize('host',[False,True,'conforming'])
 def test_comparison_rejects_different_dependency_runtime(tmp_path, monkeypatch, host):
     import sys
     runs = []
     for i, size in enumerate([.02,.015,.01]):
         record = {'mesh_size_m':size, 'mesh_inventory':[{'purpose':'bem_surface','sha256':str(i)}],
                   'runtime':{'packages':{'numpy':str(0 if host else i)}},
-                  'compiler_runtime':{'gmsh':str(i if host else 0)}, 'exterior_identity':{'cad':'same'},
+                  'compiler_runtime':{'gmsh':str(i if host is True else 0)},
+                  'compilation_runtime':{'python':str(i if host=='conforming' else 0)}, 'exterior_identity':{'cad':'same'},
                   'pressure_ids':['polar'], 'project_definition_sha256':'same'}
         manifest = {'frequencies_hz':[1000], 'excitation_port_ids':['a'], 'meshes':[]}
         runs.append((record, manifest, []))
@@ -167,7 +168,7 @@ def test_comparison_records_and_rechecks_runner_identity(tmp_path,monkeypatch,ch
     loaded=[]
     for i,size in enumerate([.02,.015,.01]):
         record={'mesh_size_m':size,'mesh_inventory':[{'purpose':'bem_surface','sha256':str(i)}],
-                'runtime':{'python':'test'},'compiler_runtime':{'gmsh':'test'},
+                'runtime':{'python':'test'},'compiler_runtime':{'gmsh':'test'},'compilation_runtime':{'python':'same'},
                 'exterior_identity':{'cad':'same'},'pressure_ids':['p'],
                 'project_definition_sha256':'same','evaluation':f'run-{i}'}
         manifest={'frequencies_hz':[1000],'excitation_port_ids':['a'],'meshes':[],

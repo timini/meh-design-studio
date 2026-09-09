@@ -9,6 +9,15 @@ from .geometry import HornGeometry
 from .radiation_geometry import export_exterior, surface_integrity, verify_exterior_groups, meshing_runtime_identity
 
 
+def require_cad_dependencies():
+    from .cad_runtime import load_cadquery
+    try:
+        load_cadquery()
+        import gmsh
+    except ImportError as exc:
+        raise ImportError('Radiating compilation requires optional CAD dependencies; install meh-design-studio[cad]') from exc
+
+
 def compile_radiating_system(geometry_directory: Path, sources: HornSources, output: Path,
                              runtime: BoundaryLabRuntime, *, exterior_mesh_size_m: float = .02,
                              timeout_s: float = 600) -> dict:
@@ -36,6 +45,7 @@ def compile_radiating_system(geometry_directory: Path, sources: HornSources, out
 def _compile_radiating_system(geometry_directory, sources, output, runtime, *, exterior_mesh_size_m,
                               timeout_s, report, activate):
     runtime_identity = runtime.verify()
+    require_cad_dependencies()
     output = Path(output).resolve()
     report = compile_interior_system(geometry_directory, sources, output, _report=report, _activate=activate)
     report.update(status="running", mouth_load="coupled_exterior_bem", runtime=runtime_identity)
