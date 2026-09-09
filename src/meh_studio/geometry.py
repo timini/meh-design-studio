@@ -92,7 +92,7 @@ def build_geometry(design: HornGeometry):
             front_air = front_air.fuse(tube, chamber)
             material = material.fuse(
                 cylinder(design.port_radius_m * mm + wall, 0, duct_end + wall),
-                cylinder(design.front_radius_m * mm + wall, duct_end, design.front_depth_m * mm + wall))
+                cylinder(design.front_radius_m * mm + wall, duct_end - wall, design.front_depth_m * mm + 2 * wall))
             # Open mounting aperture; the missing driver is an explicit reserved volume.
             material = material.cut(cylinder(design.front_radius_m * mm, diaphragm, wall * 2))
             rear_start = diaphragm + wall
@@ -109,7 +109,28 @@ def build_geometry(design: HornGeometry):
     for name, solid in {**parts, **air_regions}.items():
         if not solid.isValid() or solid.Volume() <= 0 or len(solid.Solids()) != 1:
             raise ValueError(f"geometry kernel produced an invalid or disconnected solid: {name}")
+    verify_front_chamber_back_walls(design, front_air, parts["horn"])
     return air_regions, parts, sources
+
+
+def verify_front_chamber_back_walls(design, front_air, horn):
+    """Check material behind the chamber back faces independently of STL closure."""
+    from .cad_runtime import load_cadquery
+    cq=load_cadquery();mm=1000.;wall=design.wall_m*mm
+    # Stay away from coincident faces while testing almost the entire wall thickness.
+    inset=min(wall/1000.,1e-3);depth=wall-2*inset;checks=[]
+    for pair,entry in enumerate(design.entry_positions_m):
+        local_radius=design.throat_radius_m+(design.mouth_radius_m-design.throat_radius_m)*entry/design.length_m
+        start=(local_radius+design.port_length_m)*mm+inset
+        for sign in (1,-1):
+            nominal=cq.Solid.makeCylinder(design.front_radius_m*mm,depth,cq.Vector(sign*start,0,entry*mm),cq.Vector(sign,0,0))
+            # The port and any intended intersection with horn air remain open.
+            required=nominal.cut(front_air);volume=required.Volume()
+            missing=required.cut(horn).Volume()
+            if volume<=1e-9 or missing>max(1e-6,volume*1e-7):
+                raise ValueError('front chamber back wall is not covered by material')
+            checks.append({'entry_pair':pair,'side':sign,'required_volume_m3':volume/1e9,'missing_volume_m3':missing/1e9})
+    return checks
 
 
 def export_geometry(design: HornGeometry, output: Path) -> dict:
@@ -139,6 +160,7 @@ def export_geometry(design: HornGeometry, output: Path) -> dict:
                                   "size_bytes": path.stat().st_size})
         state.update(status="complete", design=design.model_dump(mode="json"),
                      driver_count=design.driver_count, sources=sources, files=files,
+                     front_chamber_back_walls_verified=True,
                      air_volume_m3={name: solid.Volume() / 1e9 for name, solid in regions.items()},
                      material_volume_m3={name: solid.Volume() / 1e9 for name, solid in parts.items()},
                      limitations=["Ideal circular source interfaces, not qualified purchased-driver mounting geometry",
@@ -159,7 +181,7 @@ SOURCE_AREA_RELATIVE_TOLERANCE = .01
 
 
 def estimated_curved_tetrahedra(design, region, volume):
-    """Conservative size-field estimate for the supported conical/cylindrical family."""
+    """Heuristic size-field estimate for the supported conical/cylindrical family."""
     import math
     h=design.mesh_size_m
     local=lambda radius:min(h,2*math.pi*radius/CURVATURE_ELEMENTS)

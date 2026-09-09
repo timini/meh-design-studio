@@ -1,6 +1,12 @@
 name: Native horn end-to-end validation
 on:
   workflow_dispatch:
+    inputs:
+      benchmark:
+        type: choice
+        description: Numerical horn benchmark
+        default: compact
+        options: [compact, full-size]
   pull_request:
     types: [labeled]
 permissions:
@@ -21,8 +27,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-native
       - name: Run reference and search
+        env:
+          BENCHMARK: ${{ inputs.benchmark || 'compact' }}
         run: |
-          "$RUNNER_TEMP/meh-env/bin/python" validation/fixtures/run_native_e2e.py "$RUNNER_TEMP/horn-evidence" --search-only \
+          case "$BENCHMARK" in
+            compact) brief_file=examples/synthetic-compact-search-brief.json; geometry_file=examples/compact-three-driver-geometry.json ;;
+            full-size) brief_file=examples/synthetic-dense-search-brief.json; geometry_file=examples/three-driver-geometry.json ;;
+            *) exit 2 ;;
+          esac
+          "$RUNNER_TEMP/meh-env/bin/python" validation/fixtures/run_native_e2e.py "$RUNNER_TEMP/horn-evidence" --search-only --brief "$brief_file" --geometry "$geometry_file" \
             --checkout "$RUNNER_TEMP/boundary-lab" --python "$RUNNER_TEMP/meh-env/bin/python" \
             --julia "$(command -v julia)" 2>&1 | tee "$RUNNER_TEMP/search.log"
       - uses: actions/upload-artifact@v4

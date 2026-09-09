@@ -128,3 +128,15 @@ change those identities. The sequential local runner remains available.
 
 The evidence runners require a clean checkout and the same source commit across
 search, partition workers and assembly. Dirty or changed sources are rejected.
+
+### Compact benchmark
+
+The label-triggered native workflow uses `synthetic-compact-search-brief.json` and
+`compact-three-driver-geometry.json`: four candidates with 120/125 mm paths,
+100 mm mouth diameter, and 17 search frequencies from 1000 to 4000 Hz. Validation
+uses 33 frequencies and the same 8/6/4 mm maximum mesh sizes and acceptance limits.
+It uses the same synthetic driver catalogue. This is a separate, smaller numerical
+benchmark, not a successful result for the larger 500–2000 Hz experiment.
+Manual workflow dispatch offers `full-size` for the larger benchmark. The local
+runner accepts `--brief` and `--geometry`; omitting them retains the original
+full-size defaults. The smaller case reduces the cost of complete pipeline testing.

@@ -50,3 +50,18 @@ that mesh therefore changed the effective source as well as the discretisation.
 The area gate is a geometry check, not a substitute for acoustic convergence.
 See [Gmsh's mesh-size rules](https://gmsh.info/doc/texinfo/#Specifying-mesh-element-sizes)
 for how curvature targets are constrained by minimum and maximum sizes.
+
+## Chamber back-wall coverage
+
+The front-chamber material extends one wall thickness behind its air volume. This
+connects the wider chamber wall to the narrower entry port and backs the rigid
+annular air boundary with material. The generator independently checks a thinly
+inset slab through that wall, subtracts intended air openings, and rejects any
+remaining required volume not covered by the horn material.
+
+A compact-horn test exposed the previous missing transition wall: it produced
+three disconnected, individually valid solids. Some larger shapes happened to
+connect through the horn flare, so solid validity and STL closure alone missed
+the defect. Tests now cover compact connected chambers and deliberately removed
+back-wall material. Earlier geometry exports remain experimental and should not
+be used as qualified printable designs.

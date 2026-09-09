@@ -115,3 +115,30 @@ def test_curved_source_area_gate_rejects_underresolved_disk(tmp_path,segments,pa
         assert checks[0]['relative_area_error']<.003
     else:
         with pytest.raises(ValueError,match='mesh area differs'):source_area_checks(path,{'source':1.})
+
+
+@pytest.mark.cad
+@pytest.mark.parametrize('length',[.12,.125])
+def test_compact_chambers_have_connected_material_back_walls(geometry_data,length):
+    pytest.importorskip('cadquery')
+    design=HornGeometry.model_validate(geometry_data|{'length_m':length,'mouth_radius_m':.05,
+        'entry_positions_m':[length*.45],'front_radius_m':.02})
+    air,parts,_=build_geometry(design)
+    from meh_studio.geometry import verify_front_chamber_back_walls
+    checks=verify_front_chamber_back_walls(design,air['front'],parts['horn'])
+    assert len(parts['horn'].Solids())==1 and len(checks)==2
+    assert all(c['required_volume_m3']>0 and c['missing_volume_m3']<1e-12 for c in checks)
+
+
+@pytest.mark.cad
+def test_missing_back_wall_is_rejected_even_for_closed_cad(geometry_data):
+    cq=pytest.importorskip('cadquery')
+    from meh_studio.geometry import verify_front_chamber_back_walls
+    design=HornGeometry.model_validate(geometry_data);air,parts,_=build_geometry(design)
+    z=design.entry_positions_m[0];radius=design.throat_radius_m+(design.mouth_radius_m-design.throat_radius_m)*z/design.length_m
+    cut=cq.Solid.makeCylinder(design.front_radius_m*1000,design.wall_m*1000,
+        cq.Vector((radius+design.port_length_m)*1000,0,z*1000),cq.Vector(1,0,0))
+    damaged=parts['horn'].cut(cut)
+    assert damaged.isValid()  # CAD validity/closure alone does not check acoustic wall coverage.
+    with pytest.raises(ValueError,match='back wall'):
+        verify_front_chamber_back_walls(design,air['front'],damaged)

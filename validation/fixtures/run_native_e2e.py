@@ -30,6 +30,8 @@ def verify_source_revision(repo,revision):
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('output',type=Path)
+    parser.add_argument('--brief',type=Path)
+    parser.add_argument('--geometry',type=Path)
     parser.add_argument('--search-only',action='store_true',help='Preserve the reference and search for partitioned CI validation')
     parser.add_argument('--checkout',type=Path,required=True)
     parser.add_argument('--python',type=Path,required=True)
@@ -66,8 +68,8 @@ def main():
             drivers=[DriverRevision.model_validate(d) for d in json.loads((repo/'examples/synthetic-search-drivers.json').read_text())]
             with Catalogue.create(output/'drivers.sqlite') as catalogue:
                 for driver in drivers:catalogue.add(driver)
-            brief=SearchBrief.model_validate_json((repo/'examples/synthetic-dense-search-brief.json').read_text())
-            base=HornGeometry.model_validate_json((repo/'examples/three-driver-geometry.json').read_text())
+            brief=SearchBrief.model_validate_json((args.brief or repo/'examples/synthetic-dense-search-brief.json').read_text())
+            base=HornGeometry.model_validate_json((args.geometry or repo/'examples/three-driver-geometry.json').read_text())
             search=optimise(brief,base,output/'drivers.sqlite',runtime,output/'search',trial_timeout_s=7200)
             baseline=response_score(output/'search/trial-000/system/project.blab.json',output/'search/trial-000/evaluation',(1.,))
             _write_json(output/'baseline-search-grid.json',baseline)
