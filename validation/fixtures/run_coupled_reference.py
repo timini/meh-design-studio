@@ -10,6 +10,8 @@ import json
 import subprocess
 import sys
 import importlib.metadata
+import hashlib
+import tempfile
 
 def verify_julia(executable):
     path = str(Path(executable).absolute())
@@ -40,6 +42,39 @@ def finish_failed_reference(session, writer, error):
             error.add_note(f'failure report could not be finalized: {report_error}')
 
 
+def request_snapshot(path, loader):
+    payload = path.read_bytes()
+    with tempfile.TemporaryDirectory(prefix='meh-reference-request-') as directory:
+        snapshot = Path(directory)/'request.json'
+        snapshot.write_bytes(payload)
+        spec = loader(snapshot)
+        if snapshot.read_bytes() != payload:
+            raise ValueError('request snapshot changed during parsing')
+    return spec, json.loads(payload), hashlib.sha256(payload).hexdigest()
+
+
+def execute_reference(writer, output, runtime, request_path, request_digest, make_session, canonicalize):
+    session = None
+    try:
+        runtime_payload = (json.dumps(runtime, indent=2) + '\n').encode()
+        runtime_path = output/'runtime.json'
+        runtime_path.write_bytes(runtime_payload)
+        writer.manifest['reference_runtime'] = {
+            'file':'runtime.json', 'sha256':hashlib.sha256(runtime_payload).hexdigest(), 'identity':runtime}
+        writer.manifest['source_request_sha256'] = request_digest
+        session = make_session()
+        for result in session.solve_stream():
+            writer.write_result(canonicalize(result))
+        if hashlib.sha256(request_path.read_bytes()).hexdigest() != request_digest:
+            raise ValueError('source request changed during reference solve')
+        if runtime_path.read_bytes() != runtime_payload:
+            raise ValueError('reference runtime evidence changed during solve')
+        writer.finish(status='complete')
+    except BaseException as exc:
+        finish_failed_reference(session, writer, exc)
+        raise
+
+
 def main():
     import blab
     from blab.headless import load_headless_project, load_headless_solve_spec, prepare_headless_solve, HeadlessResultWriter
@@ -61,24 +96,18 @@ def main():
     julia_identity = verify_julia(args.julia)
     runtime_identity = {**julia_identity, **python_identity()}
     project = load_headless_project(args.project)
-    spec = load_headless_solve_spec(args.request)
+    spec, public_request, request_digest = request_snapshot(args.request, load_headless_solve_spec)
     prepared = prepare_headless_solve(project, spec, backend_id="beat_cpu")
     # Hold condensation fixed to compare numerical precision on the same formulation.
     request = replace(prepared.request, solver_options=dict(prepared.request.solver_options) | {"static_condensation": True})
     prepared = replace(prepared, request=request)
     writer = HeadlessResultWriter(args.output, project=project, prepared=prepared,
-        backend_id="coupled_reference", public_request=json.loads(args.request.read_text()))
-    (args.output / "runtime.json").write_text(json.dumps({"revision": revision, **runtime_identity}, indent=2) + "\n", encoding="utf-8")
-    backend = CoupledReferenceBackend(julia_executable=args.julia, julia_threads="4", persistent_worker=False)
-    session = None
-    try:
-        session = backend.create_system_session(request)
-        for result in session.solve_stream():
-            writer.write_result(canonicalize_observation_result(prepared, result))
-        writer.finish(status="complete")
-    except BaseException as exc:
-        finish_failed_reference(session, writer, exc)
-        raise
+        backend_id="coupled_reference", public_request=public_request)
+    execute_reference(writer, args.output, {"revision":revision, **runtime_identity},
+        args.request, request_digest,
+        lambda: CoupledReferenceBackend(julia_executable=args.julia, julia_threads="4",
+            persistent_worker=False).create_system_session(request),
+        lambda result: canonicalize_observation_result(prepared, result))
     print(json.dumps({"status": "complete", "backend": "coupled_reference", "precision": "float64",
                       "revision": revision, "runtime": runtime_identity, "output": str(args.output.resolve())}))
 

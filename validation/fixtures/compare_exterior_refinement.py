@@ -20,6 +20,7 @@ def load(project, evaluation):
         raise ValueError("missing evaluated runtime identity")
     manifest = _read_json(evaluation/'upstream/manifest.json')
     identity = exterior_identity(project, manifest)
+    step_digest = sha256(project.parent/'exterior/envelope.step')
     rows = []
     pressure_ids = None
     for result in manifest['results']:
@@ -36,9 +37,9 @@ def load(project, evaluation):
     target = _read_json(project.parent/'compilation.json')['exterior_mesh_size_m']
     if validate_electrical_basis(project, evaluation) != checks or sha256(evaluation/'evaluation.json') != evaluation_hash:
         raise ValueError('evaluation artifacts changed while loading comparison arrays')
-    if exterior_identity(project, manifest) != identity:
+    if exterior_identity(project, manifest) != identity or sha256(project.parent/'exterior/envelope.step') != step_digest:
         raise ValueError('exterior evidence changed while loading comparison arrays')
-    return {'runtime': runtime, 'pressure_ids': sorted(pressure_ids or []),
+    return {'cad_sha256': step_digest, 'runtime': runtime, 'pressure_ids': sorted(pressure_ids or []),
             'project_definition_sha256': refinement_project_hash(project), 'evaluation':str(evaluation.resolve()),'evaluation_sha256':sha256(evaluation/'evaluation.json'),
             'project_sha256':sha256(project),'mesh_inventory':manifest['meshes'],
             'exterior_identity':identity,

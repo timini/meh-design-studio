@@ -93,6 +93,8 @@ def test_load_requires_pressure_and_revalidates_artifacts(tmp_path, monkeypatch,
     import json
     project = tmp_path/'project.json'
     project.write_text('{}')
+    (tmp_path/'exterior').mkdir()
+    (tmp_path/'exterior/envelope.step').write_text('fixture CAD')
     (tmp_path/'compilation.json').write_text('{"exterior_mesh_size_m":0.02}')
     root = tmp_path/'evaluation'
     upstream = root/'upstream'
@@ -116,6 +118,7 @@ def test_load_requires_pressure_and_revalidates_artifacts(tmp_path, monkeypatch,
         record, _, rows = module.load(project,root)
         assert record['pressure_ids'] == ['observable']
         assert record['runtime'] == {'python':'pinned'}
+        assert record['cad_sha256'] == module.sha256(tmp_path/'exterior/envelope.step')
         assert len(calls) == 2 and len(rows) == 1
 
 

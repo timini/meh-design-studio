@@ -42,3 +42,54 @@ def test_reference_failure_is_finalized_despite_cleanup_error():
     module.finish_failed_reference(Session(), writer, error)
     assert writer.result == {'status':'failed','error':'original solve failed'}
     assert 'cleanup failed' in error.__notes__[0]
+
+
+def test_request_preparation_uses_one_snapshot(tmp_path):
+    import json
+    path = tmp_path/'request.json'
+    path.write_text('{"frequencies_hz":[1000]}')
+    def loader(snapshot):
+        path.write_text('{"frequencies_hz":[2000]}')
+        return json.loads(snapshot.read_bytes())
+    spec, public, digest = module.request_snapshot(path, loader)
+    assert spec == public == {'frequencies_hz':[1000]}
+    assert digest != module.hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+@pytest.mark.parametrize('fault', [None, 'setup', 'runtime_write', 'request_change'])
+def test_reference_setup_and_evidence_are_finalized(tmp_path, monkeypatch, fault):
+    import json
+    request = tmp_path/'input.json'
+    request.write_text('{}')
+    digest = module.hashlib.sha256(request.read_bytes()).hexdigest()
+    output = tmp_path/'output'
+    output.mkdir()
+    class Writer:
+        manifest = {}
+        def finish(self, **kwargs):
+            self.result = kwargs
+        def write_result(self, result): pass
+    class Session:
+        def solve_stream(self):
+            if fault == 'request_change': request.write_text('{"changed":true}')
+            return iter([])
+        def stop(self): pass
+    writer = Writer()
+    def make_session():
+        if fault == 'setup': raise RuntimeError('backend setup failed')
+        return Session()
+    original = Path.write_bytes
+    def fail_write(path, data):
+        if path.name == 'runtime.json': raise OSError('runtime write failed')
+        return original(path,data)
+    if fault == 'runtime_write': monkeypatch.setattr(Path,'write_bytes',fail_write)
+    if fault:
+        with pytest.raises((RuntimeError,ValueError,OSError)):
+            module.execute_reference(writer,output,{'python':'pinned'},request,digest,make_session,lambda r:r)
+        assert writer.result['status'] == 'failed'
+    else:
+        module.execute_reference(writer,output,{'python':'pinned'},request,digest,make_session,lambda r:r)
+        assert writer.result['status'] == 'complete'
+        runtime = writer.manifest['reference_runtime']
+        assert runtime['sha256'] == module.hashlib.sha256((output/'runtime.json').read_bytes()).hexdigest()
+        assert runtime['identity'] == json.loads((output/'runtime.json').read_bytes())
