@@ -2,7 +2,7 @@
 
 Design, optimise and manufacture affordable, efficient, high-fidelity multiple entry horn speakers from a curated driver database and a set of acoustic, budget and printing constraints.
 
-**Status: experimental foundation tools. There is no complete design application or validated speaker design yet.** The feasibility study has explicit gates before the full product can be qualified.
+**Status: experimental command-line design and simulation tools. An end-to-end numerical search is available; there is no physically validated speaker design yet.** The feasibility study has explicit gates before the full product can be qualified.
 
 ## Try the foundation tools
 
@@ -22,6 +22,8 @@ The command-line tools validate an explicit design brief, manage immutable priva
 A [Boundary Lab adapter](docs/boundary-lab-adapter.md) also runs existing projects using a separately installed pinned solver; its interior-FEM integration smoke test has been executed. The independent references do not simulate a 3D horn, and a syntactically valid brief is not evidence of an achievable speaker. The example brief remains a proposed challenge. See [implementation status and next steps](docs/implementation-status.md).
 
 Experimental horn CAD and tagged air meshing are available through [the geometry generator](docs/geometry-generator.md). These exports remain unverified for printing and acoustic performance.
+
+An [experimental optimisation workflow](docs/end-to-end-search.md) connects the synthetic driver catalogue, CAD, coupled FEM/BEM simulation, bounded search and finalist validation. It produces STEP/STL/3MF geometry exports. It currently optimises relative response ripple within a straight conical family; it does not establish efficiency, continuous-band hi-fi performance or print qualification.
 
 ## Documents
 
