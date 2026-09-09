@@ -1,7 +1,6 @@
 """Run original references, real horn search and frozen validation in a fresh directory."""
 import argparse
 import json
-import math
 import subprocess
 import sys
 from pathlib import Path
@@ -11,7 +10,7 @@ from meh_studio.catalogue import Catalogue
 from meh_studio.domain import DriverRevision
 from meh_studio.geometry import HornGeometry
 from meh_studio.optimisation import SearchBrief, candidates, optimise, evaluate_candidate, response_score
-from validate_search_finalist import validate
+from validate_search_finalist import validate, validation_frequencies
 
 
 def checked_source_revision(repo):
@@ -38,6 +37,9 @@ def main():
     parser.add_argument('--julia',type=Path,required=True)
     args=parser.parse_args()
     repo=Path(__file__).resolve().parents[2];output=args.output.absolute()
+    brief=SearchBrief.model_validate_json((args.brief or repo/'examples/synthetic-dense-search-brief.json').read_text())
+    frequencies=validation_frequencies(brief.frequencies_hz)
+    base=HornGeometry.model_validate_json((args.geometry or repo/'examples/three-driver-geometry.json').read_text())
     runtime=BoundaryLabRuntime(args.checkout,args.python,args.julia,julia_threads=1)
     identity=runtime.verify()
     source_commit=checked_source_revision(repo)
@@ -68,8 +70,6 @@ def main():
             drivers=[DriverRevision.model_validate(d) for d in json.loads((repo/'examples/synthetic-search-drivers.json').read_text())]
             with Catalogue.create(output/'drivers.sqlite') as catalogue:
                 for driver in drivers:catalogue.add(driver)
-            brief=SearchBrief.model_validate_json((args.brief or repo/'examples/synthetic-dense-search-brief.json').read_text())
-            base=HornGeometry.model_validate_json((args.geometry or repo/'examples/three-driver-geometry.json').read_text())
             search=optimise(brief,base,output/'drivers.sqlite',runtime,output/'search',solver_stage_timeout_s=7200)
             baseline=response_score(output/'search/trial-000/system/project.blab.json',output/'search/trial-000/evaluation',(1.,))
             _write_json(output/'baseline-search-grid.json',baseline)
@@ -80,7 +80,6 @@ def main():
                 report.update(status='search_complete',stage='search_complete')
                 return
             stage('baseline_validation_grid')
-            frequencies=tuple(sorted(set(brief.frequencies_hz)|{float(round(math.sqrt(a*b))) for a,b in zip(brief.frequencies_hz,brief.frequencies_hz[1:])}))
             baseline_brief=SearchBrief.model_validate(brief.model_dump()|{'side_gains':(1.,)})
             baseline_dense=evaluate_candidate(candidates(brief,base,drivers)[0],output/'baseline-validation',runtime,
                 baseline_brief,frequencies=frequencies,timeout_s=7200)

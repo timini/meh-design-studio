@@ -42,6 +42,19 @@ def mesh_identity(root):
             'exterior_mesh_size_m':record['exterior_mesh_size_m'],'compiler_runtime':record['compiler_runtime']}
 
 
+def validation_frequencies(search_frequencies):
+    """Require a distinct native-label-safe held-out sample in every interval."""
+    midpoints=[]
+    for low,high in zip(search_frequencies,search_frequencies[1:]):
+        midpoint=float(round(math.sqrt(low*high)))
+        if not low<midpoint<high:
+            raise ValueError('rounded validation midpoint must lie strictly inside each search interval')
+        midpoints.append(midpoint)
+    if not midpoints:
+        raise ValueError('validation requires held-out frequencies')
+    return tuple(sorted((*search_frequencies,*midpoints)))
+
+
 def load_search(search):
     search=Path(search).absolute()
     control_names=('search.json','brief.json','base-geometry.json','catalogue-snapshot.json')
@@ -74,7 +87,7 @@ def load_search(search):
         raise ValueError('winning trial differs from its scored artifact')
     control_hashes[score_name]=result['winner_score_sha256']
     gain=trial['side_gain']
-    frequencies=tuple(sorted(set(brief.frequencies_hz)|{float(round(math.sqrt(a*b))) for a,b in zip(brief.frequencies_hz,brief.frequencies_hz[1:])}))
+    frequencies=validation_frequencies(brief.frequencies_hz)
     frozen=SearchBrief.model_validate(brief.model_dump()|{'side_gains':(gain,)})
     sizes=(base.mesh_size_m,base.mesh_size_m*.75,base.mesh_size_m*.5)
     if min(sizes)<.0005: raise ValueError('refinement exceeds generator mesh limits')

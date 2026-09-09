@@ -61,6 +61,9 @@ size is 8 mm), using the search frequencies and rounded geometric midpoints.
 The selected side gain remains fixed. Native frequency result labels lose
 precision for irrational midpoint frequencies, so this experiment requests
 explicit whole-hertz midpoints and retains exact request/result label checks.
+Each midpoint must lie strictly inside its search interval. Closely spaced grids
+that collapse after rounding are rejected before native E2E work or finalist validation,
+so every interval contributes a distinct held-out sample.
 The original failed noninteger-frequency evaluation is retained in the run evidence.
 
 Successive **raw complex pressure** differences must stay within 0.5 dB and

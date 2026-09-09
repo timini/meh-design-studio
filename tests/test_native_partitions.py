@@ -134,3 +134,21 @@ def test_partition_inputs_replay_real_catalogue_array(tmp_path,level):
     assert frequencies==(1000.,1044.)
     assert expected['design']['mesh_size_m']==size
     assert candidate['drivers'][0].id=='synthetic-throat'
+
+
+@pytest.mark.parametrize('search_only',[False,True])
+def test_native_runner_rejects_collapsed_grid_before_runtime(tmp_path,monkeypatch,search_only):
+    import json
+    runner=sys.modules['run_native_e2e']
+    examples=fixtures.parents[1]/'examples'
+    data=json.loads((examples/'synthetic-compact-search-brief.json').read_text())
+    data['frequencies_hz']=[1000,1001,1002]
+    brief=tmp_path/'brief.json';brief.write_text(json.dumps(data))
+    def unexpected_runtime(*args,**kwargs):
+        pytest.fail('invalid validation grid must fail before native runtime work')
+    monkeypatch.setattr(runner,'BoundaryLabRuntime',unexpected_runtime)
+    monkeypatch.setattr(sys,'argv',['run_native_e2e.py',str(tmp_path/'output'),'--brief',str(brief),
+        '--checkout','unused','--python','unused','--julia','unused']+(['--search-only'] if search_only else []))
+    with pytest.raises(ValueError,match='strictly inside'):
+        runner.main()
+    assert not (tmp_path/'output').exists()

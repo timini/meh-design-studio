@@ -10,7 +10,7 @@ module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 
 
-@pytest.mark.parametrize('changed_input',[False,True,'before','wide','unstable','gain','both_gains','score_changed','last_runtime',pytest.param('cancel',marks=pytest.mark.skipif(__import__('sys').platform=='win32',reason='POSIX SIGTERM lifecycle'))])
+@pytest.mark.parametrize('changed_input',[False,True,'before','wide','collapsed','unstable','gain','both_gains','score_changed','last_runtime',pytest.param('cancel',marks=pytest.mark.skipif(__import__('sys').platform=='win32',reason='POSIX SIGTERM lifecycle'))])
 def test_finalist_replays_catalogue_array_and_freezes_gain(tmp_path, monkeypatch, changed_input):
     examples = Path(__file__).resolve().parents[1] / 'examples'
     search = tmp_path / 'search'
@@ -21,6 +21,9 @@ def test_finalist_replays_catalogue_array_and_freezes_gain(tmp_path, monkeypatch
         (search / target).write_bytes((examples / source).read_bytes())
     if changed_input=='wide':
         data=json.loads((search/'brief.json').read_text());data['frequencies_hz']=[500+15*i for i in range(100)]
+        (search/'brief.json').write_text(json.dumps(data))
+    if changed_input=='collapsed':
+        data=json.loads((search/'brief.json').read_text());data['frequencies_hz']=[1000,1001,1002]
         (search/'brief.json').write_text(json.dumps(data))
     candidate=search/'trial-000/candidate.json';candidate.parent.mkdir()
     pool=module.candidates(module.SearchBrief.model_validate_json((search/'brief.json').read_text()),
@@ -43,6 +46,11 @@ def test_finalist_replays_catalogue_array_and_freezes_gain(tmp_path, monkeypatch
     monkeypatch.setattr(module, 'validate_export', lambda *args: {'print_qualified': False})
     class Runtime:
         def verify(self): return {'revision':'changed' if changed_input=='last_runtime' and len(calls)==3 else 'test'}
+    if changed_input=='collapsed':
+        with pytest.raises(ValueError,match='strictly inside'):
+            module.validate(search,tmp_path/'validation',Runtime())
+        assert not calls and not (tmp_path/'validation').exists()
+        return
     if changed_input in ('both_gains','score_changed'):
         if changed_input=='both_gains':
             result=json.loads((search/'search.json').read_text());result['winner']['side_gain']=.8;result['trials'][0]['side_gain']=.8
@@ -99,3 +107,16 @@ def test_finalist_replays_catalogue_array_and_freezes_gain(tmp_path, monkeypatch
     assert len(calls) == 3
     assert all(gain == (.5,) and len(frequencies) == (199 if changed_input=='wide' else 5) for gain, frequencies, _ in calls)
     assert [call[2] for call in calls] == pytest.approx([.008, .006, .004])
+
+
+@pytest.mark.parametrize('frequencies',[(1000,1001,1002),(1000,1100,1101)])
+def test_validation_rejects_any_collapsed_interval(frequencies):
+    with pytest.raises(ValueError,match='strictly inside'):
+        module.validation_frequencies(frequencies)
+
+
+def test_compact_validation_has_exactly_one_new_sample_per_interval():
+    brief=module.SearchBrief.model_validate_json((Path(__file__).resolve().parents[1]/'examples/synthetic-compact-search-brief.json').read_text())
+    grid=module.validation_frequencies(brief.frequencies_hz)
+    assert len(grid)==33 and len(set(grid)-set(brief.frequencies_hz))==16
+    assert grid[:3]==(1000.,1044.,1090.)
