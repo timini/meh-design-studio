@@ -2,7 +2,9 @@
 
 Design, optimise and manufacture affordable, efficient, high-fidelity multiple entry horn speakers from a curated driver database and a set of acoustic, budget and printing constraints.
 
-**Status: experimental command-line design and simulation tools. An end-to-end numerical search is available; there is no physically validated speaker design yet.** The feasibility study has explicit gates before the full product can be qualified.
+**Status: experimental command-line design and simulation tools. A complete native optimisation and numerical validation experiment has passed; there is no physically validated speaker design yet.** The feasibility study has explicit gates before the full product can be qualified.
+
+The [executed E2E results](docs/end-to-end-evidence.md) include a 3.77 dB improvement at unseen frequencies, three-mesh stability checks, raw solver evidence and downloadable horn geometry. The benchmark uses synthetic drivers and does not establish hi-fi flatness or efficiency.
 
 ## Try the foundation tools
 

@@ -4,6 +4,8 @@ Merged increments now include the foundation, geometry generator, durable job le
 
 The generated interior experiment now connects synthetic three-source geometry to FEM and includes an 8-to-4 mm mesh sensitivity study, independent electrical consistency checks, and a uniform-tube analytic load comparison. See [generated-system evidence](generated-system.md). These remain experimental numerical results with no free-field, band or physical qualification.
 
+The [complete compact native experiment](end-to-end-evidence.md) now passes its analytic-reference, held-out improvement and mesh-stability gates. Its 1–4 kHz result is an executed numerical demonstration with archived raw evidence and STEP/STL/3MF exports; physical qualification and broader product requirements remain open.
+
 ## Available
 
 - Durable SQLite job leases, cancellation, one automatic recovery retry, bounded completion descriptors and integrity-checked publication. An isolated CAD worker is implemented; dependency-aware scheduling and full search/solver orchestration through durable workers remain to implement.

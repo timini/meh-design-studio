@@ -1,0 +1,24 @@
+{
+  "original_run": "https://github.com/timini/meh-design-studio/actions/runs/34370258164",
+  "acceptance_run": "https://github.com/timini/meh-design-studio/actions/runs/34384322949",
+  "source_commit": "ca3e8caf4f9c2437a8b3c3f22b5bee7cb54cb610",
+  "release": "https://github.com/timini/meh-design-studio/releases/tag/numerical-e2e-2026-09-09",
+  "files": [
+    {
+      "name": "native-inputs-34370258164.zip",
+      "size_bytes": 1325592296,
+      "sha256": "5d8059878032f2302ac1da9d0ae1f8dca00cad9bdf598716d88114185c174338"
+    },
+    {
+      "name": "native-acceptance-34384322949.zip",
+      "size_bytes": 28517,
+      "sha256": "f8e91aaa28c4857dbefb8c25fd4431c9f78e2afa948e449c0f57b4ba31906f1e"
+    },
+    {
+      "name": "experimental-horn.zip",
+      "size_bytes": 5587603,
+      "sha256": "4f56089f4848b761d2a916a4f1b9730bb3df545c85f9ffab600d1dc2f8b4626b"
+    }
+  ],
+  "note": "Original search and all 68 solves completed; original assembly setup failed on Chrome mirror checksum. Separate replay used the original source and unmodified raw artifacts and passed all declared numerical gates. Later guard and workflow changes are not represented as new solver executions."
+}

@@ -41,7 +41,7 @@ Set `JULIA_DEPOT_PATH` to an absolute path when using a separate Julia depot.
 Validation must use fresh generated reference fixtures, repeat the finalist with
 fixed drive settings on a denser frequency grid and at multiple mesh resolutions,
 and retain failing results. Passing software tests alone does not validate acoustics.
-Current executed evidence will be recorded separately after those runs finish.
+The [executed compact benchmark](end-to-end-evidence.md) records a completed passing numerical experiment and its raw evidence.
 
 ## Reproduce the denser validation experiment
 
@@ -164,3 +164,20 @@ gates. It does not rerun, rewrite or rescore the optimisation with new settings.
 The replay run and original run must both be cited when reporting the result.
 The initial replay defaults recover run 34370258164, whose assembly setup failed
 on an unrelated Chrome repository checksum mismatch after all solves completed.
+
+## Run the completed compact benchmark locally
+
+From a clean checkout with the external runtime installed as described in the
+[adapter guide](boundary-lab-adapter.md):
+
+```sh
+python validation/fixtures/run_native_e2e.py runs/compact-e2e \
+  --brief examples/synthetic-compact-search-brief.json \
+  --geometry examples/compact-three-driver-geometry.json \
+  --checkout /path/to/boundary-lab --python /path/to/blab-env/bin/python \
+  --julia /path/to/julia
+```
+
+Use a fresh output directory. This runs real native solves and can take hours.
+A successful `experiment.json` records pipeline completion separately from
+unsupported strict coupled electrical consistency and absent physical qualification.
