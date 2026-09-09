@@ -109,8 +109,8 @@ with a fresh search to obtain evidence under the current integrity contract.
 ### Partitioned native CI
 
 CI first runs the independent tube reference and the complete 17-frequency search.
-It then evaluates the baseline and three frozen-winner meshes in eleven frequency
-partitions each (44 jobs, three frequencies per solve). A final job reads
+It then evaluates the baseline and three frozen-winner meshes in seventeen frequency
+partitions each (68 jobs, at most two frequencies per solve). A final job reads
 and verifies every raw result, requires exact frequency coverage and identical
 mesh hashes within each level, and combines raw complex pressures before scoring.
 It never normalises individual partitions. The 33 frequencies, 8/6/4 mm meshes,

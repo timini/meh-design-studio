@@ -11,7 +11,7 @@ from meh_studio.geometry import HornGeometry
 from validate_search_finalist import load_search, pressure, mesh_identity
 from run_native_e2e import checked_source_revision, verify_source_revision
 
-PARTS=11
+PARTS=17
 LEVELS=('baseline','0','1','2')
 
 
