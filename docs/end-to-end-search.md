@@ -106,12 +106,17 @@ before it expires. A successfully completed numerical job never marks the
 synthetic drivers or printed speaker as physically qualified.
 
 New searches bind saved controls and the selected candidate in `search.json`.
+Replay verifies the winning evaluation digest and the original referenced solver
+artifacts before accepting its frozen gain, and checks them again at completion.
 The current finalist validator rejects older, unbound searches; reproduce them
 with a fresh search to obtain evidence under the current integrity contract.
 
 ### Partitioned native CI
 
 CI first runs the independent tube reference and the complete 17-frequency search.
+Search-only mode rejects grids with fewer than 17 validation frequencies before
+starting native work, because every partition must contain a sample. Unrelated PR
+labels have separate concurrency groups and cannot cancel a requested native run.
 It then evaluates the baseline and three frozen-winner meshes in seventeen frequency
 partitions each (68 jobs, at most two frequencies per solve). A final job reads
 and verifies every raw result, requires exact frequency coverage and identical

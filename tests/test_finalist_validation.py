@@ -10,7 +10,7 @@ module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 
 
-@pytest.mark.parametrize('changed_input',[False,True,'before','wide','collapsed','unstable','gain','both_gains','score_changed','last_runtime',pytest.param('cancel',marks=pytest.mark.skipif(__import__('sys').platform=='win32',reason='POSIX SIGTERM lifecycle'))])
+@pytest.mark.parametrize('changed_input',[False,True,'before','wide','collapsed','evaluation_changed','upstream_changed','upstream_late','unstable','gain','both_gains','score_changed','last_runtime',pytest.param('cancel',marks=pytest.mark.skipif(__import__('sys').platform=='win32',reason='POSIX SIGTERM lifecycle'))])
 def test_finalist_replays_catalogue_array_and_freezes_gain(tmp_path, monkeypatch, changed_input):
     examples = Path(__file__).resolve().parents[1] / 'examples'
     search = tmp_path / 'search'
@@ -30,13 +30,21 @@ def test_finalist_replays_catalogue_array_and_freezes_gain(tmp_path, monkeypatch
         module.HornGeometry.model_validate_json((search/'base-geometry.json').read_text()),
         [module.DriverRevision.model_validate(d) for d in json.loads((search/'catalogue-snapshot.json').read_text())])
     candidate.write_text(json.dumps(module.candidate_record(pool[0])))
-    winning_trial={'index':0,'status':'complete','side_gain':.5}
-    score=candidate.parent/'score.json';score.write_text(json.dumps({'side_gain':.5}))
+    evaluation=candidate.parent/'evaluation/evaluation.json';evaluation.parent.mkdir();evaluation.write_text('{}')
+    scored={'side_gain':.5,'evaluation_sha256':module.sha256(evaluation)}
+    winning_trial=scored|{'index':0,'status':'complete'}
+    score=candidate.parent/'score.json';score.write_text(json.dumps(scored))
     (search / 'search.json').write_text(json.dumps({'status': 'complete', 'winner_index': 0,
         'winner':winning_trial,'trials':[winning_trial],'winner_candidate_sha256':module.sha256(candidate),'winner_score_sha256':module.sha256(score),
         'control_sha256':{name:module.sha256(search/name) for name in
             ('brief.json','base-geometry.json','catalogue-snapshot.json')}}))
     calls = []
+    def verify_winner(project,root):
+        if changed_input=='upstream_changed' or changed_input=='upstream_late' and len(calls)==3:
+            raise ValueError('evaluation artifact identity mismatch')
+        assert root==evaluation.parent
+        return {'controls':{'evaluation.json':module.sha256(evaluation)}}
+    monkeypatch.setattr(module,'verified_assessment',verify_winner)
     def evaluate(candidate, root, runtime, brief, *, mesh_size, timeout_s, frequencies):
         calls.append((brief.side_gains, frequencies, mesh_size))
         return {'electrical_validation': {'passed': False}}
@@ -46,6 +54,14 @@ def test_finalist_replays_catalogue_array_and_freezes_gain(tmp_path, monkeypatch
     monkeypatch.setattr(module, 'validate_export', lambda *args: {'print_qualified': False})
     class Runtime:
         def verify(self): return {'revision':'changed' if changed_input=='last_runtime' and len(calls)==3 else 'test'}
+    if changed_input in ('evaluation_changed','upstream_changed','upstream_late'):
+        if changed_input=='evaluation_changed':evaluation.write_text('{"changed":true}')
+        with pytest.raises(ValueError,match='winning evaluation|artifact identity'):
+            module.validate(search,tmp_path/'validation',Runtime())
+        assert len(calls)==(3 if changed_input=='upstream_late' else 0)
+        if changed_input=='upstream_late':
+            assert json.loads((tmp_path/'validation/validation.json').read_text())['status']=='failed'
+        return
     if changed_input=='collapsed':
         with pytest.raises(ValueError,match='strictly inside'):
             module.validate(search,tmp_path/'validation',Runtime())

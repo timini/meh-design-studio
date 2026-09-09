@@ -9,9 +9,9 @@ from meh_studio.optimisation import candidates, candidate_record, evaluate_candi
 from meh_studio.domain import DriverRevision
 from meh_studio.geometry import HornGeometry
 from validate_search_finalist import load_search, pressure, mesh_identity
-from run_native_e2e import checked_source_revision, verify_source_revision
+from run_native_e2e import checked_source_revision, verify_source_revision, VALIDATION_PARTS
 
-PARTS=17
+PARTS=VALIDATION_PARTS
 LEVELS=('baseline','0','1','2')
 
 

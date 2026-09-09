@@ -13,6 +13,9 @@ from meh_studio.optimisation import SearchBrief, candidates, optimise, evaluate_
 from validate_search_finalist import validate, validation_frequencies
 
 
+VALIDATION_PARTS=17
+
+
 def checked_source_revision(repo):
     if subprocess.check_output(['git','status','--porcelain','--untracked-files=normal'],cwd=repo,text=True).strip():
         raise ValueError('native evidence requires a clean source checkout')
@@ -39,6 +42,8 @@ def main():
     repo=Path(__file__).resolve().parents[2];output=args.output.absolute()
     brief=SearchBrief.model_validate_json((args.brief or repo/'examples/synthetic-dense-search-brief.json').read_text())
     frequencies=validation_frequencies(brief.frequencies_hz)
+    if args.search_only and len(frequencies)<VALIDATION_PARTS:
+        raise ValueError(f'partitioned validation requires at least {VALIDATION_PARTS} validation frequencies')
     base=HornGeometry.model_validate_json((args.geometry or repo/'examples/three-driver-geometry.json').read_text())
     runtime=BoundaryLabRuntime(args.checkout,args.python,args.julia,julia_threads=1)
     identity=runtime.verify()

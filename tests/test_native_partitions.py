@@ -112,7 +112,7 @@ def test_native_runner_rejects_dirty_or_changed_source(tmp_path):
 
 
 @pytest.mark.parametrize('level',module.LEVELS)
-def test_partition_inputs_replay_real_catalogue_array(tmp_path,level):
+def test_partition_inputs_replay_real_catalogue_array(tmp_path,monkeypatch,level):
     import json
     from meh_studio.optimisation import SearchBrief,candidates,candidate_record
     from meh_studio.geometry import HornGeometry
@@ -124,7 +124,9 @@ def test_partition_inputs_replay_real_catalogue_array(tmp_path,level):
     drivers=[DriverRevision.model_validate(d) for d in json.loads((search/'catalogue-snapshot.json').read_text())]
     pool=candidates(brief,base,drivers);trial=search/'trial-000';trial.mkdir()
     (trial/'candidate.json').write_text(json.dumps(candidate_record(pool[0])))
-    score={'side_gain':.3,'ripple_db':9.,'objective':9.};(trial/'score.json').write_text(json.dumps(score))
+    evaluation=trial/'evaluation/evaluation.json';evaluation.parent.mkdir();evaluation.write_text('{}')
+    monkeypatch.setattr(sys.modules['validate_search_finalist'],'verified_assessment',lambda *args:{'controls':{'evaluation.json':module.sha256(evaluation)}})
+    score={'side_gain':.3,'ripple_db':9.,'objective':9.,'evaluation_sha256':module.sha256(evaluation)};(trial/'score.json').write_text(json.dumps(score))
     winner=score|{'index':0,'status':'complete'}
     (search/'search.json').write_text(json.dumps({'status':'complete','winner_index':0,'winner':winner,'trials':[winner],
         'winner_candidate_sha256':module.sha256(trial/'candidate.json'),'winner_score_sha256':module.sha256(trial/'score.json'),
@@ -150,5 +152,20 @@ def test_native_runner_rejects_collapsed_grid_before_runtime(tmp_path,monkeypatc
     monkeypatch.setattr(sys,'argv',['run_native_e2e.py',str(tmp_path/'output'),'--brief',str(brief),
         '--checkout','unused','--python','unused','--julia','unused']+(['--search-only'] if search_only else []))
     with pytest.raises(ValueError,match='strictly inside'):
+        runner.main()
+    assert not (tmp_path/'output').exists()
+
+
+@pytest.mark.parametrize('count',[3,8])
+def test_partitioned_search_rejects_small_grid_before_runtime(tmp_path,monkeypatch,count):
+    import json
+    runner=sys.modules['run_native_e2e']
+    data=json.loads((fixtures.parents[1]/'examples/synthetic-compact-search-brief.json').read_text())
+    data['frequencies_hz']=[1000+100*i for i in range(count)]
+    brief=tmp_path/'brief.json';brief.write_text(json.dumps(data))
+    monkeypatch.setattr(runner,'BoundaryLabRuntime',lambda *args,**kwargs:pytest.fail('native work started'))
+    monkeypatch.setattr(sys,'argv',['run_native_e2e.py',str(tmp_path/'output'),'--brief',str(brief),
+        '--checkout','unused','--python','unused','--julia','unused','--search-only'])
+    with pytest.raises(ValueError,match='at least 17'):
         runner.main()
     assert not (tmp_path/'output').exists()

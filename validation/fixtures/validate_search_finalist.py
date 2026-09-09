@@ -86,6 +86,14 @@ def load_search(search):
     if {k:v for k,v in trial.items() if k not in ('index','status')}!=_read_json(search/score_name):
         raise ValueError('winning trial differs from its scored artifact')
     control_hashes[score_name]=result['winner_score_sha256']
+    evaluation=search/f'trial-{index:03d}/evaluation'
+    evaluation_name=f'trial-{index:03d}/evaluation/evaluation.json'
+    if trial.get('evaluation_sha256')!=sha256(evaluation/'evaluation.json'):
+        raise ValueError('winning evaluation differs from its scored artifact')
+    assessment=verified_assessment(search/f'trial-{index:03d}/system/project.blab.json',evaluation)
+    if assessment['controls']['evaluation.json']!=trial['evaluation_sha256']:
+        raise ValueError('winning evaluation changed during replay')
+    control_hashes[evaluation_name]=trial['evaluation_sha256']
     gain=trial['side_gain']
     frequencies=validation_frequencies(brief.frequencies_hz)
     frozen=SearchBrief.model_validate(brief.model_dump()|{'side_gains':(gain,)})
@@ -148,6 +156,8 @@ def _validate(search, output, runtime, timeout_s, report, activate):
             electrical_consistency_passed=all(level['score']['electrical_validation']['passed'] for level in report['levels']))
         if any(sha256(search/name)!=digest for name,digest in control_hashes.items()):
             raise ValueError('source search controls changed during validation')
+        if load_search(search)[0]!=control_hashes:
+            raise ValueError('source search evidence changed during validation')
     except BaseException as exc:
         report.update(status='cancelled' if isinstance(exc,KeyboardInterrupt) else 'failed',
                       refinement_passed=False,electrical_consistency_passed=False,error=f'{type(exc).__name__}: {exc}')
