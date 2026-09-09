@@ -39,6 +39,9 @@ def load(project, evaluation):
         raise ValueError('exterior-pressure observations are missing')
     compilation=_read_json(project.parent/'compilation.json')
     target = compilation['exterior_mesh_size_m']
+    compilation_runtime=compilation.get('runtime')
+    if not isinstance(compilation_runtime,dict) or not compilation_runtime:
+        raise ValueError('missing conform-interface compilation runtime')
     compiler_runtime=compilation.get('compiler_runtime')
     if not isinstance(compiler_runtime,dict) or not compiler_runtime:
         raise ValueError('missing host meshing runtime identity')
@@ -48,7 +51,7 @@ def load(project, evaluation):
         raise ValueError('exterior evidence changed while loading comparison arrays')
     if project.read_bytes()!=project_payload:
         raise ValueError('project changed while loading comparison arrays')
-    return {'compiler_runtime':compiler_runtime,'cad_sha256': step_digest, 'runtime': runtime, 'pressure_ids': sorted(pressure_ids or []),
+    return {'compilation_runtime':compilation_runtime,'compiler_runtime':compiler_runtime,'cad_sha256': step_digest, 'runtime': runtime, 'pressure_ids': sorted(pressure_ids or []),
             'project_definition_sha256': definition_digest, 'evaluation':str(evaluation.resolve()),'evaluation_sha256':evaluation_hash,
             'project_sha256':project_digest,'mesh_inventory':manifest['meshes'],
             'exterior_identity':identity,
@@ -164,6 +167,8 @@ def main():
             raise ValueError('runtime changed across refinements')
         if record['compiler_runtime'] != loaded[0][0]['compiler_runtime']:
             raise ValueError('host meshing runtime changed across refinements')
+        if record['compilation_runtime'] != loaded[0][0]['compilation_runtime']:
+            raise ValueError('conform-interface compilation runtime changed across refinements')
         if record['pressure_ids'] != loaded[0][0]['pressure_ids']:
             raise ValueError('exterior-pressure observable identities differ')
         if record['project_definition_sha256'] != loaded[0][0]['project_definition_sha256']:

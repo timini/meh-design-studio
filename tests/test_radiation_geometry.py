@@ -152,3 +152,28 @@ def test_invalid_radiating_options_do_not_reserve_output(tmp_path, options):
     with pytest.raises(ValueError):
         compile_radiating_system(tmp_path,None,tmp_path/'out',None,**options)
     assert not (tmp_path/'out').exists()
+
+
+def test_missing_cad_dependencies_do_not_reserve_compilation(tmp_path,monkeypatch):
+    import meh_studio.radiating_system as radiation
+    class Runtime:
+        def verify(self):return {}
+    def missing():raise ImportError('optional CAD dependencies missing')
+    monkeypatch.setattr(radiation,'require_cad_dependencies',missing)
+    with pytest.raises(ImportError,match='optional CAD'):
+        radiation.compile_radiating_system(tmp_path,None,tmp_path/'out',Runtime())
+    assert not (tmp_path/'out').exists()
+
+
+def test_missing_cad_dependency_is_a_structured_cli_error(tmp_path,monkeypatch,capsys):
+    from meh_studio.cli import main
+    from meh_studio.boundary_lab import BoundaryLabRuntime
+    import meh_studio.radiating_system as radiation
+    monkeypatch.setattr(BoundaryLabRuntime,'verify',lambda self:{})
+    def missing():raise ImportError('optional CAD dependencies missing')
+    monkeypatch.setattr(radiation,'require_cad_dependencies',missing)
+    sources=Path(__file__).resolve().parents[1]/'examples/synthetic-horn-sources.json'
+    code=main(['compile-radiating',str(tmp_path),'--sources',str(sources),'--output',str(tmp_path/'out'),
+               '--checkout',str(tmp_path),'--python','python','--julia','julia'])
+    assert code==2 and 'optional CAD dependencies missing' in capsys.readouterr().err
+    assert not (tmp_path/'out').exists()

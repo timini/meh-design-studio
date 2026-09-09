@@ -185,6 +185,8 @@ def test_radiating_cancellation_during_interior_copy_is_terminal(generated, monk
     import os
     import signal
     import meh_studio.generated_system as interior
+    import meh_studio.radiating_system as radiation
+    monkeypatch.setattr(radiation,'require_cad_dependencies',lambda:None)
     from meh_studio.radiating_system import compile_radiating_system
     if os.name == 'nt':
         pytest.skip('POSIX termination signal')
@@ -220,6 +222,7 @@ def test_cancellation_at_interior_exterior_transition_is_retained(generated, mon
     import os
     import signal
     import meh_studio.radiating_system as radiation
+    monkeypatch.setattr(radiation,'require_cad_dependencies',lambda:None)
     if os.name == 'nt': pytest.skip('POSIX termination')
     root,sources,output=generated
     original=radiation.compile_interior_system
