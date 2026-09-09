@@ -64,8 +64,9 @@ The original failed noninteger-frequency evaluation is retained in the run evide
 
 Successive **raw complex pressure** differences must stay within 0.5 dB and
 5 degrees at every sampled frequency. There is no gain or phase fit between
-mesh levels. The exterior discretisation is fixed, so this is interior-mesh
-refinement evidence only. The report separately records electrical validation,
+mesh levels. The rigid-exterior target size is fixed, but the conforming BEM mouth interface
+changes with the FEM mesh. This tests combined interior/interface sensitivity,
+not independent full exterior convergence. Canonical CAD identity is held fixed. The report separately records electrical validation,
 independent closed-edge/orientation/volume checks of the exported STL parts,
 and the absence of physical or print qualification. A completed validation
 command can still contain failed acceptance gates; read `validation.json`.

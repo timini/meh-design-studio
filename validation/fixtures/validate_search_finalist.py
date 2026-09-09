@@ -8,6 +8,7 @@ from meh_studio.boundary_lab import BoundaryLabRuntime, _read_json, _write_json,
 from meh_studio.domain import DriverRevision
 from meh_studio.geometry import HornGeometry
 from meh_studio.export_validation import validate_export
+from meh_studio.radiation_geometry import step_geometry_sha256
 from meh_studio.optimisation import SearchBrief, candidates, evaluate_candidate, verified_assessment
 
 
@@ -32,6 +33,15 @@ def pressure(project, evaluation, gain):
     return np.asarray(values)
 
 
+def mesh_identity(root):
+    record=_read_json(root/'system/compilation.json')
+    digest=step_geometry_sha256(root/'system/exterior/envelope.step')
+    if digest!=record['exterior_identity']['cad_geometry_sha256']:
+        raise ValueError('finalist CAD identity differs from compilation')
+    return {'cad_geometry_sha256':digest,'exterior_surface':record['exterior_surface'],
+            'exterior_mesh_size_m':record['exterior_mesh_size_m']}
+
+
 def validate(search, output, runtime):
     search=search.absolute();output=output.absolute()
     control_names=('search.json','brief.json','base-geometry.json','catalogue-snapshot.json')
@@ -54,7 +64,7 @@ def validate(search, output, runtime):
         'input_sha256':control_hashes,'winner_index':result['winner_index'],'fixed_side_gain':gain,'frequencies_hz':frequencies,
         'runtime':runtime_identity,'mesh_sizes_m':sizes,'magnitude_change_limit_db':.5,'phase_change_limit_deg':5.,
         'qualified':False,'physical_validation':False,'levels':[],
-        'limitations':['Exterior mesh fixed; FEM refinement only','Pointwise pressure comparison, no gain/phase fitting',
+        'limitations':['FEM and conforming mouth interface refined; rigid-exterior target size fixed, not an independent full exterior convergence test','Pointwise pressure comparison, no gain/phase fitting',
                       'Additional geometric-midpoint frequencies rounded to whole hertz for native label precision','Finite frequency samples do not establish full-band convergence','Synthetic sources; no print or physical validation']}
     responses=[]
     try:
@@ -63,11 +73,16 @@ def validate(search, output, runtime):
             if runtime.verify()!=runtime_identity: raise ValueError('finalist runtime changed between levels')
             root=output/f'level-{i}'
             score=evaluate_candidate(winner,root,runtime,frozen,mesh_size=size)
+            identity=mesh_identity(root)
+            if report['levels']:
+                prior=report['levels'][0]['mesh_identity']
+                if any(identity[k]!=prior[k] for k in ('cad_geometry_sha256','exterior_mesh_size_m')):
+                    raise ValueError('finalist CAD or exterior target changed between levels')
             values=pressure(root/'system/project.blab.json',root/'evaluation',gain)
             if not np.isfinite(values).all() or np.any(abs(values)==0): raise ValueError('undefined finalist pressure comparison')
             responses.append(values)
             report['levels'].append({'mesh_size_m':size,'score':score,
-                'export_checks':validate_export(root/'geometry'),
+                'mesh_identity':identity,'export_checks':validate_export(root/'geometry'),
                 'pressure_real':values.real.tolist(),'pressure_imag':values.imag.tolist()})
             _write_json(output/'validation.json',report)
         comparisons=[]

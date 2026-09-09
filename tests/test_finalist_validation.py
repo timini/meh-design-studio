@@ -26,6 +26,7 @@ def test_finalist_replays_catalogue_array_and_freezes_gain(tmp_path, monkeypatch
         calls.append((brief.side_gains, brief.frequencies_hz, mesh_size))
         return {'electrical_validation': {'passed': False}}
     monkeypatch.setattr(module, 'evaluate_candidate', evaluate)
+    monkeypatch.setattr(module, 'mesh_identity', lambda *args: {'cad_geometry_sha256':'test','exterior_mesh_size_m':.02})
     monkeypatch.setattr(module, 'pressure', lambda *args: np.ones(5, dtype=complex))
     monkeypatch.setattr(module, 'validate_export', lambda *args: {'print_qualified': False})
     class Runtime:
