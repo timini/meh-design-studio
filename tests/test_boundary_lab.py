@@ -1025,17 +1025,22 @@ def test_invalid_julia_thread_count_fails_before_runtime_probes(tmp_path, thread
         runtime.verify()
 
 
-def test_explicit_julia_thread_count_reaches_native_command(tmp_path, monkeypatch):
+def test_explicit_julia_thread_count_reaches_only_solve_command(artifact, tmp_path, monkeypatch):
+    import shutil
     import meh_studio.boundary_lab as adapter
-    project=tmp_path/'project.json';project.write_text('{}')
+    root,manifest=artifact
+    project=root/'project.snapshot.blab.json';output=tmp_path/'out'
     monkeypatch.setattr(BoundaryLabRuntime,'verify',lambda self:{'julia_threads':self.julia_threads})
     commands=[]
-    def capture(command,*args,**kwargs):
+    def execute(command,*args,**kwargs):
         commands.append(command)
-        raise RuntimeError('captured preflight')
-    monkeypatch.setattr(adapter,'_execute',capture)
+        if 'validate' in command:
+            assert '--julia-threads' not in command
+            (output/'preflight.json').write_text(json.dumps({'valid':True,'solve_kind':'interior_fem',
+                'meshes':manifest['meshes'],'output_ids':['acoustic:pressure:fem-nodes']}))
+        else: shutil.copytree(root,output/'upstream')
+    monkeypatch.setattr(adapter,'_execute',execute)
     runtime=BoundaryLabRuntime(tmp_path,Path(sys.executable),tmp_path/'julia',julia_threads=1)
-    with pytest.raises(RuntimeError,match='captured preflight'):
-        runtime.solve(project,SolveRequest(frequencies_hz=(1000,)),tmp_path/'out')
-    index=commands[0].index('--julia-threads')
-    assert commands[0][index+1]=='1'
+    runtime.solve(project,SolveRequest(frequencies_hz=(1000,)),output)
+    index=commands[1].index('--julia-threads')
+    assert commands[1][index+1]=='1'

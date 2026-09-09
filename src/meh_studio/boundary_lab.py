@@ -653,8 +653,8 @@ class BoundaryLabRuntime:
                 common = [str(project), "--request", str(request_file), "--backend", self.backend,
                           "--julia-executable", str(Path(self.julia).absolute())]
                 runtime = self.verify()
-                if self.julia_threads is not None:
-                    common += ["--julia-threads", str(self.julia_threads)]
+                solve_options = (["--julia-threads", str(self.julia_threads)]
+                                 if self.julia_threads is not None else [])
                 project_hash = sha256(project)
                 _write_json(request_file, request.model_dump(mode="json"))
                 report.update(runtime=runtime, project_sha256=project_hash, request_sha256=sha256(request_file))
@@ -678,7 +678,7 @@ class BoundaryLabRuntime:
                 observations = _project_observation_ids(project_data, request)
                 if not observations.issubset(expected_outputs):
                     raise ValueError("preflight omitted requested project observations")
-                _execute(base + ["solve"] + common + ["--events", "ndjson", "--output", str(output / "upstream")],
+                _execute(base + ["solve"] + common + solve_options + ["--events", "ndjson", "--output", str(output / "upstream")],
                          Path(self.checkout), output / "solve.ndjson", timeout_s)
                 result = inspect_result(output / "upstream", request, self.backend,
                                         _result_output_ids(project_data, expected_outputs), solve_kind, project)
