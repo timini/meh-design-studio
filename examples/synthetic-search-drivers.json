@@ -1,0 +1,107 @@
+[
+  {
+    "schema_version": 1,
+    "id": "synthetic-throat",
+    "revision": 1,
+    "manufacturer": "Original synthetic fixture",
+    "model": "synthetic-throat",
+    "outer_diameter_m": 0.04,
+    "cutout_diameter_m": 0.036000000000000004,
+    "depth_m": 0.035,
+    "provenance": {
+      "schema_version": 1,
+      "kind": "synthetic",
+      "source": "MEH integration fixture: invented parameters, not a purchasable driver",
+      "permission": "redistribution_allowed",
+      "permission_evidence": "Original synthetic fixture authored for this repository"
+    },
+    "source_model": {
+      "schema_version": 1,
+      "re_ohm": 6.0,
+      "le_h": 0.0001,
+      "bl_n_a": 8.0,
+      "mmd_kg": 0.001,
+      "cms_m_n": 3e-05,
+      "rms_ns_m": 1.0,
+      "sd_m2": 0.0005067074790974977,
+      "provenance": {
+        "schema_version": 1,
+        "kind": "synthetic",
+        "source": "MEH integration fixture: invented parameters, not a purchasable driver",
+        "permission": "redistribution_allowed",
+        "permission_evidence": "Original synthetic fixture authored for this repository"
+      }
+    },
+    "qualification": null
+  },
+  {
+    "schema_version": 1,
+    "id": "synthetic-side",
+    "revision": 1,
+    "manufacturer": "Original synthetic fixture",
+    "model": "synthetic-side",
+    "outer_diameter_m": 0.075,
+    "cutout_diameter_m": 0.0675,
+    "depth_m": 0.035,
+    "provenance": {
+      "schema_version": 1,
+      "kind": "synthetic",
+      "source": "MEH integration fixture: invented parameters, not a purchasable driver",
+      "permission": "redistribution_allowed",
+      "permission_evidence": "Original synthetic fixture authored for this repository"
+    },
+    "source_model": {
+      "schema_version": 1,
+      "re_ohm": 6.0,
+      "le_h": 0.0001,
+      "bl_n_a": 4.0,
+      "mmd_kg": 0.005,
+      "cms_m_n": 0.0005,
+      "rms_ns_m": 1.0,
+      "sd_m2": 0.003216990877275948,
+      "provenance": {
+        "schema_version": 1,
+        "kind": "synthetic",
+        "source": "MEH integration fixture: invented parameters, not a purchasable driver",
+        "permission": "redistribution_allowed",
+        "permission_evidence": "Original synthetic fixture authored for this repository"
+      }
+    },
+    "qualification": null
+  },
+  {
+    "schema_version": 1,
+    "id": "synthetic-side-b",
+    "revision": 1,
+    "manufacturer": "Original synthetic fixture",
+    "model": "synthetic-side-b",
+    "outer_diameter_m": 0.075,
+    "cutout_diameter_m": 0.0675,
+    "depth_m": 0.035,
+    "provenance": {
+      "schema_version": 1,
+      "kind": "synthetic",
+      "source": "MEH integration fixture: invented parameters, not a purchasable driver",
+      "permission": "redistribution_allowed",
+      "permission_evidence": "Original synthetic fixture authored for this repository"
+    },
+    "source_model": {
+      "schema_version": 1,
+      "re_ohm": 6.0,
+      "le_h": 0.0001,
+      "bl_n_a": 4.5,
+      "mmd_kg": 0.005,
+      "cms_m_n": 0.0005,
+      "rms_ns_m": 1.0,
+      "sd_m2": 0.003216990877275948,
+      "provenance": {
+        "schema_version": 1,
+        "kind": "synthetic",
+        "source": "MEH integration fixture: invented parameters, not a purchasable driver",
+        "permission": "redistribution_allowed",
+        "permission_evidence": "Original synthetic fixture authored for this repository"
+      }
+    },
+    "qualification": null
+  }
+]
