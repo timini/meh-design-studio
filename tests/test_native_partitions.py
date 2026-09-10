@@ -125,7 +125,7 @@ def test_partition_inputs_replay_real_catalogue_array(tmp_path,monkeypatch,level
     pool=candidates(brief,base,drivers);trial=search/'trial-000';trial.mkdir()
     (trial/'candidate.json').write_text(json.dumps(candidate_record(pool[0])))
     evaluation=trial/'evaluation/evaluation.json';evaluation.parent.mkdir();evaluation.write_text('{}')
-    monkeypatch.setattr(sys.modules['validate_search_finalist'],'verified_assessment',lambda *args:{'controls':{'evaluation.json':module.sha256(evaluation)}})
+    monkeypatch.setattr(__import__('meh_studio.search_results',fromlist=['verified_assessment']),'verified_assessment',lambda *args:{'controls':{'evaluation.json':module.sha256(evaluation)}})
     score={'side_gain':.3,'ripple_db':9.,'objective':9.,'evaluation_sha256':module.sha256(evaluation)};(trial/'score.json').write_text(json.dumps(score))
     winner=score|{'index':0,'status':'complete'}
     (search/'search.json').write_text(json.dumps({'status':'complete','winner_index':0,'winner':winner,'trials':[winner],

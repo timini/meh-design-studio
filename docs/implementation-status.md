@@ -20,6 +20,8 @@ The [complete compact native experiment](end-to-end-evidence.md) now passes its 
 - Independent rigid-box modal reference and coupled linear driver circuit reference with explicit RMS/phase/load conventions. Circuit tests cover known resonant impedance, mutual motion, reciprocity, power conservation and complex superposition.
 - Headless commands, regression tests and a Linux/macOS/Windows CI matrix for Python 3.11/3.14.
 
+- A repeatable [experimental build-bundle exporter](search-build-bundle.md) packages a completed search with verified geometry, driver BOM, fixed gains and source identities. Manufacturing interfaces and two-slicer/physical qualification remain open (B06).
+
 ## Commands
 
 ```sh

@@ -44,7 +44,7 @@ def test_finalist_replays_catalogue_array_and_freezes_gain(tmp_path, monkeypatch
             raise ValueError('evaluation artifact identity mismatch')
         assert root==evaluation.parent
         return {'controls':{'evaluation.json':module.sha256(evaluation)}}
-    monkeypatch.setattr(module,'verified_assessment',verify_winner)
+    monkeypatch.setattr(__import__('meh_studio.search_results',fromlist=['verified_assessment']),'verified_assessment',verify_winner)
     def evaluate(candidate, root, runtime, brief, *, mesh_size, timeout_s, frequencies):
         calls.append((brief.side_gains, frequencies, mesh_size))
         return {'electrical_validation': {'passed': False}}

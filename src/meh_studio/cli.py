@@ -64,9 +64,15 @@ def main(argv=None) -> int:
     search.add_argument('--python', type=Path, required=True)
     search.add_argument('--julia', type=Path, required=True)
     search.add_argument('--timeout-per-solver-stage-s',type=float,default=1800)
+    bundle = commands.add_parser('export-search', help='export experimental winning geometry, driver BOM and relative gains')
+    bundle.add_argument('search', type=Path)
+    bundle.add_argument('--output', type=Path, required=True, help='new ZIP file; existing files are never replaced')
     args = parser.parse_args(argv)
     try:
-        if args.command == 'optimise':
+        if args.command == 'export-search':
+            from .build_bundle import export_search
+            result = export_search(args.search, args.output)
+        elif args.command == 'optimise':
             from .optimisation import SearchBrief, optimise
             from .geometry import HornGeometry
             from .boundary_lab import BoundaryLabRuntime

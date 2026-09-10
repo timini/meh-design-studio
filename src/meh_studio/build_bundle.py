@@ -1,0 +1,118 @@
+"""Portable experimental geometry, driver BOM and fixed-gain export."""
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+from pathlib import Path, PurePosixPath
+import tempfile
+import zipfile
+
+from .boundary_lab import _contained, _read_json, sha256
+from .export_validation import validate_export
+from .optimisation import candidate_record
+from .search_results import load_completed_search
+
+
+def export_search(search: Path, output: Path) -> dict:
+    """Export a verified completed search without running CAD or acoustic solves."""
+    search, output = Path(search).absolute(), Path(output).absolute()
+    if output.exists():
+        raise FileExistsError(f'output already exists: {output}')
+    controls, result, brief, _, winner, gain = load_completed_search(search)
+    trial = search / f"trial-{result['winner_index']:03d}"
+    geometry = trial / 'geometry'
+    geometry_bytes = (geometry / 'geometry.json').read_bytes()
+    manifest = json.loads(geometry_bytes)
+    if (manifest['design'] != candidate_record(winner)['design']
+            or not manifest.get('front_chamber_back_walls_verified')):
+        raise ValueError('winning geometry is inconsistent or lacks verified chamber walls')
+    export_checks = validate_export(geometry)
+    design = winner['design']
+    rows = []
+    for role, driver, quantity in [('throat', winner['drivers'][0], 1),
+                                   ('side', winner['drivers'][1], design.driver_count - 1)]:
+        price = brief.prices[driver.id]
+        rows.append({'role': role, 'driver_id': driver.id, 'revision': driver.revision,
+                     'quantity': quantity, 'unit_price': price, 'line_total': price * quantity,
+                     'record_sha256': driver.content_hash,
+                     'provenance_kind': driver.provenance.kind})
+    bom = {'currency': brief.currency, 'scope': 'drivers_only',
+           'price_provenance': 'user_supplied_search_brief', 'items': rows,
+           'total': winner['cost'], 'physical_qualification': False,
+           'excluded_costs': ['amplifier', 'DSP', 'material', 'printing', 'hardware', 'assembly']}
+    project = _read_json(trial / 'system/project.blab.json')
+    ports = project['physical_system']['excitation_ports']
+    expected = {'component:throat'} | {
+        f'component:entry_{i}_{side}' for i in range(len(design.entry_positions_m))
+        for side in ('positive', 'negative')}
+    if len(ports) != design.driver_count or {p['component_id'] for p in ports} != expected:
+        raise ValueError('winning source layout differs from generated geometry')
+    gains = {'kind': 'relative_voltage_basis_gains', 'hardware_preset': False,
+             'absolute_voltage_calibrated': False,
+             'description': 'Multipliers of the saved native excitation basis; no filters or delays.',
+             'channels': [{'excitation_port_id': p['id'], 'component_id': p['component_id'],
+                           'gain': 1.0 if p['component_id'] == 'component:throat' else gain,
+                           'phase_deg': 0.0, 'delay_s': 0.0} for p in ports]}
+    assembly = {'units': 'mm', 'placement': 'parts already share assembled coordinates',
+                'parts': [{'file': 'geometry/' + row['file'],
+                           'transform': [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]}
+                          for row in export_checks['parts']],
+                'source_locations_m': manifest['sources'], 'hardware_fit_verified': False}
+    bundle = {'schema_version': 1, 'kind': 'experimental_search_build_bundle',
+              'status': 'complete', 'print_qualified': False, 'physical_validation': False,
+              'finalist_validation_included': False, 'search_winner_index': result['winner_index'],
+              'source_sha256': controls, 'runtime': result['runtime'],
+              'electrical_validation': result['winner']['electrical_validation'],
+              'export_checks': export_checks, 'files_sha256': {},
+              'limitations': ['Search export does not establish mesh convergence or physical qualification',
+                             'Ideal driver interfaces require mounting, sealing and print planning',
+                             'Driver-only cost uses supplied prices; synthetic records are not products']}
+    # Stage a complete ZIP, then publish without replacing an existing user file.
+    with tempfile.NamedTemporaryFile(dir=output.parent, suffix='.zip', delete=False) as temp:
+        staged = Path(temp.name)
+    try:
+        with zipfile.ZipFile(staged, 'w', zipfile.ZIP_DEFLATED) as archive:
+            def write(name, data):
+                if name in bundle['files_sha256']:
+                    raise ValueError('duplicate bundle file')
+                archive.writestr(name, data)
+                bundle['files_sha256'][name] = hashlib.sha256(data).hexdigest()
+            def write_json(name, data):
+                write(name, (json.dumps(data, indent=2, allow_nan=False) + '\n').encode())
+            write('geometry/geometry.json', geometry_bytes)
+            for entry in manifest['files']:
+                relative = entry['path']
+                if PurePosixPath(relative).is_absolute() or '..' in PurePosixPath(relative).parts or '\\' in relative:
+                    raise ValueError('unsafe geometry archive path')
+                path = _contained(geometry, relative)
+                data = path.read_bytes()
+                if hashlib.sha256(data).hexdigest() != entry['sha256']:
+                    raise ValueError('geometry changed during export')
+                write('geometry/' + relative, data)
+            write_json('bom.json', bom)
+            write_json('gain-settings.json', gains)
+            write_json('assembly.json', assembly)
+            write_json('candidate.json', candidate_record(winner))
+            write('brief.json', (search / 'brief.json').read_bytes())
+            write('score.json', (trial / 'score.json').read_bytes())
+            write('README.txt', b'Experimental MEH search export\n\n'
+                  b'Use material parts in geometry/parts; air and analysis meshes are not print parts.\n'
+                  b'STEP/STL coordinates are millimetres. Material parts already share assembly coordinates.\n'
+                  b'bom.json lists selected driver quantities and supplied driver-only prices.\n'
+                  b'gain-settings.json preserves relative simulation gains, not a hardware crossover preset.\n'
+                  b'No supports, mounting hardware, sealing, slicer or physical print qualification is supplied.\n'
+                  b'Exporting a search does not run or claim finalist validation. Keep the original raw search evidence.\n'
+                  b'bundle.json contains source identities and SHA-256 hashes of the other bundled files.\n')
+            if (load_completed_search(search)[0] != controls
+                    or (geometry / 'geometry.json').read_bytes() != geometry_bytes):
+                raise ValueError('search or geometry changed during export')
+            archive.writestr('bundle.json', json.dumps(bundle, indent=2, allow_nan=False) + '\n')
+        digest = sha256(staged)
+        os.link(staged, output)
+        return {'status': 'complete', 'output': str(output), 'sha256': digest,
+                'driver_count': design.driver_count, 'driver_cost': bom['total'],
+                'currency': brief.currency, 'print_qualified': False,
+                'finalist_validation_included': False}
+    finally:
+        staged.unlink(missing_ok=True)
