@@ -211,6 +211,19 @@ def export_exterior(design: HornGeometry, output: Path, mesh_size_m: float = .02
                 raise ValueError("exterior mouth interface is not unique")
             gmsh.model.addPhysicalGroup(2, interface, 10, name="mouth_interface")
             gmsh.model.addPhysicalGroup(2, walls, 99, name="rigid_exterior")
+            if design.profile_sections:
+                # Independent coarse polygons of a curved rim can disagree even
+                # when both originate from the same STEP face. Resolve the rim
+                # before conform-interface replaces the mouth with FEM facets.
+                # Only the shared edge is refined; the exterior face target and
+                # all interface/volume acceptance tolerances remain unchanged.
+                rim_spacing = min(mesh_size_m, design.mesh_size_m) / 2
+                rim_curves = gmsh.model.getBoundary([(2, interface[0])], oriented=False)
+                for dim, curve in rim_curves:
+                    length = gmsh.model.occ.getMass(dim, curve)
+                    gmsh.model.mesh.setTransfiniteCurve(curve, max(3, math.ceil(length / rim_spacing) + 1))
+                report['mouth_rim_sampling'] = {'maximum_target_spacing_m': rim_spacing,
+                                               'curve_count': len(rim_curves)}
             gmsh.option.setNumber("Mesh.MeshSizeMin", mesh_size_m)
             gmsh.option.setNumber("Mesh.MeshSizeMax", mesh_size_m)
             gmsh.option.setNumber("Mesh.ElementOrder", 1)

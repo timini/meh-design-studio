@@ -39,3 +39,41 @@ def test_freeform_ring_uses_actual_non_circular_mouth(tmp_path):
     exterior=export_exterior(design,tmp_path/'exterior',.01)
     assert exterior['status']=='complete'
     assert exterior['surface']['orientation_errors']==0
+
+
+@pytest.mark.cad
+def test_irregular_mouth_polygons_agree_before_conforming(tmp_path):
+    """Regression: an evolved rim failed native conformity by 0.97 mm."""
+    pytest.importorskip('cadquery');pytest.importorskip('gmsh')
+    import numpy as np
+    import meshio
+    from collections import Counter
+    from meh_studio.radiation_geometry import export_exterior
+    fixture=Path(__file__).parent/'fixtures/freeform-curved-rim.json'
+    design=HornGeometry.model_validate_json(fixture.read_text())
+    export_geometry(design,tmp_path/'geometry')
+    mesh_geometry(tmp_path/'geometry')
+    exterior=export_exterior(design,tmp_path/'exterior',.01)
+    assert exterior['mouth_rim_sampling']['maximum_target_spacing_m']==design.mesh_size_m/2
+
+    def rim(path):
+        mesh=meshio.read(path)
+        tag=int(mesh.field_data['mouth_interface'][0]);edges=Counter()
+        for block,tags in zip(mesh.cells,mesh.cell_data['gmsh:physical']):
+            if block.type!='triangle':continue
+            for a,b,c in block.data[np.asarray(tags)==tag]:
+                edges.update(tuple(sorted(e)) for e in ((a,b),(b,c),(c,a)))
+        boundary=np.array([e for e,n in edges.items() if n==1])
+        assert len(boundary)>8
+        return mesh.points[np.unique(boundary)],mesh.points[boundary]
+
+    a,edges_a=rim(tmp_path/'geometry/analysis/front.msh')
+    b,edges_b=rim(tmp_path/'exterior/exterior.msh')
+    def deviation(points,edges):
+        start=edges[:,0];delta=edges[:,1]-start
+        t=np.clip(np.sum((points[:,None]-start)*delta,axis=2)/np.sum(delta*delta,axis=1),0,1)
+        distance=np.linalg.norm(points[:,None]-start-t[:,:,None]*delta,axis=2)
+        return float(distance.min(axis=1).max())
+    # The actual failed native perimeter tolerance was 0.802 mm. Use a
+    # stricter independent geometric screen; do not relax native acceptance.
+    assert max(deviation(a,edges_b),deviation(b,edges_a))<.0005
