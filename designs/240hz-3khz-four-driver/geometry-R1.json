@@ -1,0 +1,732 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "units": {
+    "cad_and_stl": "mm"
+  },
+  "files": [
+    {
+      "path": "parts/horn_body.stl",
+      "sha256": "ab5b88176112a3d4dd4bf05bf56df588db583111573b26f153cc633977b2f44e",
+      "size_bytes": 4388184
+    },
+    {
+      "path": "parts/rear_cover_print_four.stl",
+      "sha256": "d4fbd6da881365bc5ac9dde8977c2573879e5d51af3505d7083249600794efb0",
+      "size_bytes": 290084
+    },
+    {
+      "path": "parts/fit_checks/mid_mount_coupon.stl",
+      "sha256": "1779ec0f8a8df8675ed38a5cadc49372b10ce1ec098f92483ff8af11b4f0aecb",
+      "size_bytes": 318884
+    },
+    {
+      "path": "parts/fit_checks/hf_mount_coupon.stl",
+      "sha256": "02ce45aaad3de1010b258b4e3c76b8276255a293f9f44b3b1ef6a35b231be972",
+      "size_bytes": 190484
+    },
+    {
+      "path": "parts/print/core.stl",
+      "sha256": "f59df019474b3720022c1f62cb097def571f2374091927a770f3a68c36e5338e",
+      "size_bytes": 2486684
+    },
+    {
+      "path": "parts/print/band_1_sector_1.stl",
+      "sha256": "c2af64029d8bccd2fb0406f161d1a0a7cb42cfb8b0507c83152ca3e032cde5ba",
+      "size_bytes": 166884
+    },
+    {
+      "path": "parts/print/band_1_sector_2.stl",
+      "sha256": "3d6571f8e8166ff10827c1f117bd6821eec9f487da5fa5f8700408ffcc048937",
+      "size_bytes": 166884
+    },
+    {
+      "path": "parts/print/band_1_sector_3.stl",
+      "sha256": "45b83e39762d38ed0e3d45c227c52f6cc05569183d42764ecf41ae1670e97b9c",
+      "size_bytes": 166784
+    },
+    {
+      "path": "parts/print/band_1_sector_4.stl",
+      "sha256": "b41051cac64d966c80d1abfd338ce363d017c175958812f0295e51b40aefaba3",
+      "size_bytes": 166784
+    },
+    {
+      "path": "parts/print/band_1_sector_5.stl",
+      "sha256": "5325d7681c511c89252d66763ec7f958cddfe958727118e3fcc9355f9b5d3029",
+      "size_bytes": 166684
+    },
+    {
+      "path": "parts/print/band_1_sector_6.stl",
+      "sha256": "0ca68f0300a0a7b1ecf9073a93506c98b745c9bcd989e8933463a55a9b9472ee",
+      "size_bytes": 166884
+    },
+    {
+      "path": "parts/print/band_1_sector_7.stl",
+      "sha256": "05e626f90f17ae1192523e61c506cabc058a0ec1fabffdf4f7eb9e013e01dd77",
+      "size_bytes": 166884
+    },
+    {
+      "path": "parts/print/band_1_sector_8.stl",
+      "sha256": "d7f36fa9dab33917fdccb63be5b44d9c0344553eb5e8b51d420509aaf1a2f5ce",
+      "size_bytes": 166884
+    },
+    {
+      "path": "parts/print/band_2_sector_1.stl",
+      "sha256": "6ed5a1e1793ad0b3f701236f97dd22c660010995e69583deffa90f47b0d43381",
+      "size_bytes": 164484
+    },
+    {
+      "path": "parts/print/band_2_sector_2.stl",
+      "sha256": "cc6344ddf88533a221f8b0da03738d132336aaaff6533b7bd1ef8ecad73f1537",
+      "size_bytes": 164484
+    },
+    {
+      "path": "parts/print/band_2_sector_3.stl",
+      "sha256": "1bb73bce26ea34bc5d57b073975822ab3c71fc5a8245c302632e248df606a800",
+      "size_bytes": 164484
+    },
+    {
+      "path": "parts/print/band_2_sector_4.stl",
+      "sha256": "54bb60179462dc3f7f0d4e8b4809a16019f33a1110fb2288b0bad32f2cf610c3",
+      "size_bytes": 164484
+    },
+    {
+      "path": "parts/print/band_2_sector_5.stl",
+      "sha256": "1abae870ea013bf36b950c7422aea0565925e5f1c9f21f689c91637446ca84d7",
+      "size_bytes": 164084
+    },
+    {
+      "path": "parts/print/band_2_sector_6.stl",
+      "sha256": "c31c47706240310f39acf9d27bd24ed08a8e8e661c8e18e86ec9a397bc9056cb",
+      "size_bytes": 164584
+    },
+    {
+      "path": "parts/print/band_2_sector_7.stl",
+      "sha256": "7716f549780fa7f4cbd26a19743f33649c4d656aafa501b12428ac5f203bd2c7",
+      "size_bytes": 164484
+    },
+    {
+      "path": "parts/print/band_2_sector_8.stl",
+      "sha256": "e625e14228d1fedc7e3520cb241390384897421b99cb4712fe649c9784c25922",
+      "size_bytes": 164484
+    },
+    {
+      "path": "parts/print/band_3_sector_1.stl",
+      "sha256": "96cf0dc60946029e29909fbab43672fc881d56a8f82a83d451ecad326350243c",
+      "size_bytes": 131384
+    },
+    {
+      "path": "parts/print/band_3_sector_2.stl",
+      "sha256": "474fcdd3a23b068f5aab7637d9a45c7a524d08a82d3427e655eab08a03a45112",
+      "size_bytes": 131484
+    },
+    {
+      "path": "parts/print/band_3_sector_3.stl",
+      "sha256": "d228169d1ce7b41c10fdb7da881a653b252e65f4b621e469421c44224285ada6",
+      "size_bytes": 131384
+    },
+    {
+      "path": "parts/print/band_3_sector_4.stl",
+      "sha256": "c031670c39074c5f27b01ab1e29074f2d63d9fe939c1e6fdff272a4f4d48e4af",
+      "size_bytes": 131384
+    },
+    {
+      "path": "parts/print/band_3_sector_5.stl",
+      "sha256": "98d0ff1b7579852f88ee4d19f76b1cfbe4aa86cdba7e6b1d0df7d120496e8e1f",
+      "size_bytes": 130984
+    },
+    {
+      "path": "parts/print/band_3_sector_6.stl",
+      "sha256": "9ad3e665adef0d400a57d21b5c7641618043dd0ca78d4c4a30e76932534161ab",
+      "size_bytes": 131484
+    },
+    {
+      "path": "parts/print/band_3_sector_7.stl",
+      "sha256": "5229672e091849344b3ece8c52193fd1b4f5c03c5b168ebb16f554a2cbf438db",
+      "size_bytes": 131484
+    },
+    {
+      "path": "parts/print/band_3_sector_8.stl",
+      "sha256": "35e80f528a35804883debe177ab780c827580278f942ff1fa57eeca6ee3e48d3",
+      "size_bytes": 131484
+    }
+  ],
+  "material_volume_m3": {
+    "horn_body": 0.002933746949784438,
+    "rear_cover_print_four": 0.00021520292645916004,
+    "mid_mount_coupon": 2.5971630779724266e-05,
+    "hf_mount_coupon": 2.6442031383028434e-05,
+    "core": 0.0004710816482749447,
+    "band_1_sector_1": 8.20390574694484e-05,
+    "band_1_sector_2": 8.203905745462377e-05,
+    "band_1_sector_3": 8.203905745708098e-05,
+    "band_1_sector_4": 8.203905701094351e-05,
+    "band_1_sector_5": 8.203905755354605e-05,
+    "band_1_sector_6": 8.203905739548076e-05,
+    "band_1_sector_7": 8.203905743196254e-05,
+    "band_1_sector_8": 8.20390574592637e-05,
+    "band_2_sector_1": 0.00011570337225607345,
+    "band_2_sector_2": 0.00011570337135359017,
+    "band_2_sector_3": 0.00011570337194112174,
+    "band_2_sector_4": 0.00011570336754619266,
+    "band_2_sector_5": 0.00011570337274550719,
+    "band_2_sector_6": 0.00011570337153160394,
+    "band_2_sector_7": 0.00011570337254176217,
+    "band_2_sector_8": 0.0001157033722352949,
+    "band_3_sector_1": 0.00011009107270577667,
+    "band_3_sector_2": 0.00011009107036801544,
+    "band_3_sector_3": 0.00011009107018098923,
+    "band_3_sector_4": 0.00011009105917561395,
+    "band_3_sector_5": 0.00011009107213823798,
+    "band_3_sector_6": 0.00011009107013374324,
+    "band_3_sector_7": 0.00011009107333053194,
+    "band_3_sector_8": 0.00011009107176496482
+  },
+  "kind": "mechanical_prototype",
+  "acoustic_validation": false,
+  "print_tested": false,
+  "target_mid_band_hz": [
+    240,
+    3000
+  ],
+  "target_tweeter_band_hz": [
+    3000,
+    20000
+  ],
+  "mouth_clear_diameter_mm": 600,
+  "horn_length_mm": 450.0,
+  "port_diameter_mm": 60.0,
+  "entry_axial_mm": 80.0,
+  "normal_wall_mm": 3.3707850392485605,
+  "drivers": {
+    "mid": "4 x FaitalPRO 3FE25-8",
+    "hf": "1 x Celestion CDX1-1445-8"
+  },
+  "body": {
+    "file": "parts/horn_body.stl",
+    "bounds_mm": [
+      632.000000200006,
+      632.000000200006,
+      460.3035134933425
+    ],
+    "solid_volume_mm3": 2933746.9497844377
+  },
+  "rear_cover": {
+    "file": "parts/rear_cover_print_four.stl",
+    "bounds_mm": [
+      108.01079473300439,
+      108.01079473300439,
+      124.00732506168156
+    ],
+    "solid_volume_mm3": 215202.92645916005,
+    "to_mount_local": {
+      "rotate_x_deg": 180,
+      "translate_mm": [
+        0,
+        0,
+        124
+      ]
+    }
+  },
+  "mountings": [
+    {
+      "name": "mid_1",
+      "angle_deg": 0,
+      "origin_mm": [
+        63.611111111111114,
+        0.0,
+        80.0
+      ],
+      "normal": [
+        0.84269625981214,
+        0.0,
+        -0.5383892771022006
+      ],
+      "face_offset_mm": 12.0
+    },
+    {
+      "name": "mid_2",
+      "angle_deg": 90,
+      "origin_mm": [
+        3.895057180621443e-15,
+        63.611111111111114,
+        80.0
+      ],
+      "normal": [
+        5.160026386161918e-17,
+        0.84269625981214,
+        -0.5383892771022006
+      ],
+      "face_offset_mm": 12.0
+    },
+    {
+      "name": "mid_3",
+      "angle_deg": 180,
+      "origin_mm": [
+        -63.611111111111114,
+        7.790114361242886e-15,
+        80.0
+      ],
+      "normal": [
+        -0.84269625981214,
+        1.0320052772323836e-16,
+        -0.5383892771022006
+      ],
+      "face_offset_mm": 12.0
+    },
+    {
+      "name": "mid_4",
+      "angle_deg": 270,
+      "origin_mm": [
+        -1.1685171541864328e-14,
+        -63.611111111111114,
+        80.0
+      ],
+      "normal": [
+        -1.5480079158485753e-16,
+        -0.84269625981214,
+        -0.5383892771022006
+      ],
+      "face_offset_mm": 12.0
+    }
+  ],
+  "print_parts": [
+    {
+      "file": "parts/print/core.stl",
+      "bounds_mm": [
+        223.11111131111147,
+        223.11111131111147,
+        138.44112683402653
+      ],
+      "solid_volume_mm3": 471081.64827494475,
+      "assembly_transform": {
+        "rotate_z_deg": 0,
+        "translate_mm": [
+          0,
+          0,
+          -8
+        ]
+      }
+    },
+    {
+      "file": "parts/print/band_1_sector_1.stl",
+      "bounds_mm": [
+        98.73722408772441,
+        144.05905229476997,
+        121.52335166319295
+      ],
+      "solid_volume_mm3": 82039.0574694484,
+      "assembly_transform": {
+        "translate_before_rotate_mm": [
+          137.25202210887258,
+          -7.105427357601002e-15,
+          130
+        ],
+        "rotate_z_deg": 22.5
+      }
+    },
+    {
+      "file": "parts/print/band_1_sector_2.stl",
+      "bounds_mm": [
+        98.73722408772443,
+        144.05905229476988,
+        121.52335166319293
+      ],
+      "solid_volume_mm3": 82039.05745462378,
+      "assembly_transform": {
+        "translate_before_rotate_mm": [
+          137.25202210887258,
+          7.105427357601002e-15,
+          130
+        ],
+        "rotate_z_deg": 67.5
+      }
+    },
+    {
+      "file": "parts/print/band_1_sector_3.stl",
+      "bounds_mm": [
+        98.73722408772443,
+        144.05905229476986,
+        121.52335166319295
+      ],
+      "solid_volume_mm3": 82039.05745708098,
+      "assembly_transform": {
+        "translate_before_rotate_mm": [
+          137.25202210887258,
+          -1.4210854715202004e-14,
+          130
+        ],
+        "rotate_z_deg": 112.5
+      }
+    },
+    {
+      "file": "parts/print/band_1_sector_4.stl",
+      "bounds_mm": [
+        98.7372240877244,
+        144.0590522947698,
+        121.52335166319298
+      ],
+      "solid_volume_mm3": 82039.0570109435,
+      "assembly_transform": {
+        "translate_before_rotate_mm": [
+          137.25202210887258,
+          -7.105427357601002e-15,
+          130
+        ],
+        "rotate_z_deg": 157.5
+      }
+    },
+    {
+      "file": "parts/print/band_1_sector_5.stl",
+      "bounds_mm": [
+        98.73722408772446,
+        144.05905229476974,
+        121.52335166319298
+      ],
+      "solid_volume_mm3": 82039.05755354605,
+      "assembly_transform": {
+        "translate_before_rotate_mm": [
+          137.25202210887258,
+          -7.105427357601002e-15,
+          130
+        ],
+        "rotate_z_deg": 202.5
+      }
+    },
+    {
+      "file": "parts/print/band_1_sector_6.stl",
+      "bounds_mm": [
+        98.73722408772436,
+        144.0590522947698,
+        121.52335166319284
+      ],
+      "solid_volume_mm3": 82039.05739548076,
+      "assembly_transform": {
+        "translate_before_rotate_mm": [
+          137.25202210887255,
+          -5.684341886080802e-14,
+          130
+        ],
+        "rotate_z_deg": 247.5
+      }
+    },
+    {
+      "file": "parts/print/band_1_sector_7.stl",
+      "bounds_mm": [
+        98.7372240877244,
+        144.0590522947699,
+        121.52335166319293
+      ],
+      "solid_volume_mm3": 82039.05743196254,
+      "assembly_transform": {
+        "translate_before_rotate_mm": [
+          137.25202210887255,
+          -7.105427357601002e-14,
+          130
+        ],
+        "rotate_z_deg": 292.5
+      }
+    },
+    {
+      "file": "parts/print/band_1_sector_8.stl",
+      "bounds_mm": [
+        98.73722408772437,
+        144.05905229476988,
+        121.52335166319284
+      ],
+      "solid_volume_mm3": 82039.0574592637,
+      "assembly_transform": {
+        "translate_before_rotate_mm": [
+          137.25202210887258,
+          -6.394884621840902e-14,
+          130
+        ],
+        "rotate_z_deg": 337.5
+      }
+    },
+    {
+      "file": "parts/print/band_2_sector_1.stl",
+      "bounds_mm": [
+        104.62538108708088,
+        202.73717859075043,
+        121.54608289105306
+      ],
+      "solid_volume_mm3": 115703.37225607345,
+      "assembly_transform": {
+        "translate_before_rotate_mm": [
+          211.00073752180526,
+          7.105427357601002e-15,
+          250
+        ],
+        "rotate_z_deg": 22.5
+      }
+    },
+    {
+      "file": "parts/print/band_2_sector_2.stl",
+      "bounds_mm": [
+        104.62538108708083,
+        202.73717859075026,
+        121.546082891053
+      ],
+      "solid_volume_mm3": 115703.37135359018,
+      "assembly_transform": {
+        "translate_before_rotate_mm": [
+          211.00073752180526,
+          7.105427357601002e-15,
+          250
+        ],
+        "rotate_z_deg": 67.5
+      }
+    },
+    {
+      "file": "parts/print/band_2_sector_3.stl",
+      "bounds_mm": [
+        104.62538108708084,
+        202.7371785907504,
+        121.546082891053
+      ],
+      "solid_volume_mm3": 115703.37194112175,
+      "assembly_transform": {
+        "translate_before_rotate_mm": [
+          211.00073752180526,
+          7.105427357601002e-15,
+          250
+        ],
+        "rotate_z_deg": 112.5
+      }
+    },
+    {
+      "file": "parts/print/band_2_sector_4.stl",
+      "bounds_mm": [
+        104.62538108708085,
+        202.7371785907503,
+        121.54608289105306
+      ],
+      "solid_volume_mm3": 115703.36754619266,
+      "assembly_transform": {
+        "translate_before_rotate_mm": [
+          211.00073752180526,
+          7.105427357601002e-15,
+          250
+        ],
+        "rotate_z_deg": 157.5
+      }
+    },
+    {
+      "file": "parts/print/band_2_sector_5.stl",
+      "bounds_mm": [
+        104.62538108708088,
+        202.73717859075032,
+        121.54608289105309
+      ],
+      "solid_volume_mm3": 115703.3727455072,
+      "assembly_transform": {
+        "translate_before_rotate_mm": [
+          211.00073752180526,
+          7.105427357601002e-15,
+          250
+        ],
+        "rotate_z_deg": 202.5
+      }
+    },
+    {
+      "file": "parts/print/band_2_sector_6.stl",
+      "bounds_mm": [
+        104.62538108708077,
+        202.7371785907502,
+        121.54608289105292
+      ],
+      "solid_volume_mm3": 115703.37153160395,
+      "assembly_transform": {
+        "translate_before_rotate_mm": [
+          211.00073752180526,
+          -7.105427357601002e-14,
+          250
+        ],
+        "rotate_z_deg": 247.5
+      }
+    },
+    {
+      "file": "parts/print/band_2_sector_7.stl",
+      "bounds_mm": [
+        104.62538108708085,
+        202.73717859075043,
+        121.546082891053
+      ],
+      "solid_volume_mm3": 115703.37254176218,
+      "assembly_transform": {
+        "translate_before_rotate_mm": [
+          211.00073752180526,
+          -1.1368683772161603e-13,
+          250
+        ],
+        "rotate_z_deg": 292.5
+      }
+    },
+    {
+      "file": "parts/print/band_2_sector_8.stl",
+      "bounds_mm": [
+        104.62538108708083,
+        202.73717859075026,
+        121.54608289105292
+      ],
+      "solid_volume_mm3": 115703.3722352949,
+      "assembly_transform": {
+        "translate_before_rotate_mm": [
+          211.00073752180526,
+          -1.0658141036401503e-13,
+          250
+        ],
+        "rotate_z_deg": 337.5
+      }
+    },
+    {
+      "file": "parts/print/band_3_sector_1.stl",
+      "bounds_mm": [
+        82.86535139408514,
+        241.8559294547402,
+        81.39917312912189
+      ],
+      "solid_volume_mm3": 110091.07270577668,
+      "assembly_transform": {
+        "translate_before_rotate_mm": [
+          270.97167515696015,
+          0.0,
+          370
+        ],
+        "rotate_z_deg": 22.5
+      }
+    },
+    {
+      "file": "parts/print/band_3_sector_2.stl",
+      "bounds_mm": [
+        82.86535139408517,
+        241.85592945474053,
+        81.39917312912198
+      ],
+      "solid_volume_mm3": 110091.07036801544,
+      "assembly_transform": {
+        "translate_before_rotate_mm": [
+          270.97167515696015,
+          0.0,
+          370
+        ],
+        "rotate_z_deg": 67.5
+      }
+    },
+    {
+      "file": "parts/print/band_3_sector_3.stl",
+      "bounds_mm": [
+        82.86535139408508,
+        241.8559294547404,
+        81.39917312912195
+      ],
+      "solid_volume_mm3": 110091.07018098923,
+      "assembly_transform": {
+        "translate_before_rotate_mm": [
+          270.97167515696015,
+          7.105427357601002e-15,
+          370
+        ],
+        "rotate_z_deg": 112.5
+      }
+    },
+    {
+      "file": "parts/print/band_3_sector_4.stl",
+      "bounds_mm": [
+        82.865351394085,
+        241.85592945473795,
+        81.39917312912183
+      ],
+      "solid_volume_mm3": 110091.05917561395,
+      "assembly_transform": {
+        "translate_before_rotate_mm": [
+          270.97167515696015,
+          0.0,
+          370
+        ],
+        "rotate_z_deg": 157.5
+      }
+    },
+    {
+      "file": "parts/print/band_3_sector_5.stl",
+      "bounds_mm": [
+        82.86535139408505,
+        241.85592945474033,
+        81.39917312912183
+      ],
+      "solid_volume_mm3": 110091.07213823799,
+      "assembly_transform": {
+        "translate_before_rotate_mm": [
+          270.97167515696015,
+          7.105427357601002e-15,
+          370
+        ],
+        "rotate_z_deg": 202.5
+      }
+    },
+    {
+      "file": "parts/print/band_3_sector_6.stl",
+      "bounds_mm": [
+        82.8653513940852,
+        241.8559294547427,
+        81.39917312912209
+      ],
+      "solid_volume_mm3": 110091.07013374324,
+      "assembly_transform": {
+        "translate_before_rotate_mm": [
+          270.97167515696015,
+          -1.1368683772161603e-13,
+          370
+        ],
+        "rotate_z_deg": 247.5
+      }
+    },
+    {
+      "file": "parts/print/band_3_sector_7.stl",
+      "bounds_mm": [
+        82.8653513940852,
+        241.85592945473994,
+        81.39917312912206
+      ],
+      "solid_volume_mm3": 110091.07333053194,
+      "assembly_transform": {
+        "translate_before_rotate_mm": [
+          270.97167515696015,
+          -1.5631940186722204e-13,
+          370
+        ],
+        "rotate_z_deg": 292.5
+      }
+    },
+    {
+      "file": "parts/print/band_3_sector_8.stl",
+      "bounds_mm": [
+        82.86535139408525,
+        241.85592945473903,
+        81.39917312912212
+      ],
+      "solid_volume_mm3": 110091.07176496481,
+      "assembly_transform": {
+        "translate_before_rotate_mm": [
+          270.97167515696015,
+          -1.5631940186722204e-13,
+          370
+        ],
+        "rotate_z_deg": 337.5
+      }
+    }
+  ],
+  "rear_cavity_gross_litres": 0.9276318578948924,
+  "rear_driver_displacement_litres": 0.125,
+  "total_material_litres": 3.7945586556210777,
+  "segmentation_volume_error_fraction": 9.168043195728615e-07,
+  "cover_interferences": [],
+  "limitations": [
+    "Unmeasured cone profile and front-cavity acoustics",
+    "No full coupled acoustic simulation or crossover tuning for this new four-around-one-ring layout",
+    "No measured 240 Hz\u20133 kHz flatness, distortion, directivity or efficiency claim",
+    "Nominal catalogue fit; verify one interface coupon with actual hardware before full printing",
+    "No mechanical load or print qualification; support the mouth and throat externally"
+  ]
+}
