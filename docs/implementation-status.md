@@ -8,10 +8,10 @@ The [complete compact native experiment](end-to-end-evidence.md) now passes its 
 
 ## Available
 
-- Durable SQLite job leases, cancellation, one automatic recovery retry, bounded completion descriptors and integrity-checked publication. An isolated CAD worker is implemented; dependency-aware scheduling and full search/solver orchestration through durable workers remain to implement.
+- Durable SQLite job leases, cancellation, one automatic recovery retry, bounded completion descriptors and integrity-checked publication. An isolated CAD worker is accessible through `meh jobs` with managed input snapshots, cancellation, retry and verified result retrieval; dependency-aware scheduling and full search/solver orchestration through durable workers remain to implement.
 - Explicit RMS complex source synthesis, signed real electrical power, pressure-level null handling and full-sphere pressure quadrature. Native-solver amplitude calibration and evaluation-to-metrics integration remain to implement.
 
-- Input snapshot library with bounded dependency copies, portable content identities and verification against queued job input digests. See [input snapshots](input-snapshots.md). Worker execution and automatic dependency discovery remain to implement.
+- Input snapshot library with bounded dependency copies, portable content identities and verification against queued job input digests. See [input snapshots](input-snapshots.md). CAD worker execution is connected; automatic dependency discovery and solver snapshots remain to implement.
 - Pinned Boundary Lab subprocess adapter, preflight, explicit backend/runtime checks, preserved complex output, timeout/failure reports and result integrity checks.
 
 - Immutable, versioned SI contracts for briefs, source models, driver records, provenance and declared band/mounting/level qualification; canonical content hashes.

@@ -67,9 +67,15 @@ def main(argv=None) -> int:
     bundle = commands.add_parser('export-search', help='export experimental winning geometry, driver BOM and relative gains')
     bundle.add_argument('search', type=Path)
     bundle.add_argument('--output', type=Path, required=True, help='new ZIP file; existing files are never replaced')
+    from .job_cli import add_job_commands, execute_job_command
+    add_job_commands(commands)
     args = parser.parse_args(argv)
     try:
-        if args.command == 'export-search':
+        if args.command == 'jobs':
+            result, code = execute_job_command(args)
+            print(json.dumps(result, indent=2, allow_nan=False))
+            return code
+        elif args.command == 'export-search':
             from .build_bundle import export_search
             result = export_search(args.search, args.output)
         elif args.command == 'optimise':
