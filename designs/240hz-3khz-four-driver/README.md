@@ -75,3 +75,15 @@ PYTHONPATH=src python designs/240hz-3khz-four-driver/acoustic_domain.py --output
 ```
 
 The mid interfaces terminate at the mounting plane, using the 74.6 mm aperture. This area is larger than the driver's effective piston area: do not connect catalogue Sd directly as if the aperture were the diaphragm. Actual cone/front-cavity geometry or a validated equivalent source coupling is still needed. Rear domains, tagged FEM mesh generation, driver coupling and exterior radiation remain to connect before simulation of this prototype. The existing general `meh` geometry/search CLI remains unchanged.
+
+### Tagged front mesh
+
+`mesh_front.py` converts the saved STEP to metres, identifies all six interfaces by centre and area, and exports a linear tetrahedral mesh with `mouth`, `throat`, `mid_1`–`mid_4`, `rigid_walls` and `front_air` physical groups. It verifies input CAD identity, imported volume, positive saved tetrahedral volumes and interface areas. Failed attempts retain a failure manifest in their new output directory.
+
+```sh
+PYTHONPATH=src python designs/240hz-3khz-four-driver/mesh_front.py --source designs/240hz-3khz-four-driver/analysis-preparation --output /path/to/new-mesh-directory --size-m 0.015
+```
+
+The original run is in [mesh-15mm.zip](analysis-preparation/mesh-15mm.zip), with a readable [manifest](analysis-preparation/mesh-15mm.json). At a 15 mm maximum size with curvature refinement it contains 228,551 tetrahedra. The integrated mesh volume differs from CAD by 0.0391%; all six interface area errors are below 1%. This establishes mesh construction and tagging only. It is one resolution, with no convergence or acoustic result. The archived manifest binds the exact generator, input STEP and domain manifest hashes. A later prescribed-source solve can investigate transfer behaviour, but must not be described as a validated prediction for the purchased drivers.
+
+The review-fixed mesher additionally records `rigid_walls` in the boundary manifest and rejects estimated workloads over two million tetrahedra before generating the mesh. Its heuristic is `6 * CAD volume / size³ + 250000`, with the final actual-count guard retained; this is not a guaranteed memory bound. The 5 mm setting is rejected before meshing, with a failure manifest and runtime cleanup verified. The [review-fixed archive](analysis-preparation/mesh-15mm-review-fixed.zip) and [manifest](analysis-preparation/mesh-15mm-review-fixed.json) contain the new executed 15 mm run; all seven boundary declarations exactly match the saved mesh physical groups. Use these for subsequent solver integration. The earlier archive is retained unchanged for provenance.
