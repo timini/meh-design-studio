@@ -22,6 +22,7 @@ from .domain import Record, Positive
 from .generated_system import HornSources
 from .geometry import HornGeometry, export_geometry, mesh_geometry
 from .waveguide_profile import ProfileSection, validate_profile
+from .evolution import EvolutionSettings
 from .radiating_system import compile_radiating_system
 from .validation import validate_electrical_basis
 
@@ -38,6 +39,7 @@ class SearchBrief(Record):
     mouth_radii_m: tuple[Positive, ...]
     entry_fractions: tuple[tuple[Positive, ...], ...]
     profiles: tuple[tuple[ProfileSection, ...], ...] = ()
+    evolution: EvolutionSettings | None = None
     side_gains: tuple[Positive, ...] = (.5, 1., 2.)
     trial_budget: Annotated[int, Field(strict=True, ge=1, le=100)] = 4
     seed: Annotated[int, Field(strict=True, ge=0)] = 2026
@@ -48,6 +50,7 @@ class SearchBrief(Record):
     def preserve_legacy_controls(self, handler):
         value=handler(self)
         if not self.profiles:value.pop('profiles',None)
+        if self.evolution is None:value.pop('evolution',None)
         return value
 
     @model_validator(mode='after')
@@ -237,9 +240,18 @@ def _optimise(brief, base, catalogue_path, runtime, output, report, activate, so
     # JSON normalisation matches the saved runtime representation.
     application_runtime=json.loads(json.dumps(application_runtime))
     recovery=None
+    saved_trials=[]
     if resume_from is not None:
+        if brief.evolution is not None:
+            from .evolution import replay
+            saved_search=_read_json(Path(resume_from)/'search.json')
+            saved_trials=saved_search['trials']
+            recovery_pool,proposals=replay(brief,base,drivers,saved_trials)
+            if saved_search.get('proposals')!=proposals:
+                raise ValueError('adaptive recovery proposal history differs from controls and fitness')
+        else:recovery_pool=pool
         from .search_resume import Recovery
-        recovery=Recovery(resume_from,output,brief,base,drivers,pool,runtime_identity,application_runtime,
+        recovery=Recovery(resume_from,output,brief,base,drivers,recovery_pool,runtime_identity,application_runtime,
                           solver_stage_timeout_s)
     output.mkdir(parents=True,exist_ok=False)
     report.update({'schema_version':1,'status':'running','kind':'experimental_fem_bem_search',
@@ -258,18 +270,38 @@ def _optimise(brief, base, catalogue_path, runtime, output, report, activate, so
         _write_json(output/'catalogue-snapshot.json',[d.model_dump(mode='json') for d in drivers])
         report['control_sha256']={name:sha256(output/name) for name in
             ('brief.json','base-geometry.json','catalogue-snapshot.json')}
-        for i,candidate in enumerate(pool):
+        evaluated=[]
+        if brief.evolution is not None:report['proposals']=[]
+        for i in range(brief.trial_budget if brief.evolution is not None else len(pool)):
+            if brief.evolution is not None:
+                from .evolution import propose, ProposalFailure
+                try:candidate,proposal=propose(brief,pool,report['trials'],evaluated)
+                except ProposalFailure as exc:
+                    report['proposals'].append(exc.report)
+                    report['trials'].append({'index':i,'status':'failed','error':str(exc)})
+                    evaluated.append(None)
+                    _write_json(output/'search.json',report)
+                    continue
+                report['proposals'].append(proposal)
+            else:candidate=pool[i]
+            evaluated.append(candidate)
             trial={'index':i,'status':'running'};report['trials'].append(trial)
             _write_json(output/'search.json',report)
             if runtime.verify()!=runtime_identity: raise ValueError('search runtime changed')
             try:
-                if recovery is not None and i in recovery.completed:
+                if saved_trials and i<len(saved_trials) and saved_trials[i]['status']=='failed':
+                    recovery.preserve_failed(i,candidate,output/f'trial-{i:03d}')
+                    trial.update(saved_trials[i])
+                    _write_json(output/'search.json',report)
+                    continue
+                elif recovery is not None and i in recovery.completed:
                     score=recovery.copy_trial(i,candidate,output/f'trial-{i:03d}')
                 else:
                     score=evaluate_candidate(candidate,output/f'trial-{i:03d}',runtime,brief,timeout_s=solver_stage_timeout_s)
                 trial.update(status='complete',**score)
             except Exception as exc:
-                if recovery is not None and i in recovery.completed: raise
+                if recovery is not None and (i in recovery.completed or
+                        (saved_trials and i<len(saved_trials) and saved_trials[i]['status']=='failed')): raise
                 trial.update(status='failed',error=f'{type(exc).__name__}: {exc}')
             _write_json(output/'search.json',report)
         if runtime.verify()!=runtime_identity: raise ValueError('search runtime changed')
