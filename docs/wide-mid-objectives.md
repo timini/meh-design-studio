@@ -61,3 +61,31 @@ For new irregular-horn searches, enable the optional
 using native pressure samples, adds a third directivity error term, and extends
 finalist mesh checks to a denser spherical grid. Historical searches without
 that option retain their original two-cut scoring.
+
+## Acoustic handover constraint
+
+The electrical LR4 setting alone does not establish which channel carries the
+vocal band. For a declared acoustic handover between 3 and 5 kHz, set
+`acoustic_handover_hz: [3000.0, 5000.0]` inside `acoustic_objectives`.
+The search then requires the coherent mid-bank on-axis pressure contribution to
+be at least the HF-channel contribution at every solved sample from the mid
+high-pass through 3 kHz, and the HF contribution to be at least the mid-bank
+contribution from 5 kHz upward. Both channels may contribute in between. Explicit
+samples at the mid high-pass and both handover boundaries are required; no
+interpolated crossover substitutes for those samples.
+
+Contributions are grouped by excitation channel using the full coupled voltage
+basis, retaining mutually induced motion in every driver. They are complex
+pressure contributions, not independent diaphragm powers or energy fractions.
+A passing score records the sampled channel ratio, nulls and checked frequency
+bounds. Ratios shown in dB are clipped to ±120 dB for finite display; pass/fail
+uses the actual amplitudes, so two zero contributions do not pass a dominance
+check. Mid contributions are summed coherently before comparison.
+
+This is an additional constraint on DSP selection. It does not replace response,
+coverage, impedance or numerical checks, and it cannot establish off-axis
+handover, an exact crossing between samples, breakup, or physical performance.
+Frozen-DSP finalist runs retain the constraint on their denser frequency grids.
+If no defined DSP response meets it, the candidate fails scoring and its raw
+native evaluation remains available. An absent constraint preserves historical
+brief identities and scores; old filter-only results do not gain this validation.
