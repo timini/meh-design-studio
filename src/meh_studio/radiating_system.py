@@ -20,12 +20,14 @@ def require_cad_dependencies():
 
 def compile_radiating_system(geometry_directory: Path, sources: HornSources, output: Path,
                              runtime: BoundaryLabRuntime, *, exterior_mesh_size_m: float = .02,
-                             timeout_s: float = 600) -> dict:
+                             timeout_s: float = 600, sphere_angle_deg: float | None = None) -> dict:
     if (not isinstance(exterior_mesh_size_m, (int,float)) or not math.isfinite(exterior_mesh_size_m)
             or not .01 <= exterior_mesh_size_m <= .05):
         raise ValueError('exterior mesh target must be between 10 and 50 mm')
     if not isinstance(timeout_s, (int,float)) or not math.isfinite(timeout_s) or timeout_s <= 0:
         raise ValueError('timeout must be positive and finite')
+    if sphere_angle_deg is not None and (not math.isfinite(sphere_angle_deg) or not 2.5<=sphere_angle_deg<=15):
+        raise ValueError('sphere angular target must be between 2.5 and 15 degrees')
     if threading.current_thread() is not threading.main_thread():
         raise ValueError("run radiating compilation in a worker process, not a background thread")
     report = {'status': 'running'}
@@ -33,7 +35,7 @@ def compile_radiating_system(geometry_directory: Path, sources: HornSources, out
         try:
             return _compile_radiating_system(geometry_directory, sources, output, runtime,
                 exterior_mesh_size_m=exterior_mesh_size_m, timeout_s=timeout_s,
-                report=report, activate=activate)
+                report=report, activate=activate, sphere_angle_deg=sphere_angle_deg)
         except BaseException as exc:
             if 'geometry_hash' in report:
                 if report['status'] != 'cancelled':
@@ -43,7 +45,7 @@ def compile_radiating_system(geometry_directory: Path, sources: HornSources, out
 
 
 def _compile_radiating_system(geometry_directory, sources, output, runtime, *, exterior_mesh_size_m,
-                              timeout_s, report, activate):
+                              timeout_s, report, activate, sphere_angle_deg=None):
     runtime_identity = runtime.verify()
     require_cad_dependencies()
     output = Path(output).resolve()
@@ -88,6 +90,11 @@ def _compile_radiating_system(geometry_directory, sources, output, runtime, *, e
             raise ValueError("runtime changed during interface preparation")
         if meshing_runtime_identity()!=exterior["compiler_runtime"]:
             raise ValueError("host meshing runtime changed during compilation")
+        if sphere_angle_deg is not None:
+            project['project_preferences'].update(spherical_sampling_enabled=True,
+                                                  balloon_angle_precision_deg=sphere_angle_deg)
+            report['sphere_sampling']={'angle_precision_deg':sphere_angle_deg,
+                'point_count':round(41253/sphere_angle_deg**2),'method':'pinned_fibonacci'}
         _write_json(output / "project.blab.json", project)
         report.update(status="complete", project_sha256=sha256(output / "project.blab.json"),
             exterior_surface=integrity, exterior_mesh_size_m=exterior_mesh_size_m, compiler_runtime=exterior["compiler_runtime"],

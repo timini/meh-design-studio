@@ -74,6 +74,8 @@ class SearchBrief(Record):
             targets=self.acoustic_objectives
             if self.frequencies_hz[0]>targets.mid_highpass_hz or self.frequencies_hz[-1]<1.5*max(targets.upper_crossovers_hz):
                 raise ValueError('acoustic search grid must cover the low crossover and extend 50 percent above every upper crossover')
+            if targets.sphere is not None and targets.sphere.control_from_hz>self.frequencies_hz[-1]:
+                raise ValueError('sphere coverage control frequency must be inside the search band')
         if math.prod(map(len,groups[:-1])) * max(1,len(self.profiles)) > 10000:
             raise ValueError('candidate grid exceeds 10000 combinations')
         if any(len(row) not in (1,2) or any(v>=1 for v in row) for row in self.entry_fractions):
@@ -225,8 +227,11 @@ def evaluate_candidate(candidate, root, runtime, brief, *, mesh_size=None, frequ
             raise ValueError('candidate exceeds declared total build budget')
     mesh_geometry(root/'geometry')
     geometry_digest=sha256(root/'geometry/geometry.json')
+    sphere_options={}
+    if brief.acoustic_objectives is not None and brief.acoustic_objectives.sphere is not None:
+        sphere_options['sphere_angle_deg']=brief.acoustic_objectives.sphere.angle_precision_deg
     compile_radiating_system(root/'geometry',candidate['sources'],root/'system',runtime,
-                             exterior_mesh_size_m=brief.exterior_mesh_size_m)
+                             exterior_mesh_size_m=brief.exterior_mesh_size_m,**sphere_options)
     request=SolveRequest(frequencies_hz=frequencies or brief.frequencies_hz,
         include_project_observations=True,retain=('fem_nodal_pressure','bem_boundary_traces'))
     runtime.solve(root/'system/project.blab.json',request,root/'evaluation',timeout_s=timeout_s)

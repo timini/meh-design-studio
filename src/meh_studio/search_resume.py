@@ -70,7 +70,9 @@ def verify_scored_trial(root,candidate,index,trial,brief,runtime):
         raise ValueError('recovery geometry design differs')
     from .export_validation import validate_export
     validate_export(geometry.parent)
-    verify_candidate_project(root, candidate, brief.exterior_mesh_size_m)
+    sphere=brief.acoustic_objectives.sphere if brief.acoustic_objectives is not None else None
+    verify_candidate_project(root, candidate, brief.exterior_mesh_size_m,
+                             sphere.angle_precision_deg if sphere is not None else None)
     evaluation = root / 'evaluation'
     request = SolveRequest(frequencies_hz=brief.frequencies_hz,
         include_project_observations=True, retain=('fem_nodal_pressure','bem_boundary_traces'))
@@ -163,7 +165,7 @@ class Recovery:
         return score
 
 
-def verify_candidate_project(root, candidate, exterior_mesh_size):
+def verify_candidate_project(root, candidate, exterior_mesh_size, sphere_angle_deg=None):
     """Reconstruct the cheap interior compiler output from the candidate's saved meshes.
 
     This performs mesh/group checks and JSON compilation, not CAD or a native solve.
@@ -173,6 +175,11 @@ def verify_candidate_project(root, candidate, exterior_mesh_size):
     project_path=root/'system/project.blab.json'
     project=_read_json(project_path)
     compilation=_read_json(root/'system/compilation.json')
+    expected_sampling=None if sphere_angle_deg is None else {
+        'angle_precision_deg':sphere_angle_deg,'point_count':round(41253/sphere_angle_deg**2),
+        'method':'pinned_fibonacci'}
+    if compilation.get('sphere_sampling')!=expected_sampling:
+        raise ValueError('recovery sphere sampling differs from the declared search')
     exterior_path=root/'system/exterior/exterior.json'
     exterior=_read_json(exterior_path)
     if (compilation.get('status')!='complete'
@@ -219,5 +226,9 @@ def verify_candidate_project(root, candidate, exterior_mesh_size):
     with tempfile.TemporaryDirectory(prefix='meh-recovery-check-') as temporary:
         expected_root=Path(temporary)/'expected'
         compile_interior_system(root/'geometry',candidate['sources'],expected_root)
-        if project!=_read_json(expected_root/'project.blab.json'):
+        expected=_read_json(expected_root/'project.blab.json')
+        if sphere_angle_deg is not None:
+            expected['project_preferences'].update(spherical_sampling_enabled=True,
+                                                   balloon_angle_precision_deg=sphere_angle_deg)
+        if project!=expected:
             raise ValueError('recovery mesh/source project differs from declared candidate')

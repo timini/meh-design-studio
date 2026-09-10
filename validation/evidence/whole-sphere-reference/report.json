@@ -1,0 +1,611 @@
+{
+  "schema_version": 1,
+  "evidence": "analytic_exterior_pulsating_sphere",
+  "passed": true,
+  "maximum_relative_complex_error_limit": 0.02,
+  "control_sha256": {
+    "/Users/timrichardson/Documents/projects/personal/speakers/meh-design-studio/runs/sphere-whole-reference/project.blab.json": "18ad5a56a0109cb3ad80979b245d6b78b659a06f8310feb0cb1fbf43300d5c37",
+    "/Users/timrichardson/Documents/projects/personal/speakers/meh-design-studio/runs/sphere-whole-reference/reference.json": "b92a122509fe975d38cb3bbc5270503cebfbfcf9a33fa35f9ea2db132aead76b",
+    "/Users/timrichardson/Documents/projects/personal/speakers/meh-design-studio/runs/sphere-whole-evaluation/evaluation.json": "ae10382d1ae72bab23200045586cfd0d7c48f97b6c075021ef3958c2e44e5ef2",
+    "/Users/timrichardson/Documents/projects/personal/speakers/meh-design-studio/runs/sphere-whole-evaluation/request.json": "1eb67f37a2e97a9e1340bb91c577bcc88584684bbd4be072d0453911e908c305",
+    "/Users/timrichardson/Documents/projects/personal/speakers/meh-design-studio/runs/sphere-whole-evaluation/preflight.json": "fa877081846c473d29525eda435e22df5b2491933b45c98d8a6c3ff2c81166f6",
+    "/Users/timrichardson/Documents/projects/personal/speakers/meh-design-studio/runs/full-sphere-source/validation/fixtures/compare_pulsating_sphere.py": "2c80614735629b0dad60f4483918dd9ad1452df02375694702e08328a66303d2"
+  },
+  "result_inspection": {
+    "evidence": "predicted",
+    "artifact_hashes": {
+      "manifest": "0af556486eb5c31d158bf1869ee0b107d406afd6bc58cec0d04ef06648260521",
+      "domains_metadata": "13eaf6429b71a7e9c5cbaeb318ebdc36bdd92043430d3267ddda8de80979a108",
+      "domains_arrays": "d59cfec1f7fdca6aefee21d6366c3d183e936aeb6220a65d5fb84f3dc19ebaae"
+    },
+    "solve_kind": "exterior_bem",
+    "phasor_convention": "exp(-i omega t)",
+    "frequencies_hz": [
+      350.0,
+      2000.0,
+      5000.0,
+      7500.0
+    ],
+    "excitation_port_ids": [
+      "excitation:sphere"
+    ],
+    "inventory": [
+      {
+        "frequency_hz": 350.0,
+        "metadata_sha256": "e42dec8224b5178c12efb582d6426744c44dab8757be3f8f3295861b041147bc",
+        "arrays_sha256": "433ecf8ad98211a16661bd3888c1137141c1e62d1cd311f83c503a58c3c9bb0a",
+        "quantities": [
+          {
+            "axes": [
+              "radiator"
+            ],
+            "dtype": "complex64",
+            "id": "acoustic:radiation-impedance",
+            "key": "q0000",
+            "metadata": {},
+            "quantity": "radiation_impedance",
+            "shape": [
+              1
+            ],
+            "target_id": "components:radiators",
+            "unit": "N*s/m"
+          },
+          {
+            "axes": [
+              "excitation",
+              "bem_node"
+            ],
+            "dtype": "complex64",
+            "id": "acoustic:pressure:bem-boundary",
+            "key": "q0001",
+            "metadata": {},
+            "quantity": "bem_boundary_pressure",
+            "shape": [
+              1,
+              692
+            ],
+            "target_id": "domain:bem-boundary",
+            "unit": "Pa"
+          },
+          {
+            "axes": [
+              "excitation",
+              "bem_face"
+            ],
+            "dtype": "complex64",
+            "id": "acoustic:normal-derivative:bem-boundary",
+            "key": "q0002",
+            "metadata": {},
+            "quantity": "bem_boundary_neumann",
+            "shape": [
+              1,
+              1380
+            ],
+            "target_id": "domain:bem-boundary",
+            "unit": "Pa/m"
+          },
+          {
+            "axes": [
+              "excitation",
+              "observation"
+            ],
+            "dtype": "complex64",
+            "id": "acoustic:pressure:horizontal-polar",
+            "key": "q0003",
+            "metadata": {
+              "source_output_id": "ui:exterior-pressure"
+            },
+            "quantity": "exterior_pressure",
+            "shape": [
+              1,
+              73
+            ],
+            "target_id": "observation:horizontal-polar",
+            "unit": "Pa"
+          },
+          {
+            "axes": [
+              "excitation",
+              "observation"
+            ],
+            "dtype": "complex64",
+            "id": "acoustic:pressure:vertical-polar",
+            "key": "q0004",
+            "metadata": {
+              "source_output_id": "ui:exterior-pressure"
+            },
+            "quantity": "exterior_pressure",
+            "shape": [
+              1,
+              73
+            ],
+            "target_id": "observation:vertical-polar",
+            "unit": "Pa"
+          },
+          {
+            "axes": [
+              "excitation",
+              "observation"
+            ],
+            "dtype": "complex64",
+            "id": "acoustic:pressure:sphere",
+            "key": "q0005",
+            "metadata": {
+              "source_output_id": "ui:exterior-pressure"
+            },
+            "quantity": "exterior_pressure",
+            "shape": [
+              1,
+              413
+            ],
+            "target_id": "observation:sphere",
+            "unit": "Pa"
+          }
+        ]
+      },
+      {
+        "frequency_hz": 2000.0,
+        "metadata_sha256": "3a21a686963c6937ceb4869907699e2dfbfa99549210a96bd053fb2b574f1d41",
+        "arrays_sha256": "93a614e7a156ac5f877799c19cf7110f8a24320c7a1d108d60961521e73bc1c2",
+        "quantities": [
+          {
+            "axes": [
+              "radiator"
+            ],
+            "dtype": "complex64",
+            "id": "acoustic:radiation-impedance",
+            "key": "q0000",
+            "metadata": {},
+            "quantity": "radiation_impedance",
+            "shape": [
+              1
+            ],
+            "target_id": "components:radiators",
+            "unit": "N*s/m"
+          },
+          {
+            "axes": [
+              "excitation",
+              "bem_node"
+            ],
+            "dtype": "complex64",
+            "id": "acoustic:pressure:bem-boundary",
+            "key": "q0001",
+            "metadata": {},
+            "quantity": "bem_boundary_pressure",
+            "shape": [
+              1,
+              692
+            ],
+            "target_id": "domain:bem-boundary",
+            "unit": "Pa"
+          },
+          {
+            "axes": [
+              "excitation",
+              "bem_face"
+            ],
+            "dtype": "complex64",
+            "id": "acoustic:normal-derivative:bem-boundary",
+            "key": "q0002",
+            "metadata": {},
+            "quantity": "bem_boundary_neumann",
+            "shape": [
+              1,
+              1380
+            ],
+            "target_id": "domain:bem-boundary",
+            "unit": "Pa/m"
+          },
+          {
+            "axes": [
+              "excitation",
+              "observation"
+            ],
+            "dtype": "complex64",
+            "id": "acoustic:pressure:horizontal-polar",
+            "key": "q0003",
+            "metadata": {
+              "source_output_id": "ui:exterior-pressure"
+            },
+            "quantity": "exterior_pressure",
+            "shape": [
+              1,
+              73
+            ],
+            "target_id": "observation:horizontal-polar",
+            "unit": "Pa"
+          },
+          {
+            "axes": [
+              "excitation",
+              "observation"
+            ],
+            "dtype": "complex64",
+            "id": "acoustic:pressure:vertical-polar",
+            "key": "q0004",
+            "metadata": {
+              "source_output_id": "ui:exterior-pressure"
+            },
+            "quantity": "exterior_pressure",
+            "shape": [
+              1,
+              73
+            ],
+            "target_id": "observation:vertical-polar",
+            "unit": "Pa"
+          },
+          {
+            "axes": [
+              "excitation",
+              "observation"
+            ],
+            "dtype": "complex64",
+            "id": "acoustic:pressure:sphere",
+            "key": "q0005",
+            "metadata": {
+              "source_output_id": "ui:exterior-pressure"
+            },
+            "quantity": "exterior_pressure",
+            "shape": [
+              1,
+              413
+            ],
+            "target_id": "observation:sphere",
+            "unit": "Pa"
+          }
+        ]
+      },
+      {
+        "frequency_hz": 5000.0,
+        "metadata_sha256": "cf7cd4d4ecb5395a3c5811f7050e5fd4ec39977f4fa5eb3cb9902b7ff625e34c",
+        "arrays_sha256": "d060e0c9a9ee903c2529e67f71d14b9028ecf7a652a1e968e600cab79d3b8440",
+        "quantities": [
+          {
+            "axes": [
+              "radiator"
+            ],
+            "dtype": "complex64",
+            "id": "acoustic:radiation-impedance",
+            "key": "q0000",
+            "metadata": {},
+            "quantity": "radiation_impedance",
+            "shape": [
+              1
+            ],
+            "target_id": "components:radiators",
+            "unit": "N*s/m"
+          },
+          {
+            "axes": [
+              "excitation",
+              "bem_node"
+            ],
+            "dtype": "complex64",
+            "id": "acoustic:pressure:bem-boundary",
+            "key": "q0001",
+            "metadata": {},
+            "quantity": "bem_boundary_pressure",
+            "shape": [
+              1,
+              692
+            ],
+            "target_id": "domain:bem-boundary",
+            "unit": "Pa"
+          },
+          {
+            "axes": [
+              "excitation",
+              "bem_face"
+            ],
+            "dtype": "complex64",
+            "id": "acoustic:normal-derivative:bem-boundary",
+            "key": "q0002",
+            "metadata": {},
+            "quantity": "bem_boundary_neumann",
+            "shape": [
+              1,
+              1380
+            ],
+            "target_id": "domain:bem-boundary",
+            "unit": "Pa/m"
+          },
+          {
+            "axes": [
+              "excitation",
+              "observation"
+            ],
+            "dtype": "complex64",
+            "id": "acoustic:pressure:horizontal-polar",
+            "key": "q0003",
+            "metadata": {
+              "source_output_id": "ui:exterior-pressure"
+            },
+            "quantity": "exterior_pressure",
+            "shape": [
+              1,
+              73
+            ],
+            "target_id": "observation:horizontal-polar",
+            "unit": "Pa"
+          },
+          {
+            "axes": [
+              "excitation",
+              "observation"
+            ],
+            "dtype": "complex64",
+            "id": "acoustic:pressure:vertical-polar",
+            "key": "q0004",
+            "metadata": {
+              "source_output_id": "ui:exterior-pressure"
+            },
+            "quantity": "exterior_pressure",
+            "shape": [
+              1,
+              73
+            ],
+            "target_id": "observation:vertical-polar",
+            "unit": "Pa"
+          },
+          {
+            "axes": [
+              "excitation",
+              "observation"
+            ],
+            "dtype": "complex64",
+            "id": "acoustic:pressure:sphere",
+            "key": "q0005",
+            "metadata": {
+              "source_output_id": "ui:exterior-pressure"
+            },
+            "quantity": "exterior_pressure",
+            "shape": [
+              1,
+              413
+            ],
+            "target_id": "observation:sphere",
+            "unit": "Pa"
+          }
+        ]
+      },
+      {
+        "frequency_hz": 7500.0,
+        "metadata_sha256": "3193efbb005a9fe5046dd5ce941a2113fc5bbd8c7aadf46ca449475ef220fb03",
+        "arrays_sha256": "81209d56dd02ed187cfeb40406b96eba79d06a0602c971f50a263b51cc3e7151",
+        "quantities": [
+          {
+            "axes": [
+              "radiator"
+            ],
+            "dtype": "complex64",
+            "id": "acoustic:radiation-impedance",
+            "key": "q0000",
+            "metadata": {},
+            "quantity": "radiation_impedance",
+            "shape": [
+              1
+            ],
+            "target_id": "components:radiators",
+            "unit": "N*s/m"
+          },
+          {
+            "axes": [
+              "excitation",
+              "bem_node"
+            ],
+            "dtype": "complex64",
+            "id": "acoustic:pressure:bem-boundary",
+            "key": "q0001",
+            "metadata": {},
+            "quantity": "bem_boundary_pressure",
+            "shape": [
+              1,
+              692
+            ],
+            "target_id": "domain:bem-boundary",
+            "unit": "Pa"
+          },
+          {
+            "axes": [
+              "excitation",
+              "bem_face"
+            ],
+            "dtype": "complex64",
+            "id": "acoustic:normal-derivative:bem-boundary",
+            "key": "q0002",
+            "metadata": {},
+            "quantity": "bem_boundary_neumann",
+            "shape": [
+              1,
+              1380
+            ],
+            "target_id": "domain:bem-boundary",
+            "unit": "Pa/m"
+          },
+          {
+            "axes": [
+              "excitation",
+              "observation"
+            ],
+            "dtype": "complex64",
+            "id": "acoustic:pressure:horizontal-polar",
+            "key": "q0003",
+            "metadata": {
+              "source_output_id": "ui:exterior-pressure"
+            },
+            "quantity": "exterior_pressure",
+            "shape": [
+              1,
+              73
+            ],
+            "target_id": "observation:horizontal-polar",
+            "unit": "Pa"
+          },
+          {
+            "axes": [
+              "excitation",
+              "observation"
+            ],
+            "dtype": "complex64",
+            "id": "acoustic:pressure:vertical-polar",
+            "key": "q0004",
+            "metadata": {
+              "source_output_id": "ui:exterior-pressure"
+            },
+            "quantity": "exterior_pressure",
+            "shape": [
+              1,
+              73
+            ],
+            "target_id": "observation:vertical-polar",
+            "unit": "Pa"
+          },
+          {
+            "axes": [
+              "excitation",
+              "observation"
+            ],
+            "dtype": "complex64",
+            "id": "acoustic:pressure:sphere",
+            "key": "q0005",
+            "metadata": {
+              "source_output_id": "ui:exterior-pressure"
+            },
+            "quantity": "exterior_pressure",
+            "shape": [
+              1,
+              413
+            ],
+            "target_id": "observation:sphere",
+            "unit": "Pa"
+          }
+        ]
+      }
+    ]
+  },
+  "rows": [
+    {
+      "frequency_hz": 350.0,
+      "polars": [
+        {
+          "quantity_id": "acoustic:pressure:horizontal-polar",
+          "maximum_relative_complex_error": 0.0044255451293570254,
+          "maximum_magnitude_error_db": 0.03852495866589029,
+          "maximum_phase_error_deg": 0.00040389473567291546,
+          "sample_count": 73
+        },
+        {
+          "quantity_id": "acoustic:pressure:vertical-polar",
+          "maximum_relative_complex_error": 0.004426713593679449,
+          "maximum_magnitude_error_db": 0.03853481009036279,
+          "maximum_phase_error_deg": 0.00044827089369872886,
+          "sample_count": 73
+        },
+        {
+          "quantity_id": "acoustic:pressure:sphere",
+          "maximum_relative_complex_error": 0.004426537345556457,
+          "maximum_magnitude_error_db": 0.038533824947413226,
+          "maximum_phase_error_deg": 0.00047288004921129505,
+          "sample_count": 413
+        }
+      ],
+      "passed": true
+    },
+    {
+      "frequency_hz": 2000.0,
+      "polars": [
+        {
+          "quantity_id": "acoustic:pressure:horizontal-polar",
+          "maximum_relative_complex_error": 0.0035941036454918175,
+          "maximum_magnitude_error_db": 0.03070773547993836,
+          "maximum_phase_error_deg": 0.03966831739543013,
+          "sample_count": 73
+        },
+        {
+          "quantity_id": "acoustic:pressure:vertical-polar",
+          "maximum_relative_complex_error": 0.003589319118762264,
+          "maximum_magnitude_error_db": 0.030651820320719596,
+          "maximum_phase_error_deg": 0.039957811968090506,
+          "sample_count": 73
+        },
+        {
+          "quantity_id": "acoustic:pressure:sphere",
+          "maximum_relative_complex_error": 0.003597331569701781,
+          "maximum_magnitude_error_db": 0.03072552674245082,
+          "maximum_phase_error_deg": 0.04002269380974367,
+          "sample_count": 413
+        }
+      ],
+      "passed": true
+    },
+    {
+      "frequency_hz": 5000.0,
+      "polars": [
+        {
+          "quantity_id": "acoustic:pressure:horizontal-polar",
+          "maximum_relative_complex_error": 0.004515063584277553,
+          "maximum_magnitude_error_db": 0.02104437061866891,
+          "maximum_phase_error_deg": 0.21942356846538816,
+          "sample_count": 73
+        },
+        {
+          "quantity_id": "acoustic:pressure:vertical-polar",
+          "maximum_relative_complex_error": 0.004510941530107978,
+          "maximum_magnitude_error_db": 0.0206044521609852,
+          "maximum_phase_error_deg": 0.22145598797201854,
+          "sample_count": 73
+        },
+        {
+          "quantity_id": "acoustic:pressure:sphere",
+          "maximum_relative_complex_error": 0.0045432487581629,
+          "maximum_magnitude_error_db": 0.021278015128027485,
+          "maximum_phase_error_deg": 0.2219919259123828,
+          "sample_count": 413
+        }
+      ],
+      "passed": true
+    },
+    {
+      "frequency_hz": 7500.0,
+      "polars": [
+        {
+          "quantity_id": "acoustic:pressure:horizontal-polar",
+          "maximum_relative_complex_error": 0.006958434698181686,
+          "maximum_magnitude_error_db": 0.018801273370622235,
+          "maximum_phase_error_deg": 0.384539813444307,
+          "sample_count": 73
+        },
+        {
+          "quantity_id": "acoustic:pressure:vertical-polar",
+          "maximum_relative_complex_error": 0.0070755597191328274,
+          "maximum_magnitude_error_db": 0.018154217856407473,
+          "maximum_phase_error_deg": 0.39096314280678207,
+          "sample_count": 73
+        },
+        {
+          "quantity_id": "acoustic:pressure:sphere",
+          "maximum_relative_complex_error": 0.007079487403293085,
+          "maximum_magnitude_error_db": 0.01970595481427506,
+          "maximum_phase_error_deg": 0.3907502505576585,
+          "sample_count": 413
+        }
+      ],
+      "passed": true
+    }
+  ],
+  "physical_validation": false,
+  "limitations": [
+    "Prescribed unit normal-velocity reference; not a voltage-driven commercial source",
+    "Independent analytical exterior test, not a coupled horn validation",
+    "Finite mesh and four frequencies; no gain/phase/delay fitting",
+    "No RMS or loudspeaker SPL qualification"
+  ],
+  "application_source_commit": "952e0e6",
+  "source_scope": "Native adapter, generator and comparator from clean detached application source; exact runners and raw outputs archived",
+  "raw_archive": {
+    "file": "raw-run.zip",
+    "sha256": "d7ee25c497dbef40dd7b2799256bac8676179264425901a578ea1530def3928d",
+    "size_bytes": 116667
+  }
+}

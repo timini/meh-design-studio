@@ -65,6 +65,8 @@ def load_search(search):
     frequencies=validation_frequencies(brief.frequencies_hz)
     from meh_studio.acoustic_objectives import freeze_brief
     frozen=freeze_brief(brief,gain,result['winner'].get('drive_settings'))
+    from meh_studio.spherical_metrics import denser_validation_brief
+    frozen=denser_validation_brief(frozen)
     sizes=(base.mesh_size_m,base.mesh_size_m*.75,base.mesh_size_m*.5)
     if min(sizes)<.0005: raise ValueError('refinement exceeds generator mesh limits')
     return control_hashes,result,brief,base,winner,gain,frequencies,frozen,sizes
@@ -90,6 +92,13 @@ def _validate(search, output, runtime, timeout_s, report, activate):
         'limitations':['FEM and conforming mouth interface refined; rigid-exterior target size fixed, not an independent full exterior convergence test','Pointwise pressure comparison, no gain/phase fitting',
                       'Additional geometric-midpoint frequencies rounded to whole hertz for native label precision','Finite frequency samples do not establish full-band convergence','Synthetic sources; no print or physical validation']})
     responses=[]
+    if brief.acoustic_objectives is not None and brief.acoustic_objectives.sphere is not None:
+        report['sphere_sampling']={
+            'search_angle_precision_deg':brief.acoustic_objectives.sphere.angle_precision_deg,
+            'validation_angle_precision_deg':frozen.acoustic_objectives.sphere.angle_precision_deg,
+            'validation_point_count':round(41253/frozen.acoustic_objectives.sphere.angle_precision_deg**2),
+            'angular_convergence_validated':False}
+        report['limitations'].append('A denser whole-sphere grid checks additional directions; this is not an angular quadrature convergence proof')
     try:
         activate()
         _write_json(output/'validation.json',report)
@@ -108,7 +117,7 @@ def _validate(search, output, runtime, timeout_s, report, activate):
             if brief.acoustic_objectives is not None:
                 from meh_studio.acoustic_objectives import convergence_polars
                 comparison,coordinates=convergence_polars(root/'system/project.blab.json',root/'evaluation',
-                    result['winner']['drive_settings'],brief.acoustic_objectives)
+                    result['winner']['drive_settings'],frozen.acoustic_objectives)
                 if report.get('comparison_coordinates',coordinates)!=coordinates:
                     raise ValueError('finalist polar observation coordinates changed')
                 report['comparison_coordinates']=coordinates
