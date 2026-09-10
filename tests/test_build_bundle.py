@@ -125,3 +125,26 @@ def test_export_rejects_geometry_not_bound_at_search_completion(tmp_path,monkeyp
     with pytest.raises(ValueError,match='not bound'):
         export_search(search,tmp_path/'horn.zip')
     assert not (tmp_path/'horn.zip').exists()
+
+
+def test_material_budget_export_separates_driver_subtotal(tmp_path,monkeypatch):
+    from meh_studio.build_cost import BuildBudget,estimate_build_cost
+    search=saved_search(tmp_path,monkeypatch,3);trial=search/'trial-000'
+    budget=BuildBudget(maximum_total_cost=300.,material_density_kg_m3=1250.,
+                      material_cost_per_kg=20.,other_cost_allowance=30.)
+    brief=json.loads((search/'brief.json').read_text());brief['build_budget']=budget.model_dump(mode='json')
+    (search/'brief.json').write_text(json.dumps(brief))
+    score=json.loads((trial/'score.json').read_text())
+    score['build_cost']=estimate_build_cost(budget,json.loads((trial/'geometry/geometry.json').read_text()),14.)
+    (trial/'score.json').write_text(json.dumps(score))
+    result=json.loads((search/'search.json').read_text());row=score|{'index':0,'status':'complete'}
+    result.update(winner=row,trials=[row],winner_score_sha256=sha256(trial/'score.json'))
+    result['control_sha256']['brief.json']=sha256(search/'brief.json')
+    (search/'search.json').write_text(json.dumps(result))
+    output=tmp_path/'budget.zip';report=export_search(search,output)
+    assert report['driver_cost']==14.
+    assert report['estimated_total_cost']>44.
+    with zipfile.ZipFile(output) as archive:
+        bom=json.loads(archive.read('bom.json'))
+    assert bom['driver_subtotal']==report['driver_cost']
+    assert bom['total']==report['estimated_total_cost']

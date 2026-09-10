@@ -43,6 +43,14 @@ def export_search(search: Path, output: Path) -> dict:
            'price_provenance': 'user_supplied_search_brief', 'items': rows,
            'total': winner['cost'], 'physical_qualification': False,
            'excluded_costs': ['amplifier', 'DSP', 'material', 'printing', 'hardware', 'assembly']}
+    if brief.build_budget is not None:
+        from .build_cost import estimate_build_cost
+        estimate=estimate_build_cost(brief.build_budget,manifest,winner['cost'])
+        if not estimate['within_budget'] or estimate!=result['winner'].get('build_cost'):
+            raise ValueError('winning build cost differs from declared budget and CAD')
+        bom.update(scope='drivers_CAD_material_and_declared_allowances',driver_subtotal=winner['cost'],
+                   build_cost=estimate,total=estimate['estimated_total_cost'],
+                   excluded_costs=['Anything not included in CAD material, driver prices or the declared other allowance'])
     project = _read_json(trial / 'system/project.blab.json')
     ports = project['physical_system']['excitation_ports']
     expected = {'component:throat'} | {
@@ -136,9 +144,12 @@ def export_search(search: Path, output: Path) -> dict:
             archive.writestr(member('bundle.json'), json.dumps(bundle, indent=2, allow_nan=False) + '\n')
         digest = sha256(staged)
         os.link(staged, output)
-        return {'status': 'complete', 'output': str(output), 'sha256': digest,
-                'driver_count': design.driver_count, 'driver_cost': bom['total'],
+        summary={'status': 'complete', 'output': str(output), 'sha256': digest,
+                'driver_count': design.driver_count, 'driver_cost': winner['cost'],
                 'currency': brief.currency, 'print_qualified': False,
                 'finalist_validation_included': False}
+        if brief.build_budget is not None:
+            summary['estimated_total_cost']=bom['total']
+        return summary
     finally:
         staged.unlink(missing_ok=True)

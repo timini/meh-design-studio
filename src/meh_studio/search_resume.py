@@ -79,8 +79,9 @@ def verify_scored_trial(root,candidate,index,trial,brief,runtime):
     if _read_json(evaluation / 'evaluation.json')['runtime'] != runtime:
         raise ValueError('recovery evaluation runtime differs')
     recomputed = response_score(root / 'system/project.blab.json', evaluation, brief.side_gains,brief.acoustic_objectives)
-    recomputed.update(objective=recomputed.get('acoustic_objective',recomputed['ripple_db']) + brief.cost_weight_db*candidate['cost']/brief.max_driver_cost,
-                      driver_count=candidate['design'].driver_count, driver_cost=candidate['cost'],
+    from .build_cost import cost_adjusted_score
+    recomputed=cost_adjusted_score(recomputed,brief,candidate,manifest)
+    recomputed.update(driver_count=candidate['design'].driver_count, driver_cost=candidate['cost'],
                       evaluation_sha256=sha256(evaluation / 'evaluation.json'),
                       geometry_manifest_sha256=sha256(geometry))
     if recomputed != score:
