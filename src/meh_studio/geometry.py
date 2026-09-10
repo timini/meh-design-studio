@@ -8,8 +8,9 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+from typing import Literal
 
-from pydantic import model_validator
+from pydantic import model_serializer, model_validator
 
 from .domain import Positive, Record
 
@@ -20,6 +21,7 @@ class HornGeometry(Record):
     mouth_radius_m: Positive
     wall_m: Positive
     entry_positions_m: tuple[Positive, ...]
+    entry_layout: Literal['opposed_pairs', 'four_driver_ring'] = 'opposed_pairs'
     port_radius_m: Positive
     port_length_m: Positive
     front_radius_m: Positive
@@ -28,10 +30,19 @@ class HornGeometry(Record):
     mesh_size_m: Positive
     tessellation_tolerance_m: Positive = 0.0001
 
+    @model_serializer(mode='wrap')
+    def preserve_legacy_pair_identity(self, handler):
+        value = handler(self)
+        if self.entry_layout == 'opposed_pairs':
+            value.pop('entry_layout', None)
+        return value
+
     @model_validator(mode="after")
     def valid_family(self):
         if len(self.entry_positions_m) not in (1, 2):
             raise ValueError("one or two symmetric entry pairs are supported")
+        if self.entry_layout == 'four_driver_ring' and len(self.entry_positions_m) != 1:
+            raise ValueError('four-driver ring requires exactly one axial entry position')
         if self.mouth_radius_m <= self.throat_radius_m:
             raise ValueError("mouth must exceed throat radius")
         if self.front_radius_m <= self.port_radius_m:
@@ -40,6 +51,10 @@ class HornGeometry(Record):
         flare_slope = (self.mouth_radius_m - self.throat_radius_m) / self.length_m
         if self.wall_m + self.port_length_m <= flare_slope * margin:
             raise ValueError("entry chamber envelope is buried by the horn flare")
+        if self.entry_layout == 'four_driver_ring':
+            radius = self.throat_radius_m + flare_slope * self.entry_positions_m[0]
+            if radius + self.port_length_m <= margin:
+                raise ValueError('adjacent ring chamber envelopes overlap')
         if self.tessellation_tolerance_m < 1e-6:
             raise ValueError("tessellation tolerance must be at least 1 micrometre")
         if any(not margin < z < self.length_m - margin for z in self.entry_positions_m):
@@ -63,7 +78,17 @@ class HornGeometry(Record):
 
     @property
     def driver_count(self) -> int:
-        return 1 + 2 * len(self.entry_positions_m)
+        return 1 + len(self.entry_sites)
+
+    @property
+    def entry_sites(self):
+        """Canonical source identities and outward radial axes used by CAD and solver."""
+        directions = [('positive', (1, 0, 0)), ('negative', (-1, 0, 0))]
+        if self.entry_layout == 'four_driver_ring':
+            directions += [('positive_y', (0, 1, 0)), ('negative_y', (0, -1, 0))]
+        return [(f'entry_{index}_{side}', entry, axis)
+                for index, entry in enumerate(self.entry_positions_m)
+                for side, axis in directions]
 
 
 def build_geometry(design: HornGeometry):
@@ -77,33 +102,31 @@ def build_geometry(design: HornGeometry):
     front_air = cq.Solid.makeCone(throat, mouth, length)
     material = cq.Solid.makeCone(throat + wall, mouth + wall, length)
     air_regions, parts, sources = {}, {}, []
-    for pair, entry in enumerate(design.entry_positions_m):
+    for label, entry, axis in design.entry_sites:
         z = entry * mm
         local_radius = throat + (mouth - throat) * z / length
         duct_end = local_radius + wall + design.port_length_m * mm
         diaphragm = duct_end + design.front_depth_m * mm
-        for sign, side in ((1, "positive"), (-1, "negative")):
-            label = f"entry_{pair}_{side}"
-            direction = cq.Vector(sign, 0, 0)
-            def cylinder(radius, start, depth):
-                return cq.Solid.makeCylinder(radius, depth, cq.Vector(sign * start, 0, z), direction)
-            tube = cylinder(design.port_radius_m * mm, 0, duct_end)
-            chamber = cylinder(design.front_radius_m * mm, duct_end, design.front_depth_m * mm)
-            front_air = front_air.fuse(tube, chamber)
-            material = material.fuse(
-                cylinder(design.port_radius_m * mm + wall, 0, duct_end + wall),
-                cylinder(design.front_radius_m * mm + wall, duct_end - wall, design.front_depth_m * mm + 2 * wall))
-            # Open mounting aperture; the missing driver is an explicit reserved volume.
-            material = material.cut(cylinder(design.front_radius_m * mm, diaphragm, wall * 2))
-            rear_start = diaphragm + wall
-            rear_air = cylinder(design.front_radius_m * mm, rear_start, design.rear_depth_m * mm)
-            rear_cup = cylinder(design.front_radius_m * mm + wall, rear_start,
-                                design.rear_depth_m * mm + wall).cut(rear_air)
-            air_regions[f"rear_{label}"] = rear_air
-            parts[f"rear_cup_{label}"] = rear_cup
-            sources.append({"id": label, "front_center_m": [sign * diaphragm / mm, 0, entry],
-                            "rear_center_m": [sign * rear_start / mm, 0, entry],
-                            "motion_axis": [sign, 0, 0], "radius_m": design.front_radius_m})
+        direction = cq.Vector(*axis)
+        def cylinder(radius, start, depth):
+            return cq.Solid.makeCylinder(radius, depth, cq.Vector(axis[0] * start, axis[1] * start, z), direction)
+        tube = cylinder(design.port_radius_m * mm, 0, duct_end)
+        chamber = cylinder(design.front_radius_m * mm, duct_end, design.front_depth_m * mm)
+        front_air = front_air.fuse(tube, chamber)
+        material = material.fuse(
+            cylinder(design.port_radius_m * mm + wall, 0, duct_end + wall),
+            cylinder(design.front_radius_m * mm + wall, duct_end - wall, design.front_depth_m * mm + 2 * wall))
+        # Open mounting aperture; the missing driver is an explicit reserved volume.
+        material = material.cut(cylinder(design.front_radius_m * mm, diaphragm, wall * 2))
+        rear_start = diaphragm + wall
+        rear_air = cylinder(design.front_radius_m * mm, rear_start, design.rear_depth_m * mm)
+        rear_cup = cylinder(design.front_radius_m * mm + wall, rear_start,
+                            design.rear_depth_m * mm + wall).cut(rear_air)
+        air_regions[f"rear_{label}"] = rear_air
+        parts[f"rear_cup_{label}"] = rear_cup
+        sources.append({"id": label, "front_center_m": [axis[0] * diaphragm / mm, axis[1] * diaphragm / mm, entry],
+                        "rear_center_m": [axis[0] * rear_start / mm, axis[1] * rear_start / mm, entry],
+                        "motion_axis": list(axis), "radius_m": design.front_radius_m})
     parts["horn"] = material.cut(front_air).clean()
     air_regions["front"] = front_air.clean()
     for name, solid in {**parts, **air_regions}.items():
@@ -119,17 +142,16 @@ def verify_front_chamber_back_walls(design, front_air, horn):
     cq=load_cadquery();mm=1000.;wall=design.wall_m*mm
     # Stay away from coincident faces while testing almost the entire wall thickness.
     inset=min(wall/1000.,1e-3);depth=wall-2*inset;checks=[]
-    for pair,entry in enumerate(design.entry_positions_m):
+    for label,entry,axis in design.entry_sites:
         local_radius=design.throat_radius_m+(design.mouth_radius_m-design.throat_radius_m)*entry/design.length_m
         start=(local_radius+design.port_length_m)*mm+inset
-        for sign in (1,-1):
-            nominal=cq.Solid.makeCylinder(design.front_radius_m*mm,depth,cq.Vector(sign*start,0,entry*mm),cq.Vector(sign,0,0))
-            # The port and any intended intersection with horn air remain open.
-            required=nominal.cut(front_air);volume=required.Volume()
-            missing=required.cut(horn).Volume()
-            if volume<=1e-9 or missing>max(1e-6,volume*1e-7):
-                raise ValueError('front chamber back wall is not covered by material')
-            checks.append({'entry_pair':pair,'side':sign,'required_volume_m3':volume/1e9,'missing_volume_m3':missing/1e9})
+        nominal=cq.Solid.makeCylinder(design.front_radius_m*mm,depth,cq.Vector(axis[0]*start,axis[1]*start,entry*mm),cq.Vector(*axis))
+        # The port and any intended intersection with horn air remain open.
+        required=nominal.cut(front_air);volume=required.Volume()
+        missing=required.cut(horn).Volume()
+        if volume<=1e-9 or missing>max(1e-6,volume*1e-7):
+            raise ValueError('front chamber back wall is not covered by material')
+        checks.append({'source_id':label,'required_volume_m3':volume/1e9,'missing_volume_m3':missing/1e9})
     return checks
 
 
@@ -195,7 +217,7 @@ def estimated_curved_tetrahedra(design, region, volume):
     coarse_low=max(design.throat_radius_m,split)
     if design.mouth_radius_m>coarse_low:
         cells+=math.pi*((design.mouth_radius_m-coarse_low)*(design.mouth_radius_m**2+design.mouth_radius_m*coarse_low+coarse_low**2))/(3*slope*h**3)
-    count=2*len(design.entry_positions_m)
+    count=design.driver_count-1
     cells+=count*math.pi*design.front_radius_m**2*design.front_depth_m/local(design.front_radius_m)**3
     port_length=design.port_length_m+design.wall_m+2*design.front_radius_m*slope
     cells+=count*math.pi*design.port_radius_m**2*port_length/local(design.port_radius_m)**3

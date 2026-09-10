@@ -74,7 +74,7 @@ def candidates(brief, base, drivers):
     rows = []
     for throat,side,length,mouth,entries in itertools.product(brief.throat_ids,brief.side_ids,
             brief.lengths_m,brief.mouth_radii_m,brief.entry_fractions):
-        count = 1+2*len(entries)
+        count = 5 if base.entry_layout == 'four_driver_ring' else 1+2*len(entries)
         cost = brief.prices[throat]+(count-1)*brief.prices[side]
         if count>brief.max_drivers or cost>brief.max_driver_cost: continue
         t,s = records[throat],records[side]
