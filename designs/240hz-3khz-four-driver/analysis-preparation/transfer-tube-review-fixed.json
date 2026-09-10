@@ -1,0 +1,39 @@
+{
+  "status": "complete",
+  "maximum_relative_complex_error": 0.02,
+  "geometry_m": {
+    "length": 0.1,
+    "width": 0.02,
+    "height": 0.02,
+    "mesh_size": 0.004
+  },
+  "density_kg_m3": 1.21,
+  "sound_speed_m_s": 343.0,
+  "inward_flow_m3_s_rms": 0.0001,
+  "frequencies_hz": [
+    240,
+    1000,
+    3000
+  ],
+  "phasor": "exp(+i omega t)",
+  "generator_sha256": "31505a77aa1144e781662ff8160cacd3a12872701ebab4a2d28e067b0b0e0562",
+  "solver_sha256": "90814e7ff66300bde3c97605d3d25d1bb572953c37cb37e81de5ffe4af7726a3",
+  "samples": [
+    {
+      "frequency_hz": 240,
+      "relative_complex_error": 1.2606586681933612e-05,
+      "relative_residual": 4.923536629580446e-13
+    },
+    {
+      "frequency_hz": 1000,
+      "relative_complex_error": 0.0004675302886873198,
+      "relative_residual": 1.070756862302317e-13
+    },
+    {
+      "frequency_hz": 3000,
+      "relative_complex_error": 0.011751087441673478,
+      "relative_residual": 4.2500202662782477e-14
+    }
+  ],
+  "mesh_sha256": "44ea5ee3010227b8fbceb1773f975cc594eb193d5886f04fb0f8714c8ce5b321"
+}

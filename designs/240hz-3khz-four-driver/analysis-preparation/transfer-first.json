@@ -1,0 +1,55 @@
+{
+  "status": "complete",
+  "qualified": false,
+  "termination": "plane_wave_tube_impedance_rho_c",
+  "source": "four equal prescribed inward flows, total 0.0001 m3/s RMS; throat rigid",
+  "mesh_sha256": "7d194ddf4598d7d50a6fbbfa51889ccf5a58019d7d240d811828195d840c6d35",
+  "mesh_manifest_sha256": "9e42e6f046e976066218b7315a089efe27bd059ca9436f36010cb38613b586b0",
+  "generator_sha256": "90814e7ff66300bde3c97605d3d25d1bb572953c37cb37e81de5ffe4af7726a3",
+  "phasor": "exp(+i omega t)",
+  "samples": [
+    {
+      "frequency_hz": 240.0,
+      "mouth_mean_pressure_pa": [
+        0.17356132170052627,
+        -0.21101708998342486
+      ],
+      "mouth_transfer_pa_s_m3": [
+        1735.6132170052626,
+        -2110.1708998342483
+      ],
+      "relative_residual": 6.275644127841364e-13
+    },
+    {
+      "frequency_hz": 1000.0,
+      "mouth_mean_pressure_pa": [
+        -0.015390474188628328,
+        -0.485343973690069
+      ],
+      "mouth_transfer_pa_s_m3": [
+        -153.90474188628326,
+        -4853.439736900689
+      ],
+      "relative_residual": 5.919401547137084e-12
+    },
+    {
+      "frequency_hz": 3000.0,
+      "mouth_mean_pressure_pa": [
+        0.6769137454215227,
+        -0.8704983729646644
+      ],
+      "mouth_transfer_pa_s_m3": [
+        6769.137454215227,
+        -8704.983729646643
+      ],
+      "relative_residual": 9.630187965802562e-13
+    }
+  ],
+  "limitations": [
+    "No exterior radiation or far-field SPL",
+    "No actual driver impedances, rear loads, cone profiles or crossover",
+    "Single mesh; not converged",
+    "Transfer diagnostic, not a 240\u20133000 Hz speaker qualification"
+  ],
+  "elapsed_seconds": 50.031628083001124
+}
