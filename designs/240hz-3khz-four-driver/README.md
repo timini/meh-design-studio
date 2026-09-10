@@ -6,6 +6,8 @@ A mechanical prototype for four inexpensive 3-inch mids feeding one horn, with a
 
 ## Files and dimensions
 
+Download the tracked [R1 artifact archive](MEH-240-3000-prototype-R1.zip) and extract it first. All `parts/`, `geometry.json` and `mesh-checks.json` paths below are relative to the extracted `MEH-240-3000-prototype-R1/` folder. The archive contains the original generated STL/STEP files and their checksums; regeneration is optional. The adjacent `geometry-R1.json` and `mesh-checks-R1.json` are readable copies of the archived evidence.
+
 - `parts/horn_body.stl`: complete horn body, millimetres; import at 100% scale. STEP also supplied for CAD editing.
 - `parts/print/core.stl` plus 24 `band_*_sector_*.stl`: print one of each, already oriented with their base at Z=0.
 - `parts/rear_cover_print_four.stl`: print four, closed end on the bed.
