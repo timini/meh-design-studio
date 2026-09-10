@@ -63,7 +63,15 @@ def main(argv=None) -> int:
     search.add_argument('--checkout', type=Path, required=True)
     search.add_argument('--python', type=Path, required=True)
     search.add_argument('--julia', type=Path, required=True)
+    search.add_argument('--julia-threads', type=int, help='explicit Julia thread count')
     search.add_argument('--timeout-per-solver-stage-s',type=float,default=1800)
+    resume = commands.add_parser('resume-optimise', help='continue a stopped search in a new directory')
+    resume.add_argument('search', type=Path)
+    resume.add_argument('--output', type=Path, required=True)
+    resume.add_argument('--checkout', type=Path, required=True)
+    resume.add_argument('--python', type=Path, required=True)
+    resume.add_argument('--julia', type=Path, required=True)
+    resume.add_argument('--julia-threads', type=int, help='match the original explicit Julia thread count')
     bundle = commands.add_parser('export-search', help='export experimental winning geometry, driver BOM and relative gains')
     bundle.add_argument('search', type=Path)
     bundle.add_argument('--output', type=Path, required=True, help='new ZIP file; existing files are never replaced')
@@ -78,13 +86,17 @@ def main(argv=None) -> int:
         elif args.command == 'export-search':
             from .build_bundle import export_search
             result = export_search(args.search, args.output)
+        elif args.command == 'resume-optimise':
+            from .search_resume import resume_optimise
+            from .boundary_lab import BoundaryLabRuntime
+            result = resume_optimise(args.search, BoundaryLabRuntime(args.checkout,args.python,args.julia,julia_threads=args.julia_threads),args.output)
         elif args.command == 'optimise':
             from .optimisation import SearchBrief, optimise
             from .geometry import HornGeometry
             from .boundary_lab import BoundaryLabRuntime
             result = optimise(SearchBrief.model_validate_json(args.brief.read_text()),
                 HornGeometry.model_validate_json(args.geometry.read_text()), args.database,
-                BoundaryLabRuntime(args.checkout,args.python,args.julia),args.output,solver_stage_timeout_s=args.timeout_per_solver_stage_s)
+                BoundaryLabRuntime(args.checkout,args.python,args.julia,julia_threads=args.julia_threads),args.output,solver_stage_timeout_s=args.timeout_per_solver_stage_s)
         elif args.command == "compile-radiating":
             from .boundary_lab import BoundaryLabRuntime
             from .generated_system import HornSources

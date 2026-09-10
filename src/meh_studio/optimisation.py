@@ -194,28 +194,40 @@ def evaluate_candidate(candidate, root, runtime, brief, *, mesh_size=None, frequ
     return score
 
 
-def optimise(brief, base, catalogue_path, runtime, output, *, solver_stage_timeout_s=1800):
+def optimise(brief, base, catalogue_path, runtime, output, *, solver_stage_timeout_s=1800, resume_from=None):
     if not math.isfinite(solver_stage_timeout_s) or not 0<solver_stage_timeout_s<=7200:
         raise ValueError('solver stage timeout must be within (0, 7200] seconds')
     report={'status':'running'}
     with _termination_guard(report) as activate:
-        return _optimise(brief,base,catalogue_path,runtime,output,report,activate,solver_stage_timeout_s)
+        return _optimise(brief,base,catalogue_path,runtime,output,report,activate,solver_stage_timeout_s,resume_from)
 
 
-def _optimise(brief, base, catalogue_path, runtime, output, report, activate, solver_stage_timeout_s):
+def _optimise(brief, base, catalogue_path, runtime, output, report, activate, solver_stage_timeout_s, resume_from):
     output=Path(output).absolute()
     with Catalogue(catalogue_path,readonly=True) as catalogue: drivers=catalogue.list()
     pool=candidates(brief,base,drivers)
     runtime_identity=runtime.verify()
+    from .geometry_worker import geometry_runtime
+    application_runtime=geometry_runtime()
+    # JSON normalisation matches the saved runtime representation.
+    application_runtime=json.loads(json.dumps(application_runtime))
+    recovery=None
+    if resume_from is not None:
+        from .search_resume import Recovery
+        recovery=Recovery(resume_from,output,brief,base,drivers,pool,runtime_identity,application_runtime,
+                          solver_stage_timeout_s)
     output.mkdir(parents=True,exist_ok=False)
     report.update({'schema_version':1,'status':'running','kind':'experimental_fem_bem_search',
-        'qualified':False,'physical_validation':False,'runtime':runtime_identity,'trials':[],'per_solver_stage_timeout_s':solver_stage_timeout_s,
+        'qualified':False,'physical_validation':False,'runtime':runtime_identity,
+        'application_runtime':application_runtime,'trials':[],'per_solver_stage_timeout_s':solver_stage_timeout_s,
         'limitations':['Synthetic/unqualified sources may be used only for pipeline experiments',
             'Relative on-axis ripple objective, not calibrated sensitivity or efficiency',
             'Driver-only prices exclude amplifier, material, printing and assembly',
             'Straight conical family; finite sampled grid is not a global optimum']})
     try:
         activate()
+        if recovery is not None:
+            report['recovery']=recovery.provenance
         _write_json(output/'brief.json',brief.model_dump(mode='json'))
         _write_json(output/'base-geometry.json',base.model_dump(mode='json'))
         _write_json(output/'catalogue-snapshot.json',[d.model_dump(mode='json') for d in drivers])
@@ -226,12 +238,19 @@ def _optimise(brief, base, catalogue_path, runtime, output, report, activate, so
             _write_json(output/'search.json',report)
             if runtime.verify()!=runtime_identity: raise ValueError('search runtime changed')
             try:
-                score=evaluate_candidate(candidate,output/f'trial-{i:03d}',runtime,brief,timeout_s=solver_stage_timeout_s)
+                if recovery is not None and i in recovery.completed:
+                    score=recovery.copy_trial(i,candidate,output/f'trial-{i:03d}')
+                else:
+                    score=evaluate_candidate(candidate,output/f'trial-{i:03d}',runtime,brief,timeout_s=solver_stage_timeout_s)
                 trial.update(status='complete',**score)
             except Exception as exc:
+                if recovery is not None and i in recovery.completed: raise
                 trial.update(status='failed',error=f'{type(exc).__name__}: {exc}')
             _write_json(output/'search.json',report)
         if runtime.verify()!=runtime_identity: raise ValueError('search runtime changed')
+        if json.loads(json.dumps(geometry_runtime()))!=application_runtime:
+            raise ValueError('search application runtime changed')
+        if recovery is not None: recovery.check_source()
         if any(sha256(output/name)!=digest for name,digest in report['control_sha256'].items()):
             raise ValueError('search controls changed during execution')
         successful=[t for t in report['trials'] if t['status']=='complete']

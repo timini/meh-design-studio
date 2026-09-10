@@ -29,6 +29,8 @@ An [experimental optimisation workflow](docs/end-to-end-search.md) connects the 
 
 Use [`meh jobs`](docs/geometry-worker.md#command-line-workflow) to save a design, execute it in an isolated CAD worker, cancel work and retrieve integrity-checked results.
 
+Use `meh resume-optimise` to continue a cancelled or failed search in a new directory, reusing verified completed trials; see [recovery requirements](docs/end-to-end-search.md#continue-a-stopped-search).
+
 Use [`meh export-search`](docs/search-build-bundle.md) to package a completed search with its geometry, driver BOM and fixed gain settings.
 
 ## Documents
