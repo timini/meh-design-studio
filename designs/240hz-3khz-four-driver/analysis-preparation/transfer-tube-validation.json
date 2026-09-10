@@ -1,0 +1,17 @@
+[
+  {
+    "frequency_hz": 240,
+    "relative_complex_error": 1.2606586681933612e-05,
+    "relative_residual": 4.923536629580446e-13
+  },
+  {
+    "frequency_hz": 1000,
+    "relative_complex_error": 0.0004675302886873198,
+    "relative_residual": 1.070756862302317e-13
+  },
+  {
+    "frequency_hz": 3000,
+    "relative_complex_error": 0.011751087441673478,
+    "relative_residual": 4.2500202662782477e-14
+  }
+]
