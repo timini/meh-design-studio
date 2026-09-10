@@ -25,7 +25,7 @@ A [Boundary Lab adapter](docs/boundary-lab-adapter.md) also runs existing projec
 
 Experimental horn CAD and tagged air meshing are available through [the geometry generator](docs/geometry-generator.md). These exports remain unverified for printing and acoustic performance.
 
-An [experimental optimisation workflow](docs/end-to-end-search.md) connects the synthetic driver catalogue, CAD, coupled FEM/BEM simulation, bounded search and finalist validation. It produces STEP/STL/3MF geometry exports. It currently optimises relative response ripple within a straight conical family; it does not establish efficiency, continuous-band hi-fi performance or print qualification.
+An [experimental optimisation workflow](docs/end-to-end-search.md) connects the synthetic driver catalogue, CAD, coupled FEM/BEM simulation, bounded search and finalist validation. It produces STEP/STL/3MF geometry exports. It supports four-driver rings and non-circular freeform profiles, simulation-driven evolutionary mutation, and optional wide-mid crossover/directivity objectives with shared parallel-amplifier loading. It does not establish efficiency, continuous-band hi-fi performance or print qualification.
 
 Use [`meh jobs`](docs/geometry-worker.md#command-line-workflow) to save a design, execute it in an isolated CAD worker, cancel work and retrieve integrity-checked results.
 
@@ -46,6 +46,8 @@ Use [`meh export-search`](docs/search-build-bundle.md) to package a completed se
 | [Dataset registry](validation/dataset-registry.json) | Machine-readable list of planned and externally available evidence |
 | [Measurement record template](validation/measurement-template.json) | Fields to complete before measurements become qualifying evidence |
 | [Decision log](docs/decisions.md) | Proposed defaults, unresolved decisions and change policy |
+
+The generated workflow uses one parametric design to generate acoustic domains and build solids. See the [current completion target](docs/completion-workflow.md), [freeform geometry](docs/freeform-waveguides.md), [adaptive search](docs/adaptive-search.md) and [wide-mid objectives](docs/wide-mid-objectives.md).
 
 The proposed system uses one parametric design to generate acoustic domains and printable solids. A versioned Boundary Lab adapter performs coupled simulations; a budgeted mixed-variable search selects driver models, supported counts, geometry, entry positions and active crossover settings. Finalists undergo common-fidelity numerical checks and manufacturing verification.
 
