@@ -1,0 +1,54 @@
+{
+  "status": "complete",
+  "screen_passed": false,
+  "qualified": false,
+  "limits": {
+    "maximum_magnitude_difference_db": 1.0,
+    "maximum_relative_complex_difference": 0.1
+  },
+  "source_files": [
+    {
+      "path": "refinement-plan.json",
+      "sha256": "564ad3604e747799d808227aa826b5cfb1c07bc0eb7ee78f555459e4b2a83c58"
+    },
+    {
+      "path": "sweep-summary.json",
+      "sha256": "593c792506571d080f61cf98ee5961baf7b1141645fef5cb2a832942e230427b"
+    },
+    {
+      "path": "transfer-10mm.json",
+      "sha256": "16551d0388cd2e31ebe64c60a6379716c2020389881a10aa8716b6578d9a6d0e"
+    },
+    {
+      "path": "mesh-10mm.json",
+      "sha256": "3495d70e655d1aa8522bbed47e63c4cf16f47c2b2e96c9a6092af76cc3f0c9cf"
+    }
+  ],
+  "samples": [
+    {
+      "frequency_hz": 1362.5011441823615,
+      "magnitude_difference_db": 0.006874841335368668,
+      "relative_complex_difference": 0.0237819154367796,
+      "passed": true
+    },
+    {
+      "frequency_hz": 1595.4887690834973,
+      "magnitude_difference_db": 0.009151033276714696,
+      "relative_complex_difference": 0.03735141546658143,
+      "passed": true
+    },
+    {
+      "frequency_hz": 1868.3172657437888,
+      "magnitude_difference_db": 0.02365833964235004,
+      "relative_complex_difference": 0.05681486914908737,
+      "passed": true
+    },
+    {
+      "frequency_hz": 3000.0,
+      "magnitude_difference_db": 0.002727282983959719,
+      "relative_complex_difference": 0.24101195007171763,
+      "passed": false
+    }
+  ],
+  "interpretation": "Two-level sensitivity screen only. Failure prevents a mesh-stability claim; a passed screen would not establish physical accuracy."
+}
