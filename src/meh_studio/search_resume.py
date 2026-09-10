@@ -86,7 +86,7 @@ class Recovery:
                 self.completed[i] = trial
         self.brief, self.runtime = brief, runtime
         self.provenance = {'source_directory': str(self.source), 'source_sha256': self.hashes,
-                           'reused_trial_indices': sorted(self.completed),
+                           'reused_trial_indices': [], 'eligible_trial_indices': sorted(self.completed),
                            'mode': 'whole_completed_trials',
                            'original_search_required': True}
         self.check_source()
@@ -109,6 +109,7 @@ class Recovery:
             raise ValueError('recovery geometry design differs')
         from .export_validation import validate_export
         validate_export(geometry.parent)
+        verify_candidate_project(root, candidate, self.brief.exterior_mesh_size_m)
         evaluation = root / 'evaluation'
         request = SolveRequest(frequencies_hz=self.brief.frequencies_hz,
             include_project_observations=True, retain=('fem_nodal_pressure','bem_boundary_traces'))
@@ -140,4 +141,65 @@ class Recovery:
                     {'project_path': str(original_project.absolute()), 'project_sha256': sha256(original_project)})
         self._verify_trial(destination, candidate, index)
         self.check_source()
+        self.provenance['reused_trial_indices'].append(index)
         return score
+
+
+def verify_candidate_project(root, candidate, exterior_mesh_size):
+    """Reconstruct the cheap interior compiler output from the candidate's saved meshes.
+
+    This performs mesh/group checks and JSON compilation, not CAD or a native solve.
+    Removing only the declared exterior extension must recover that exact project.
+    """
+    from .generated_system import compile_interior_system
+    project_path=root/'system/project.blab.json'
+    project=_read_json(project_path)
+    compilation=_read_json(root/'system/compilation.json')
+    exterior_path=root/'system/exterior/exterior.json'
+    exterior=_read_json(exterior_path)
+    if (compilation.get('status')!='complete'
+            or compilation.get('geometry_hash')!=candidate['design'].content_hash
+            or compilation.get('sources_hash')!=candidate['sources'].content_hash
+            or compilation.get('project_sha256')!=sha256(project_path)
+            or compilation.get('exterior_report_sha256')!=sha256(exterior_path)
+            or compilation.get('exterior_mesh_size_m')!=exterior_mesh_size
+            or exterior.get('design_hash')!=candidate['design'].content_hash
+            or exterior.get('mesh_size_m')!=exterior_mesh_size):
+        raise ValueError('recovery compiled project is not bound to the candidate')
+    system=project['physical_system']
+    exterior_digest=system['metadata']['generated_mesh_sha256'].pop('mesh:exterior')
+    if (exterior_digest!=compilation['exterior_surface']['sha256']
+            or exterior_digest!=sha256(root/'system/meshes/exterior.msh')):
+        raise ValueError('recovery exterior mesh identity mismatch')
+    exterior_meshes=[m for m in system['meshes'] if m['id']=='mesh:exterior']
+    if exterior_meshes!=[{'id':'mesh:exterior','name':'exterior','file':'meshes/exterior.msh',
+            'purpose':'bem_surface','scale_to_m':1.0,'translation_m':[0,0,0]}]:
+        raise ValueError('recovery exterior mesh declaration differs')
+    system['meshes']=[m for m in system['meshes'] if m['id']!='mesh:exterior']
+    exterior_regions=[r for r in system['regions'] if r['id']=='region:exterior']
+    if exterior_regions!=[{'id':'region:exterior','name':'Exterior air','kind':'unbounded_air',
+            'density_kg_per_m3':candidate['sources'].density_kg_m3,
+            'sound_speed_m_per_s':candidate['sources'].sound_speed_m_s,
+            'mesh_ids':['mesh:exterior'],'volume_groups':[],'loss_model':{}}]:
+        raise ValueError('recovery exterior medium differs')
+    system['regions']=[r for r in system['regions'] if r['id']!='region:exterior']
+    expected_boundaries=[{'id':'boundary:exterior:'+name,'name':name,'region_id':'region:exterior',
+        'kind':kind,'parameters':{},'group':{'mesh_id':'mesh:exterior','dimension':2,'name':name,'tag':tag}}
+        for name,tag,kind in [('mouth_interface',10,'interface'),('rigid_exterior',99,'rigid')]]
+    if [b for b in system['boundaries'] if b['region_id']=='region:exterior']!=expected_boundaries:
+        raise ValueError('recovery exterior boundaries differ')
+    system['boundaries']=[b for b in system['boundaries'] if b['region_id']!='region:exterior']
+    for boundary in system['boundaries']:
+        if boundary['id']=='boundary:front:mouth_interface':
+            if boundary['kind']!='interface': raise ValueError('recovery mouth is not coupled')
+            boundary['kind']='plane_wave_tube_termination'
+    if system['interfaces']!=[{'id':'interface:mouth','name':'Horn mouth',
+        'bounded_boundary_id':'boundary:front:mouth_interface',
+        'unbounded_boundary_id':'boundary:exterior:mouth_interface','coordinate_tolerance_m':1e-8}]:
+        raise ValueError('recovery mouth coupling differs')
+    system['interfaces']=[]
+    with tempfile.TemporaryDirectory(prefix='meh-recovery-check-') as temporary:
+        expected_root=Path(temporary)/'expected'
+        compile_interior_system(root/'geometry',candidate['sources'],expected_root)
+        if project!=_read_json(expected_root/'project.blab.json'):
+            raise ValueError('recovery mesh/source project differs from declared candidate')

@@ -61,6 +61,7 @@ def stopped(tmp_path, monkeypatch):
     with pytest.raises(KeyboardInterrupt):
         search.optimise(brief, base, database, Runtime(), original)
     monkeypatch.setattr(recovery, 'response_score', fake_score)
+    monkeypatch.setattr(recovery, 'verify_candidate_project', lambda *args: None)
     import meh_studio.export_validation as export
     monkeypatch.setattr(export, 'validate_export', lambda root: None)
     return original
@@ -115,7 +116,9 @@ def test_changed_completed_artifacts_abort_recovery(stopped, tmp_path, target):
     output = tmp_path/'continued'
     with pytest.raises(ValueError):
         recovery.resume_optimise(stopped, Runtime(), output)
-    assert search._read_json(output/'search.json')['status'] == 'failed'
+    failed=search._read_json(output/'search.json')
+    assert failed['status'] == 'failed'
+    assert failed['recovery']['reused_trial_indices'] == []
     assert not (output/'winner-geometry').exists()
 
 

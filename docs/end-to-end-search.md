@@ -226,3 +226,32 @@ budget is preserved, but total lifetime compute is not capped. Running and compl
 search records are rejected. Abrupt process death can leave `running` state and
 still needs the future worker supervisor. This command does not manipulate leases,
 kill orphan processes or mutate a running search.
+
+### Executed recovery evidence
+
+The [recovery integration record](../validation/reports/search-recovery.json)
+records a real local run on 10 September 2026, using source `3efcc0b7b4b6f32ce341f24349a98d540c654c3e`:
+
+- A compact three-driver candidate completed CAD, mesh preparation and coupled
+  FEM/BEM evaluation at 1000, 2000 and 4000 Hz.
+- The test harness intentionally interrupted immediately before the second trial.
+- The actual recovery CLI reused the completed first trial and executed the second.
+- Original stopped-search files remained byte-identical. Copied native artifacts
+  also remained byte-identical, with the additional project-origin sidecar.
+- Build-bundle export passed, yielding SHA-256
+  `27ff76a170b3c1ce8cba9b24abb2c3f8b3eff8414cb380ebafc594d1aa6f8355`.
+
+An initial recovery failed the copied-project mesh-path check; its files remain
+preserved separately. The subsequent origin-path fix passed the experiment above.
+Later candidate/project binding checks were replayed on all three saved trial
+locations without running the solver again; their source hash is in the record.
+Those checks reconstruct the interior compiler output from the candidate's saved
+meshes and source circuits and compare the declared exterior extension. Regression
+tests reject consistently rehashed changes to mesh identity, source parameters,
+medium, excitation assignment and source boundary assignment. Reuse accounting
+records successful copies separately from merely eligible source trials.
+
+The detailed native artifacts are retained at the local paths in the record;
+this small JSON record is not a substitute for the raw artifact archive. The
+three-frequency run establishes recovery integration only. It does not replace
+the earlier full-band held-out and mesh-refinement experiment or qualify a speaker.

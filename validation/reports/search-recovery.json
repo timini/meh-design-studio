@@ -1,0 +1,45 @@
+{
+  "source_commit": "3efcc0b7b4b6f32ce341f24349a98d540c654c3e",
+  "native_trials": 2,
+  "frequencies_hz": [
+    1000.0,
+    2000.0,
+    4000.0
+  ],
+  "original_status": "cancelled",
+  "continued_status": "complete",
+  "reused_trial_indices": [
+    0
+  ],
+  "original_bytes_unchanged": true,
+  "copied_native_artifacts_byte_identical": true,
+  "export": {
+    "status": "complete",
+    "output": "/Users/timrichardson/Documents/Codex/2026-09-06/i/work/resume-native-2026-09-10-fixed/resumed-horn.zip",
+    "sha256": "27ff76a170b3c1ce8cba9b24abb2c3f8b3eff8414cb380ebafc594d1aa6f8355",
+    "driver_count": 3,
+    "driver_cost": 14.0,
+    "currency": "GBP",
+    "print_qualified": false,
+    "finalist_validation_included": false
+  },
+  "physical_validation": false,
+  "full_band_validation_repeated": false,
+  "purpose": "Whole-trial interruption/recovery integration, not acoustic qualification",
+  "additional_binding_verification": {
+    "source_sha256": "f31fb7718645866e278710384f03bfe465b507b36f91e27291ccec25a9b35272",
+    "checked_trials": [
+      "stopped/trial-000",
+      "continued/trial-000",
+      "continued/trial-001"
+    ],
+    "method": "Reconstruct interior compiler output from saved geometry meshes and candidate sources; compare native project",
+    "native_solver_repeated": false
+  },
+  "raw_evidence_location": "/Users/timrichardson/Documents/Codex/2026-09-06/i/work/resume-native-2026-09-10-fixed",
+  "earlier_failed_attempt": {
+    "source_commit": "baba340c71037f58431ceb8cc8db84c0d48a5dd3",
+    "reason": "Copied relative mesh declarations failed original absolute-path identity validation",
+    "raw_evidence_location": "/Users/timrichardson/Documents/Codex/2026-09-06/i/work/resume-native-2026-09-10"
+  }
+}
