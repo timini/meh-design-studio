@@ -36,9 +36,11 @@ def step_geometry_sha256(path: Path) -> str:
     return hashlib.sha256(data.encode()).hexdigest()
 
 
-def surface_integrity(path: Path) -> dict:
+def surface_integrity(path: Path, *, maximum_triangles: int = 8000) -> dict:
     """Check closed oriented triangular topology before exposing a BEM input."""
     import gmsh
+    if type(maximum_triangles) is not int or not 1 <= maximum_triangles <= 32_000:
+        raise ValueError('exterior workload limit must be an integer in [1, 32000]')
     if gmsh.isInitialized():
         raise ValueError("surface inspection requires an isolated Gmsh process")
     gmsh.initialize()
@@ -50,8 +52,8 @@ def surface_integrity(path: Path) -> dict:
             raise ValueError("exterior must contain only linear triangle surface elements")
         tags, coordinates, _ = gmsh.model.mesh.getNodes()
         _, triangles = gmsh.model.mesh.getElementsByType(2)
-        if not len(triangles) or len(triangles) // 3 > 8000:
-            raise ValueError("exterior mesh must contain 1–8000 linear triangles")
+        if not len(triangles) or len(triangles) // 3 > maximum_triangles:
+            raise ValueError(f"exterior mesh must contain 1–{maximum_triangles} linear triangles")
         lookup = {int(tag): i for i, tag in enumerate(tags)}
         faces = np.array([lookup[int(tag)] for tag in triangles]).reshape(-1, 3)
         points = np.asarray(coordinates).reshape(-1, 3)
@@ -167,6 +169,7 @@ def export_exterior(design: HornGeometry, output: Path, mesh_size_m: float = .02
     report = {"schema_version": 1, "status": "running", "design_hash": design.content_hash,
               "mesh_size_m": mesh_size_m, "accuracy": "not_converged", "print_part": False,
               "units": {"step": "mm", "mesh": "m"}, "compiler_runtime":compiler_runtime}
+    report['workload_limit_triangles']=design.maximum_exterior_triangles
     _write_json(output / "exterior.json", report)
     try:
         air, parts, sources = build_geometry(design)
@@ -233,7 +236,7 @@ def export_exterior(design: HornGeometry, output: Path, mesh_size_m: float = .02
             gmsh.write(str(output / "exterior.msh"))
         finally:
             gmsh.finalize()
-        integrity = surface_integrity(output / "exterior.msh")
+        integrity = surface_integrity(output / "exterior.msh",maximum_triangles=design.maximum_exterior_triangles)
         if not math.isclose(integrity["enclosed_volume_m3"], exact_volume, rel_tol=.02):
             raise ValueError("exterior surface volume differs from CAD by more than 2 percent")
         if meshing_runtime_identity()!=compiler_runtime:

@@ -62,7 +62,7 @@ def _compile_radiating_system(geometry_directory, sources, output, runtime, *, e
                   str(output / "meshes/front.msh"), str(output / "exterior/exterior.msh"), str(destination),
                   "--fem-interface", "mouth_interface", "--bem-interface", "mouth_interface"],
                  Path(runtime.checkout), output / "conform-interface.log", timeout_s)
-        integrity = surface_integrity(destination)
+        integrity = surface_integrity(destination,maximum_triangles=design.maximum_exterior_triangles)
         verify_exterior_groups(destination, output / "meshes/front.msh")
         if abs(integrity["enclosed_volume_m3"] / exterior["cad_volume_m3"] - 1) > .02:
             raise ValueError("conforming changed the exterior volume beyond the supported tolerance")
