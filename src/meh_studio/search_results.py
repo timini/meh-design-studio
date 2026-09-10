@@ -33,7 +33,26 @@ def _load_completed_search(search):
     brief=SearchBrief.model_validate_json((search/'brief.json').read_text())
     base=HornGeometry.model_validate_json((search/'base-geometry.json').read_text())
     drivers=[DriverRevision.model_validate(d) for d in json.loads((search/'catalogue-snapshot.json').read_text())]
-    winner=candidates(brief,base,drivers)[result['winner_index']]
+    if brief.evolution is not None:
+        from .evolution import replay
+        pool,proposals=replay(brief,base,drivers,trials)
+        if result.get('proposals')!=proposals:
+            raise ValueError('adaptive proposal history differs from completed search')
+        from .search_resume import verify_scored_trial
+        for ancestor,trial in enumerate(trials):
+            if trial['status']!='complete':continue
+            root=search/f'trial-{ancestor:03d}'
+            names=('candidate.json','score.json','geometry/geometry.json',
+                   'system/project.blab.json','evaluation/evaluation.json',
+                   'evaluation/request.json','evaluation/preflight.json')
+            before={name:sha256(root/name) for name in names}
+            verify_scored_trial(root,pool[ancestor],ancestor,trial,brief,result['runtime'])
+            if any(sha256(root/name)!=digest for name,digest in before.items()):
+                raise ValueError('adaptive ancestral evidence changed during verification')
+            control_hashes.update({f'trial-{ancestor:03d}/{name}':digest for name,digest in before.items()})
+        winner=pool[index]
+    else:
+        winner=candidates(brief,base,drivers)[index]
     if candidate_record(winner)!=_read_json(candidate_file):
         raise ValueError('reconstructed winner differs from recorded candidate')
     trial=trials[index]
