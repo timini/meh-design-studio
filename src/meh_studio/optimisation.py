@@ -14,13 +14,14 @@ import shutil
 from typing import Annotated
 
 import numpy as np
-from pydantic import Field, model_validator
+from pydantic import Field, model_validator, model_serializer
 
 from .boundary_lab import BoundaryLabRuntime, SolveRequest, _read_json, _write_json, _contained, sha256, inspect_result, _termination_guard
 from .catalogue import Catalogue
 from .domain import Record, Positive
 from .generated_system import HornSources
 from .geometry import HornGeometry, export_geometry, mesh_geometry
+from .waveguide_profile import ProfileSection, validate_profile
 from .radiating_system import compile_radiating_system
 from .validation import validate_electrical_basis
 
@@ -36,11 +37,18 @@ class SearchBrief(Record):
     lengths_m: tuple[Positive, ...]
     mouth_radii_m: tuple[Positive, ...]
     entry_fractions: tuple[tuple[Positive, ...], ...]
+    profiles: tuple[tuple[ProfileSection, ...], ...] = ()
     side_gains: tuple[Positive, ...] = (.5, 1., 2.)
     trial_budget: Annotated[int, Field(strict=True, ge=1, le=100)] = 4
     seed: Annotated[int, Field(strict=True, ge=0)] = 2026
     exterior_mesh_size_m: Annotated[float, Field(ge=.01, le=.05)] = .02
     cost_weight_db: Annotated[float, Field(ge=0, allow_inf_nan=False)] = .5
+
+    @model_serializer(mode='wrap')
+    def preserve_legacy_controls(self, handler):
+        value=handler(self)
+        if not self.profiles:value.pop('profiles',None)
+        return value
 
     @model_validator(mode='after')
     def bounded(self):
@@ -50,7 +58,10 @@ class SearchBrief(Record):
         groups = (self.throat_ids,self.side_ids,self.lengths_m,self.mouth_radii_m,self.entry_fractions,self.side_gains)
         if any(not group or len(group)>20 or len(set(group))!=len(group) for group in groups):
             raise ValueError('search choices must be nonempty, unique and bounded to 20 each')
-        if math.prod(map(len,groups[:-1])) > 10000:
+        if len(self.profiles)>20 or len(set(self.profiles))!=len(self.profiles):
+            raise ValueError('at most 20 unique freeform profiles are supported')
+        for profile in self.profiles:validate_profile(profile)
+        if math.prod(map(len,groups[:-1])) * max(1,len(self.profiles)) > 10000:
             raise ValueError('candidate grid exceeds 10000 combinations')
         if any(len(row) not in (1,2) or any(v>=1 for v in row) for row in self.entry_fractions):
             raise ValueError('one or two entry fractions strictly between zero and one required')
@@ -72,8 +83,8 @@ def candidates(brief, base, drivers):
     if not set(brief.throat_ids+brief.side_ids).issubset(records):
         raise ValueError('selected driver absent from catalogue')
     rows = []
-    for throat,side,length,mouth,entries in itertools.product(brief.throat_ids,brief.side_ids,
-            brief.lengths_m,brief.mouth_radii_m,brief.entry_fractions):
+    for throat,side,length,mouth,entries,profile in itertools.product(brief.throat_ids,brief.side_ids,
+            brief.lengths_m,brief.mouth_radii_m,brief.entry_fractions,brief.profiles or (base.profile_sections,)):
         count = 5 if base.entry_layout == 'four_driver_ring' else 1+2*len(entries)
         cost = brief.prices[throat]+(count-1)*brief.prices[side]
         if count>brief.max_drivers or cost>brief.max_driver_cost: continue
@@ -83,6 +94,7 @@ def candidates(brief, base, drivers):
         try:
             design = HornGeometry.model_validate(base.model_dump() | {'length_m':length,
                 'mouth_radius_m':mouth,'entry_positions_m':tuple(length*z for z in entries),
+                'profile_sections':profile,
                 'throat_radius_m':math.sqrt(t.source_model.sd_m2/math.pi),
                 'front_radius_m':math.sqrt(s.source_model.sd_m2/math.pi)})
         except ValueError:
@@ -236,7 +248,7 @@ def _optimise(brief, base, catalogue_path, runtime, output, report, activate, so
         'limitations':['Synthetic/unqualified sources may be used only for pipeline experiments',
             'Relative on-axis ripple objective, not calibrated sensitivity or efficiency',
             'Driver-only prices exclude amplifier, material, printing and assembly',
-            'Straight conical family; finite sampled grid is not a global optimum']})
+            'Bounded straight-axis profiles; finite sampled grid is not a global optimum']})
     try:
         activate()
         if recovery is not None:

@@ -12,12 +12,13 @@ import numpy as np
 
 from .boundary_lab import _write_json, sha256
 from .geometry import HornGeometry, build_geometry
+from .waveguide_profile import mouth_face, cad_volume, imported_volume
 
 
 def meshing_runtime_identity():
     return {'python':sys.version,
         'packages':{name:importlib.metadata.version(name) for name in ('cadquery','cadquery-ocp','gmsh','numpy')},
-        'source_sha256':{name:sha256(Path(__file__).with_name(name)) for name in ('geometry.py','radiation_geometry.py')}}
+        'source_sha256':{name:sha256(Path(__file__).with_name(name)) for name in ('geometry.py','radiation_geometry.py','waveguide_profile.py')}}
 
 
 def step_geometry_sha256(path: Path) -> str:
@@ -169,6 +170,9 @@ def export_exterior(design: HornGeometry, output: Path, mesh_size_m: float = .02
     _write_json(output / "exterior.json", report)
     try:
         air, parts, sources = build_geometry(design)
+        cap=mouth_face(design,air['front'])
+        cap_center=[x/1000 for x in cap.Center().toTuple()]
+        cap_area=cap.Area()/1e6
         solids = list(air.values()) + list(parts.values())
         for source in sources:
             centre = cq.Vector(*[x * 1000 for x in source["front_center_m"]])
@@ -178,26 +182,28 @@ def export_exterior(design: HornGeometry, output: Path, mesh_size_m: float = .02
         if not body.isValid() or len(body.Solids()) != 1:
             raise ValueError("exterior envelope is not one valid solid")
         cq.exporters.export(body, str(output / "envelope.step"))
+        cq.exporters.export(cap, str(output / 'mouth.step'))
         gmsh.initialize()
         try:
             gmsh.option.setNumber("General.Terminal", 0)
             gmsh.option.setString("Geometry.OCCTargetUnit", "M")
             imported = gmsh.model.occ.importShapes(str(output / "envelope.step"))
-            disk = gmsh.model.occ.addDisk(0, 0, design.length_m, design.mouth_radius_m, design.mouth_radius_m)
-            gmsh.model.occ.fragment(imported, [(2, disk)])
+            mouth_entities=gmsh.model.occ.importShapes(str(output/'mouth.step'))
+            gmsh.model.occ.fragment(imported, mouth_entities)
             gmsh.model.occ.synchronize()
             volumes = gmsh.model.getEntities(3)
             if len(volumes) != 1:
                 raise ValueError("exterior envelope import must contain one volume")
-            exact_volume = body.Volume() / 1e9
-            if not math.isclose(gmsh.model.occ.getMass(3, volumes[0][1]), exact_volume, rel_tol=1e-6):
+            exact_volume = cad_volume(design,body) / 1e9
+            imported=imported_volume(design,gmsh.model.occ.getMass(3, volumes[0][1]),output/'fragmented.step')
+            if not math.isclose(imported, exact_volume, rel_tol=1e-6):
                 raise ValueError("exterior CAD unit or volume mismatch")
             interface, walls = [], []
             for dim, tag in gmsh.model.getBoundary(volumes, oriented=False):
                 centre = gmsh.model.occ.getCenterOfMass(dim, tag)
                 area = gmsh.model.occ.getMass(dim, tag)
-                if (gmsh.model.getType(dim, tag) == "Plane" and math.dist(centre, [0, 0, design.length_m]) < 1e-7
-                        and math.isclose(area, math.pi * design.mouth_radius_m**2, rel_tol=1e-6)):
+                if (gmsh.model.getType(dim, tag) == "Plane" and math.dist(centre, cap_center) < 1e-7
+                        and math.isclose(area, cap_area, rel_tol=1e-6)):
                     interface.append(tag)
                 else:
                     walls.append(tag)
