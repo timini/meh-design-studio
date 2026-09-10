@@ -65,3 +65,13 @@ PYTHONPATH=src python designs/240hz-3khz-four-driver/generate.py --output /path/
 ```
 
 Use a new output directory and retain failed attempts. R1 was generated with CadQuery 2.8 and checked with the repository export validator. `generate.py` is a standalone prototype generator; it does not add this ring configuration to the optimisation CLI.
+
+## Front air domain for analysis
+
+`acoustic_domain.py` now exports the R1 horn interior, including its 8 mm throat flange bore and four wall-normal port transitions. The checked-in `analysis-preparation/front-air.step` and `front-domain.json` retain the first successful run. It is one connected 44.433 L CAD air volume, with zero intersection against the original printed horn material. Six planar interfaces (mouth, throat and four mids) were independently identified by centre, area and outward normal; the saved STEP passed a volume round-trip check. This is a useful input to meshing, not a solved speaker model.
+
+```sh
+PYTHONPATH=src python designs/240hz-3khz-four-driver/acoustic_domain.py --output /path/to/new-analysis-directory
+```
+
+The mid interfaces terminate at the mounting plane, using the 74.6 mm aperture. This area is larger than the driver's effective piston area: do not connect catalogue Sd directly as if the aperture were the diaphragm. Actual cone/front-cavity geometry or a validated equivalent source coupling is still needed. Rear domains, tagged FEM mesh generation, driver coupling and exterior radiation remain to connect before simulation of this prototype. The existing general `meh` geometry/search CLI remains unchanged.
