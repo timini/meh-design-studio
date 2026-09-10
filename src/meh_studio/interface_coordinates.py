@@ -65,7 +65,8 @@ def restore_fem_interface_coordinates(raw: Path, front: Path, output: Path):
     # Meshio's Gmsh writer requires a path; copy its completed output exclusively.
     with tempfile.TemporaryDirectory(prefix='meh-interface-',dir=output.parent) as temporary:
         staged=Path(temporary)/'surface.msh'
-        meshio.write(staged,bem,file_format='gmsh22',binary=True)
+        # Boundary Lab's physical-group preflight scans the mesh as UTF-8 text.
+        meshio.write(staged,bem,file_format='gmsh22',binary=False,float_fmt='.17e')
         with staged.open('rb') as source,output.open('xb') as stream:shutil.copyfileobj(source,stream)
     return inputs|{'output_sha256':sha256(output),'mouth_vertices':len(bi),
         'corrected_vertices':sum(d>0 for d in distances),'maximum_correction_m':max(distances),
