@@ -1,0 +1,113 @@
+{
+  "status": "complete",
+  "units": "mm",
+  "acoustic_validation": false,
+  "volume_mm3": 44432991.94230708,
+  "material_overlap_mm3": 0.0,
+  "interfaces": [
+    {
+      "id": "throat",
+      "center_mm": [
+        0,
+        0,
+        -8
+      ],
+      "outward_normal": [
+        0,
+        0,
+        -1
+      ],
+      "radius_mm": 12.5,
+      "area_mm2": 490.8738521234052
+    },
+    {
+      "id": "mouth",
+      "center_mm": [
+        0,
+        0,
+        450.0
+      ],
+      "outward_normal": [
+        0,
+        0,
+        1
+      ],
+      "radius_mm": 300.0,
+      "area_mm2": 282743.33882308146
+    },
+    {
+      "id": "mid_1",
+      "center_mm": [
+        73.7234662288568,
+        0.0,
+        73.5393286747736
+      ],
+      "outward_normal": [
+        0.84269625981214,
+        0.0,
+        -0.5383892771022006
+      ],
+      "radius_mm": 37.3,
+      "area_mm2": 4370.866443012943
+    },
+    {
+      "id": "mid_2",
+      "center_mm": [
+        4.514260346960873e-15,
+        73.7234662288568,
+        73.5393286747736
+      ],
+      "outward_normal": [
+        5.160026386161918e-17,
+        0.84269625981214,
+        -0.5383892771022006
+      ],
+      "radius_mm": 37.3,
+      "area_mm2": 4370.866443012943
+    },
+    {
+      "id": "mid_3",
+      "center_mm": [
+        -73.7234662288568,
+        9.028520693921746e-15,
+        73.5393286747736
+      ],
+      "outward_normal": [
+        -0.84269625981214,
+        1.0320052772323836e-16,
+        -0.5383892771022006
+      ],
+      "radius_mm": 37.3,
+      "area_mm2": 4370.866443012943
+    },
+    {
+      "id": "mid_4",
+      "center_mm": [
+        -1.3542781040882618e-14,
+        -73.7234662288568,
+        73.5393286747736
+      ],
+      "outward_normal": [
+        -1.5480079158485753e-16,
+        -0.84269625981214,
+        -0.5383892771022006
+      ],
+      "radius_mm": 37.3,
+      "area_mm2": 4370.866443012943
+    }
+  ],
+  "files": [
+    {
+      "path": "front-air.step",
+      "sha256": "42041cd5e65c2014c16f2f72e6211477208291c85d4542c5bcc55bfec3839d09"
+    }
+  ],
+  "generator_sha256": "d0240704554772811b58ac7f644453f8e67118ac275abe8f8bb2f1d8020965f9",
+  "mechanical_generator_sha256": "a8bd54abe0c697daecb6a460880bc61c65739351c5f74808f684dcf5ff48421a",
+  "limitations": [
+    "Ideal planar interfaces at mounting planes; actual cone profile/front cavity not measured",
+    "Interface area is aperture area, not catalogue effective piston Sd",
+    "Rear chambers and driver impedances are not included in this front-domain export",
+    "No FEM/BEM solve, convergence, radiation or acoustic performance claim"
+  ]
+}
