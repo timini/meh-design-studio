@@ -56,6 +56,7 @@ def test_evolution_mutates_and_replays_signed_offset():
 
 @pytest.mark.cad
 def test_offset_changes_real_aperture_without_relocating_driver():
+    pytest.importorskip('cadquery')
     from meh_studio.cad_runtime import load_cadquery
     cq=load_cadquery()
     baseline=HornGeometry.model_validate(example())
@@ -76,6 +77,7 @@ def test_offset_changes_real_aperture_without_relocating_driver():
 
 @pytest.mark.cad
 def test_near_throat_eccentric_port_exports_and_meshes(tmp_path):
+    pytest.importorskip('cadquery');pytest.importorskip('gmsh')
     design=HornGeometry.model_validate(example()|{'entry_positions_m':[.02],'driver_axial_offset_m':.01})
     root=tmp_path/'geometry';report=export_geometry(design,root)
     assert all(s['front_center_m'][2]==pytest.approx(.03) for s in report['sources'])

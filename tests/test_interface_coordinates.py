@@ -36,6 +36,7 @@ def test_restore_preserves_authoritative_interface_without_changing_topology(tmp
     else:
         with pytest.raises(ValueError,match='triangle membership'):verify_exterior_groups(raw,front)
         report=restore_fem_interface_coordinates(raw,front,out)
+        assert out.read_text(encoding='utf-8').startswith('$MeshFormat\n2.2 0 8\n')
         assert report['maximum_correction_m']==pytest.approx(8e-9)
         assert report['corrected_vertices']==1
         verify_exterior_groups(out,front)
