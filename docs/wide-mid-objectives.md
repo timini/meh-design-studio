@@ -89,3 +89,20 @@ Frozen-DSP finalist runs retain the constraint on their denser frequency grids.
 If no defined DSP response meets it, the candidate fails scoring and its raw
 native evaluation remains available. An absent constraint preserves historical
 brief identities and scores; old filter-only results do not gain this validation.
+
+A [native-basis reanalysis](../validation/evidence/acoustic-handover/report.json)
+from source `e1a7a42` demonstrates why this distinction matters. The larger search's
+trial 7 selected a 3 kHz electrical crossover, but its HF-channel contribution
+exceeded the mid bank by 1.71 dB at 2 kHz and 4.61 dB at 3 kHz. Applying the new
+3–5 kHz constraint to the unchanged voltage basis and original DSP choices
+selected a 4 kHz electrical crossover instead. Mid gain 0.2, positive polarity
+and 0.75 ms HF delay remained unchanged. Its sampled channel-dominance check
+passes, while target-relative response variation worsens from 7.3464 to
+10.5264 dB. The geometry therefore still misses the response target.
+
+This is DSP reanalysis of the original `a0a604e` native solve, not a new geometry
+solve or an independently validated acoustic improvement. Original search
+scores remain unchanged. The report preserves both scores, the old failed
+handover check, new settings, exact runner and links/hashes for the original raw
+evidence. Synthetic HF, strict electrical-storage failure and missing physical
+and mesh qualification remain explicit.
