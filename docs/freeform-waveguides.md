@@ -37,3 +37,12 @@ mesh-work estimate is heuristic with a final actual-count guard.
 Do not call the example a Solana equivalent or an acoustically optimised design.
 Performance requires real coupled solves, common-fidelity finalist validation and
 calibrated measurements of the selected driver/build combination.
+
+The first native freeform ring evaluation completed at 1000, 2000 and 3000 Hz
+using frozen source `f595a31` and the same pinned solver as the conical ring run.
+[Report](../validation/evidence/freeform-ring/report.json) and
+[raw evidence](../validation/evidence/freeform-ring/raw-run.zip) preserve the full
+five-source fields, current/motion matrices and horizontal/vertical polars.
+The three samples establish coupled execution on the non-circular geometry;
+they neither establish response flatness nor show that this shape is improved.
+Complex64 storage remains unsupported by the unchanged strict electrical gate.
