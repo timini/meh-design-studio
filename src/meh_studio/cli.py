@@ -75,6 +75,10 @@ def main(argv=None) -> int:
     bundle = commands.add_parser('export-search', help='export experimental winning geometry, driver BOM and relative gains')
     bundle.add_argument('search', type=Path)
     bundle.add_argument('--output', type=Path, required=True, help='new ZIP file; existing files are never replaced')
+    operating = commands.add_parser('operating-report', help='predict frozen-winner pressure, excursion and current at an explicit RMS input')
+    operating.add_argument('search', type=Path)
+    operating.add_argument('--input-rms-v', type=float, required=True)
+    operating.add_argument('--output', type=Path, required=True, help='new JSON report; existing files are never replaced')
     from .job_cli import add_job_commands, execute_job_command
     add_job_commands(commands)
     args = parser.parse_args(argv)
@@ -86,6 +90,12 @@ def main(argv=None) -> int:
         elif args.command == 'export-search':
             from .build_bundle import export_search
             result = export_search(args.search, args.output)
+        elif args.command == 'operating-report':
+            from .operating import search_operating_report
+            result = search_operating_report(args.search, args.input_rms_v)
+            encoded = json.dumps(result, indent=2, allow_nan=False)
+            with args.output.open('x', encoding='utf-8') as stream:
+                stream.write(encoded+'\n')
         elif args.command == 'resume-optimise':
             from .search_resume import resume_optimise
             from .boundary_lab import BoundaryLabRuntime
