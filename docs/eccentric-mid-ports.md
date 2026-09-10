@@ -43,3 +43,43 @@ original source. A follow-up search should explore the new degree of freedom
 alongside port radius/length, cavity depth and profile, using whole-sphere
 observations and retaining failed proposals. Any acoustic benefit remains to be
 established with frozen-DSP frequency holdouts and mesh checks.
+
+## Completed native integration study
+
+A separate two-proposal study from frozen application source `1187c25` completed
+both CAD → mesh → coupled FEM/BEM → DSP scoring evaluations. Each evaluation
+solved 350, 1,000, 2,000 and 3,000 Hz, with 413 spherical observation directions
+per frequency as well as horizontal and vertical cuts. The second proposal
+mutated the irregular profile and cavity offset from the first result. Its
+objective worsened from 19.4196 to 19.7452, so the first candidate remained the
+winner. Recomputed ancestry and scores passed export verification.
+
+This is a deliberately small, synthetic integration fixture: 125 mm horn length,
+50 mm nominal mouth radius, four mid ports at 20 mm and initial driver cavity
+centres at 40 mm. Its selected upper crossover is 2 kHz. These are diagnostic
+inputs, not the commercial 350 Hz / wide-vocal-range design. The winner's
+target-relative response range is 14.1548 dB and its spherical target RMS error
+is 14.6775 dB over the scored 1–3 kHz frequencies. Neither establishes acceptable
+performance. The second candidate's response range is 14.4637 dB.
+
+![Actual native sphere samples](assets/eccentric-sphere-samples.png)
+
+The chart shows individual native observations with the selected DSP, without
+interpolation into unobserved directions. Sampling is not a radiated-power
+qualification or an angular-convergence study. Strict electrical validation
+remains failed because this backend stores complex64 responses. The impedance
+screen was explicitly disabled for this synthetic diagnostic: its roughly
+1.50 Ω minimum bank impedance does not qualify it for the user's 2 Ω amplifier.
+
+The [evidence report](../validation/evidence/eccentric-sphere-search/report.json)
+records exact sources, archive hashes and export checks. Trial archives retain
+complete geometry, meshes and raw complex fields. `controls-and-export.zip`
+includes the verified geometry bundle and exact runners; the separate
+[1 Vrms operating report](../validation/evidence/eccentric-sphere-search/operating-1vrms.json)
+retains the numerical and physical qualification flags.
+
+Initial attempts are retained too: an incompatible synthetic cavity radius,
+profile bounds that excluded the base shape, and two native preflight failures
+caused by binary mesh output. The final run uses lossless ASCII mesh output for
+the pinned runtime's text reader. These failures were corrected through input
+or format fixes; no acoustic acceptance threshold was relaxed.

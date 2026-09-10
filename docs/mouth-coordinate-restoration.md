@@ -38,3 +38,12 @@ The [report](../validation/evidence/mouth-coordinate-restoration/report.json)
 identifies both application sources and archives the original failed trial and
 the new compilation, including complete geometry, meshes and exact replay
 scripts. The original adaptive search remains a separate historical run.
+
+The next native integration study exposed a format compatibility failure in
+that original restoration implementation: its binary Gmsh output passed the
+compiler checks but was rejected by the pinned runtime's UTF-8 preflight reader.
+Source `1187c25` writes the same coordinates as ASCII with 17-digit scientific
+precision and verifies the text format in a regression test. Both candidates
+in the [eccentric-port integration study](eccentric-mid-ports.md) then completed
+native coupled solves. The archived `f969e1d` replay remains evidence of compiler
+validation only; it is not relabelled as a successful native solve.
