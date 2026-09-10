@@ -22,6 +22,7 @@ class HornGeometry(Record):
     mouth_radius_m: Positive
     wall_m: Positive
     entry_positions_m: tuple[Positive, ...]
+    driver_axial_offset_m: Annotated[float, Field(strict=True,ge=-.5,le=.5)] = 0.
     entry_layout: Literal['opposed_pairs', 'four_driver_ring'] = 'opposed_pairs'
     profile_sections: tuple[ProfileSection, ...] = ()
     port_radius_m: Positive
@@ -39,6 +40,8 @@ class HornGeometry(Record):
         value = handler(self)
         if self.entry_layout == 'opposed_pairs':
             value.pop('entry_layout', None)
+        if self.driver_axial_offset_m == 0:
+            value.pop('driver_axial_offset_m',None)
         if not self.profile_sections:
             value.pop('profile_sections', None)
         if self.maximum_tetrahedra == 2_000_000:
@@ -58,18 +61,23 @@ class HornGeometry(Record):
             raise ValueError("mouth must exceed throat radius")
         if self.front_radius_m <= self.port_radius_m:
             raise ValueError("front chamber radius must exceed port radius")
+        if abs(self.driver_axial_offset_m)+self.port_radius_m >= self.front_radius_m:
+            raise ValueError('eccentric port must fit inside the front chamber face')
         margin = self.front_radius_m + self.wall_m
         flare_slope = (self.mouth_radius_m - self.throat_radius_m) / self.length_m
         if not self.profile_sections and self.wall_m + self.port_length_m <= flare_slope * margin:
             raise ValueError("entry chamber envelope is buried by the horn flare")
         if self.entry_layout == 'four_driver_ring':
-            radius = self.throat_radius_m + flare_slope * self.entry_positions_m[0]
+            radius = self.throat_radius_m + flare_slope * (self.entry_positions_m[0]+self.driver_axial_offset_m)
             if radius + self.port_length_m <= margin:
                 raise ValueError('adjacent ring chamber envelopes overlap')
         if self.tessellation_tolerance_m < 1e-6:
             raise ValueError("tessellation tolerance must be at least 1 micrometre")
-        if any(not margin < z < self.length_m - margin for z in self.entry_positions_m):
+        if any(not margin < z+self.driver_axial_offset_m < self.length_m - margin for z in self.entry_positions_m):
             raise ValueError("entry chambers must clear throat and mouth planes")
+        port_margin=self.port_radius_m+self.wall_m
+        if any(not port_margin < z < self.length_m-port_margin for z in self.entry_positions_m):
+            raise ValueError('entry ports must clear throat and mouth planes')
         if any(b - a <= 2 * margin for a, b in zip(self.entry_positions_m, self.entry_positions_m[1:])):
             raise ValueError("entry pairs must be ordered with non-overlapping chamber envelopes")
         if self.wall_m >= min(self.throat_radius_m, self.front_radius_m):
@@ -115,28 +123,30 @@ def build_geometry(design: HornGeometry):
     air_regions, parts, sources = {}, {}, []
     for label, entry, axis in design.entry_sites:
         z = entry * mm
-        local_radius = entry_support_radius(design, unported_air, entry, axis) * mm
+        driver_entry=entry+design.driver_axial_offset_m
+        driver_z=driver_entry*mm
+        local_radius = entry_support_radius(design, unported_air, driver_entry, axis) * mm
         duct_end = local_radius + wall + design.port_length_m * mm
         diaphragm = duct_end + design.front_depth_m * mm
         direction = cq.Vector(*axis)
-        def cylinder(radius, start, depth):
-            return cq.Solid.makeCylinder(radius, depth, cq.Vector(axis[0] * start, axis[1] * start, z), direction)
+        def cylinder(radius, start, depth, axial=z):
+            return cq.Solid.makeCylinder(radius, depth, cq.Vector(axis[0] * start, axis[1] * start, axial), direction)
         tube = cylinder(design.port_radius_m * mm, 0, duct_end)
-        chamber = cylinder(design.front_radius_m * mm, duct_end, design.front_depth_m * mm)
+        chamber = cylinder(design.front_radius_m * mm, duct_end, design.front_depth_m * mm,driver_z)
         front_air = front_air.fuse(tube, chamber)
         material = material.fuse(
             cylinder(design.port_radius_m * mm + wall, 0, duct_end + wall),
-            cylinder(design.front_radius_m * mm + wall, duct_end - wall, design.front_depth_m * mm + 2 * wall))
+            cylinder(design.front_radius_m * mm + wall, duct_end - wall, design.front_depth_m * mm + 2 * wall,driver_z))
         # Open mounting aperture; the missing driver is an explicit reserved volume.
-        material = material.cut(cylinder(design.front_radius_m * mm, diaphragm, wall * 2))
+        material = material.cut(cylinder(design.front_radius_m * mm, diaphragm, wall * 2,driver_z))
         rear_start = diaphragm + wall
-        rear_air = cylinder(design.front_radius_m * mm, rear_start, design.rear_depth_m * mm)
+        rear_air = cylinder(design.front_radius_m * mm, rear_start, design.rear_depth_m * mm,driver_z)
         rear_cup = cylinder(design.front_radius_m * mm + wall, rear_start,
-                            design.rear_depth_m * mm + wall).cut(rear_air)
+                            design.rear_depth_m * mm + wall,driver_z).cut(rear_air)
         air_regions[f"rear_{label}"] = rear_air
         parts[f"rear_cup_{label}"] = rear_cup
-        sources.append({"id": label, "front_center_m": [axis[0] * diaphragm / mm, axis[1] * diaphragm / mm, entry],
-                        "rear_center_m": [axis[0] * rear_start / mm, axis[1] * rear_start / mm, entry],
+        sources.append({"id": label, "front_center_m": [axis[0] * diaphragm / mm, axis[1] * diaphragm / mm, driver_entry],
+                        "rear_center_m": [axis[0] * rear_start / mm, axis[1] * rear_start / mm, driver_entry],
                         "motion_axis": list(axis), "radius_m": design.front_radius_m})
     parts["horn"] = material.cut(front_air).clean()
     air_regions["front"] = front_air.clean()
@@ -144,7 +154,7 @@ def build_geometry(design: HornGeometry):
         if not solid.isValid() or solid.Volume() <= 0 or len(solid.Solids()) != 1:
             raise ValueError(f"geometry kernel produced an invalid or disconnected solid: {name}")
     verify_front_chamber_back_walls(design, front_air, parts["horn"], unported_air=unported_air)
-    if design.profile_sections:
+    if design.profile_sections or design.driver_axial_offset_m:
         for air in air_regions.values():
             if any(air.intersect(part).Volume() > 1e-3 for part in parts.values()):
                 raise ValueError('freeform air intersects material')
@@ -163,9 +173,10 @@ def verify_front_chamber_back_walls(design, front_air, horn, *, unported_air=Non
     if unported_air is None and design.profile_sections:
         unported_air=horn_solids(design)[0]
     for label,entry,axis in design.entry_sites:
-        local_radius=entry_support_radius(design,unported_air,entry,axis)
+        driver_entry=entry+design.driver_axial_offset_m
+        local_radius=entry_support_radius(design,unported_air,driver_entry,axis)
         start=(local_radius+design.port_length_m)*mm+inset
-        nominal=cq.Solid.makeCylinder(design.front_radius_m*mm,depth,cq.Vector(axis[0]*start,axis[1]*start,entry*mm),cq.Vector(*axis))
+        nominal=cq.Solid.makeCylinder(design.front_radius_m*mm,depth,cq.Vector(axis[0]*start,axis[1]*start,driver_entry*mm),cq.Vector(*axis))
         # The port and any intended intersection with horn air remain open.
         required=nominal.cut(front_air);volume=required.Volume()
         missing=required.cut(horn).Volume()
@@ -242,7 +253,7 @@ def estimated_curved_tetrahedra(design, region, volume):
         cells+=math.pi*((design.mouth_radius_m-coarse_low)*(design.mouth_radius_m**2+design.mouth_radius_m*coarse_low+coarse_low**2))/(3*slope*h**3)
     count=design.driver_count-1
     cells+=count*math.pi*design.front_radius_m**2*design.front_depth_m/local(design.front_radius_m)**3
-    port_length=design.port_length_m+design.wall_m+2*design.front_radius_m*slope
+    port_length=design.port_length_m+design.wall_m+(2*design.front_radius_m+abs(design.driver_axial_offset_m))*slope
     cells+=count*math.pi*design.port_radius_m**2*port_length/local(design.port_radius_m)**3
     shape_factor=1.
     if design.profile_sections:

@@ -12,7 +12,7 @@ from .domain import Positive, Record
 from .geometry import HornGeometry
 
 Parameter = Literal['length_m','mouth_radius_m','port_radius_m','port_length_m',
-                    'front_depth_m','rear_depth_m','entry_fraction_0','entry_fraction_1']
+                    'front_depth_m','rear_depth_m','entry_fraction_0','entry_fraction_1','driver_axial_offset_m']
 
 
 class EvolutionSettings(Record):
@@ -21,7 +21,7 @@ class EvolutionSettings(Record):
     mutation_fraction: Annotated[float, Field(strict=True,gt=0,le=1)] = .25
     sigma_fraction: Annotated[float, Field(strict=True,gt=0,le=.5)] = .12
     profile_scale_bounds: tuple[Positive, Positive] = (.65,1.5)
-    geometry_bounds: dict[Parameter, tuple[Positive,Positive]] = {}
+    geometry_bounds: dict[Parameter, tuple[Annotated[float,Field(strict=True)],Annotated[float,Field(strict=True)]]] = {}
 
     @model_validator(mode='after')
     def ordered_bounds(self):
@@ -29,6 +29,10 @@ class EvolutionSettings(Record):
         if not .5 <= low < high <= 2:
             raise ValueError('profile mutation bounds must increase within [0.5,2]')
         for name,(low,high) in self.geometry_bounds.items():
+            if name!='driver_axial_offset_m' and low<=0:
+                raise ValueError('non-offset geometry bounds must be positive')
+            if name=='driver_axial_offset_m' and not -.5<=low<high<=.5:
+                raise ValueError('driver axial offset bounds must increase within ±0.5 m')
             if low>=high or (name.startswith('entry_fraction') and high>=1):
                 raise ValueError('evolution bounds must increase; entry fractions must be below one')
         return self
@@ -94,7 +98,7 @@ def propose(brief, seed_pool, history, previous):
         for kind,key,column,low,high in chosen:
             if kind=='profile':old=profile[key]['radial_scales'][column]
             elif key.startswith('entry_fraction'):old=fractions[int(key[-1])]
-            else:old=data[key]
+            else:old=data.get(key,getattr(selected['design'],key))
             value=rng.uniform(low,high) if explore else _reflect(old+rng.gauss(0,settings.sigma_fraction*(high-low)),low,high)
             if kind=='profile':profile[key]['radial_scales'][column]=value
             elif key.startswith('entry_fraction'):fractions[int(key[-1])]=value
