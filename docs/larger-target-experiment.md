@@ -33,6 +33,16 @@ filters. The improvement therefore does not come from changing those DSP
 settings. It remains a comparison between unconverged meshes in this source
 model, without a frequency holdout or a matched random-search benchmark.
 
+The filter setting does not establish the acoustic handover. A separate native
+basis decomposition shows that the HF-channel pressure contribution is already
+1.71 dB above the mid-bank contribution at 2 kHz and 4.61 dB above it at 3 kHz.
+The mid bank dominates at the sampled 1.2 kHz point. No exact crossover frequency
+is inferred between samples. These are contributions grouped by excitation
+channel, including mutually induced driver motion, not independent diaphragm
+power fractions. This winner therefore does not establish the requested wide
+vocal midrange merely by selecting a 3 kHz electrical filter. The report's
+`acoustic-crossover-diagnostic.zip` preserves the calculation and exact runner.
+
 ![Completed baseline and winner](assets/larger-target-result.png)
 
 The winner's sampled minimum parallel-bank impedance magnitude is 3.1377 Ω;

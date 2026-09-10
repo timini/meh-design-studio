@@ -4703,6 +4703,11 @@
       "file": "diagnostics.zip",
       "sha256": "9cba604d3ef3910edccabc06d8cc0eede10562e00e0d61243b31dfb38e8d47cc",
       "size_bytes": 545006
+    },
+    {
+      "file": "acoustic-crossover-diagnostic.zip",
+      "sha256": "faf21532b466200acf47babf3af572c9c4394e3887af2f6825cd663e6336b663",
+      "size_bytes": 4460
     }
   ],
   "export_verification": {
@@ -4733,6 +4738,13 @@
     "baseline_field_trial": 0,
     "winner_comparison_trial": 7,
     "comparison_dsp_identical": true,
-    "centre_line_duct_inspection": "CAD distances only; no effective acoustic length or resonance attribution"
+    "centre_line_duct_inspection": "CAD distances only; no effective acoustic length or resonance attribution",
+    "acoustic_crossover": {
+      "source_commit": "1187c25",
+      "kind": "on_axis_excitation_channel_contributions",
+      "mid_over_hf_at_2000_hz_db": -1.70965458221682,
+      "mid_over_hf_at_3000_hz_db": -4.609881584807628,
+      "interpretation": "3 kHz electrical filter setting does not establish a 3 kHz acoustic handover; no exact crossover frequency inferred"
+    }
   }
 }
