@@ -11,7 +11,7 @@ from meh_studio.search_resume import verify_candidate_project
 
 
 @pytest.fixture
-def compiled(generated, monkeypatch):
+def compiled(generated, monkeypatch, request):
     import meh_studio.radiating_system as module
     geometry, sources, _ = generated
     root=geometry.parent
@@ -33,7 +33,8 @@ def compiled(generated, monkeypatch):
     monkeypatch.setattr(module,'surface_integrity',lambda path,**kwargs:{'sha256':sha256(path),'enclosed_volume_m3':1.})
     monkeypatch.setattr(module,'verify_exterior_groups',lambda *args:None)
     monkeypatch.setattr(module,'meshing_runtime_identity',lambda:{})
-    module.compile_radiating_system(geometry,sources,output,Runtime(),exterior_mesh_size_m=.01)
+    module.compile_radiating_system(geometry,sources,output,Runtime(),exterior_mesh_size_m=.01,
+                                   sphere_angle_deg=getattr(request,'param',None))
     candidate={'design':HornGeometry.model_validate(_read_json(geometry/'geometry.json')['design']),
                'sources':sources}
     return root,candidate
@@ -61,3 +62,22 @@ def test_consistently_rehashed_foreign_project_is_rejected(compiled, change):
     _write_json(root/'system/compilation.json',report)
     with pytest.raises(ValueError,match='differs from declared candidate'):
         verify_candidate_project(root,candidate,.01)
+
+
+@pytest.mark.parametrize('compiled',[10.],indirect=True)
+@pytest.mark.parametrize('change',[None,'undeclared','precision','disabled','metadata'])
+def test_sphere_compilation_replays_only_with_matching_declared_sampling(compiled,change):
+    root,candidate=compiled
+    path=root/'system/project.blab.json'
+    project=_read_json(path)
+    report_path=root/'system/compilation.json'
+    report=_read_json(report_path)
+    if change=='precision':project['project_preferences']['balloon_angle_precision_deg']=5.
+    if change=='disabled':project['project_preferences']['spherical_sampling_enabled']=False
+    if change=='metadata':report['sphere_sampling']['point_count']=100
+    _write_json(path,project);report['project_sha256']=sha256(path);_write_json(report_path,report)
+    if change is None:
+        verify_candidate_project(root,candidate,.01,10.)
+    else:
+        with pytest.raises(ValueError,match='sphere sampling|differs from declared candidate'):
+            verify_candidate_project(root,candidate,.01,None if change=='undeclared' else 10.)
