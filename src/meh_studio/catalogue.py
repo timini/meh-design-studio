@@ -1,6 +1,7 @@
 """Private, immutable driver revisions. This is not a bundled qualified pack."""
 from __future__ import annotations
 
+from contextlib import closing
 import sqlite3
 from pathlib import Path
 
@@ -25,7 +26,7 @@ class Catalogue:
         with path.open("xb"):
             pass
         try:
-            with sqlite3.connect(path) as con:
+            with closing(sqlite3.connect(path)) as con, con:
                 con.execute("CREATE TABLE drivers (id TEXT NOT NULL, revision INTEGER NOT NULL, "
                             "hash TEXT NOT NULL, record TEXT NOT NULL, PRIMARY KEY(id, revision))")
                 con.execute("PRAGMA user_version=1")

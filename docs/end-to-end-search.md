@@ -181,3 +181,77 @@ python validation/fixtures/run_native_e2e.py runs/compact-e2e \
 Use a fresh output directory. This runs real native solves and can take hours.
 A successful `experiment.json` records pipeline completion separately from
 unsupported strict coupled electrical consistency and absent physical qualification.
+
+## Continue a stopped search
+
+New searches save an application/runtime fingerprint as well as their existing
+input snapshots. After an ordinary interruption or a reported failure, continue
+into a **new** directory:
+
+```sh
+meh resume-optimise runs/stopped-search --output runs/continued-search \
+  --checkout /path/to/boundary-lab --python /path/to/blab-env/bin/python \
+  --julia /path/to/julia
+```
+
+If the original run used an explicit thread count, pass the same `--julia-threads`
+value (also supported by `meh optimise`).
+
+The command restores the saved brief, driver revisions, candidate order, seed,
+trial budget and solver-stage timeout. It reuses only whole completed trials.
+Before and after copying a completed trial, it verifies the original candidate,
+geometry files, solve request, runtime and native evidence, and recomputes the
+score. Failed/cancelled and unstarted trials run afresh in their original slots.
+A damaged reusable result aborts recovery; it is never silently accepted or omitted.
+The original search, including failed attempts, is left untouched. `recovery` in
+the new report records the original directory, control hashes and reused indices.
+
+Keep the original search at its original path: native results retain absolute
+mesh locations while projects can declare relative mesh paths. A small
+`system/recovery-origin.json` record identifies the original project location and
+hash. Assessment verifies identical project bytes there and resolves its meshes
+at that original location. All copied native project/result bytes are preserved.
+The continued directory is therefore a local continuation, not a portable archive.
+Further continuation can depend on more than one original search directory.
+
+Recovery requires the same application source files, installed Python package
+inventory, host runtime and pinned solver runtime. Older searches lacking that
+fingerprint cannot resume; do not backfill historical evidence. Runtime identity
+is an installation check, not a binary attestation or a guarantee of identical
+floating-point results. No qualification state is promoted by recovery.
+
+This is recovery between trials, not continuation inside a partially solved
+frequency sweep. A repeated failed trial consumes additional compute; the candidate
+budget is preserved, but total lifetime compute is not capped. Running and completed
+search records are rejected. Abrupt process death can leave `running` state and
+still needs the future worker supervisor. This command does not manipulate leases,
+kill orphan processes or mutate a running search.
+
+### Executed recovery evidence
+
+The [recovery integration record](../validation/reports/search-recovery.json)
+records a real local run on 10 September 2026, using source `3efcc0b7b4b6f32ce341f24349a98d540c654c3e`:
+
+- A compact three-driver candidate completed CAD, mesh preparation and coupled
+  FEM/BEM evaluation at 1000, 2000 and 4000 Hz.
+- The test harness intentionally interrupted immediately before the second trial.
+- The actual recovery CLI reused the completed first trial and executed the second.
+- Original stopped-search files remained byte-identical. Copied native artifacts
+  also remained byte-identical, with the additional project-origin sidecar.
+- Build-bundle export passed, yielding SHA-256
+  `27ff76a170b3c1ce8cba9b24abb2c3f8b3eff8414cb380ebafc594d1aa6f8355`.
+
+An initial recovery failed the copied-project mesh-path check; its files remain
+preserved separately. The subsequent origin-path fix passed the experiment above.
+Later candidate/project binding checks were replayed on all three saved trial
+locations without running the solver again; their source hash is in the record.
+Those checks reconstruct the interior compiler output from the candidate's saved
+meshes and source circuits and compare the declared exterior extension. Regression
+tests reject consistently rehashed changes to mesh identity, source parameters,
+medium, excitation assignment and source boundary assignment. Reuse accounting
+records successful copies separately from merely eligible source trials.
+
+The detailed native artifacts are retained at the local paths in the record;
+this small JSON record is not a substitute for the raw artifact archive. The
+three-frequency run establishes recovery integration only. It does not replace
+the earlier full-band held-out and mesh-refinement experiment or qualify a speaker.

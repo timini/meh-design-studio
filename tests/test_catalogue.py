@@ -64,3 +64,23 @@ def test_displaced_keys_rejected_on_read_and_before_write(tmp_path, driver, colu
         with pytest.raises(ValueError, match="integrity"):
             cat.add(driver)
         assert cat.connection.execute("SELECT count(*) FROM drivers").fetchone()[0] == 1
+
+
+def test_create_closes_schema_connection_without_waiting_for_gc(tmp_path, monkeypatch):
+    import sqlite3
+    import meh_studio.catalogue as module
+    original = sqlite3.connect
+    connections = []
+    def connect(*args, **kwargs):
+        connection = original(*args, **kwargs)
+        connections.append(connection)  # Keep references alive, as a traceback can.
+        return connection
+    monkeypatch.setattr(module.sqlite3, 'connect', connect)
+    path = tmp_path/'catalogue.sqlite'
+    with module.Catalogue.create(path):
+        pass
+    assert len(connections) == 2
+    for connection in connections:
+        with pytest.raises(sqlite3.ProgrammingError, match='closed'):
+            connection.execute('SELECT 1')
+    path.unlink()

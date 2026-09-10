@@ -8,6 +8,8 @@ The [complete compact native experiment](end-to-end-evidence.md) now passes its 
 
 ## Available
 
+- `meh resume-optimise` continues stopped searches using saved inputs and verified completed trials. It preserves the original evidence and retries incomplete trials; partial solver sweeps, abrupt-death recovery and total lifetime compute accounting remain open. See [search recovery](end-to-end-search.md#continue-a-stopped-search).
+
 - Durable SQLite job leases, cancellation, one automatic recovery retry, bounded completion descriptors and integrity-checked publication. An isolated CAD worker is accessible through `meh jobs` with managed input snapshots, cancellation, retry and verified result retrieval; dependency-aware scheduling and full search/solver orchestration through durable workers remain to implement.
 - Explicit RMS complex source synthesis, signed real electrical power, pressure-level null handling and full-sphere pressure quadrature. Native-solver amplitude calibration and evaluation-to-metrics integration remain to implement.
 
