@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "id": "faitalpro-4fe32-16",
+  "revision": 1,
+  "manufacturer": "FaitalPRO",
+  "model": "4FE32 (16 ohm)",
+  "outer_diameter_m": 0.12985,
+  "cutout_diameter_m": 0.0915,
+  "depth_m": 0.0498,
+  "provenance": {
+    "schema_version": 1,
+    "kind": "reported",
+    "source": "https://faitalpro.com/en/products/LF_Loudspeakers/product_details/index.php?id=401005102 ; retrieved 2026-09-10; manufacturer nominal specifications, not an independently measured horn-loaded model",
+    "permission": "unknown",
+    "permission_evidence": null
+  },
+  "source_model": {
+    "schema_version": 1,
+    "re_ohm": 12.3,
+    "le_h": 0.00025,
+    "bl_n_a": 5.5,
+    "mmd_kg": 0.0036,
+    "cms_m_n": 0.00063,
+    "rms_ns_m": 0.7,
+    "sd_m2": 0.00519,
+    "provenance": {
+      "schema_version": 1,
+      "kind": "reported",
+      "source": "https://faitalpro.com/en/products/LF_Loudspeakers/product_details/index.php?id=401005102 ; retrieved 2026-09-10; manufacturer nominal specifications, not an independently measured horn-loaded model",
+      "permission": "unknown",
+      "permission_evidence": null
+    }
+  },
+  "qualification": null
+}
