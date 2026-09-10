@@ -1,0 +1,175 @@
+{
+  "application_source_commit": "f969e1d",
+  "original_failed_trial": "/Users/timrichardson/Documents/projects/personal/speakers/meh-design-studio/runs/larger-wide-mid-32k/trial-001",
+  "original_input_sha256": {
+    "candidate.json": "e1c424171b6c1b666778bd401f2f257b45f60b8b398bf2e4341c72376786eb79",
+    "build-cost.json": "ad8343c2a5f76e3baae32fcd2122315549acb110c95f0ddebd38c59cabfe66dc",
+    "system/sources.json": "ebef3ab6f30b7372438cf7a22d3753046f60a11620eea989a411ebc55ed6780c",
+    "system/conform-interface.log": "5cab8688cf0316f415d0a42d88cff5f7e2c7d243d33ed124e24749642a256f8f",
+    "system/project.blab.json": "0f563c3704b62a19a5afcda0e9380a7a4f17fb9febf257adaa8f194658a1bba3",
+    "system/compilation.json": "61e13ebe14bae6cc1aa89e39936733cbd61024e45472833cd46f7638011a07a0",
+    "system/exterior/envelope.step": "6551526b0083bdfea10061879db0e85c1b643bf5739711ca87029cb5972db780",
+    "system/exterior/exterior.msh": "5aa1aaba520bbbf2d5e6b13c1ac9a49082fe45f51767088b37e75b3ae9fea966",
+    "system/exterior/fragmented.step": "0227a455b5d0c85a14c5c4639b2af28c34afc49203787afc5d86d10bcb73f7fd",
+    "system/exterior/mouth.step": "64b921de6007997fb4937d047241ffb20a35942971e38af6e6c577391cbfb671",
+    "system/exterior/exterior.json": "0a74a0067e073ff5c05cd47a0bc3c532ce80dacf6a8605cbece843438a622375",
+    "system/meshes/rear_entry_0_positive_y.msh": "6affed7ebb81298ad823d3e7b06977150477e04365b9e639b6327cf13c409429",
+    "system/meshes/exterior.msh": "90a3e7656eeff7f62ad2a7ad37159492f4cd63e6788aa92c575b74a2b3d59447",
+    "system/meshes/rear_entry_0_positive.msh": "90f15291459cbc47aa351274c0327a0181d68afc3ae0d080ea69c4f19cbc9c21",
+    "system/meshes/front.msh": "f99c1fa00278dd0abbdcb1216867e65f14f181b0b800d5a6d91d738dc82f5aa1",
+    "system/meshes/rear_entry_0_negative.msh": "7c81ba95aab507213c6290025d55ad5cc4957f50ae4473fa0e1265ee4f376302",
+    "system/meshes/rear_entry_0_negative_y.msh": "d44fe227c2132d59887343bd5fff65fdedaff4bb029220cf42ab8964acc11334",
+    "geometry/geometry.json": "631809837672cab40b14e9ff3dc5dc6e4091f277779e106f3e7649de9be8932c",
+    "geometry/analysis/rear_entry_0_positive_y.msh": "6affed7ebb81298ad823d3e7b06977150477e04365b9e639b6327cf13c409429",
+    "geometry/analysis/front-imported.step": "4768bcb874715f52e7a9cab470bd282fd0b40a2c591fddc6e7bbd7720ffef904",
+    "geometry/analysis/mesh.json": "ffc3afa69acd597aa8e090817b29ad6d84fef0fe159676dc468789974ae12026",
+    "geometry/analysis/rear_entry_0_negative-imported.step": "8fe47dff65933ee2d2eed1d84fe61346e7d9c1d482bd59885a7a24818568d8cb",
+    "geometry/analysis/rear_entry_0_positive_y-imported.step": "06898533c8d8a46340e38e72d444d9ab0070576745b80684ae095194441459ad",
+    "geometry/analysis/rear_entry_0_negative_y-imported.step": "33d08f5935b397887beaab26686b76dd1786724f98fa9138d8581195f826ab3c",
+    "geometry/analysis/rear_entry_0_positive.msh": "90f15291459cbc47aa351274c0327a0181d68afc3ae0d080ea69c4f19cbc9c21",
+    "geometry/analysis/front.msh": "f99c1fa00278dd0abbdcb1216867e65f14f181b0b800d5a6d91d738dc82f5aa1",
+    "geometry/analysis/rear_entry_0_positive-imported.step": "127f46c675864ebf0159b3f616f56aec330a53244879880b1d19fa95b0e8bbf8",
+    "geometry/analysis/rear_entry_0_negative.msh": "7c81ba95aab507213c6290025d55ad5cc4957f50ae4473fa0e1265ee4f376302",
+    "geometry/analysis/rear_entry_0_negative_y.msh": "d44fe227c2132d59887343bd5fff65fdedaff4bb029220cf42ab8964acc11334",
+    "geometry/air/rear_entry_0_positive.step": "10e2cf0f8f78b848d79e56179759d0408fbf41e2bb1818e4c0a123244f5604ef",
+    "geometry/air/rear_entry_0_negative.step": "9b453e5cbc661d6f598d6b83fd7f95d41a1869f21fade6d99d13ab5ad1410380",
+    "geometry/air/front.step": "ca5bf61297238762e77b8d284cd17e88ed612c950fa6e36bf6b91c83c1a29feb",
+    "geometry/air/rear_entry_0_negative_y.step": "b956e81092b0882c7140f2ac217f18821c258b658014623e9ec2206801103192",
+    "geometry/air/rear_entry_0_positive_y.step": "933f1e72cca07d932c529f2934a04e7a7b3b2f1cb91d32d67d0315e96b3ef602",
+    "geometry/parts/rear_cup_entry_0_negative_y.3mf": "7a75b4c9b7ad058300bfcad442d98ed24dcf8f2472f5da562a6bc7c5a9d9fcc2",
+    "geometry/parts/rear_cup_entry_0_positive_y.stl": "69e3845a639ead4f5a8a70473f76ec23ba0907f9e100fcdc56e1ee6cdf538ab0",
+    "geometry/parts/horn.3mf": "23564dcac9363f00d45d3346a5a4ecd23fbb349b7faf7730b5c16462306d2d80",
+    "geometry/parts/rear_cup_entry_0_negative.stl": "8180bbf8fd8258d400436b508a3ec525bd74196bbb3c30ed29b904797cdc3163",
+    "geometry/parts/rear_cup_entry_0_positive.stl": "c77f23ed57f65ecb9f8641b833da229af7d3d2e7fa3e9645d8299671eb1f916f",
+    "geometry/parts/horn.step": "ee3d4aa8a538fc0bb3cf81f92ebc10eb1280390088ce2ccb88987b5d4cee9797",
+    "geometry/parts/rear_cup_entry_0_positive.step": "b57ce5e8003c8f1dd30234abcaac69770935ccad7461c3c9741a233f1b4f15c3",
+    "geometry/parts/rear_cup_entry_0_positive.3mf": "cd8a7758c65aa9e99ea1f12f986f9563695d4acaaf8110e1f13e2b2a2f67008d",
+    "geometry/parts/rear_cup_entry_0_negative_y.step": "b191624213aa16765359633adc427009146085152b42d4ba4224e9f11a2ba696",
+    "geometry/parts/rear_cup_entry_0_positive_y.step": "e8347060b2348b11a9490de75090ffdd075fd1477cde60b024801c6dd75ff8d5",
+    "geometry/parts/rear_cup_entry_0_negative.step": "2bdbdaa567a1df1aaabdf113a4b94c95587969c289cca206869535377b881d34",
+    "geometry/parts/rear_cup_entry_0_positive_y.3mf": "c26909e41bf636d12ffb2557b321342fe32dbff5b24c4ea5e9b69b0d1c797d44",
+    "geometry/parts/rear_cup_entry_0_negative_y.stl": "974b7b7075ad1248e24551f5fadb03a91ef430a1ad990e741ec74cb26c59c038",
+    "geometry/parts/rear_cup_entry_0_negative.3mf": "2761dee97b968dc76879a54199bf4d70758102593edb51b6682750192c48b6b6",
+    "geometry/parts/horn.stl": "8df402eb0796d7cc994f06abf236e6e9a46b2963d912a693bb1b7bb9e918b7f5"
+  },
+  "status": "complete",
+  "acoustic_solve_performed": false,
+  "compilation": {
+    "status": "complete",
+    "schema_version": 1,
+    "evidence": "experimental_prediction_input",
+    "geometry_hash": "10833bcefc1ae0ac0bbafa464aaeb3b7d2ed319c7ba065e9e3b42311c741069e",
+    "sources_hash": "ad9f0c9d7d8eb4f32cb3f2021a834b4b849c39f80d061d81719a62acc2948b02",
+    "qualified": false,
+    "mouth_load": "coupled_exterior_bem",
+    "throat_rear_load": "none",
+    "mesh_accuracy": "not_converged",
+    "project_sha256": "4a5b80fb520547fc4e7e167a4a815ade9bffb59bef628cbee18be3a26a2ad35f",
+    "driver_count": 5,
+    "limitations": [
+      "Ideal rigid mounting package, not measured driver geometry",
+      "Throat piston has no rear acoustic load or compression-driver internals",
+      "FEM/BEM and frequency refinement remain unqualified",
+      "No nonlinear, structural, physical speaker or print validation"
+    ],
+    "runtime": {
+      "revision": "8cb166226e412877d3f71f2845918e479b97aa85",
+      "backend": "beat_cpu",
+      "python": "3.11.16 (main, Aug 12 2026, 23:03:19) [Clang 21.0.0 (clang-2100.1.1.101)]",
+      "julia": "julia version 1.12.6",
+      "packages": {
+        "kiwisolver": "1.5.1",
+        "packaging": "26.3",
+        "fonttools": "4.65.0",
+        "platformdirs": "4.11.8",
+        "Pygments": "2.21.0",
+        "rich": "15.0.0",
+        "contourpy": "1.3.3",
+        "numpy": "2.4.6",
+        "pytools": "2026.1.1",
+        "matplotlib": "3.11.1",
+        "bempp-cl": "0.4.2",
+        "llvmlite": "0.49.0",
+        "mdurl": "0.1.2",
+        "python-dateutil": "2.9.0.post0",
+        "numba": "0.67.0",
+        "scipy": "1.17.1",
+        "pyopencl": "2026.1.4",
+        "cycler": "0.12.1",
+        "gmsh": "4.15.2",
+        "pyparsing": "3.3.2",
+        "markdown-it-py": "4.2.0",
+        "meshio": "5.3.5",
+        "typing_extensions": "4.16.0",
+        "pillow": "12.3.0",
+        "six": "1.17.0",
+        "boundary-lab": "0.4.2",
+        "siphash24": "1.9"
+      },
+      "julia_threads": 1
+    },
+    "interface_coordinate_restoration": {
+      "raw_sha256": "90a3e7656eeff7f62ad2a7ad37159492f4cd63e6788aa92c575b74a2b3d59447",
+      "front_sha256": "f99c1fa00278dd0abbdcb1216867e65f14f181b0b800d5a6d91d738dc82f5aa1",
+      "output_sha256": "12dae1a1c97e486ebca10ed54f79f1480b09c6fade1f9b39176dda81eb96a005",
+      "mouth_vertices": 2796,
+      "corrected_vertices": 30,
+      "maximum_correction_m": 9.060512321991853e-09,
+      "maximum_allowed_correction_m": 1e-08,
+      "method": "restore_unique_authoritative_fem_coordinates"
+    },
+    "sphere_sampling": {
+      "angle_precision_deg": 10.0,
+      "point_count": 413,
+      "method": "pinned_fibonacci"
+    },
+    "exterior_surface": {
+      "triangles": 10604,
+      "nodes": 5304,
+      "open_edges": 0,
+      "orientation_errors": 0,
+      "enclosed_volume_m3": 0.01870652788757086,
+      "sha256": "12dae1a1c97e486ebca10ed54f79f1480b09c6fade1f9b39176dda81eb96a005"
+    },
+    "exterior_mesh_size_m": 0.015,
+    "compiler_runtime": {
+      "python": "3.11.16 (main, Aug 12 2026, 23:03:19) [Clang 21.0.0 (clang-2100.1.1.101)]",
+      "packages": {
+        "cadquery": "2.8.0",
+        "cadquery-ocp": "7.9.3.1.1",
+        "gmsh": "4.15.2",
+        "numpy": "2.4.6"
+      },
+      "source_sha256": {
+        "geometry.py": "c795a96b80feeaff64bb7447d868b735e344ae738ca796637099a1b6f7b38e25",
+        "radiation_geometry.py": "07c4b29e7968c076ff897c57b9c22189585dfaa61f40f95f1a9903bf32c72692",
+        "waveguide_profile.py": "303ffb8a22f0e05c1c84ae281580e3c808b1c1b0c27735a4d70da908e364e6f8",
+        "interface_coordinates.py": "2b365807c5dbd77149421c460ec3c1e7e64f4e65208cc8c5541dafa15cc8c7f4"
+      }
+    },
+    "exterior_report_sha256": "d5483f158d1d340baf4bdbeee684829d84461efbc5fc4ba8c7ede47847d51915",
+    "exterior_identity": {
+      "design_hash": "10833bcefc1ae0ac0bbafa464aaeb3b7d2ed319c7ba065e9e3b42311c741069e",
+      "cad_geometry_sha256": "07da75e84e92f2caa7baddae797e70ee154894aa69618fafb9d7c0c8b516aacd"
+    }
+  },
+  "candidate_replay_verification_passed": true,
+  "archives": [
+    {
+      "file": "original-failed-trial.zip",
+      "sha256": "6c06e7eabeb57c656848c8d359a4ceccf4d743928cfc43bf3d7f542ba8df9a7c",
+      "size_bytes": 27894135
+    },
+    {
+      "file": "recompiled-trial.zip",
+      "sha256": "7335c1414a5b70382131107589e402f30906d292973323b6b9b4daf8fcab3559",
+      "size_bytes": 28087307
+    }
+  ],
+  "original_application_source_commit": "a0a604e",
+  "limitations": [
+    "Original failed adaptive trial is unchanged and unscored",
+    "Recompilation and candidate binding validation only; no new acoustic solve",
+    "No acceptance tolerance was relaxed"
+  ]
+}
