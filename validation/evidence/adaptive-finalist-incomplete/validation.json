@@ -1,0 +1,455 @@
+{
+  "status": "failed",
+  "schema_version": 1,
+  "search_sha256": "124b4a62dbdfdb0c171a0841ad998815af87d8c82e94d28055cd2dbefb21a4a2",
+  "input_sha256": {
+    "search.json": "124b4a62dbdfdb0c171a0841ad998815af87d8c82e94d28055cd2dbefb21a4a2",
+    "brief.json": "2cac4c8e7a81dc0327c89eb5bd567c02c22173a79636b50b3cad84e57b091e1c",
+    "base-geometry.json": "0adcc45bdd77d3b268ed75e08784fffa985e3717f033e7da8b91521349ed9ef5",
+    "catalogue-snapshot.json": "73f55f55510bba096045c4918e59fd1c721a3d29c74e9a1c0ccb5db3793342e7",
+    "trial-002/candidate.json": "fc9512cd6a6a993dafe3e9623a01485ab87d82177ad3611fbda524958d40e5fd",
+    "trial-000/candidate.json": "c159eb3631099f6c354f87e65dae3f4895524f680aca12555d3449897759e309",
+    "trial-000/score.json": "494984f7d984bce230e14345cbb243093f0394ed69ddd0c950a2d02b25582bb9",
+    "trial-000/geometry/geometry.json": "0368134cd1d70dfb18e3841f6bca0513eb2c7e39eebb771ef6daee0363a93261",
+    "trial-000/system/project.blab.json": "fa88e355ffa4af8264132f7313188b3e666ef8383706fe6ee2b2fbe5e966ba50",
+    "trial-000/evaluation/evaluation.json": "59c7704a75e186672c2a8a8954d30587d0bd5844871c327417b6f1f8f972387a",
+    "trial-000/evaluation/request.json": "b9a446009bd792aa2272a10e09c6ba243e45053d21a4ee6cfcf8c3f4aec0b333",
+    "trial-000/evaluation/preflight.json": "06f413f4c57f587f9ed201c13223daf3cac7763909e59fea45cb16b345722bcf",
+    "trial-001/candidate.json": "fb673defe681f8661be96c2deab664449ef76377d8a07984d0f4771b0c728938",
+    "trial-001/score.json": "c93e3bab1cc942c0a104bca7ea9a79cf28660d075198bc526bf39a455ef64f41",
+    "trial-001/geometry/geometry.json": "f07d586855b8faedff872ad52db3800b9500c153dc427ca1b94d5ba7af13929c",
+    "trial-001/system/project.blab.json": "316054ac204445ed3260581b2e121f59a7432658201dc05c8bcfe84aa12b1925",
+    "trial-001/evaluation/evaluation.json": "8d1e295036539df30ca01574fd2595799efba879a6856c7f1512f10dcf3c0ec1",
+    "trial-001/evaluation/request.json": "b9a446009bd792aa2272a10e09c6ba243e45053d21a4ee6cfcf8c3f4aec0b333",
+    "trial-001/evaluation/preflight.json": "ca9869e6d44f154a962988f0c4cfda28fc2ce011007e082c3a1aad81ef0987f2",
+    "trial-002/score.json": "61a0b0eb1be1a6c4e2a35cd13fad68eac324423b32dd6f1487db1daaa0bc7d52",
+    "trial-002/geometry/geometry.json": "5f67b62ae59ae60e36ab24ffb7efb402dc0b4835642c770605061ab5b55f153d",
+    "trial-002/system/project.blab.json": "a3ebd032e22bc495e15d03d26664a7ca3cee5a56f69f7150e4047c03369dc602",
+    "trial-002/evaluation/evaluation.json": "68d71ded2e33989cc595e776eecf7c7788a1f6102ba38f79cdc12b2576992f8f",
+    "trial-002/evaluation/request.json": "b9a446009bd792aa2272a10e09c6ba243e45053d21a4ee6cfcf8c3f4aec0b333",
+    "trial-002/evaluation/preflight.json": "e1d4fd922d7ae7cb89b62f672b083ada20dd45d39aa3091791eefb852d521253"
+  },
+  "winner_index": 2,
+  "fixed_side_gain": 0.2,
+  "frequencies_hz": [
+    1000.0,
+    1414.0,
+    2000.0,
+    2449.0,
+    3000.0
+  ],
+  "runtime": {
+    "revision": "8cb166226e412877d3f71f2845918e479b97aa85",
+    "backend": "beat_cpu",
+    "python": "3.11.16 (main, Aug 12 2026, 23:03:19) [Clang 21.0.0 (clang-2100.1.1.101)]",
+    "julia": "julia version 1.12.6",
+    "packages": {
+      "kiwisolver": "1.5.1",
+      "packaging": "26.3",
+      "fonttools": "4.65.0",
+      "platformdirs": "4.11.8",
+      "Pygments": "2.21.0",
+      "rich": "15.0.0",
+      "contourpy": "1.3.3",
+      "numpy": "2.4.6",
+      "pytools": "2026.1.1",
+      "matplotlib": "3.11.1",
+      "bempp-cl": "0.4.2",
+      "llvmlite": "0.49.0",
+      "mdurl": "0.1.2",
+      "python-dateutil": "2.9.0.post0",
+      "numba": "0.67.0",
+      "scipy": "1.17.1",
+      "pyopencl": "2026.1.4",
+      "cycler": "0.12.1",
+      "gmsh": "4.15.2",
+      "pyparsing": "3.3.2",
+      "markdown-it-py": "4.2.0",
+      "meshio": "5.3.5",
+      "typing_extensions": "4.16.0",
+      "pillow": "12.3.0",
+      "six": "1.17.0",
+      "boundary-lab": "0.4.2",
+      "siphash24": "1.9"
+    },
+    "julia_threads": 4
+  },
+  "per_level_solve_timeout_s": 1800.0,
+  "mesh_sizes_m": [
+    0.008,
+    0.006,
+    0.004
+  ],
+  "magnitude_change_limit_db": 0.5,
+  "phase_change_limit_deg": 5.0,
+  "qualified": false,
+  "physical_validation": false,
+  "levels": [
+    {
+      "mesh_size_m": 0.008,
+      "score": {
+        "ripple_db": 10.778548630559069,
+        "side_gain": 0.2,
+        "relative_response_db": [
+          -0.8457941569175109,
+          -10.778548630559069,
+          -1.3302711902115338,
+          -4.70035779727834,
+          0.0
+        ],
+        "electrical_validation": {
+          "passed": false,
+          "status": "unsupported_storage_precision",
+          "reason": "electrical consistency at 1e-8 requires complex128 response storage",
+          "acoustic_accuracy_validated": false
+        },
+        "objective": 11.178548630559069,
+        "driver_count": 5,
+        "driver_cost": 20.0,
+        "evaluation_sha256": "a4fb581d3dc5733906c22792dd58adae6981532f405ec3a2bd8576a7d5078dd5",
+        "geometry_manifest_sha256": "795f971746066fe12f6dd0ea9a367ec30e7642b4671775e0dfd799764bf6b303"
+      },
+      "mesh_identity": {
+        "cad_geometry_sha256": "af995ce080bea6cdd497d2f9450d20d2f1959f412751a0e6942bdcdc708ba2c9",
+        "exterior_surface": {
+          "triangles": 3984,
+          "nodes": 1994,
+          "open_edges": 0,
+          "orientation_errors": 0,
+          "enclosed_volume_m3": 0.001417950571112096,
+          "sha256": "988c8e3f1671d954b5b4711d1ef7c0979c69e2b94ddad581596b2a54cfc2db05"
+        },
+        "exterior_mesh_size_m": 0.01,
+        "compiler_runtime": {
+          "python": "3.11.16 (main, Aug 12 2026, 23:03:19) [Clang 21.0.0 (clang-2100.1.1.101)]",
+          "packages": {
+            "cadquery": "2.8.0",
+            "cadquery-ocp": "7.9.3.1.1",
+            "gmsh": "4.15.2",
+            "numpy": "2.4.6"
+          },
+          "source_sha256": {
+            "geometry.py": "bfe419c2800be87deee68a1bde3165e86eb8240b2168fe632f026ff225485eec",
+            "radiation_geometry.py": "0012ad61fea93f5839cfbce2d1fc6e13fb82bf36aede8e70d7335b3727a489b4",
+            "waveguide_profile.py": "303ffb8a22f0e05c1c84ae281580e3c808b1c1b0c27735a4d70da908e364e6f8"
+          }
+        }
+      },
+      "export_checks": {
+        "schema_version": 1,
+        "mesh_checks_passed": true,
+        "print_qualified": false,
+        "parts": [
+          {
+            "file": "parts/rear_cup_entry_0_positive.stl",
+            "sha256": "f386950e34778d1ee191d39524aa8120ab0a5a7dd66b683885bf735f339222e2",
+            "triangles": 1004,
+            "closed_oriented_edges": true,
+            "volume_m3": 3.678854409372434e-05,
+            "relative_cad_volume_error": 0.0004133774357001352,
+            "bounds_mm": [
+              [
+                72.59142303466797,
+                -34.98912048339844,
+                21.25
+              ],
+              [
+                115.59142303466797,
+                34.98912048339844,
+                91.25
+              ]
+            ]
+          },
+          {
+            "file": "parts/rear_cup_entry_0_negative.stl",
+            "sha256": "a99fe0714523a4a7e85b793dc6782589eb714a283d272a0626e90645ddb643ae",
+            "triangles": 1004,
+            "closed_oriented_edges": true,
+            "volume_m3": 3.6788500437978655e-05,
+            "relative_cad_volume_error": 0.00041456361200753467,
+            "bounds_mm": [
+              [
+                -124.07184600830078,
+                -34.98912048339844,
+                21.25
+              ],
+              [
+                -81.07184600830078,
+                34.98912048339844,
+                91.25
+              ]
+            ]
+          },
+          {
+            "file": "parts/rear_cup_entry_0_positive_y.stl",
+            "sha256": "8a25a98d61b6265969fb82b565b4fefbb59128fb6d8c7000ecc5f4c0d553e7d8",
+            "triangles": 1004,
+            "closed_oriented_edges": true,
+            "volume_m3": 3.678858047351241e-05,
+            "relative_cad_volume_error": 0.00041238895544393195,
+            "bounds_mm": [
+              [
+                -34.98912048339844,
+                63.435359954833984,
+                21.25
+              ],
+              [
+                34.98912048339844,
+                106.43535614013672,
+                91.25
+              ]
+            ]
+          },
+          {
+            "file": "parts/rear_cup_entry_0_negative_y.stl",
+            "sha256": "399020de6eef38a9694ea343f1b0c5be193213b362064944cec949e4131b2527",
+            "triangles": 1004,
+            "closed_oriented_edges": true,
+            "volume_m3": 3.678854409372434e-05,
+            "relative_cad_volume_error": 0.00041337743570046825,
+            "bounds_mm": [
+              [
+                -34.98912048339844,
+                -105.0208511352539,
+                21.25
+              ],
+              [
+                34.98912048339844,
+                -62.020851135253906,
+                91.25
+              ]
+            ]
+          },
+          {
+            "file": "parts/horn.stl",
+            "sha256": "acf8971eeb620a04c25e7edf1206e834476e2590032bc10b183acfe6bdc0db6c",
+            "triangles": 34654,
+            "closed_oriented_edges": true,
+            "volume_m3": 0.00016619442612864077,
+            "relative_cad_volume_error": 0.0008089343485319089,
+            "bounds_mm": [
+              [
+                -81.07184600830078,
+                -62.020851135253906,
+                0.0
+              ],
+              [
+                72.59142303466797,
+                63.435359954833984,
+                125.0
+              ]
+            ]
+          }
+        ],
+        "limitations": [
+          "No slicer, printer, supports, fit, sealing, hardware or physical strength qualification"
+        ]
+      },
+      "pressure_real": [
+        -1.669794238440227,
+        0.4363662853837013,
+        -0.7610687503794907,
+        1.267712097428739,
+        -0.9337755181826651
+      ],
+      "pressure_imag": [
+        -1.0619127094745635,
+        -0.45528240483254195,
+        -1.7097646368667485,
+        0.07022886052727699,
+        -1.971263911575079
+      ]
+    },
+    {
+      "mesh_size_m": 0.006,
+      "score": {
+        "ripple_db": 10.777169146941663,
+        "side_gain": 0.2,
+        "relative_response_db": [
+          -0.849649045608315,
+          -10.777169146941663,
+          -1.336549727572448,
+          -4.696337859579339,
+          0.0
+        ],
+        "electrical_validation": {
+          "passed": false,
+          "status": "unsupported_storage_precision",
+          "reason": "electrical consistency at 1e-8 requires complex128 response storage",
+          "acoustic_accuracy_validated": false
+        },
+        "objective": 11.177169146941663,
+        "driver_count": 5,
+        "driver_cost": 20.0,
+        "evaluation_sha256": "9b5d337aca7a49e80a1f128bf1599b77b5104c61283e27c1175b347edd96f6a6",
+        "geometry_manifest_sha256": "75e287d6bb295c2b9be000858229656b6fe25d9f827ecf768f35ace44a1bb2df"
+      },
+      "mesh_identity": {
+        "cad_geometry_sha256": "af995ce080bea6cdd497d2f9450d20d2f1959f412751a0e6942bdcdc708ba2c9",
+        "exterior_surface": {
+          "triangles": 4060,
+          "nodes": 2032,
+          "open_edges": 0,
+          "orientation_errors": 0,
+          "enclosed_volume_m3": 0.001417950571112096,
+          "sha256": "70fcc1f79a49493c3d3ae17226fafd9038b6aecb12459195d370131f09fd7591"
+        },
+        "exterior_mesh_size_m": 0.01,
+        "compiler_runtime": {
+          "python": "3.11.16 (main, Aug 12 2026, 23:03:19) [Clang 21.0.0 (clang-2100.1.1.101)]",
+          "packages": {
+            "cadquery": "2.8.0",
+            "cadquery-ocp": "7.9.3.1.1",
+            "gmsh": "4.15.2",
+            "numpy": "2.4.6"
+          },
+          "source_sha256": {
+            "geometry.py": "bfe419c2800be87deee68a1bde3165e86eb8240b2168fe632f026ff225485eec",
+            "radiation_geometry.py": "0012ad61fea93f5839cfbce2d1fc6e13fb82bf36aede8e70d7335b3727a489b4",
+            "waveguide_profile.py": "303ffb8a22f0e05c1c84ae281580e3c808b1c1b0c27735a4d70da908e364e6f8"
+          }
+        }
+      },
+      "export_checks": {
+        "schema_version": 1,
+        "mesh_checks_passed": true,
+        "print_qualified": false,
+        "parts": [
+          {
+            "file": "parts/rear_cup_entry_0_positive.stl",
+            "sha256": "f386950e34778d1ee191d39524aa8120ab0a5a7dd66b683885bf735f339222e2",
+            "triangles": 1004,
+            "closed_oriented_edges": true,
+            "volume_m3": 3.678854409372434e-05,
+            "relative_cad_volume_error": 0.0004133774357001352,
+            "bounds_mm": [
+              [
+                72.59142303466797,
+                -34.98912048339844,
+                21.25
+              ],
+              [
+                115.59142303466797,
+                34.98912048339844,
+                91.25
+              ]
+            ]
+          },
+          {
+            "file": "parts/rear_cup_entry_0_negative.stl",
+            "sha256": "a99fe0714523a4a7e85b793dc6782589eb714a283d272a0626e90645ddb643ae",
+            "triangles": 1004,
+            "closed_oriented_edges": true,
+            "volume_m3": 3.6788500437978655e-05,
+            "relative_cad_volume_error": 0.00041456361200753467,
+            "bounds_mm": [
+              [
+                -124.07184600830078,
+                -34.98912048339844,
+                21.25
+              ],
+              [
+                -81.07184600830078,
+                34.98912048339844,
+                91.25
+              ]
+            ]
+          },
+          {
+            "file": "parts/rear_cup_entry_0_positive_y.stl",
+            "sha256": "8a25a98d61b6265969fb82b565b4fefbb59128fb6d8c7000ecc5f4c0d553e7d8",
+            "triangles": 1004,
+            "closed_oriented_edges": true,
+            "volume_m3": 3.678858047351241e-05,
+            "relative_cad_volume_error": 0.00041238895544393195,
+            "bounds_mm": [
+              [
+                -34.98912048339844,
+                63.435359954833984,
+                21.25
+              ],
+              [
+                34.98912048339844,
+                106.43535614013672,
+                91.25
+              ]
+            ]
+          },
+          {
+            "file": "parts/rear_cup_entry_0_negative_y.stl",
+            "sha256": "399020de6eef38a9694ea343f1b0c5be193213b362064944cec949e4131b2527",
+            "triangles": 1004,
+            "closed_oriented_edges": true,
+            "volume_m3": 3.678854409372434e-05,
+            "relative_cad_volume_error": 0.00041337743570046825,
+            "bounds_mm": [
+              [
+                -34.98912048339844,
+                -105.0208511352539,
+                21.25
+              ],
+              [
+                34.98912048339844,
+                -62.020851135253906,
+                91.25
+              ]
+            ]
+          },
+          {
+            "file": "parts/horn.stl",
+            "sha256": "acf8971eeb620a04c25e7edf1206e834476e2590032bc10b183acfe6bdc0db6c",
+            "triangles": 34654,
+            "closed_oriented_edges": true,
+            "volume_m3": 0.00016619442612864077,
+            "relative_cad_volume_error": 0.0008089343485319089,
+            "bounds_mm": [
+              [
+                -81.07184600830078,
+                -62.020851135253906,
+                0.0
+              ],
+              [
+                72.59142303466797,
+                63.435359954833984,
+                125.0
+              ]
+            ]
+          }
+        ],
+        "limitations": [
+          "No slicer, printer, supports, fit, sealing, hardware or physical strength qualification"
+        ]
+      },
+      "pressure_real": [
+        -1.6684731313434895,
+        0.4362187996506691,
+        -0.7599204040539916,
+        1.2683087512850761,
+        -0.9290654943324625
+      ],
+      "pressure_imag": [
+        -1.0623454749584198,
+        -0.45556054953485725,
+        -1.7087910858739632,
+        0.0700351882725954,
+        -1.9734830133616923
+      ]
+    }
+  ],
+  "successive_changes": [
+    {
+      "maximum_magnitude_change_db": 0.006297003972636608,
+      "maximum_phase_change_deg": 0.13676461648355473
+    }
+  ],
+  "limitations": [
+    "FEM and conforming mouth interface refined; rigid-exterior target size fixed, not an independent full exterior convergence test",
+    "Pointwise pressure comparison, no gain/phase fitting",
+    "Additional geometric-midpoint frequencies rounded to whole hertz for native label precision",
+    "Finite frequency samples do not establish full-band convergence",
+    "Synthetic sources; no print or physical validation"
+  ],
+  "refinement_passed": false,
+  "electrical_consistency_passed": false,
+  "error": "ValueError: estimated tetrahedral workload exceeds this generator's mesh budget"
+}

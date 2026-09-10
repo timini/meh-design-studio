@@ -33,3 +33,16 @@ first two mesh levels completed and agreed within 0.0063 dB and 0.137 degrees at
 five samples. Its third level was refused by the conservative estimate. Those
 observations motivate configurable resource limits; they do not establish complete
 convergence or physical performance.
+
+## Preserved failed refinement study
+
+The adaptive freeform winner was re-evaluated at 1,000, 1,414, 2,000, 2,449 and
+3,000 Hz with frozen gain, using source `2b21d93`. The 8 mm and 6 mm levels
+completed: maximum successive pressure change was 0.00630 dB and 0.1368 degrees.
+The requested 4 mm level stopped at the original two-million estimated-tetrahedron
+budget. **The three-level study failed; no convergence pass is claimed.**
+
+[Original report and raw level archives](../validation/evidence/adaptive-finalist-incomplete/)
+retain both completed levels and the failed third attempt. They use the historical
+source and mesh policy, before the configurable caps and curved-rim fix. New code
+or larger budgets do not retroactively turn those records into successful runs.
