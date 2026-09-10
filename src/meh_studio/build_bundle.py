@@ -46,8 +46,7 @@ def export_search(search: Path, output: Path) -> dict:
     project = _read_json(trial / 'system/project.blab.json')
     ports = project['physical_system']['excitation_ports']
     expected = {'component:throat'} | {
-        f'component:entry_{i}_{side}' for i in range(len(design.entry_positions_m))
-        for side in ('positive', 'negative')}
+        f'component:{name}' for name, _, _ in design.entry_sites}
     if len(ports) != design.driver_count or {p['component_id'] for p in ports} != expected:
         raise ValueError('winning source layout differs from generated geometry')
     gains = {'kind': 'relative_voltage_basis_gains', 'hardware_preset': False,
