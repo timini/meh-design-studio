@@ -2,6 +2,12 @@
   "status": "complete",
   "screen_passed": false,
   "qualified": false,
+  "resolved_plan_frequencies_hz": [
+    1362.5011441823615,
+    1595.4887690834973,
+    1868.3172657437888,
+    3000.0
+  ],
   "limits": {
     "maximum_magnitude_difference_db": 1.0,
     "maximum_relative_complex_difference": 0.1
