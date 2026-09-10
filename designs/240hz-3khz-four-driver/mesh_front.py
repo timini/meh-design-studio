@@ -35,6 +35,12 @@ def mesh_front(source: Path, output: Path, size_m: float = .015):
               'generator_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
     gmsh.initialize()
     try:
+        # Volume-based estimate plus allowance for R1's curvature refinement.
+        # This is a workload heuristic, not an upper bound on the mesher.
+        estimate = 6*(domain['volume_mm3']/1e9)/size_m**3 + 250_000
+        report['estimated_tetrahedra'] = estimate
+        if estimate > 2_000_000:
+            raise ValueError('estimated tetrahedral workload exceeds the mesh budget')
         gmsh.option.setNumber('General.Terminal', 0)
         gmsh.option.setString('Geometry.OCCTargetUnit', 'M')
         gmsh.model.occ.importShapes(str(step.resolve()))
@@ -62,6 +68,7 @@ def mesh_front(source: Path, output: Path, size_m: float = .015):
         if not walls:
             raise ValueError('no rigid wall surfaces')
         gmsh.model.addPhysicalGroup(2,walls,99,name='rigid_walls')
+        groups.append({'name':'rigid_walls','tag':99,'role':'rigid_wall'})
         gmsh.model.addPhysicalGroup(3,[volumes[0][1]],1,name='front_air')
         gmsh.option.setNumber('Mesh.MeshSizeMin', min(size_m,.001))
         gmsh.option.setNumber('Mesh.MeshSizeMax', size_m)

@@ -1,0 +1,125 @@
+{
+  "status": "complete",
+  "units": "m",
+  "acoustic_validation": false,
+  "accuracy": "not_converged",
+  "maximum_mesh_size_m": 0.015,
+  "source_step_sha256": "42041cd5e65c2014c16f2f72e6211477208291c85d4542c5bcc55bfec3839d09",
+  "source_manifest_sha256": "f0ddf94ecf5b87a4b3eec5c0dc6eee8405c94a93e3bf568771ca3bef89e3e16e",
+  "generator_sha256": "871105f3b7e5e24ab3feec1bda5730c90e6a2156751b7b1055d25e507bac2ca8",
+  "estimated_tetrahedra": 328991.9856752126,
+  "tetrahedra": 228551,
+  "minimum_quality": 0.11019381101425466,
+  "cad_volume_m3": 0.04443299194230545,
+  "mesh_volume_m3": 0.04441562971278283,
+  "relative_volume_error": 0.0003907508534459758,
+  "source_area_checks": [
+    {
+      "name": "throat",
+      "cad_area_m2": 0.0004908738521234052,
+      "mesh_area_m2": 0.0004894732208251935,
+      "relative_area_error": 0.0028533426503631887
+    },
+    {
+      "name": "mouth",
+      "cad_area_m2": 0.2827433388230814,
+      "mesh_area_m2": 0.2826261716961529,
+      "relative_area_error": 0.00041439394263431684
+    },
+    {
+      "name": "mid_1",
+      "cad_area_m2": 0.004370866443012943,
+      "mesh_area_m2": 0.004358394863372056,
+      "relative_area_error": 0.0028533426503625225
+    },
+    {
+      "name": "mid_2",
+      "cad_area_m2": 0.004370866443012943,
+      "mesh_area_m2": 0.004358394863372054,
+      "relative_area_error": 0.0028533426503629666
+    },
+    {
+      "name": "mid_3",
+      "cad_area_m2": 0.004370866443012943,
+      "mesh_area_m2": 0.004358394863372054,
+      "relative_area_error": 0.0028533426503629666
+    },
+    {
+      "name": "mid_4",
+      "cad_area_m2": 0.004370866443012943,
+      "mesh_area_m2": 0.004358394863372054,
+      "relative_area_error": 0.0028533426503629666
+    }
+  ],
+  "boundaries": [
+    {
+      "name": "throat",
+      "tag": 10,
+      "outward_normal": [
+        0,
+        0,
+        -1
+      ]
+    },
+    {
+      "name": "mouth",
+      "tag": 11,
+      "outward_normal": [
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "name": "mid_1",
+      "tag": 12,
+      "outward_normal": [
+        0.84269625981214,
+        0.0,
+        -0.5383892771022006
+      ]
+    },
+    {
+      "name": "mid_2",
+      "tag": 13,
+      "outward_normal": [
+        5.160026386161918e-17,
+        0.84269625981214,
+        -0.5383892771022006
+      ]
+    },
+    {
+      "name": "mid_3",
+      "tag": 14,
+      "outward_normal": [
+        -0.84269625981214,
+        1.0320052772323836e-16,
+        -0.5383892771022006
+      ]
+    },
+    {
+      "name": "mid_4",
+      "tag": 15,
+      "outward_normal": [
+        -1.5480079158485753e-16,
+        -0.84269625981214,
+        -0.5383892771022006
+      ]
+    },
+    {
+      "name": "rigid_walls",
+      "tag": 99,
+      "role": "rigid_wall"
+    }
+  ],
+  "files": [
+    {
+      "path": "front.msh",
+      "sha256": "7d194ddf4598d7d50a6fbbfa51889ccf5a58019d7d240d811828195d840c6d35"
+    }
+  ],
+  "limitations": [
+    "Single mesh resolution; no convergence claim",
+    "No source coupling, rear domains or FEM/BEM solve"
+  ]
+}
