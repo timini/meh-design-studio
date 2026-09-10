@@ -6,6 +6,28 @@ The generated interior experiment now connects synthetic three-source geometry t
 
 The [complete compact native experiment](end-to-end-evidence.md) now passes its analytic-reference, held-out improvement and mesh-stability gates. Its 1–4 kHz result is an executed numerical demonstration with archived raw evidence and STEP/STL/3MF exports; physical qualification and broader product requirements remain open.
 
+## Current wide-mid implementation
+
+The maintainer's clarified target is an inexpensive, Solana-inspired freeform MEH
+with approximately 350 Hz handover to X1/HD15 bass/kicks and a wide vocal midrange.
+The [completion contract](completion-workflow.md) records the requested shared
+2-ohm-capable amplifier bank, higher HF crossover and later diyAudio project post.
+
+The shared geometry now supports a four-driver ring plus throat and smooth
+non-circular/asymmetric lofts. Both have completed native five-source FEM/BEM
+experiments, with archived full fields, induced inactive-driver motion and polars.
+See [ring evidence](coupled-ring-evidence.md) and [freeform evidence](freeform-waveguides.md).
+Those are three-frequency topology demonstrations, not target-band qualification.
+
+[Adaptive search](adaptive-search.md) mutates profile and geometry controls using
+preceding simulated fitness, with periodic random exploration, bound checks and
+verified ancestral evidence. [Wide-mid objectives](wide-mid-objectives.md) add
+LR4 crossover/polarity/delay selection, H/V coverage scoring and full coupled
+parallel-bank impedance. Finalists freeze the DSP and compare raw complex
+pressures across the sampled coverage sectors. Commercial source calibration,
+full-band numerical convergence, comparable measured performance, manufacturing
+qualification and an actual finished affordable design remain open.
+
 ## R1 requested horn experiment
 
 The [240–3000 Hz R1 prototype](../designs/240hz-3khz-four-driver/README.md) now has archived print geometry, a four-entry front-air domain, tagged meshes and an executed prescribed-flow FEM diagnostic with an independent tube check. A 17-point sweep and three mesh levels retain numerical failures: the 3 kHz complex-transfer stability screen fails the unchanged 10% limit even at the 10-to-7.5 mm comparison (10.208%). This is internal mean pressure with local mouth impedance, not exterior radiation or a commercial-driver response. Actual driver/source coupling, rear loads, radiation and physical qualification remain open; R1 has not achieved its acoustic target.
