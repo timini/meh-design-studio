@@ -1,0 +1,67 @@
+{
+  "status": "complete",
+  "qualified": false,
+  "termination": "plane_wave_tube_impedance_rho_c",
+  "source": "four equal prescribed inward flows, total 0.0001 m3/s RMS; throat rigid",
+  "mesh_sha256": "f6e014bde0ffb342fa9167e9e654d9e30cc55b107c5140a2b6a7e308f45fad3b",
+  "mesh_manifest_sha256": "3495d70e655d1aa8522bbed47e63c4cf16f47c2b2e96c9a6092af76cc3f0c9cf",
+  "generator_sha256": "90814e7ff66300bde3c97605d3d25d1bb572953c37cb37e81de5ffe4af7726a3",
+  "phasor": "exp(+i omega t)",
+  "samples": [
+    {
+      "frequency_hz": 1362.5011441823615,
+      "mouth_mean_pressure_pa": [
+        0.016680747430206894,
+        0.1672043797456322
+      ],
+      "mouth_transfer_pa_s_m3": [
+        166.80747430206893,
+        1672.043797456322
+      ],
+      "relative_residual": 3.7563657562720545e-13
+    },
+    {
+      "frequency_hz": 1595.4887690834973,
+      "mouth_mean_pressure_pa": [
+        -0.07431395305363661,
+        0.07898093089652512
+      ],
+      "mouth_transfer_pa_s_m3": [
+        -743.1395305363661,
+        789.8093089652511
+      ],
+      "relative_residual": 4.1630132908539e-13
+    },
+    {
+      "frequency_hz": 1868.3172657437888,
+      "mouth_mean_pressure_pa": [
+        0.3703120953869942,
+        -0.23520276885130406
+      ],
+      "mouth_transfer_pa_s_m3": [
+        3703.1209538699422,
+        -2352.0276885130406
+      ],
+      "relative_residual": 1.0692721366027897e-12
+    },
+    {
+      "frequency_hz": 3000.0,
+      "mouth_mean_pressure_pa": [
+        0.4491618748654279,
+        -1.0074706432891445
+      ],
+      "mouth_transfer_pa_s_m3": [
+        4491.6187486542785,
+        -10074.706432891444
+      ],
+      "relative_residual": 1.4400619289940573e-12
+    }
+  ],
+  "limitations": [
+    "No exterior radiation or far-field SPL",
+    "No actual driver impedances, rear loads, cone profiles or crossover",
+    "Single mesh; not converged",
+    "Transfer diagnostic, not a 240\u20133000 Hz speaker qualification"
+  ],
+  "elapsed_seconds": 388.3744068329979
+}

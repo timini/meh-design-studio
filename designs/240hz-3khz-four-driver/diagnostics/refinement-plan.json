@@ -1,0 +1,12 @@
+{
+  "status": "planned",
+  "purpose": "Check mesh sensitivity at the sampled mid-band minimum and high-frequency endpoint before interpreting the diagnostic",
+  "coarse_max_size_m": 0.015,
+  "fine_max_size_m": 0.01,
+  "frequencies_hz": [1362.487833,1595.488769,1868.323105,3000.0],
+  "frequency_selection": "Use exact three sampled frequencies nearest 1.6 kHz from the retained 17-point sweep, plus 3000 Hz; rounded values above are descriptive only",
+  "maximum_magnitude_difference_db": 1.0,
+  "maximum_relative_complex_difference": 0.1,
+  "qualification": "Two mesh levels are a sensitivity screen, not proof of convergence or physical accuracy",
+  "model": "Prescribed equal mid flows, rigid throat, local rho*c mouth impedance; mouth-area mean pressure only"
+}

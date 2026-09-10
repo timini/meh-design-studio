@@ -1,0 +1,228 @@
+{
+  "status": "complete",
+  "qualified": false,
+  "source_reports": [
+    {
+      "path": "analysis-preparation/transfer-first.json",
+      "sha256": "818719bbbee37204ab316b8f74f00094ba9eff4aeff401463135ca2ed8f8c8a7"
+    },
+    {
+      "path": "diagnostics/transfer-dense-interior.json",
+      "sha256": "0406466ea85f3f45e44e4a752afe6ff2b27571b1464f4c38f66fd5af0741d498"
+    }
+  ],
+  "sampled_magnitude_span_db": 20.135835266322474,
+  "sampled_minimum_hz": 1595.4887690834973,
+  "quantity": "Magnitude of complex mouth-area mean pressure per prescribed total flow, relative to 240 Hz",
+  "limitations": [
+    "Not far-field SPL or speaker frequency response",
+    "Local rho*c termination, rigid throat, no driver model",
+    "Single mesh; sparse frequency sampling may miss narrower features"
+  ],
+  "samples": [
+    {
+      "frequency_hz": 240.0,
+      "mouth_mean_pressure_pa": [
+        0.17356132170052627,
+        -0.21101708998342486
+      ],
+      "mouth_transfer_pa_s_m3": [
+        1735.6132170052626,
+        -2110.1708998342483
+      ],
+      "relative_residual": 6.275644127841364e-13
+    },
+    {
+      "frequency_hz": 281.039987536912,
+      "mouth_mean_pressure_pa": [
+        0.1396027991922608,
+        -0.3142846944936582
+      ],
+      "mouth_transfer_pa_s_m3": [
+        1396.0279919226077,
+        -3142.846944936582
+      ],
+      "relative_residual": 6.990618498667401e-13
+    },
+    {
+      "frequency_hz": 329.0978108114487,
+      "mouth_mean_pressure_pa": [
+        -0.003934642671154609,
+        -0.4522001006720917
+      ],
+      "mouth_transfer_pa_s_m3": [
+        -39.34642671154609,
+        -4522.001006720917
+      ],
+      "relative_residual": 7.882133555008868e-13
+    },
+    {
+      "frequency_hz": 385.3735193703108,
+      "mouth_mean_pressure_pa": [
+        -0.3368450907340242,
+        -0.44282296177938885
+      ],
+      "mouth_transfer_pa_s_m3": [
+        -3368.450907340242,
+        -4428.229617793888
+      ],
+      "relative_residual": 8.26700168810798e-13
+    },
+    {
+      "frequency_hz": 451.2723711703671,
+      "mouth_mean_pressure_pa": [
+        -0.5549446805053807,
+        -0.11113783742913205
+      ],
+      "mouth_transfer_pa_s_m3": [
+        -5549.446805053807,
+        -1111.3783742913204
+      ],
+      "relative_residual": 7.098332791788562e-13
+    },
+    {
+      "frequency_hz": 528.4399232061364,
+      "mouth_mean_pressure_pa": [
+        -0.4942962188265985,
+        0.25028269706470774
+      ],
+      "mouth_transfer_pa_s_m3": [
+        -4942.962188265985,
+        2502.8269706470774
+      ],
+      "relative_residual": 5.865600563153036e-13
+    },
+    {
+      "frequency_hz": 618.8031226327473,
+      "mouth_mean_pressure_pa": [
+        -0.20306308193919975,
+        0.5726606736922234
+      ],
+      "mouth_transfer_pa_s_m3": [
+        -2030.6308193919974,
+        5726.606736922234
+      ],
+      "relative_residual": 5.593475508571542e-13
+    },
+    {
+      "frequency_hz": 724.6184244687906,
+      "mouth_mean_pressure_pa": [
+        0.41838330244931066,
+        0.4811720750165403
+      ],
+      "mouth_transfer_pa_s_m3": [
+        4183.833024493107,
+        4811.720750165403
+      ],
+      "relative_residual": 5.31578610653957e-13
+    },
+    {
+      "frequency_hz": 848.5281374238575,
+      "mouth_mean_pressure_pa": [
+        0.5239523376470401,
+        -0.14843602621725427
+      ],
+      "mouth_transfer_pa_s_m3": [
+        5239.523376470401,
+        -1484.3602621725427
+      ],
+      "relative_residual": 4.046695681408863e-13
+    },
+    {
+      "frequency_hz": 993.6264048596673,
+      "mouth_mean_pressure_pa": [
+        0.013877875555231595,
+        -0.48870092985763797
+      ],
+      "mouth_transfer_pa_s_m3": [
+        138.77875555231594,
+        -4887.0092985763795
+      ],
+      "relative_residual": 2.356881673420218e-12
+    },
+    {
+      "frequency_hz": 1163.5364684921153,
+      "mouth_mean_pressure_pa": [
+        -0.33420264429055657,
+        -0.01718718584616712
+      ],
+      "mouth_transfer_pa_s_m3": [
+        -3342.0264429055655,
+        -171.8718584616712
+      ],
+      "relative_residual": 3.410685884447547e-13
+    },
+    {
+      "frequency_hz": 1362.5011441823615,
+      "mouth_mean_pressure_pa": [
+        0.01271055673767577,
+        0.16768639092316642
+      ],
+      "mouth_transfer_pa_s_m3": [
+        127.1055673767577,
+        1676.8639092316641
+      ],
+      "relative_residual": 1.6640174360001528e-13
+    },
+    {
+      "frequency_hz": 1595.4887690834973,
+      "mouth_mean_pressure_pa": [
+        -0.0772934067489413,
+        0.07623048706851472
+      ],
+      "mouth_transfer_pa_s_m3": [
+        -772.934067489413,
+        762.3048706851472
+      ],
+      "relative_residual": 2.81932983513084e-13
+    },
+    {
+      "frequency_hz": 1868.3172657437888,
+      "mouth_mean_pressure_pa": [
+        0.3841194817019456,
+        -0.21437084803880865
+      ],
+      "mouth_transfer_pa_s_m3": [
+        3841.194817019456,
+        -2143.7084803880866
+      ],
+      "relative_residual": 2.742833530020538e-13
+    },
+    {
+      "frequency_hz": 2187.7994211651335,
+      "mouth_mean_pressure_pa": [
+        -0.30822425998206615,
+        0.2726282825453285
+      ],
+      "mouth_transfer_pa_s_m3": [
+        -3082.2425998206613,
+        2726.282825453285
+      ],
+      "relative_residual": 3.363909864717386e-13
+    },
+    {
+      "frequency_hz": 2561.9130085729694,
+      "mouth_mean_pressure_pa": [
+        -0.012450994601982455,
+        -0.3401580053259685
+      ],
+      "mouth_transfer_pa_s_m3": [
+        -124.50994601982454,
+        -3401.580053259685
+      ],
+      "relative_residual": 2.9607559064787274e-13
+    },
+    {
+      "frequency_hz": 3000.0,
+      "mouth_mean_pressure_pa": [
+        0.6769137454215227,
+        -0.8704983729646644
+      ],
+      "mouth_transfer_pa_s_m3": [
+        6769.137454215227,
+        -8704.983729646643
+      ],
+      "relative_residual": 9.630187965802562e-13
+    }
+  ]
+}

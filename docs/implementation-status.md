@@ -6,6 +6,10 @@ The generated interior experiment now connects synthetic three-source geometry t
 
 The [complete compact native experiment](end-to-end-evidence.md) now passes its analytic-reference, held-out improvement and mesh-stability gates. Its 1–4 kHz result is an executed numerical demonstration with archived raw evidence and STEP/STL/3MF exports; physical qualification and broader product requirements remain open.
 
+## R1 requested horn experiment
+
+The [240–3000 Hz R1 prototype](../designs/240hz-3khz-four-driver/README.md) now has archived print geometry, a four-entry front-air domain, tagged meshes and an executed prescribed-flow FEM diagnostic with an independent tube check. A 17-point sweep and three mesh levels retain numerical failures: the 3 kHz complex-transfer stability screen fails the unchanged 10% limit even at the 10-to-7.5 mm comparison (10.208%). This is internal mean pressure with local mouth impedance, not exterior radiation or a commercial-driver response. Actual driver/source coupling, rear loads, radiation and physical qualification remain open; R1 has not achieved its acoustic target.
+
 ## Available
 
 - `meh resume-optimise` continues stopped searches using saved inputs and verified completed trials. It preserves the original evidence and retries incomplete trials; partial solver sweeps, abrupt-death recovery and total lifetime compute accounting remain open. See [search recovery](end-to-end-search.md#continue-a-stopped-search).
