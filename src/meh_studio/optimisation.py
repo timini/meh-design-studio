@@ -24,6 +24,7 @@ from .geometry import HornGeometry, export_geometry, mesh_geometry
 from .waveguide_profile import ProfileSection, validate_profile
 from .evolution import EvolutionSettings
 from .acoustic_objectives import AcousticObjectives
+from .build_cost import BuildBudget, estimate_build_cost, cost_adjusted_score
 from .radiating_system import compile_radiating_system
 from .validation import validate_electrical_basis
 
@@ -42,6 +43,7 @@ class SearchBrief(Record):
     profiles: tuple[tuple[ProfileSection, ...], ...] = ()
     evolution: EvolutionSettings | None = None
     acoustic_objectives: AcousticObjectives | None = None
+    build_budget: BuildBudget | None = None
     side_gains: tuple[Positive, ...] = (.5, 1., 2.)
     trial_budget: Annotated[int, Field(strict=True, ge=1, le=100)] = 4
     seed: Annotated[int, Field(strict=True, ge=0)] = 2026
@@ -54,6 +56,7 @@ class SearchBrief(Record):
         if not self.profiles:value.pop('profiles',None)
         if self.evolution is None:value.pop('evolution',None)
         if self.acoustic_objectives is None:value.pop('acoustic_objectives',None)
+        if self.build_budget is None:value.pop('build_budget',None)
         return value
 
     @model_validator(mode='after')
@@ -214,7 +217,13 @@ def evaluate_candidate(candidate, root, runtime, brief, *, mesh_size=None, frequ
         design=HornGeometry.model_validate(design.model_dump()|{'mesh_size_m':mesh_size})
     root.mkdir(parents=True,exist_ok=False)
     _write_json(root/'candidate.json',candidate_record(candidate|{'design':design}))
-    export_geometry(design,root/'geometry');mesh_geometry(root/'geometry')
+    export_geometry(design,root/'geometry')
+    if brief.build_budget is not None:
+        estimate=estimate_build_cost(brief.build_budget,_read_json(root/'geometry/geometry.json'),candidate['cost'])
+        _write_json(root/'build-cost.json',estimate)
+        if not estimate['within_budget']:
+            raise ValueError('candidate exceeds declared total build budget')
+    mesh_geometry(root/'geometry')
     geometry_digest=sha256(root/'geometry/geometry.json')
     compile_radiating_system(root/'geometry',candidate['sources'],root/'system',runtime,
                              exterior_mesh_size_m=brief.exterior_mesh_size_m)
@@ -224,7 +233,7 @@ def evaluate_candidate(candidate, root, runtime, brief, *, mesh_size=None, frequ
     score=response_score(root/'system/project.blab.json',root/'evaluation',brief.side_gains,brief.acoustic_objectives)
     if sha256(root/'geometry/geometry.json')!=geometry_digest:
         raise ValueError('geometry manifest changed during candidate evaluation')
-    score['objective']=score.get('acoustic_objective',score['ripple_db'])+brief.cost_weight_db*candidate['cost']/brief.max_driver_cost
+    score=cost_adjusted_score(score,brief,candidate,_read_json(root/'geometry/geometry.json'))
     score.update(driver_count=design.driver_count,driver_cost=candidate['cost'],
                  evaluation_sha256=sha256(root/'evaluation/evaluation.json'),
                  geometry_manifest_sha256=geometry_digest)
