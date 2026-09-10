@@ -28,6 +28,23 @@ pressures across the sampled coverage sectors. Commercial source calibration,
 full-band numerical convergence, comparable measured performance, manufacturing
 qualification and an actual finished affordable design remain open.
 
+The first [350–7,500 Hz four-proposal search](wide-mid-target-experiment.md)
+completed with reported FaitalPRO mid circuits and a synthetic HF placeholder.
+Selection reduced sampled target residual variation from 13.17 to 11.81 dB;
+the selected design still fails the practical response target. Raw trials,
+fixed DSP, build-cost estimate and exact geometry export are archived.
+[Operating reports](operating-predictions.md) now map verified native voltage
+transfer ratios to explicit RMS drive, pressure, excursion and amplifier current.
+This is numerical source normalisation, not physical driver calibration.
+
+An [independent pulsating-sphere comparison](pulsating-sphere-reference.md)
+passed its predeclared 2% complex-pressure limit at 350, 2,000, 5,000 and 7,500 Hz
+(maximum 0.708%). This validates the tested exterior formulation and normalisation
+on that reference; it does not validate horn source models. The earlier adaptive
+finalist's two completed mesh levels agreed within 0.0063 dB/0.137 degrees, but
+the third level exceeded the historical mesh workload cap and the study failed.
+Its raw failure is retained in [mesh workload evidence](mesh-workloads.md).
+
 ## R1 requested horn experiment
 
 The [240–3000 Hz R1 prototype](../designs/240hz-3khz-four-driver/README.md) now has archived print geometry, a four-entry front-air domain, tagged meshes and an executed prescribed-flow FEM diagnostic with an independent tube check. A 17-point sweep and three mesh levels retain numerical failures: the 3 kHz complex-transfer stability screen fails the unchanged 10% limit even at the 10-to-7.5 mm comparison (10.208%). This is internal mean pressure with local mouth impedance, not exterior radiation or a commercial-driver response. Actual driver/source coupling, rear loads, radiation and physical qualification remain open; R1 has not achieved its acoustic target.
@@ -37,7 +54,7 @@ The [240–3000 Hz R1 prototype](../designs/240hz-3khz-four-driver/README.md) no
 - `meh resume-optimise` continues stopped searches using saved inputs and verified completed trials. It preserves the original evidence and retries incomplete trials; partial solver sweeps, abrupt-death recovery and total lifetime compute accounting remain open. See [search recovery](end-to-end-search.md#continue-a-stopped-search).
 
 - Durable SQLite job leases, cancellation, one automatic recovery retry, bounded completion descriptors and integrity-checked publication. An isolated CAD worker is accessible through `meh jobs` with managed input snapshots, cancellation, retry and verified result retrieval; dependency-aware scheduling and full search/solver orchestration through durable workers remain to implement.
-- Explicit RMS complex source synthesis, signed real electrical power, pressure-level null handling and full-sphere pressure quadrature. Native-solver amplitude calibration and evaluation-to-metrics integration remain to implement.
+- Explicit RMS complex source synthesis, signed real electrical power, pressure-level null handling and full-sphere pressure quadrature. Verified winning voltage bases now feed single-tone operating predictions. Physical amplitude calibration and full-sphere native-output integration remain open.
 
 - Input snapshot library with bounded dependency copies, portable content identities and verification against queued job input digests. See [input snapshots](input-snapshots.md). CAD worker execution is connected; automatic dependency discovery and solver snapshots remain to implement.
 - Pinned Boundary Lab subprocess adapter, preflight, explicit backend/runtime checks, preserved complex output, timeout/failure reports and result integrity checks.
@@ -66,10 +83,10 @@ The circuit accepts a prescribed mechanical load matrix in N·s/m. It does not d
 
 ## Next reviewable increments
 
-1. Extend the executed adapter to generated geometry and full FEM/BEM radiation; establish independent acoustic accuracy and source normalisation checks (remaining A02/A05).
-2. Connect durable jobs to isolated CAD/solver workers with cancellation, input snapshots, resource accounting and restart tests (remaining B04).
-3. Complete generated geometry/source convergence comparisons and connect trusted evaluations to metrics with explicit amplitude calibration (A05/B03–B05).
-4. Extend the experimental bounded search beyond straight conical geometry and relative ripple, integrate manufacturing constraints and qualified driver data, and complete measured qualification gates in the plan.
+1. Find a target-band candidate with acceptable response, coverage and operating requirements; verify frozen DSP on held-out frequencies and progressively refined meshes.
+2. Obtain commercial HF source/load data and driver/chamber geometry, and test model uncertainty and the unresolved strict electrical reciprocity discrepancy.
+3. Make manufacturing interfaces and estimated material costs correspond to actual driver mounts, cone clearances, assembly and slicing; complete physical source and speaker measurements.
+4. Connect the existing durable job infrastructure to complete search/solver orchestration where it improves these end-to-end experiments. This is secondary to the acoustic and manufacturing gaps above.
 
 Physical source/load acquisition, actual builds, calibrated measurements and rights-cleared catalogue release remain external evidence work. Reference tests passing cannot mark those items complete.
 
