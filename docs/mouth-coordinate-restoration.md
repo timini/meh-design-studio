@@ -26,3 +26,15 @@ This is an interface-conversion correction, not a geometric mutation or evidence
 of improved acoustics. Old results and failed adaptive ancestors retain their
 original status; replaying that geometry is a distinct run with a new source
 identity. The frozen active search is allowed to finish with its original code.
+
+Fresh compiler replay from frozen source `f969e1d` completed successfully. It
+recreated the same raw native mesh, restored the same 30 coordinates, and passed
+exact interface membership, all surface checks, volume validation and saved
+candidate reconstruction. The replay also enabled the 413-point spherical
+observation setting, verifying that it survives compilation and candidate
+identity checks. No acoustic solve was performed for this replay.
+
+The [report](../validation/evidence/mouth-coordinate-restoration/report.json)
+identifies both application sources and archives the original failed trial and
+the new compilation, including complete geometry, meshes and exact replay
+scripts. The original adaptive search remains a separate historical run.
