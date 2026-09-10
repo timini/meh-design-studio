@@ -13,7 +13,7 @@ def export(source,output):
   domain=json.loads((source/'front-domain.json').read_text());path=source/'front-air.step'
   expected=next(x['sha256'] for x in domain['files'] if x['path']==path.name)
   if domain['status']!='complete' or domain['units']!='mm' or hashlib.sha256(path.read_bytes()).hexdigest()!=expected:raise ValueError('invalid front air identity')
-  body,_,mounts=build();air=cq.importers.importStep(str(path)).val()
+  body,_,mounts=build(exterior_blank=True);air=cq.importers.importStep(str(path)).val()
   # Fill sealed rear cavities and ideal driver packages. This changes no mouth geometry.
   cap=rounded_plate(108,6,radius=28).fuse(rounded_plate(96,124,radius=10))
   fills=[cap.translate((0,0,FACE)).moved(m['plane'].location) for m in mounts]
@@ -46,7 +46,7 @@ def export(source,output):
   if not math.isclose(integrity['enclosed_volume_m3'],envelope.Volume()/1e9,rel_tol=.02):raise ValueError('surface volume error exceeds 2%')
   report.update(status='complete',surface=integrity,cad_volume_m3=envelope.Volume()/1e9,
     source_front_air_sha256=expected,generator_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
-    limitations=['Rigid filled rear packages; no measured driver casing geometry','Interface not yet conformed to FEM triangles','No acoustic solve or convergence claim'])
+    limitations=['Rigid filled rear packages and fastener holes; no measured driver casing geometry','Interface not yet conformed to FEM triangles','No acoustic solve or convergence claim'])
  except BaseException as exc:
   report.update(status='failed',error=f'{type(exc).__name__}: {exc}');raise
  finally:(output/'exterior.json').write_text(json.dumps(report,indent=2))

@@ -34,7 +34,7 @@ def rounded_plate(width, height, z=0, radius=6):
     return cq.Workplane('XY').rect(width,width).extrude(height).edges('|Z').fillet(radius).val().translate((0,0,z))
 
 
-def build():
+def build(*, exterior_blank=False):
     slope=(MOUTH-THROAT)/LENGTH
     angle=math.atan(slope)
     shell=cq.Solid.makeCone(THROAT+WALL,MOUTH+WALL,LENGTH)
@@ -84,6 +84,9 @@ def build():
         bores.extend(shape.moved(plane.location) for shape in [local_air,*mount_holes])
         locations.append({'name':f'mid_{i+1}','angle_deg':90*i,'origin_mm':list(origin),
                           'normal':list(normal),'face_offset_mm':FACE,'plane':plane})
+    if exterior_blank:
+        # Filled acoustic exterior: installed fasteners and sources seal openings.
+        return shell.clean(), None, locations
     for shape in bores:
         shell=shell.cut(shape)
     shell=shell.clean()
