@@ -7,8 +7,9 @@ from __future__ import annotations
 from typing import Annotated
 import math
 import numpy as np
-from pydantic import Field, model_validator
+from pydantic import Field, model_validator, model_serializer
 from .domain import Positive, Record
+from .spherical_metrics import SphericalObjectives, sphere_error
 
 
 class AcousticObjectives(Record):
@@ -20,6 +21,13 @@ class AcousticObjectives(Record):
     vertical_coverage_deg: Annotated[float,Field(strict=True,ge=20,le=180)] = 90.
     directivity_weight: Annotated[float,Field(strict=True,ge=0)] = .5
     minimum_bank_impedance_ohm: Positive | None = 2.
+    sphere: SphericalObjectives | None = None
+
+    @model_serializer(mode='wrap')
+    def preserve_legacy_objectives(self,handler):
+        result=handler(self)
+        if self.sphere is None:result.pop('sphere',None)
+        return result
 
     @model_validator(mode='after')
     def bounded(self):
@@ -115,11 +123,15 @@ def score_acoustics(project,evaluation,gains,objectives):
     ports={p['id']:p['component_id'] for p in _read_json(project)['physical_system']['excitation_ports']}
     ids=[ports[p] for p in manifest['excitation_port_ids']]
     domains=_read_json(_contained(root,manifest['domains_metadata_file']))['domains']
-    angles={};bases={'horizontal':[],'vertical':[]};currents=[];frequencies=[]
+    angles={};bases={'horizontal':[],'vertical':[]};currents=[];frequencies=[];sphere_basis=[];sphere_points=None
     with np.load(_contained(root,manifest['domains_file']),allow_pickle=False) as data:
         for plane in bases:
             domain=next(d for d in domains if d['id']==f'observation:{plane}-polar')
             angles[plane]=data[domain['coordinates']['angle_deg']].copy()
+        if objectives.sphere is not None:
+            domain=next((d for d in domains if d['id']=='observation:sphere'),None)
+            if domain is None:raise ValueError('spherical objective requires a complete native sphere observation')
+            sphere_points=data[domain['coordinates']['points_m']].copy()
     for row in manifest['results']:
         frequencies.append(row['freq_hz'])
         metadata=_read_json(_contained(root,row['metadata_file']))
@@ -134,11 +146,16 @@ def score_acoustics(project,evaluation,gains,objectives):
             q=quantities['electrical:voice-coil-current'];ordered=q['metadata']['component_ids']
             if len(ordered)!=len(ids) or set(ordered)!=set(ids):raise ValueError('current basis component identities differ')
             currents.append(data[q['key']][:,[ordered.index(c) for c in ids]].copy())
+            if objectives.sphere is not None:
+                q=quantities['acoustic:pressure:sphere'];basis=data[q['key']]
+                if basis.shape!=(len(ids),len(sphere_points)):raise ValueError('invalid whole-sphere basis shape')
+                sphere_basis.append(basis.copy())
     frequencies=np.asarray(frequencies)
     bank=parallel_bank(currents,ids)
     if objectives.minimum_bank_impedance_ohm is not None and bank['minimum_impedance_magnitude_ohm']<objectives.minimum_bank_impedance_ohm:
         raise ValueError(f"parallel mid bank minimum {bank['minimum_impedance_magnitude_ohm']:.6g} ohm violates {objectives.minimum_bank_impedance_ohm:g} ohm constraint")
     bases={name:np.asarray(value) for name,value in bases.items()}
+    sphere_basis=np.asarray(sphere_basis)
     winner=None
     winner_key=None
     for gain in gains:
@@ -158,12 +175,20 @@ def score_acoustics(project,evaluation,gains,objectives):
                         # Target the declared low crossover roll-off, rather than boosting it away.
                         residual=relative-20*np.log10(abs(lr4(frequencies,objectives.mid_highpass_hz,'highpass')))
                         polars={plane:polar_error(pressure[plane],angles[plane],getattr(objectives,plane+'_coverage_deg')) for plane in bases}
+                        spherical=None
+                        if objectives.sphere is not None:
+                            spherical=sphere_error(np.einsum('fea,fe->fa',sphere_basis,weights),axial,
+                                frequencies,sphere_points,objectives.sphere,
+                                objectives.horizontal_coverage_deg,objectives.vertical_coverage_deg)
                     except ValueError:continue
-                    directivity=sum(p['rms_target_error_db'] for p in polars.values())/2
+                    errors=[p['rms_target_error_db'] for p in polars.values()]
+                    if spherical is not None:errors.append(spherical['rms_target_error_db'])
+                    directivity=sum(errors)/len(errors)
                     ripple=float(np.ptp(residual))
                     option={'ripple_db':ripple,'side_gain':gain,'relative_response_db':relative.tolist(),
                         'acoustic_objective':ripple+objectives.directivity_weight*directivity,
                         'directivity_error_db':directivity,'polars':polars,'drive_settings':settings}
+                    if spherical is not None:option['sphere']=spherical
                     key=(option['acoustic_objective'],gain,crossover)
                     if winner_key is None or key<winner_key:
                         winner,winner_key=option,key
@@ -210,13 +235,20 @@ def convergence_polars(project,evaluation,settings,objectives):
             selected[plane]=np.flatnonzero(abs(angles)<=getattr(objectives,plane+'_coverage_deg')/2)
             if len(selected[plane])<3:raise ValueError('insufficient polar observations for coverage convergence')
             coordinates.extend({'plane':plane,'angle_deg':float(angles[i])} for i in selected[plane])
+        if objectives.sphere is not None:
+            domain=next((d for d in domains if d['id']=='observation:sphere'),None)
+            if domain is None:raise ValueError('finalist requires the complete native sphere')
+            points=arrays[domain['coordinates']['points_m']]
+            selected['sphere']=np.arange(len(points))
+            coordinates.extend({'plane':'sphere','point_m':point.tolist()} for point in points)
     values=[]
     for index,row in enumerate(manifest['results']):
         meta=_read_json(_contained(root,row['metadata_file']))
         with np.load(_contained(root,row['arrays_file']),allow_pickle=False) as arrays:
             combined=[]
             for plane in selected:
-                q=next(q for q in meta['quantities'] if q['id']==f'acoustic:pressure:{plane}-polar')
+                identity='acoustic:pressure:sphere' if plane=='sphere' else f'acoustic:pressure:{plane}-polar'
+                q=next(q for q in meta['quantities'] if q['id']==identity)
                 combined.extend(weights[index]@arrays[q['key']][:,selected[plane]])
             values.append(combined)
     if verified_assessment(project,evaluation)!=evidence:raise ValueError('polar evidence changed during convergence extraction')

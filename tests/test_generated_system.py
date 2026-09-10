@@ -246,3 +246,29 @@ def test_changed_source_axis_cannot_compile(generated):
     path.write_text(json.dumps(saved))
     with pytest.raises(ValueError, match='motion axes'):
         compile_interior_system(root, sources, output)
+
+
+@pytest.mark.parametrize('angle',[None,10.])
+def test_sphere_observations_are_bound_into_compiled_project_identity(generated,monkeypatch,angle):
+    import meh_studio.radiating_system as radiation
+    root,sources,output=generated
+    monkeypatch.setattr(radiation,'require_cad_dependencies',lambda:None)
+    def exterior(design,destination,size):
+        destination.mkdir();(destination/'exterior.json').write_text('{}')
+        return {'cad_volume_m3':1.,'compiler_runtime':{},'cad_geometry_sha256':'fixture'}
+    monkeypatch.setattr(radiation,'export_exterior',exterior)
+    monkeypatch.setattr(radiation,'_execute',lambda *args:None)
+    monkeypatch.setattr(radiation,'surface_integrity',lambda *args,**kwargs:{'sha256':'fixture','enclosed_volume_m3':1.})
+    monkeypatch.setattr(radiation,'verify_exterior_groups',lambda *args:None)
+    monkeypatch.setattr(radiation,'meshing_runtime_identity',lambda:{})
+    class Runtime:
+        python=Path('fixture-python');checkout=Path('.')
+        def verify(self):return {}
+    report=radiation.compile_radiating_system(root,sources,output,Runtime(),sphere_angle_deg=angle)
+    project=json.loads((output/'project.blab.json').read_text())
+    assert report['project_sha256']==sha256(output/'project.blab.json')
+    assert project['project_preferences']['spherical_sampling_enabled']==(angle is not None)
+    if angle is not None:
+        assert project['project_preferences']['balloon_angle_precision_deg']==angle
+        assert report['sphere_sampling']['point_count']==413
+    else: assert 'sphere_sampling' not in report

@@ -16,7 +16,7 @@ if result!=saved['result']:raise ValueError('native result identity mismatch')
 manifest=json.loads((root/'manifest.json').read_text());domains=json.loads(_contained(root,manifest['domains_metadata_file']).read_text())['domains']
 if manifest['phasor_convention']!=r['phasor_convention'] or manifest['frequencies_hz']!=r['frequencies_hz'] or manifest['excitation_port_ids']!=['excitation:sphere']:raise ValueError('comparison basis mismatch')
 with np.load(_contained(root,manifest['domains_file']),allow_pickle=False) as data:
- coordinates={d['id']:data[d['coordinates']['points_m']] for d in domains if d['kind']=='polar_observation'}
+ coordinates={d['id']:data[d['coordinates']['points_m']] for d in domains if d['kind'] in ('polar_observation','spherical_observation')}
 rows=[]
 for item in manifest['results']:
  f=item['freq_hz'];k=2*np.pi*f/r['sound_speed_m_s'];a=r['radius_m'];rho=r['density_kg_m3'];c=r['sound_speed_m_s'];v=r['velocity_coefficient_m_per_s']
@@ -32,7 +32,11 @@ for item in manifest['results']:
    values.append({'quantity_id':q['id'],'maximum_relative_complex_error':float(np.max(abs(calculated-exact)/abs(exact))),
     'maximum_magnitude_error_db':float(np.max(abs(20*np.log10(abs(calculated)/abs(exact))))),
     'maximum_phase_error_deg':float(np.max(abs(np.angle(calculated*exact.conj(),deg=True)))),'sample_count':len(distance)})
- if len(values)!=2:raise ValueError('expected both polar cuts')
+ expected={'acoustic:pressure:horizontal-polar','acoustic:pressure:vertical-polar'}
+ if r.get('sphere_angle_deg') is not None:
+  if p['project_preferences'].get('balloon_angle_precision_deg')!=r['sphere_angle_deg']:raise ValueError('sphere sampling differs from bound reference')
+  expected.add('acoustic:pressure:sphere')
+ if {v['quantity_id'] for v in values}!=expected or len(values)!=len(expected):raise ValueError('expected every declared polar/spherical observation')
  rows.append({'frequency_hz':f,'polars':values,'passed':all(x['maximum_relative_complex_error']<=r['maximum_relative_complex_error'] for x in values)})
 if controls!={str(Path(p)):sha256(Path(p)) for p in controls} or inspect_result(root,request,saved['runtime']['backend'],project_path=project)!=result:raise ValueError('evidence changed during comparison')
 report={'schema_version':1,'evidence':'analytic_exterior_pulsating_sphere','passed':all(row['passed'] for row in rows),'maximum_relative_complex_error_limit':r['maximum_relative_complex_error'],'control_sha256':controls,'result_inspection':result,'rows':rows,'physical_validation':False,'limitations':['Prescribed unit normal-velocity reference; not a voltage-driven commercial source','Independent analytical exterior test, not a coupled horn validation','Finite mesh and four frequencies; no gain/phase/delay fitting','No RMS or loudspeaker SPL qualification']}

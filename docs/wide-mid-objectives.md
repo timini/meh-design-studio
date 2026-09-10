@@ -55,3 +55,9 @@ so the enabled 2-ohm constraint correctly rejects it. This is resynthesis of the
 original synthetic solve, not a new solve, a 350 Hz–5 kHz design or an improved
 speaker. The diagnostic disables the load screen only to inspect all metrics;
 it is not an accepted candidate under the 2-ohm challenge.
+
+For new irregular-horn searches, enable the optional
+[whole-sphere objective](whole-sphere-objectives.md). It detects off-plane lobes
+using native pressure samples, adds a third directivity error term, and extends
+finalist mesh checks to a denser spherical grid. Historical searches without
+that option retain their original two-cut scoring.
