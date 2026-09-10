@@ -27,6 +27,8 @@ Experimental horn CAD and tagged air meshing are available through [the geometry
 
 An [experimental optimisation workflow](docs/end-to-end-search.md) connects the synthetic driver catalogue, CAD, coupled FEM/BEM simulation, bounded search and finalist validation. It produces STEP/STL/3MF geometry exports. It currently optimises relative response ripple within a straight conical family; it does not establish efficiency, continuous-band hi-fi performance or print qualification.
 
+Use [`meh export-search`](docs/search-build-bundle.md) to package a completed search with its geometry, driver BOM and fixed gain settings.
+
 ## Documents
 
 | Document | Purpose |

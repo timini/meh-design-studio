@@ -114,3 +114,27 @@ def test_runtime_change_aborts_after_completed_trial(tmp_path, monkeypatch):
     report=json.loads((output/'search.json').read_text())
     assert report['status']=='failed' and 'winner' not in report
     assert report['trials'][0]['status']=='complete'
+
+
+@pytest.mark.parametrize('changed',[False,True])
+def test_candidate_score_binds_pre_solve_geometry(tmp_path,monkeypatch,changed):
+    import meh_studio.optimisation as search
+    brief,base,drivers=inputs();candidate=search.candidates(brief,base,drivers)[0]
+    def geometry(design,root):
+        root.mkdir();(root/'geometry.json').write_text('{"generated":"original"}')
+    monkeypatch.setattr(search,'export_geometry',geometry)
+    monkeypatch.setattr(search,'mesh_geometry',lambda *args:None)
+    monkeypatch.setattr(search,'compile_radiating_system',lambda *args,**kwargs:None)
+    monkeypatch.setattr(search,'response_score',lambda *args:{'ripple_db':1.})
+    root=tmp_path/'candidate'
+    class Runtime:
+        def solve(self,project,request,output,**kwargs):
+            output.mkdir();(output/'evaluation.json').write_text('{}')
+            if changed:(root/'geometry/geometry.json').write_text('{"generated":"changed"}')
+    if changed:
+        with pytest.raises(ValueError,match='geometry manifest changed'):
+            search.evaluate_candidate(candidate,root,Runtime(),brief)
+        assert not (root/'score.json').exists()
+    else:
+        score=search.evaluate_candidate(candidate,root,Runtime(),brief)
+        assert score['geometry_manifest_sha256']==search.sha256(root/'geometry/geometry.json')

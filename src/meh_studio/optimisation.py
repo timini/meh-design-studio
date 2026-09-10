@@ -177,15 +177,19 @@ def evaluate_candidate(candidate, root, runtime, brief, *, mesh_size=None, frequ
     root.mkdir(parents=True,exist_ok=False)
     _write_json(root/'candidate.json',candidate_record(candidate|{'design':design}))
     export_geometry(design,root/'geometry');mesh_geometry(root/'geometry')
+    geometry_digest=sha256(root/'geometry/geometry.json')
     compile_radiating_system(root/'geometry',candidate['sources'],root/'system',runtime,
                              exterior_mesh_size_m=brief.exterior_mesh_size_m)
     request=SolveRequest(frequencies_hz=frequencies or brief.frequencies_hz,
         include_project_observations=True,retain=('fem_nodal_pressure','bem_boundary_traces'))
     runtime.solve(root/'system/project.blab.json',request,root/'evaluation',timeout_s=timeout_s)
     score=response_score(root/'system/project.blab.json',root/'evaluation',brief.side_gains)
+    if sha256(root/'geometry/geometry.json')!=geometry_digest:
+        raise ValueError('geometry manifest changed during candidate evaluation')
     score['objective']=score['ripple_db']+brief.cost_weight_db*candidate['cost']/brief.max_driver_cost
     score.update(driver_count=design.driver_count,driver_cost=candidate['cost'],
-                 evaluation_sha256=sha256(root/'evaluation/evaluation.json'))
+                 evaluation_sha256=sha256(root/'evaluation/evaluation.json'),
+                 geometry_manifest_sha256=geometry_digest)
     _write_json(root/'score.json',score)
     return score
 
