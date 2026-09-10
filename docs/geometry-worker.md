@@ -19,7 +19,7 @@ Local integration tests execute the real geometry exporter through spawn and req
 - No automatic restart loop. Expired leases can be recovered through the queue API, but orphan process cleanup is not yet integrated.
 - Snapshot and attempt storage remain caller-controlled. The worker does not protect against another process modifying its output files while publication hashes them.
 - Runtime identity records Python, OS release and architecture, the installed distribution-version inventory, and SHA-256 hashes of worker and geometry source modules. This assumes a trusted installation: it does not attest every native binary, detect all in-place dependency edits or include unrecorded environment settings. Reusable production caching still needs a pinned installation and an explicit environment contract.
-- Native Windows and Linux execution of these worker tests remains required. Current local execution is on macOS; configured hosted CI remains blocked by account billing restrictions.
+- Hosted CAD CI runs the worker tests on Linux, macOS and Windows. Platform results establish the tested software workflow, not print or acoustic qualification.
 
 Do not promote this draft as completed B04 or enable unattended production execution until those boundaries have tests and implementations. The CLI/desktop service integration follows the worker contract rather than duplicating CAD logic in the UI.
 
@@ -39,3 +39,48 @@ Operation version 2 includes the runtime fingerprint in JobSpec parameters. The 
 Successful real exports include `geometry/execution.json` in the immutable hashed completion inventory. It records elapsed monotonic wall time and child process CPU time for the export stage, including runtime rechecking and runtime record creation. CPU time excludes process startup and is not total host CPU consumption. Peak memory is explicitly null with `not_measured` status.
 
 Once an attempt directory is reserved, a separate `worker-execution.json` operational record starts as running and is atomically replaced on normal cleanup with the worker outcome, elapsed wall time, child exit code and available diagnostic. Tests check real success, timeout and cancellation records. This file is deliberately outside immutable completion evidence and does not override the queue state: an error may coincide with a queue cancellation, and forced parent death can leave the record running. A diagnostic-write failure warns without replacing the original worker outcome. Early input rejection creates no attempt directory or accounting file. These measurements support future resource budgeting; they do not enforce quotas or qualify output quality.
+
+## Command-line workflow
+
+Install the CAD extra (`python -m pip install -e ".[cad]"`), then:
+
+```sh
+meh jobs init jobs.sqlite --artifacts job-artifacts
+meh jobs submit-geometry jobs.sqlite examples/compact-three-driver-geometry.json
+# Use the job_id returned by submission in the commands below.
+meh jobs run-geometry jobs.sqlite --timeout-s 600
+meh jobs status jobs.sqlite JOB_ID
+meh jobs result jobs.sqlite JOB_ID
+```
+
+Submission validates and canonicalises the design, saves a content-addressed copy
+under the queue's artifact root and enqueues it with the current runtime identity.
+Editing the original design afterwards cannot change that job. Resubmitting an
+identical design in the same runtime returns the existing job, including its
+current state; it does not implicitly retry failed or cancelled work. Keep the
+saved inputs and database together with the artifact root at its recorded absolute
+path. This is local durable storage, not a portable archive.
+
+`run-geometry` runs at most one geometry job in the foreground. It ignores other
+job kinds, returns `idle` when no geometry job is queued, and exits nonzero if the
+claimed job fails or is cancelled. Invalid timeout options fail before claiming.
+It does not start an unattended daemon or run optimisation/solver jobs.
+
+`status` reports ledger state without rereading output files. `result` rehashes
+all output artifacts and returns their directory and completion inventory; it
+fails for missing, changed or incomplete results. Successful geometry remains
+experimental, without acoustic or print qualification.
+
+From another terminal, `meh jobs cancel jobs.sqlite JOB_ID` requests cancellation;
+the existing worker stops its child before acknowledging it. Use `meh jobs retry
+jobs.sqlite JOB_ID` for an explicit retry within the stored attempt budget.
+After a worker dies, `meh jobs recover jobs.sqlite` processes expired leases
+across the queue using the ledger's single automatic recovery allowance. It does
+not kill orphan processes; ensure the old worker is stopped before recovery.
+Changing the software/runtime requires a fresh submission, because retry preserves
+the original runtime identity. Abrupt termination can leave a running lease until
+expiry. Existing process-supervision limits above still apply.
+
+Commands print JSON. Exit codes are 0 for a completed command (including idle),
+1 for a failed/cancelled worker outcome, 2 for input, database or integrity errors,
+and 130 for an interactive interruption.

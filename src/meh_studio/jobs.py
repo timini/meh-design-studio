@@ -190,12 +190,16 @@ class JobQueue:
             raise ValueError("lease duration must be positive and at most one day")
         return seconds
 
-    def claim(self, owner: str, *, lease_seconds=60) -> Lease | None:
+    def claim(self, owner: str, *, lease_seconds=60, kind: str | None = None) -> Lease | None:
         duration = self._duration(lease_seconds)
         if not isinstance(owner, str) or not owner.strip() or len(owner) > 128:
             raise ValueError("worker owner must be a nonempty short identifier")
+        if kind is not None and kind not in {"geometry", "mesh", "compile", "solve", "validate"}:
+            raise ValueError("unsupported job kind")
         with self._transaction():
-            row = self.connection.execute("SELECT id FROM jobs WHERE status='queued' ORDER BY created,id LIMIT 1").fetchone()
+            row = self.connection.execute(
+                "SELECT id FROM jobs WHERE status='queued' AND (? IS NULL OR json_extract(spec,'$.kind')=?) "
+                "ORDER BY created,id LIMIT 1", (kind, kind)).fetchone()
             if row is None:
                 return None
             row = self._row(row["id"])
