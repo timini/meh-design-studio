@@ -1,0 +1,35 @@
+{
+  "status": "complete",
+  "screen_passed": false,
+  "qualified": false,
+  "frequency_hz": 3000,
+  "magnitude_difference_db": 0.002526108638495853,
+  "relative_complex_difference": 0.1020833246212216,
+  "limits": {
+    "maximum_magnitude_difference_db": 1.0,
+    "maximum_relative_complex_difference": 0.1
+  },
+  "source_files": [
+    {
+      "path": "third-mesh-plan.json",
+      "sha256": "ad1c3ad2fe1d3f1f683cf6633d97b18d6887b0d95c288d8fb1541c1f224cf220"
+    },
+    {
+      "path": "transfer-10mm.json",
+      "sha256": "16551d0388cd2e31ebe64c60a6379716c2020389881a10aa8716b6578d9a6d0e"
+    },
+    {
+      "path": "transfer-7p5mm.json",
+      "sha256": "2d7325a88c101e4da7482e7f661d9a80076387e7348a039f06d4628547725056"
+    },
+    {
+      "path": "mesh-10mm.json",
+      "sha256": "3495d70e655d1aa8522bbed47e63c4cf16f47c2b2e96c9a6092af76cc3f0c9cf"
+    },
+    {
+      "path": "mesh-7p5mm.json",
+      "sha256": "e80eb5a8cb45885bf1344b39167d0528ea71273d277702b43b91b1c574ee6f52"
+    }
+  ],
+  "interpretation": "Original 10% complex gate retained. Magnitude stability is insufficient to establish phase stability; no band convergence or physical accuracy claim."
+}

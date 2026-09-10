@@ -1,0 +1,1 @@
+{"purpose":"Investigate the failed 3 kHz phase/complex mesh-sensitivity screen", "maximum_mesh_size_m":0.0075,"frequencies_hz":[3000],"comparison_mesh_size_m":0.01,"maximum_magnitude_difference_db":1.0,"maximum_relative_complex_difference":0.1,"limits_unchanged":true,"qualification":"Single-frequency third-level sensitivity check, not band convergence or physical validation"}

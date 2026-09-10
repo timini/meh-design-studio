@@ -1,0 +1,31 @@
+{
+  "status": "complete",
+  "qualified": false,
+  "termination": "plane_wave_tube_impedance_rho_c",
+  "source": "four equal prescribed inward flows, total 0.0001 m3/s RMS; throat rigid",
+  "mesh_sha256": "fbc2f99abe521887500ce408f67791c7065c508f15f450dc15b3a23d17f88bd2",
+  "mesh_manifest_sha256": "e80eb5a8cb45885bf1344b39167d0528ea71273d277702b43b91b1c574ee6f52",
+  "generator_sha256": "90814e7ff66300bde3c97605d3d25d1bb572953c37cb37e81de5ffe4af7726a3",
+  "phasor": "exp(+i omega t)",
+  "samples": [
+    {
+      "frequency_hz": 3000.0,
+      "mouth_mean_pressure_pa": [
+        0.34422572749925684,
+        -1.048312963724183
+      ],
+      "mouth_transfer_pa_s_m3": [
+        3442.2572749925685,
+        -10483.12963724183
+      ],
+      "relative_residual": 2.8013282029704192e-12
+    }
+  ],
+  "limitations": [
+    "No exterior radiation or far-field SPL",
+    "No actual driver impedances, rear loads, cone profiles or crossover",
+    "Single mesh; not converged",
+    "Transfer diagnostic, not a 240\u20133000 Hz speaker qualification"
+  ],
+  "elapsed_seconds": 398.553974541981
+}
