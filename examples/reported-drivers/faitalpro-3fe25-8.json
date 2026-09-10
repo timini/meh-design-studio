@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "id": "faitalpro-3fe25-8",
+  "revision": 1,
+  "manufacturer": "FaitalPRO",
+  "model": "3FE25 (8 ohm)",
+  "outer_diameter_m": 0.1056,
+  "cutout_diameter_m": 0.0736,
+  "depth_m": 0.0545,
+  "provenance": {
+    "schema_version": 1,
+    "kind": "reported",
+    "source": "https://faitalpro.com/en/products/LF_Loudspeakers/product_details/index.php?id=401000150 ; retrieved 2026-09-10; manufacturer nominal specifications, not an independently measured horn-loaded model",
+    "permission": "unknown",
+    "permission_evidence": null
+  },
+  "source_model": {
+    "schema_version": 1,
+    "re_ohm": 6.2,
+    "le_h": 7e-05,
+    "bl_n_a": 3.6,
+    "mmd_kg": 0.0022,
+    "cms_m_n": 0.00087,
+    "rms_ns_m": 0.4,
+    "sd_m2": 0.0033,
+    "provenance": {
+      "schema_version": 1,
+      "kind": "reported",
+      "source": "https://faitalpro.com/en/products/LF_Loudspeakers/product_details/index.php?id=401000150 ; retrieved 2026-09-10; manufacturer nominal specifications, not an independently measured horn-loaded model",
+      "permission": "unknown",
+      "permission_evidence": null
+    }
+  },
+  "qualification": null
+}
