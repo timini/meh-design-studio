@@ -24,7 +24,10 @@ preceding simulated fitness, with periodic random exploration, bound checks and
 verified ancestral evidence. [Wide-mid objectives](wide-mid-objectives.md) add
 LR4 crossover/polarity/delay selection, H/V coverage scoring and full coupled
 parallel-bank impedance. Finalists freeze the DSP and compare raw complex
-pressures across the sampled coverage sectors. Commercial source calibration,
+pressures across the sampled coverage sectors. Optional [whole-sphere scoring](whole-sphere-objectives.md)
+adds native off-plane pressure observations and denser finalist angular checks;
+its exterior analytical reference passes the unchanged 2% complex-error limit.
+Commercial source calibration,
 full-band numerical convergence, comparable measured performance, manufacturing
 qualification and an actual finished affordable design remain open.
 
@@ -54,7 +57,7 @@ The [240–3000 Hz R1 prototype](../designs/240hz-3khz-four-driver/README.md) no
 - `meh resume-optimise` continues stopped searches using saved inputs and verified completed trials. It preserves the original evidence and retries incomplete trials; partial solver sweeps, abrupt-death recovery and total lifetime compute accounting remain open. See [search recovery](end-to-end-search.md#continue-a-stopped-search).
 
 - Durable SQLite job leases, cancellation, one automatic recovery retry, bounded completion descriptors and integrity-checked publication. An isolated CAD worker is accessible through `meh jobs` with managed input snapshots, cancellation, retry and verified result retrieval; dependency-aware scheduling and full search/solver orchestration through durable workers remain to implement.
-- Explicit RMS complex source synthesis, signed real electrical power, pressure-level null handling and full-sphere pressure quadrature. Verified winning voltage bases now feed single-tone operating predictions. Physical amplitude calibration and full-sphere native-output integration remain open.
+- Explicit RMS complex source synthesis, signed real electrical power, pressure-level null handling and full-sphere pressure quadrature. Verified winning voltage bases now feed single-tone operating predictions. Native sphere data now feeds optional search scoring; physical amplitude calibration, radiated-power qualification and angular quadrature convergence remain open.
 
 - Input snapshot library with bounded dependency copies, portable content identities and verification against queued job input digests. See [input snapshots](input-snapshots.md). CAD worker execution is connected; automatic dependency discovery and solver snapshots remain to implement.
 - Pinned Boundary Lab subprocess adapter, preflight, explicit backend/runtime checks, preserved complex output, timeout/failure reports and result integrity checks.

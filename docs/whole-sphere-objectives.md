@@ -58,3 +58,12 @@ model-serialization level. Existing two-cut search evidence remains labelled as
 such; it is not retroactively promoted to whole-sphere evidence. The analytical
 pulsating-sphere fixture accepts `--sphere-angle-deg 10` to check native complex
 pressure at these additional directions against its unchanged 2% error limit.
+
+Executed native reference: frozen application source `952e0e6`, with 413 sphere
+directions plus both 73-point polar cuts, passes at 350, 2,000, 5,000 and 7,500 Hz.
+Maximum relative complex-pressure error is 0.708%, with no gain/phase/delay fit.
+The [comparison report](../validation/evidence/whole-sphere-reference/report.json)
+and [raw archive](../validation/evidence/whole-sphere-reference/raw-run.zip)
+preserve the source identity, exact runners and all native inputs/results. This
+checks spherical observation evaluation for the analytical exterior reference;
+it does not establish accuracy of a coupled horn or commercial driver model.

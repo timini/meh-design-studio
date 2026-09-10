@@ -15,8 +15,9 @@ The implementation must connect:
    exterior radiation. Retain every driver's induced motion and the complex
    source-to-observation transfer basis.
 3. Reproducible simulation-driven shape mutation and selection. Preserve budgets,
-   failed trials, parentage and exact inputs. Optimise response and horizontal/
-   vertical directivity together; freeze DSP for independent finalist checks.
+   failed trials, parentage and exact inputs. Optimise response, horizontal/
+   vertical directivity and whole-sphere behaviour for irregular shapes together;
+   freeze DSP for independent finalist checks.
 4. Numerical references, sampled-frequency holdouts, mesh convergence and
    baseline/random-search comparisons with unchanged declared limits.
 5. A traceable driver BOM, drive settings and geometry exports from the actual
