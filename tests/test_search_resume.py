@@ -26,6 +26,8 @@ def fake_evaluate(candidate, root, runtime, brief, **kwargs):
     (root/'geometry').mkdir()
     _write_json(root/'geometry/geometry.json', {'design': candidate['design'].model_dump(mode='json')})
     (root/'geometry/test-only.stl').write_text('synthetic test bytes, not real STL')
+    (root/'system').mkdir()
+    _write_json(root/'system/project.blab.json', {'test_only': True})
     (root/'evaluation').mkdir()
     _write_json(root/'evaluation/evaluation.json', {'runtime': runtime.verify()})
     request = SolveRequest(frequencies_hz=brief.frequencies_hz,
@@ -78,7 +80,10 @@ def test_resume_reuses_only_complete_trials_and_preserves_original(stopped, tmp_
     assert result['recovery']['reused_trial_indices'] == [0]
     assert result['recovery']['original_search_required'] is True
     assert recovery._inventory(stopped) == before
-    assert recovery._inventory(stopped/'trial-000') == recovery._inventory(output/'trial-000')
+    copied=recovery._inventory(output/'trial-000')
+    copied.pop('system/recovery-origin.json')
+    assert recovery._inventory(stopped/'trial-000') == copied
+    assert search.assessment_project(output/'trial-000/system/project.blab.json') == stopped/'trial-000/system/project.blab.json'
     assert not (output/'trial-001/partial.txt').exists()
 
 
@@ -142,3 +147,13 @@ def test_resume_cli_dispatch_preserves_runtime_options(tmp_path, monkeypatch, ca
                  '--julia-threads', '1']) == 0
     assert calls == [(tmp_path/'source', 1, tmp_path/'output')]
     assert json.loads(capsys.readouterr().out)['fixture'] is True
+
+
+def test_recovered_project_requires_identical_original_bytes(tmp_path):
+    original=tmp_path/'original.json'; original.write_text('{"mesh":"relative.msh"}')
+    copy=tmp_path/'copy/project.blab.json'; copy.parent.mkdir(); copy.write_bytes(original.read_bytes())
+    _write_json(copy.parent/'recovery-origin.json', {'project_path':str(original), 'project_sha256':sha256(original)})
+    assert search.assessment_project(copy)==original
+    original.write_text('{}')
+    with pytest.raises(ValueError, match='origin identity'):
+        search.assessment_project(copy)

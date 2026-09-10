@@ -4,11 +4,11 @@ import json
 import shutil
 import tempfile
 
-from .boundary_lab import _read_json, sha256, SolveRequest
+from .boundary_lab import _read_json, sha256, SolveRequest, _write_json
 from .catalogue import Catalogue
 from .domain import DriverRevision
 from .geometry import HornGeometry
-from .optimisation import SearchBrief, candidate_record, optimise, response_score
+from .optimisation import SearchBrief, candidate_record, optimise, response_score, assessment_project
 
 CONTROLS = ('brief.json', 'base-geometry.json', 'catalogue-snapshot.json')
 
@@ -133,6 +133,11 @@ class Recovery:
         shutil.copytree(root, destination)
         if _inventory(root) != before or _inventory(destination) != before:
             raise ValueError('recovery trial changed during copy')
+        # Preserve raw project/result bytes while resolving relative mesh declarations
+        # at the actual solve location. Flatten earlier continuation origins.
+        original_project=assessment_project(root / 'system/project.blab.json')
+        _write_json(destination / 'system/recovery-origin.json',
+                    {'project_path': str(original_project.absolute()), 'project_sha256': sha256(original_project)})
         self._verify_trial(destination, candidate, index)
         self.check_source()
         return score

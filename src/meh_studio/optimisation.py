@@ -96,6 +96,18 @@ def candidates(brief, base, drivers):
     return ([rows[0]]+tail)[:brief.trial_budget]
 
 
+def assessment_project(project):
+    """Use the original path for byte-identical recovered projects with relative meshes."""
+    origin=project.parent/'recovery-origin.json'
+    if not origin.exists(): return project
+    record=_read_json(origin)
+    original=Path(record['project_path'])
+    if (not original.is_absolute() or record.get('project_sha256')!=sha256(project)
+            or sha256(original)!=sha256(project)):
+        raise ValueError('recovered project origin identity mismatch')
+    return original
+
+
 def verified_assessment(project, evaluation):
     saved=_read_json(evaluation/'evaluation.json')
     controls={name:sha256(evaluation/name) for name in ('evaluation.json','request.json','preflight.json')}
@@ -104,10 +116,11 @@ def verified_assessment(project, evaluation):
             or saved.get('preflight_sha256')!=controls['preflight.json']):
         raise ValueError('evaluation control identity mismatch')
     request=SolveRequest.model_validate_json((evaluation/'request.json').read_text())
-    result=inspect_result(evaluation/'upstream',request,saved['runtime']['backend'],project_path=project)
+    original_project=assessment_project(project)
+    result=inspect_result(evaluation/'upstream',request,saved['runtime']['backend'],project_path=original_project)
     if result!=saved['result']: raise ValueError('evaluation artifact identity mismatch')
     try:
-        checks=validate_electrical_basis(project,evaluation)
+        checks=validate_electrical_basis(original_project,evaluation)
     except ValueError as exc:
         if str(exc)!='electrical consistency at 1e-8 requires complex128 response storage': raise
         checks={'passed':False,'status':'unsupported_storage_precision','reason':str(exc),

@@ -206,8 +206,11 @@ A damaged reusable result aborts recovery; it is never silently accepted or omit
 The original search, including failed attempts, is left untouched. `recovery` in
 the new report records the original directory, control hashes and reused indices.
 
-Keep the original search at its original path: native projects/results contain
-absolute mesh references, which are deliberately preserved rather than rewritten.
+Keep the original search at its original path: native results retain absolute
+mesh locations while projects can declare relative mesh paths. A small
+`system/recovery-origin.json` record identifies the original project location and
+hash. Assessment verifies identical project bytes there and resolves its meshes
+at that original location. All copied native project/result bytes are preserved.
 The continued directory is therefore a local continuation, not a portable archive.
 Further continuation can depend on more than one original search directory.
 
