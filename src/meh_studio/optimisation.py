@@ -23,6 +23,7 @@ from .generated_system import HornSources
 from .geometry import HornGeometry, export_geometry, mesh_geometry
 from .waveguide_profile import ProfileSection, validate_profile
 from .evolution import EvolutionSettings
+from .acoustic_objectives import AcousticObjectives
 from .radiating_system import compile_radiating_system
 from .validation import validate_electrical_basis
 
@@ -40,6 +41,7 @@ class SearchBrief(Record):
     entry_fractions: tuple[tuple[Positive, ...], ...]
     profiles: tuple[tuple[ProfileSection, ...], ...] = ()
     evolution: EvolutionSettings | None = None
+    acoustic_objectives: AcousticObjectives | None = None
     side_gains: tuple[Positive, ...] = (.5, 1., 2.)
     trial_budget: Annotated[int, Field(strict=True, ge=1, le=100)] = 4
     seed: Annotated[int, Field(strict=True, ge=0)] = 2026
@@ -51,6 +53,7 @@ class SearchBrief(Record):
         value=handler(self)
         if not self.profiles:value.pop('profiles',None)
         if self.evolution is None:value.pop('evolution',None)
+        if self.acoustic_objectives is None:value.pop('acoustic_objectives',None)
         return value
 
     @model_validator(mode='after')
@@ -64,6 +67,10 @@ class SearchBrief(Record):
         if len(self.profiles)>20 or len(set(self.profiles))!=len(self.profiles):
             raise ValueError('at most 20 unique freeform profiles are supported')
         for profile in self.profiles:validate_profile(profile)
+        if self.acoustic_objectives is not None:
+            targets=self.acoustic_objectives
+            if self.frequencies_hz[0]>targets.mid_highpass_hz or self.frequencies_hz[-1]<1.5*max(targets.upper_crossovers_hz):
+                raise ValueError('acoustic search grid must cover the low crossover and extend 50 percent above every upper crossover')
         if math.prod(map(len,groups[:-1])) * max(1,len(self.profiles)) > 10000:
             raise ValueError('candidate grid exceeds 10000 combinations')
         if any(len(row) not in (1,2) or any(v>=1 for v in row) for row in self.entry_fractions):
@@ -152,7 +159,10 @@ def relative_response(pressure):
     return 20*(np.log10(magnitude)-np.log10(magnitude.max()))
 
 
-def response_score(project, evaluation, gains):
+def response_score(project, evaluation, gains, acoustic_objectives=None):
+    if acoustic_objectives is not None:
+        from .acoustic_objectives import score_acoustics
+        return score_acoustics(project,evaluation,gains,acoustic_objectives)
     assessment=verified_assessment(project,evaluation)
     checks=assessment["checks"]
     root=evaluation/'upstream'
@@ -211,10 +221,10 @@ def evaluate_candidate(candidate, root, runtime, brief, *, mesh_size=None, frequ
     request=SolveRequest(frequencies_hz=frequencies or brief.frequencies_hz,
         include_project_observations=True,retain=('fem_nodal_pressure','bem_boundary_traces'))
     runtime.solve(root/'system/project.blab.json',request,root/'evaluation',timeout_s=timeout_s)
-    score=response_score(root/'system/project.blab.json',root/'evaluation',brief.side_gains)
+    score=response_score(root/'system/project.blab.json',root/'evaluation',brief.side_gains,brief.acoustic_objectives)
     if sha256(root/'geometry/geometry.json')!=geometry_digest:
         raise ValueError('geometry manifest changed during candidate evaluation')
-    score['objective']=score['ripple_db']+brief.cost_weight_db*candidate['cost']/brief.max_driver_cost
+    score['objective']=score.get('acoustic_objective',score['ripple_db'])+brief.cost_weight_db*candidate['cost']/brief.max_driver_cost
     score.update(driver_count=design.driver_count,driver_cost=candidate['cost'],
                  evaluation_sha256=sha256(root/'evaluation/evaluation.json'),
                  geometry_manifest_sha256=geometry_digest)
