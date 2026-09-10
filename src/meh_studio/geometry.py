@@ -8,9 +8,9 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import model_serializer, model_validator
+from pydantic import Field, model_serializer, model_validator
 
 from .domain import Positive, Record
 from .waveguide_profile import ProfileSection, validate_profile, horn_solids, mouth_face, entry_support_radius, cad_volume, imported_volume
@@ -31,6 +31,8 @@ class HornGeometry(Record):
     rear_depth_m: Positive
     mesh_size_m: Positive
     tessellation_tolerance_m: Positive = 0.0001
+    maximum_tetrahedra: Annotated[int, Field(strict=True, ge=1, le=10_000_000)] = 2_000_000
+    maximum_exterior_triangles: Annotated[int, Field(strict=True, ge=1, le=32_000)] = 8000
 
     @model_serializer(mode='wrap')
     def preserve_legacy_pair_identity(self, handler):
@@ -39,6 +41,10 @@ class HornGeometry(Record):
             value.pop('entry_layout', None)
         if not self.profile_sections:
             value.pop('profile_sections', None)
+        if self.maximum_tetrahedra == 2_000_000:
+            value.pop('maximum_tetrahedra', None)
+        if self.maximum_exterior_triangles == 8000:
+            value.pop('maximum_exterior_triangles', None)
         return value
 
     @model_validator(mode="after")
@@ -296,10 +302,11 @@ def mesh_geometry(output: Path) -> dict:
                   "minimum_m":min(design.mesh_size_m,math.pi*min(design.throat_radius_m,design.port_radius_m,design.front_radius_m)/CURVATURE_ELEMENTS),
                   "curvature_elements_per_revolution":CURVATURE_ELEMENTS,
                   "source_area_relative_tolerance":SOURCE_AREA_RELATIVE_TOLERANCE}}
+    report['workload_limit_tetrahedra_per_region']=design.maximum_tetrahedra
     try:
         for region, expected_volume in geometry["air_volume_m3"].items():
             estimated=estimated_curved_tetrahedra(design,region,expected_volume)
-            if estimated > 2_000_000:
+            if estimated > design.maximum_tetrahedra:
                 raise ValueError("estimated tetrahedral workload exceeds this generator's mesh budget")
             gmsh.initialize()
             try:
@@ -356,7 +363,7 @@ def mesh_geometry(output: Path) -> dict:
                 gmsh.option.setNumber("Mesh.Binary", 0)
                 gmsh.model.mesh.generate(3)
                 tetrahedra, _ = gmsh.model.mesh.getElementsByType(4)
-                if len(tetrahedra)>2_000_000:
+                if len(tetrahedra)>design.maximum_tetrahedra:
                     raise ValueError("actual tetrahedral workload exceeds the mesh budget")
                 if not len(tetrahedra):
                     raise ValueError("mesher produced no tetrahedra")

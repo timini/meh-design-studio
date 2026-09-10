@@ -45,6 +45,9 @@ def test_bem_topology_checks_reject_invalid_surfaces(tmp_path, fault):
         with pytest.raises(ValueError): surface_integrity(path)
     else:
         assert surface_integrity(path)["enclosed_volume_m3"] == pytest.approx(1/6)
+        with pytest.raises(ValueError,match='1–3'):
+            surface_integrity(path,maximum_triangles=3)
+        assert surface_integrity(path,maximum_triangles=4)['triangles']==4
 
 
 def test_radiating_command_imports_and_reports_invalid_runtime(tmp_path, monkeypatch, capsys):

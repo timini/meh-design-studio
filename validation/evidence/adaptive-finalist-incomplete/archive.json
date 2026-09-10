@@ -1,0 +1,27 @@
+{
+  "source_commit": "2b21d93",
+  "source_state": "clean detached adaptive-source worktree",
+  "native_checkout_commit": "8cb166226e412877d3f71f2845918e479b97aa85",
+  "validation_runner": "validation/fixtures/validate_search_finalist.py at source_commit",
+  "archives": [
+    {
+      "file": "level-0.zip",
+      "size_bytes": 48007673,
+      "sha256": "814a1284b48d08bf1c682f8d6df3dd4928de88a0ec1521d69b59c3d2d173ca28"
+    },
+    {
+      "file": "level-1.zip",
+      "size_bytes": 46376450,
+      "sha256": "17a490233cba76034d4635bae0d3ee111a2b052de5ede047cb6a05fe86e18ddd"
+    },
+    {
+      "file": "level-2.zip",
+      "size_bytes": 2519464,
+      "sha256": "f286852e67bf79fea8ffebb66edb522eb14edc2daff05fa06d6639b1aadda5a1"
+    }
+  ],
+  "status": "failed",
+  "refinement_passed": false,
+  "physical_validation": false,
+  "note": "Original 2M estimated tetrahedron guard prevented level 2. Two completed levels do not establish three-level convergence. No results relabelled as newer source."
+}
