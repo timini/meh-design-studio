@@ -40,3 +40,9 @@ explicitly authorised a technical forum post to the DIY community used by JW
 Sound. The destination thread is pending clarification. Prepare an evidence-led
 write-up, credit prior work, distinguish prediction from measurement, and link
 reproducible project/design artifacts. Do not publish a premature success claim.
+
+Updated publication instruction: start a new project thread on diyAudio to invite
+community feedback. Do not post the write-up in the Solana thread; link to it as
+context and credit. Choose the relevant loudspeaker/multiway forum category.
+Post after the work is ready using the maintainer's authenticated account; if no
+posting access is available, retain the completed draft and report that obstacle.
