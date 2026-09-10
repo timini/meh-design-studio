@@ -40,6 +40,15 @@ fixed DSP, build-cost estimate and exact geometry export are archived.
 transfer ratios to explicit RMS drive, pressure, excursion and amplifier current.
 This is numerical source normalisation, not physical driver calibration.
 
+The subsequent [larger-horn search](larger-target-experiment.md) completed three
+native candidates from eight proposals, preserving five geometry/interface
+failures. Its selected mutation improved response variation from 8.25 to 7.35 dB
+with identical selected DSP, but still missed the provisional 6 dB limit. The
+verified export and £261.30 planning estimate remain experimental. Independent
+[mid-port placement](eccentric-mid-ports.md) now also completes the native
+geometry/simulation/mutation/export loop, with spherical observations in a
+separate synthetic diagnostic. A target-size port-shift experiment is underway.
+
 An [independent pulsating-sphere comparison](pulsating-sphere-reference.md)
 passed its predeclared 2% complex-pressure limit at 350, 2,000, 5,000 and 7,500 Hz
 (maximum 0.708%). This validates the tested exterior formulation and normalisation
