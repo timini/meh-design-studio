@@ -258,6 +258,7 @@ def test_sphere_observations_are_bound_into_compiled_project_identity(generated,
         return {'cad_volume_m3':1.,'compiler_runtime':{},'cad_geometry_sha256':'fixture'}
     monkeypatch.setattr(radiation,'export_exterior',exterior)
     monkeypatch.setattr(radiation,'_execute',lambda *args:None)
+    monkeypatch.setattr(radiation,'restore_fem_interface_coordinates',lambda *args:{})
     monkeypatch.setattr(radiation,'surface_integrity',lambda *args,**kwargs:{'sha256':'fixture','enclosed_volume_m3':1.})
     monkeypatch.setattr(radiation,'verify_exterior_groups',lambda *args:None)
     monkeypatch.setattr(radiation,'meshing_runtime_identity',lambda:{})

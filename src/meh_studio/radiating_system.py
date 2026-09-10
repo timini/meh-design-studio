@@ -7,6 +7,7 @@ from .boundary_lab import BoundaryLabRuntime, _execute, _read_json, _write_json,
 from .generated_system import HornSources, compile_interior_system
 from .geometry import HornGeometry
 from .radiation_geometry import export_exterior, surface_integrity, verify_exterior_groups, meshing_runtime_identity
+from .interface_coordinates import restore_fem_interface_coordinates
 
 
 def require_cad_dependencies():
@@ -60,10 +61,13 @@ def _compile_radiating_system(geometry_directory, sources, output, runtime, *, e
             raise ValueError("geometry changed during compilation")
         exterior = export_exterior(design, output / "exterior", exterior_mesh_size_m)
         destination = output / "meshes/exterior.msh"
+        raw_destination = output / 'meshes/exterior-conformed-raw.msh'
         _execute([str(Path(runtime.python).absolute()), "-I", "-m", "blab.cli", "conform-interface",
-                  str(output / "meshes/front.msh"), str(output / "exterior/exterior.msh"), str(destination),
+                  str(output / "meshes/front.msh"), str(output / "exterior/exterior.msh"), str(raw_destination),
                   "--fem-interface", "mouth_interface", "--bem-interface", "mouth_interface"],
                  Path(runtime.checkout), output / "conform-interface.log", timeout_s)
+        report['interface_coordinate_restoration']=restore_fem_interface_coordinates(
+            raw_destination,output/'meshes/front.msh',destination)
         integrity = surface_integrity(destination,maximum_triangles=design.maximum_exterior_triangles)
         verify_exterior_groups(destination, output / "meshes/front.msh")
         if abs(integrity["enclosed_volume_m3"] / exterior["cad_volume_m3"] - 1) > .02:

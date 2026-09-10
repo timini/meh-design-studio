@@ -18,7 +18,7 @@ from .waveguide_profile import mouth_face, cad_volume, imported_volume
 def meshing_runtime_identity():
     return {'python':sys.version,
         'packages':{name:importlib.metadata.version(name) for name in ('cadquery','cadquery-ocp','gmsh','numpy')},
-        'source_sha256':{name:sha256(Path(__file__).with_name(name)) for name in ('geometry.py','radiation_geometry.py','waveguide_profile.py')}}
+        'source_sha256':{name:sha256(Path(__file__).with_name(name)) for name in ('geometry.py','radiation_geometry.py','waveguide_profile.py','interface_coordinates.py')}}
 
 
 def step_geometry_sha256(path: Path) -> str:
