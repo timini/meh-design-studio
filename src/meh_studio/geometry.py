@@ -13,6 +13,7 @@ from typing import Literal
 from pydantic import model_serializer, model_validator
 
 from .domain import Positive, Record
+from .waveguide_profile import ProfileSection, validate_profile, horn_solids, mouth_face, entry_support_radius, cad_volume, imported_volume
 
 
 class HornGeometry(Record):
@@ -22,6 +23,7 @@ class HornGeometry(Record):
     wall_m: Positive
     entry_positions_m: tuple[Positive, ...]
     entry_layout: Literal['opposed_pairs', 'four_driver_ring'] = 'opposed_pairs'
+    profile_sections: tuple[ProfileSection, ...] = ()
     port_radius_m: Positive
     port_length_m: Positive
     front_radius_m: Positive
@@ -35,10 +37,13 @@ class HornGeometry(Record):
         value = handler(self)
         if self.entry_layout == 'opposed_pairs':
             value.pop('entry_layout', None)
+        if not self.profile_sections:
+            value.pop('profile_sections', None)
         return value
 
     @model_validator(mode="after")
     def valid_family(self):
+        validate_profile(self.profile_sections)
         if len(self.entry_positions_m) not in (1, 2):
             raise ValueError("one or two symmetric entry pairs are supported")
         if self.entry_layout == 'four_driver_ring' and len(self.entry_positions_m) != 1:
@@ -49,7 +54,7 @@ class HornGeometry(Record):
             raise ValueError("front chamber radius must exceed port radius")
         margin = self.front_radius_m + self.wall_m
         flare_slope = (self.mouth_radius_m - self.throat_radius_m) / self.length_m
-        if self.wall_m + self.port_length_m <= flare_slope * margin:
+        if not self.profile_sections and self.wall_m + self.port_length_m <= flare_slope * margin:
             raise ValueError("entry chamber envelope is buried by the horn flare")
         if self.entry_layout == 'four_driver_ring':
             radius = self.throat_radius_m + flare_slope * self.entry_positions_m[0]
@@ -99,12 +104,12 @@ def build_geometry(design: HornGeometry):
     mm = 1000.0
     length, throat, mouth, wall = (v * mm for v in (
         design.length_m, design.throat_radius_m, design.mouth_radius_m, design.wall_m))
-    front_air = cq.Solid.makeCone(throat, mouth, length)
-    material = cq.Solid.makeCone(throat + wall, mouth + wall, length)
+    unported_air, material = horn_solids(design)
+    front_air = unported_air
     air_regions, parts, sources = {}, {}, []
     for label, entry, axis in design.entry_sites:
         z = entry * mm
-        local_radius = throat + (mouth - throat) * z / length
+        local_radius = entry_support_radius(design, unported_air, entry, axis) * mm
         duct_end = local_radius + wall + design.port_length_m * mm
         diaphragm = duct_end + design.front_depth_m * mm
         direction = cq.Vector(*axis)
@@ -132,18 +137,27 @@ def build_geometry(design: HornGeometry):
     for name, solid in {**parts, **air_regions}.items():
         if not solid.isValid() or solid.Volume() <= 0 or len(solid.Solids()) != 1:
             raise ValueError(f"geometry kernel produced an invalid or disconnected solid: {name}")
-    verify_front_chamber_back_walls(design, front_air, parts["horn"])
+    verify_front_chamber_back_walls(design, front_air, parts["horn"], unported_air=unported_air)
+    if design.profile_sections:
+        for air in air_regions.values():
+            if any(air.intersect(part).Volume() > 1e-3 for part in parts.values()):
+                raise ValueError('freeform air intersects material')
+        solids=list(parts.values())
+        if any(a.intersect(b).Volume()>1e-3 for i,a in enumerate(solids) for b in solids[i+1:]):
+            raise ValueError('freeform driver chamber parts intersect')
     return air_regions, parts, sources
 
 
-def verify_front_chamber_back_walls(design, front_air, horn):
+def verify_front_chamber_back_walls(design, front_air, horn, *, unported_air=None):
     """Check material behind the chamber back faces independently of STL closure."""
     from .cad_runtime import load_cadquery
     cq=load_cadquery();mm=1000.;wall=design.wall_m*mm
     # Stay away from coincident faces while testing almost the entire wall thickness.
     inset=min(wall/1000.,1e-3);depth=wall-2*inset;checks=[]
+    if unported_air is None and design.profile_sections:
+        unported_air=horn_solids(design)[0]
     for label,entry,axis in design.entry_sites:
-        local_radius=design.throat_radius_m+(design.mouth_radius_m-design.throat_radius_m)*entry/design.length_m
+        local_radius=entry_support_radius(design,unported_air,entry,axis)
         start=(local_radius+design.port_length_m)*mm+inset
         nominal=cq.Solid.makeCylinder(design.front_radius_m*mm,depth,cq.Vector(axis[0]*start,axis[1]*start,entry*mm),cq.Vector(*axis))
         # The port and any intended intersection with horn air remain open.
@@ -168,6 +182,7 @@ def export_geometry(design: HornGeometry, output: Path) -> dict:
     manifest = output / "geometry.json"
     try:
         regions, parts, sources = build_geometry(design)
+        mouth_cap=mouth_face(design,regions['front'])
         files = []
         for group, shapes in (("air", regions), ("parts", parts)):
             directory = output / group
@@ -182,9 +197,11 @@ def export_geometry(design: HornGeometry, output: Path) -> dict:
                                   "size_bytes": path.stat().st_size})
         state.update(status="complete", design=design.model_dump(mode="json"),
                      driver_count=design.driver_count, sources=sources, files=files,
+                     mouth_interface={'center_m':[v/1000 for v in mouth_cap.Center().toTuple()],
+                                      'area_m2':mouth_cap.Area()/1e6},
                      front_chamber_back_walls_verified=True,
-                     air_volume_m3={name: solid.Volume() / 1e9 for name, solid in regions.items()},
-                     material_volume_m3={name: solid.Volume() / 1e9 for name, solid in parts.items()},
+                     air_volume_m3={name: cad_volume(design, solid) / 1e9 for name, solid in regions.items()},
+                     material_volume_m3={name: cad_volume(design, solid) / 1e9 for name, solid in parts.items()},
                      limitations=["Ideal circular source interfaces, not qualified purchased-driver mounting geometry",
                                   "No mounting hardware, seals, print-bed segmentation or structural validation",
                                   "No acoustic solve or mesh-convergence claim"])
@@ -221,7 +238,11 @@ def estimated_curved_tetrahedra(design, region, volume):
     cells+=count*math.pi*design.front_radius_m**2*design.front_depth_m/local(design.front_radius_m)**3
     port_length=design.port_length_m+design.wall_m+2*design.front_radius_m*slope
     cells+=count*math.pi*design.port_radius_m**2*port_length/local(design.port_radius_m)**3
-    return max(6*cells,6*volume/h**3)
+    shape_factor=1.
+    if design.profile_sections:
+        scales=[v for section in design.profile_sections for v in section.radial_scales]
+        shape_factor=(max(scales)/min(scales))**3
+    return max(6*cells*shape_factor,6*volume/h**3)
 
 
 def source_area_checks(path, radii):
@@ -289,13 +310,15 @@ def mesh_geometry(output: Path) -> dict:
                 volumes = gmsh.model.getEntities(3)
                 if len(volumes) != 1:
                     raise ValueError("air region must import as one solid")
-                volume = gmsh.model.occ.getMass(3, volumes[0][1])
+                volume = imported_volume(design,gmsh.model.occ.getMass(3, volumes[0][1]),directory/f'{region}-imported.step')
                 if not math.isclose(volume, expected_volume, rel_tol=1e-6, abs_tol=1e-12):
                     raise ValueError("CAD-to-analysis volume or unit mismatch")
                 expected = {}
                 if region == "front":
                     expected["throat_source"] = ([0, 0, 0], design.throat_radius_m, "source")
-                    expected["mouth_interface"] = ([0, 0, design.length_m], design.mouth_radius_m, "radiation_interface")
+                    mouth=geometry.get('mouth_interface',{'center_m':[0,0,design.length_m],
+                          'area_m2':math.pi*design.mouth_radius_m**2})
+                    expected["mouth_interface"] = (mouth['center_m'], math.sqrt(mouth['area_m2']/math.pi), "radiation_interface")
                     for source in geometry["sources"]:
                         expected[source["id"] + "_front_source"] = (source["front_center_m"], source["radius_m"], "source")
                 else:

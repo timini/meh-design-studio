@@ -46,3 +46,25 @@ community feedback. Do not post the write-up in the Solana thread; link to it as
 context and credit. Choose the relevant loudspeaker/multiway forum category.
 Post after the work is ready using the maintainer's authenticated account; if no
 posting access is available, retain the completed draft and report that obstacle.
+
+## Updated practical target
+
+The latest maintainer instruction supersedes R1's original 240 Hz lower target:
+use approximately 350 Hz to meet an X1 sub/HD15 kick system, prioritising a
+continuous wide vocal midrange and a higher HF crossover (explore up to roughly
+5 kHz, subject to directivity, source validity and breakup constraints). The
+Funktion-One wide-mid approach is a functional reference; its Evolution X lists
+280 Hz–5 kHz for the mid band: https://funktion-one.com/product/evolution-x/.
+Do not assume an unmeasured HD15 assembly remains usable at 350 Hz.
+
+The objective is to rival Solana 2.0's relevant mid/high performance for a fraction
+of its price; this is a target requiring comparable measurements, not an existing
+claim. Keep GBP 300 per speaker as the current cost ceiling until superseded.
+The maintainer's amplifier supports 2-ohm loads. Optimise a single shared mid
+amplifier bank, including full parallel wiring where the predicted impedance and
+current remain compatible; preserve common voltage, sum all currents and model
+mutual loading. Nominal driver impedance alone is insufficient for that check.
+
+Amplifier preference: an inexpensive Sinbosen plate/DSP module. Select an exact
+module only after checking its per-channel 2-ohm rating, voltage/current limits,
+DSP capability, cooling and price; rack amplifier ratings are not transferable.
