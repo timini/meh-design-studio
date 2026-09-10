@@ -10,7 +10,14 @@ meh export-search runs/search --output horn-build.zip
 Run this against the original search directory while its referenced solver files
 remain available. The exporter verifies the saved winner, driver revisions, score,
 original evaluation and geometry before creating the ZIP. It refuses to replace an
-existing output file and publishes only a fully written bundle.
+existing output file and publishes only a fully written bundle. ZIP member timestamps
+and permissions are fixed, so repeated exports under the same runtime are byte-identical.
+
+New candidate scores bind the geometry manifest before the native evaluation. The
+exporter requires that saved identity as well as the declared file hashes. Older
+searches without this binding are rejected; their existing historical evidence and
+exports remain unchanged. Do not backfill a digest into old evidence and present
+it as an identity recorded at solve time.
 
 The ZIP contains:
 
@@ -26,7 +33,9 @@ The ZIP contains:
   preset; no frequency-dependent filters or absolute amplifier voltage are inferred.
 - `assembly.json`: material STL references, identity placement transforms and source
   locations. The material parts already share their assembled millimetre coordinate
-  frame; source locations retain their explicitly labelled metre units.
+  frame; source locations retain their explicitly labelled metre units. The throat
+  ideal piston is at the origin, moving along +Z, with no modelled rear boundary;
+  each side source retains its generated front/rear locations and motion axis.
 - `candidate.json`, `brief.json`, `score.json` and `bundle.json`: selected parameters,
   source records, inputs, score, runtime identity and per-file SHA-256 hashes.
 
@@ -37,5 +46,6 @@ and print qualification false. Synthetic drivers remain synthetic. Practical dri
 mounts, seals, supports, two-slicer checks and a physical build remain required.
 
 This implements the metadata/export portion of B06. It does not complete B06's
-manufacturing and slicer acceptance gate. The command has been exercised against
-the completed compact native search; no new acoustic solve was needed.
+manufacturing and slicer acceptance gate. The earlier prototype was exercised against the completed compact native search.
+The current geometry-binding requirement deliberately rejects that legacy search;
+new searches record the required identity during evaluation.

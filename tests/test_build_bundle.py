@@ -45,8 +45,13 @@ def saved_search(tmp_path, monkeypatch, count):
     meshio.write(geometry/'parts/tetra.stl',meshio.Mesh(np.array([[0.,0,0],[1.,0,0],[0,1.,0],[0,0,1.]]),
         [('triangle',np.array([[0,2,1],[0,1,3],[0,3,2],[1,2,3]]))]),binary=True)
     write(geometry/'geometry.json',{'status':'complete','units':{'cad_and_stl':'mm'},'design':winner['design'].model_dump(mode='json'),
-        'front_chamber_back_walls_verified':True,'sources':[{'id':n} for n in names],
+        'front_chamber_back_walls_verified':True,'sources':[{'id':n} for n in names[1:]],
         'material_volume_m3':{'tetra':1/6/1e9},'files':[{'path':'parts/tetra.stl','sha256':sha256(geometry/'parts/tetra.stl')}]})
+    score['geometry_manifest_sha256']=sha256(geometry/'geometry.json')
+    write(trial/'score.json',score)
+    result=json.loads((search/'search.json').read_text());row=score|{'status':'complete','index':0}
+    result.update(winner=row,trials=[row],winner_score_sha256=sha256(trial/'score.json'))
+    write(search/'search.json',result)
     return search
 
 
@@ -62,7 +67,12 @@ def test_bundle_counts_gains_units_and_hashes(tmp_path,monkeypatch,count):
         assert bom['total']==report['driver_cost'] and bom['scope']=='drivers_only'
         assert [c['gain'] for c in gains['channels']]==[1.]+[.5]*(count-1)
         assert not gains['hardware_preset'] and len(gains['channels'])==count
-        assert json.loads(z.read('assembly.json'))['units']=='mm'
+        assembly=json.loads(z.read('assembly.json'))
+        assert assembly['units']=='mm' and len(assembly['source_locations_m'])==count
+        throat=assembly['source_locations_m'][0]
+        assert throat['id']=='throat' and throat['front_center_m']==[0,0,0] and throat['motion_axis']==[0,0,1]
+        assert throat['rear_center_m'] is None
+        assert all(info.date_time==(1980,1,1,0,0,0) for info in z.infolist())
         assert all(hashlib.sha256(z.read(name)).hexdigest()==digest for name,digest in bundle['files_sha256'].items())
         assert not bundle['physical_validation'] and not bundle['electrical_validation']['passed']
     with pytest.raises(FileExistsError):export_search(search,output)
@@ -85,3 +95,33 @@ def test_cli_exports_bundle_and_reports_invalid_input(tmp_path,monkeypatch,capsy
     assert json.loads(capsys.readouterr().out)['status']=='complete'
     assert main(['export-search',str(tmp_path/'missing'),'--output',str(tmp_path/'missing.zip')])==2
     assert 'error' in json.loads(capsys.readouterr().err)
+
+
+def test_identical_search_exports_are_byte_identical(tmp_path,monkeypatch):
+    search=saved_search(tmp_path,monkeypatch,3)
+    first=export_search(search,tmp_path/'first.zip')
+    # A default writestr timestamp would change with this local clock.
+    monkeypatch.setattr(zipfile.time,'localtime',lambda *args:(2030,6,7,8,9,10,0,0,0))
+    second=export_search(search,tmp_path/'second.zip')
+    assert first['sha256']==second['sha256']
+
+
+@pytest.mark.parametrize('change',['locations','replacement_files','legacy'])
+def test_export_rejects_geometry_not_bound_at_search_completion(tmp_path,monkeypatch,change):
+    search=saved_search(tmp_path,monkeypatch,3);trial=search/'trial-000'
+    if change=='legacy':
+        score=json.loads((trial/'score.json').read_text());score.pop('geometry_manifest_sha256')
+        (trial/'score.json').write_text(json.dumps(score))
+        result=json.loads((search/'search.json').read_text());row=score|{'index':0,'status':'complete'}
+        result.update(winner=row,trials=[row],winner_score_sha256=sha256(trial/'score.json'))
+        (search/'search.json').write_text(json.dumps(result))
+    else:
+        geometry=trial/'geometry';p=geometry/'geometry.json';state=json.loads(p.read_text())
+        if change=='locations':state['sources'][0]['front_center_m']=[1,2,3]
+        else:
+            path=geometry/'parts/tetra.stl';mesh=meshio.read(path);mesh.points+=10
+            meshio.write(path,mesh,binary=True);state['files'][0]['sha256']=sha256(path)
+        p.write_text(json.dumps(state))
+    with pytest.raises(ValueError,match='not bound'):
+        export_search(search,tmp_path/'horn.zip')
+    assert not (tmp_path/'horn.zip').exists()

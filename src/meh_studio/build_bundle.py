@@ -23,6 +23,8 @@ def export_search(search: Path, output: Path) -> dict:
     trial = search / f"trial-{result['winner_index']:03d}"
     geometry = trial / 'geometry'
     geometry_bytes = (geometry / 'geometry.json').read_bytes()
+    if hashlib.sha256(geometry_bytes).hexdigest() != result['winner'].get('geometry_manifest_sha256'):
+        raise ValueError('geometry is not bound to the completed search; legacy searches cannot be exported')
     manifest = json.loads(geometry_bytes)
     if (manifest['design'] != candidate_record(winner)['design']
             or not manifest.get('front_chamber_back_walls_verified')):
@@ -54,11 +56,17 @@ def export_search(search: Path, output: Path) -> dict:
              'channels': [{'excitation_port_id': p['id'], 'component_id': p['component_id'],
                            'gain': 1.0 if p['component_id'] == 'component:throat' else gain,
                            'phase_deg': 0.0, 'delay_s': 0.0} for p in ports]}
+    side_locations = manifest['sources']
+    if len(side_locations)!=design.driver_count-1 or {f"component:{s['id']}" for s in side_locations} != expected-{'component:throat'}:
+        raise ValueError('geometry source placements are incomplete or inconsistent')
+    throat_location = {'id': 'throat', 'front_center_m': [0, 0, 0], 'rear_center_m': None,
+                       'motion_axis': [0, 0, 1], 'radius_m': design.throat_radius_m,
+                       'rear_load': 'none', 'kind': 'ideal_piston_interface'}
     assembly = {'units': 'mm', 'placement': 'parts already share assembled coordinates',
                 'parts': [{'file': 'geometry/' + row['file'],
                            'transform': [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]}
                           for row in export_checks['parts']],
-                'source_locations_m': manifest['sources'], 'hardware_fit_verified': False}
+                'source_locations_m': [throat_location, *side_locations], 'hardware_fit_verified': False}
     bundle = {'schema_version': 1, 'kind': 'experimental_search_build_bundle',
               'status': 'complete', 'print_qualified': False, 'physical_validation': False,
               'finalist_validation_included': False, 'search_winner_index': result['winner_index'],
@@ -73,10 +81,16 @@ def export_search(search: Path, output: Path) -> dict:
         staged = Path(temp.name)
     try:
         with zipfile.ZipFile(staged, 'w', zipfile.ZIP_DEFLATED) as archive:
+            def member(name):
+                info = zipfile.ZipInfo(name, date_time=(1980, 1, 1, 0, 0, 0))
+                info.compress_type = zipfile.ZIP_DEFLATED
+                info.create_system = 3
+                info.external_attr = 0o100644 << 16
+                return info
             def write(name, data):
                 if name in bundle['files_sha256']:
                     raise ValueError('duplicate bundle file')
-                archive.writestr(name, data)
+                archive.writestr(member(name), data)
                 bundle['files_sha256'][name] = hashlib.sha256(data).hexdigest()
             def write_json(name, data):
                 write(name, (json.dumps(data, indent=2, allow_nan=False) + '\n').encode())
@@ -107,7 +121,7 @@ def export_search(search: Path, output: Path) -> dict:
             if (load_completed_search(search)[0] != controls
                     or (geometry / 'geometry.json').read_bytes() != geometry_bytes):
                 raise ValueError('search or geometry changed during export')
-            archive.writestr('bundle.json', json.dumps(bundle, indent=2, allow_nan=False) + '\n')
+            archive.writestr(member('bundle.json'), json.dumps(bundle, indent=2, allow_nan=False) + '\n')
         digest = sha256(staged)
         os.link(staged, output)
         return {'status': 'complete', 'output': str(output), 'sha256': digest,
