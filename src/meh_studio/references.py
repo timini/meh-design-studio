@@ -59,6 +59,8 @@ def solve_driver_circuit(sources: tuple[SourceModel, ...], frequencies_hz,
     """Solve coupled linear electromechanical equations for prescribed voltages.
 
     Shapes: frequency (F,), voltage (F,D), mechanical load (F,D,D).
+    Source parameters and mechanical loads refer to physical diaphragm motion;
+    an optional ideal outlet field does not change this reference coordinate.
     A zero-voltage source remains connected and mechanically reactive.
     Open-circuit terminations require a different circuit formulation.
     """

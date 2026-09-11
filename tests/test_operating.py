@@ -41,7 +41,8 @@ def test_operating_rejects_missing_receiving_driver():
                              [[[1.],[1.]]],[[[1.],[1.]]],[4.,4.])
 
 
-def test_report_uses_manifest_coordinates_and_reorders_component_columns(tmp_path,monkeypatch):
+@pytest.mark.parametrize('transformed', [False, True])
+def test_report_uses_manifest_coordinates_and_reorders_component_columns(tmp_path,monkeypatch,source,transformed):
     import json
     import meh_studio.search_results as search_results
     import meh_studio.optimisation as optimisation
@@ -54,9 +55,20 @@ def test_report_uses_manifest_coordinates_and_reorders_component_columns(tmp_pat
     saved=({'search.json':'original'}, {'winner_index':0,'winner':{'drive_settings':settings}},None,None,None,.5)
     monkeypatch.setattr(search_results,'load_completed_search',lambda p:saved)
     monkeypatch.setattr(optimisation,'verified_assessment',lambda *a:{'checks':{'passed':False}})
-    (system_path/'project.blab.json').write_text(json.dumps({'physical_system':{
+    system = {
         'excitation_ports':[{'id':str(i),'component_id':c} for i,c in enumerate(ids)],
-        'components':[{'id':c,'parameters':{'re_ohm':4.}} for c in ids]}}))
+        'components':[{'id':c,'parameters':{'re_ohm':4.}} for c in ids]}
+    if transformed:
+        from meh_studio.domain import SourceModel
+        from meh_studio.generated_system import HornSources
+        physical = SourceModel.model_validate(source.model_dump() | {'ideal_outlet_area_m2': source.sd_m2/3})
+        (system_path/'sources.json').write_text(HornSources(throat=physical,side=source).model_dump_json())
+        system['components'][1]['parameters'] = physical.outlet_piston_parameters()
+        system['metadata'] = {'ideal_outlet_transforms': {'component:throat': {
+            'source_sha256':physical.content_hash, 'diaphragm_area_m2':physical.sd_m2,
+            'outlet_area_m2':physical.outlet_area_m2, 'outlet_velocity_per_diaphragm_velocity':3.,
+            'model':'lossless_zero_length_area_transformer'}}}
+    (system_path/'project.blab.json').write_text(json.dumps({'physical_system':system}))
     (root/'relocated-domains.json').write_text(json.dumps({'domains':[{
         'id':'observation:horizontal-polar','coordinates':{'angle_deg':'angles','points_m':'points'}}]}))
     np.savez(root/'relocated-domains.npz',angles=[0.],points=[[0.,0.,2.]])
@@ -73,6 +85,14 @@ def test_report_uses_manifest_coordinates_and_reorders_component_columns(tmp_pat
     weights=2*drive_weights([1000.],ids,settings)
     current=weights@np.array([[.25,.05],[.05,.5]])
     np.testing.assert_allclose(report['component_current_rms_a']['real'],current.real)
+    raw_velocity = weights @ np.array([[.002,.001],[.004,.003]])
+    physical_velocity = raw_velocity / np.array([1.,3. if transformed else 1.])
+    np.testing.assert_allclose(report['component_velocity_rms_m_s']['real'],physical_velocity.real)
+    np.testing.assert_allclose(report['component_peak_excursion_m'],np.sqrt(2)*abs(physical_velocity)/(2*np.pi*1000))
+    if transformed:
+        np.testing.assert_allclose(report['component_outlet_velocity_rms_m_s']['real'],raw_velocity.real)
+    else:
+        assert 'component_outlet_velocity_rms_m_s' not in report
     assert report['observation_coordinates']['points_m']==[0.,0.,2.]
     assert report['physical_validation'] is False
     assert report['electrical_validation']['passed'] is False

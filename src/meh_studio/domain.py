@@ -3,9 +3,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator, model_serializer
 
 Positive = Annotated[float, Field(strict=True, gt=0, allow_inf_nan=False)]
 Nonnegative = Annotated[float, Field(strict=True, ge=0, allow_inf_nan=False)]
@@ -131,6 +132,42 @@ class SourceModel(Record):
     sd_m2: Positive
     # Explicit dry mass only. Mms is not an accepted alias.
     provenance: Provenance
+    # Explicit lossless, zero-length transformer; this is not a phase-plug model.
+    ideal_outlet_area_m2: Positive | None = None
+
+    @model_serializer(mode='wrap')
+    def preserve_direct_piston_records(self, handler):
+        value = handler(self)
+        if self.ideal_outlet_area_m2 is None:
+            value.pop('ideal_outlet_area_m2', None)
+        return value
+
+    @property
+    def outlet_area_m2(self) -> float:
+        return self.sd_m2 if self.ideal_outlet_area_m2 is None else self.ideal_outlet_area_m2
+
+    @property
+    def outlet_velocity_ratio(self) -> float:
+        return self.sd_m2 / self.outlet_area_m2
+
+    def outlet_piston_parameters(self) -> dict:
+        """Circuit in the outlet-velocity coordinate; physical record stays intact."""
+        n = self.outlet_velocity_ratio
+        return {'re_ohm': self.re_ohm, 'le_h': self.le_h,
+                'bl_n_per_a': self.bl_n_a / n, 'mmd_kg': self.mmd_kg / n**2,
+                'cms_m_per_n': self.cms_m_n * n**2, 'rms_n_s_per_m': self.rms_ns_m / n**2}
+
+    @model_validator(mode='after')
+    def finite_outlet_transform(self):
+        if self.ideal_outlet_area_m2 is not None:
+            try:
+                values = self.outlet_piston_parameters()
+                if any(not math.isfinite(v) or (v <= 0 if k != 'le_h' else v < 0)
+                       for k, v in values.items()):
+                    raise ValueError('nonpositive or nonfinite transformed parameter')
+            except (ZeroDivisionError, OverflowError, ValueError) as exc:
+                raise ValueError('ideal outlet transform exceeds finite positive circuit range') from exc
+        return self
 
 
 class Qualification(Record):
