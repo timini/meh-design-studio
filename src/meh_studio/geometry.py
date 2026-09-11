@@ -25,6 +25,7 @@ class HornGeometry(Record):
     driver_axial_offset_m: Annotated[float, Field(strict=True,ge=-.5,le=.5)] = 0.
     entry_layout: Literal['opposed_pairs', 'four_driver_ring'] = 'opposed_pairs'
     profile_sections: tuple[ProfileSection, ...] = ()
+    profile_interpolation: Literal['legacy', 'periodic_cubic'] = 'legacy'
     port_radius_m: Positive
     port_length_m: Positive
     front_radius_m: Positive
@@ -44,6 +45,8 @@ class HornGeometry(Record):
             value.pop('driver_axial_offset_m',None)
         if not self.profile_sections:
             value.pop('profile_sections', None)
+        if self.profile_interpolation == 'legacy':
+            value.pop('profile_interpolation', None)
         if self.maximum_tetrahedra == 2_000_000:
             value.pop('maximum_tetrahedra', None)
         if self.maximum_exterior_triangles == 8000:

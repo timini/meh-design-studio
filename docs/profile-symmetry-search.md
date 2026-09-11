@@ -14,7 +14,8 @@ searches retain their previous control hashes and seeded proposal sequence.
 ```
 
 Place these controls inside the search brief's `evolution` object and supply a
-matching explicit seed geometry. The modes are:
+matching explicit seed geometry with `"profile_interpolation": "periodic_cubic"`.
+This geometry field selects a uniform periodic C2 cubic interpolant. The modes are:
 
 | Mode | Linked azimuthal control indices (0°, 45°, … 315°) | Shape freedom |
 | --- | --- | --- |
@@ -41,10 +42,22 @@ the four mid-excitation transfer contributions lost about 8.6 dB relative to the
 magnitude sum at the 20 m on-axis point. At 2 kHz the corresponding cancellation
 was only 0.25 dB, so symmetry cannot be assumed to cure the whole midband problem.
 These columns each include mutually induced driver motion; they are not isolated
-diaphagm radiation measurements. The diagnostic remains numerical and unqualified.
+diaphragm radiation measurements. The diagnostic remains numerical and unqualified.
 
 Tests retain an exact six-proposal legacy fingerprint, verify linked mutations
 and random exploration with replay, reject mismatched seeds, and compare a
 nonconical offspring's actual air and material CAD against a 90° rotation. A
 symmetry setting does not establish mesh symmetry, acoustic target compliance,
 physical source accuracy, commercial fit or print qualification.
+
+The interpolation choice is versioned in the geometry identity. `legacy` remains
+omitted from historical serialised designs and reproduces their existing CAD.
+The legacy kernel gives its periodic junction only C1 continuity; a direct CAD
+check found unequal horn extents and entry locations despite quarter-turn control
+values. A cyclic cubic system treats every control equivalently, avoiding that
+privileged seam. Archived failed CAD checks remain evidence of the old behaviour;
+invalid boolean-cut volumes from the diagnostic are not geometric error estimates.
+
+Changing interpolation creates a new physical model requiring a new mesh and
+solve. It does not repair or relabel an old simulation. The new method is also
+available for fully asymmetric profiles with `profile_symmetry: none`.

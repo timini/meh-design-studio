@@ -148,6 +148,7 @@ def test_default_symmetry_preserves_existing_seeded_search_identity():
 def symmetric_inputs(symmetry):
     brief,base,drivers=inputs()
     data=base.model_dump(mode='json')
+    data['profile_interpolation']='periodic_cubic'
     for section in data['profile_sections']:
         section['radial_scales']=[1.,1.1,1.,1.1,1.,1.1,1.,1.1]
     base=HornGeometry.model_validate(data)
@@ -206,3 +207,10 @@ def test_quarter_turn_offspring_changes_real_cad_and_preserves_ring_rotation():
         assert np.linalg.norm(centers-center,axis=1).min()<1e-9
     # Offspring are nonconical: their declared sections have nonuniform radial/axial controls.
     assert any(len(set(section.radial_scales))>1 for section in design.profile_sections)
+
+
+def test_symmetry_search_requires_geometry_to_declare_periodic_interpolation():
+    brief,base,drivers=symmetric_inputs('quarter_turn')
+    base=HornGeometry.model_validate(base.model_dump()|{'profile_interpolation':'legacy'})
+    with pytest.raises(ValueError,match='periodic_cubic'):
+        propose(brief,candidates(brief,base,drivers),[],[])

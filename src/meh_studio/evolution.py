@@ -68,6 +68,8 @@ def _profile_groups(symmetry):
 
 
 def validate_bounds(settings,design):
+    if settings.profile_symmetry != 'none' and design.profile_interpolation != 'periodic_cubic':
+        raise ValueError('symmetric profile search requires explicit periodic_cubic interpolation')
     for name,(low,high) in settings.geometry_bounds.items():
         if name.startswith('entry_fraction'):
             index=int(name[-1])
