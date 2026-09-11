@@ -26,8 +26,15 @@ conforming preserves the curved walls exactly and passes the existing topology,
 interface, volume and mesh limits. The [exponential-round native search](nonlinear-commercial-search.md)
 now completes both candidates and the selected export. Its seed remains better
 than its mutation, but both fail the 6 dB response screen (14.26 and 15.09 dB).
-The quadratic rounded-square case is in progress; the original failed preparations
-remain archived.
+The quadratic rounded-square seed completes all 15 frequencies but fails the
+response screen at 20.35 dB; its mutation exceeds the exterior mesh budget.
+Both searches, their selected exports and the failed preparations remain archived.
+
+[Tilted entries](tilted-mid-entries.md) now also complete a two-candidate native
+FP64 search and export. The selected mutation improves its synthetic four-frequency
+reference score, but fails the unchanged 2% rotation/axis-equality check, and both
+candidates fail the strict electrical reciprocity check. This extends the real
+geometry/solver workflow without establishing an accepted commercial design.
 
 [Adaptive search](adaptive-search.md) mutates profile and geometry controls using
 preceding simulated fitness, with periodic random exploration, bound checks and
