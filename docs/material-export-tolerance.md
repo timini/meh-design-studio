@@ -36,3 +36,27 @@ seals, structural strength, slicing, a printer or the horn's acoustic response.
 Retessellating material for an old experiment must be recorded as a separate
 derived export; it must not rewrite that experiment's geometry hashes or claim
 its native fields were generated from newer application code.
+
+## Retained concentric-entry experiment
+
+[The evidence report](../validation/evidence/concentric-overhang/report.json)
+preserves all 15 native frequencies from application source `ad0b400`, the
+original failed export and replay logs, and a separately derived material export
+from `91abae3`. Extract every `evidence-part-*.zip` into the same directory to
+reconstruct the archived paths; the report records every member's SHA-256.
+
+The native candidate has 19.21347 dB response variation against the declared
+6 dB limit. Its rotation check also fails: 2.64661% against 2%. Electrical
+consistency passes at the declared `1e-8` tolerance, independent projected
+pressure-force reconstruction has maximum relative residual `5.12e-15`, and
+the predicted parallel mid-bank impedance stays above 3.10835 ohms over the
+sampled frequencies. These results do not establish mesh convergence or
+physical acoustic accuracy.
+
+The corrected export retains exactly the same geometry in all 11 STEP files,
+verified by their semantic geometry hashes. All five material meshes pass the
+existing checks, with maximum STL/CAD volume error 0.04983%. Original experiment
+files remain unchanged. `derivation.json` records both source versions and the
+identity checks; no native simulation was rerun or attributed to the newer code.
+This is a separate corrected export, not a successful completed-search build
+bundle. Actual commercial driver fit and print qualification remain unresolved.
