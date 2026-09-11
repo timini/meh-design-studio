@@ -74,6 +74,26 @@ def mouth_face(design, air):
 
 def entry_support_radius(design, air, entry, axis):
     """Place freeform chambers outside the entire local horn envelope."""
+    if design.driver_tilt_deg:
+        from .cad_runtime import load_cadquery
+        cq = load_cadquery()
+        centre = cq.Vector(0, 0, entry * 1000)
+        direction = cq.Vector(*axis)
+        extent = air.BoundingBox().DiagonalLength + 100
+        # Clip to the complete circular chamber envelope, then measure support
+        # along its tilted axis. A radial/z bounding box would place the disk on
+        # the wrong plane and could leave its back wall inside the horn air.
+        envelope = cq.Solid.makeCylinder((design.front_radius_m + design.wall_m) * 1000,
+                                         2 * extent, centre - direction * extent, direction)
+        local = air.intersect(envelope)
+        if local.Volume() <= 0:
+            raise ValueError('tilted entry has no horn air within its chamber envelope')
+        radial_length = (axis[0] ** 2 + axis[1] ** 2) ** .5
+        tangent = cq.Vector(-axis[1] / radial_length, axis[0] / radial_length, 0)
+        local = local.rotate(centre.toTuple(), (centre + tangent).toTuple(), -design.driver_tilt_deg)
+        box = local.BoundingBox()
+        return (box.xmax if axis[0] > 0 else -box.xmin if axis[0] < 0
+                else box.ymax if axis[1] > 0 else -box.ymin) / 1000
     if not design.profile_sections:
         return design.throat_radius_m+(design.mouth_radius_m-design.throat_radius_m)*entry/design.length_m
     from .cad_runtime import load_cadquery

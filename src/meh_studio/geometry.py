@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 from pathlib import Path
 from typing import Annotated, Literal
 
@@ -23,6 +24,7 @@ class HornGeometry(Record):
     wall_m: Positive
     entry_positions_m: tuple[Positive, ...]
     driver_axial_offset_m: Annotated[float, Field(strict=True,ge=-.5,le=.5)] = 0.
+    driver_tilt_deg: Annotated[float, Field(strict=True, ge=0, le=60)] = 0.
     entry_layout: Literal['opposed_pairs', 'four_driver_ring'] = 'opposed_pairs'
     profile_sections: tuple[ProfileSection, ...] = ()
     profile_interpolation: Literal['legacy', 'periodic_cubic'] = 'legacy'
@@ -43,6 +45,8 @@ class HornGeometry(Record):
             value.pop('entry_layout', None)
         if self.driver_axial_offset_m == 0:
             value.pop('driver_axial_offset_m',None)
+        if self.driver_tilt_deg == 0:
+            value.pop('driver_tilt_deg', None)
         if not self.profile_sections:
             value.pop('profile_sections', None)
         if self.profile_interpolation == 'legacy':
@@ -64,13 +68,15 @@ class HornGeometry(Record):
             raise ValueError("mouth must exceed throat radius")
         if self.front_radius_m <= self.port_radius_m:
             raise ValueError("front chamber radius must exceed port radius")
+        if self.driver_tilt_deg and self.driver_axial_offset_m:
+            raise ValueError('tilted entries currently require concentric driver and port axes')
         if abs(self.driver_axial_offset_m)+self.port_radius_m >= self.front_radius_m:
             raise ValueError('eccentric port must fit inside the front chamber face')
         margin = self.front_radius_m + self.wall_m
         flare_slope = (self.mouth_radius_m - self.throat_radius_m) / self.length_m
-        if not self.profile_sections and self.wall_m + self.port_length_m <= flare_slope * margin:
+        if not self.driver_tilt_deg and not self.profile_sections and self.wall_m + self.port_length_m <= flare_slope * margin:
             raise ValueError("entry chamber envelope is buried by the horn flare")
-        if self.entry_layout == 'four_driver_ring':
+        if self.entry_layout == 'four_driver_ring' and not self.driver_tilt_deg:
             radius = self.throat_radius_m + flare_slope * (self.entry_positions_m[0]+self.driver_axial_offset_m)
             if radius + self.port_length_m <= margin:
                 raise ValueError('adjacent ring chamber envelopes overlap')
@@ -104,10 +110,14 @@ class HornGeometry(Record):
 
     @property
     def entry_sites(self):
-        """Canonical source identities and outward radial axes used by CAD and solver."""
+        """Canonical source identities and outward axes used by CAD and solver."""
         directions = [('positive', (1, 0, 0)), ('negative', (-1, 0, 0))]
         if self.entry_layout == 'four_driver_ring':
             directions += [('positive_y', (0, 1, 0)), ('negative_y', (0, -1, 0))]
+        if self.driver_tilt_deg:
+            angle = math.radians(self.driver_tilt_deg)
+            directions = [(name, (x * math.cos(angle), y * math.cos(angle), -math.sin(angle)))
+                          for name, (x, y, _) in directions]
         return [(f'entry_{index}_{side}', entry, axis)
                 for index, entry in enumerate(self.entry_positions_m)
                 for side, axis in directions]
@@ -133,9 +143,14 @@ def build_geometry(design: HornGeometry):
         diaphragm = duct_end + design.front_depth_m * mm
         direction = cq.Vector(*axis)
         def cylinder(radius, start, depth, axial=z):
-            return cq.Solid.makeCylinder(radius, depth, cq.Vector(axis[0] * start, axis[1] * start, axial), direction)
+            return cq.Solid.makeCylinder(radius, depth, cq.Vector(axis[0] * start, axis[1] * start, axial + axis[2] * start), direction)
         tube = cylinder(design.port_radius_m * mm, 0, duct_end)
         chamber = cylinder(design.front_radius_m * mm, duct_end, design.front_depth_m * mm,driver_z)
+        if design.driver_tilt_deg:
+            envelope = cylinder(design.front_radius_m * mm + wall, duct_end - wall,
+                                design.front_depth_m * mm + 2 * wall, driver_z).BoundingBox()
+            if envelope.zmin <= 0 or envelope.zmax >= length:
+                raise ValueError('tilted front chamber must clear throat and mouth planes')
         front_air = front_air.fuse(tube, chamber)
         material = material.fuse(
             cylinder(design.port_radius_m * mm + wall, 0, duct_end + wall),
@@ -148,8 +163,8 @@ def build_geometry(design: HornGeometry):
                             design.rear_depth_m * mm + wall,driver_z).cut(rear_air)
         air_regions[f"rear_{label}"] = rear_air
         parts[f"rear_cup_{label}"] = rear_cup
-        sources.append({"id": label, "front_center_m": [axis[0] * diaphragm / mm, axis[1] * diaphragm / mm, driver_entry],
-                        "rear_center_m": [axis[0] * rear_start / mm, axis[1] * rear_start / mm, driver_entry],
+        sources.append({"id": label, "front_center_m": [axis[0] * diaphragm / mm, axis[1] * diaphragm / mm, driver_entry + axis[2] * diaphragm / mm],
+                        "rear_center_m": [axis[0] * rear_start / mm, axis[1] * rear_start / mm, driver_entry + axis[2] * rear_start / mm],
                         "motion_axis": list(axis), "radius_m": design.front_radius_m})
     parts["horn"] = material.cut(front_air).clean()
     air_regions["front"] = front_air.clean()
@@ -157,7 +172,7 @@ def build_geometry(design: HornGeometry):
         if not solid.isValid() or solid.Volume() <= 0 or len(solid.Solids()) != 1:
             raise ValueError(f"geometry kernel produced an invalid or disconnected solid: {name}")
     verify_front_chamber_back_walls(design, front_air, parts["horn"], unported_air=unported_air)
-    if design.profile_sections or design.driver_axial_offset_m:
+    if design.profile_sections or design.driver_axial_offset_m or design.driver_tilt_deg:
         for air in air_regions.values():
             if any(air.intersect(part).Volume() > 1e-3 for part in parts.values()):
                 raise ValueError('freeform air intersects material')
@@ -173,13 +188,13 @@ def verify_front_chamber_back_walls(design, front_air, horn, *, unported_air=Non
     cq=load_cadquery();mm=1000.;wall=design.wall_m*mm
     # Stay away from coincident faces while testing almost the entire wall thickness.
     inset=min(wall/1000.,1e-3);depth=wall-2*inset;checks=[]
-    if unported_air is None and design.profile_sections:
+    if unported_air is None and (design.profile_sections or design.driver_tilt_deg):
         unported_air=horn_solids(design)[0]
     for label,entry,axis in design.entry_sites:
         driver_entry=entry+design.driver_axial_offset_m
         local_radius=entry_support_radius(design,unported_air,driver_entry,axis)
         start=(local_radius+design.port_length_m)*mm+inset
-        nominal=cq.Solid.makeCylinder(design.front_radius_m*mm,depth,cq.Vector(axis[0]*start,axis[1]*start,driver_entry*mm),cq.Vector(*axis))
+        nominal=cq.Solid.makeCylinder(design.front_radius_m*mm,depth,cq.Vector(axis[0]*start,axis[1]*start,driver_entry*mm + axis[2]*start),cq.Vector(*axis))
         # The port and any intended intersection with horn air remain open.
         required=nominal.cut(front_air);volume=required.Volume()
         missing=required.cut(horn).Volume()
