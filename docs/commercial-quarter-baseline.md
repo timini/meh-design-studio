@@ -3,7 +3,8 @@
 The public-driver seed now completes generated geometry, native coupled FEM/BEM
 simulation and DSP scoring from 350 to 7,500 Hz. It does **not** meet the response
 or upper-band numerical consistency targets. This is the completed baseline of
-the twelve-proposal search, not its selected final design.
+the [now-completed twelve-proposal search](commercial-quarter-search.md), not its
+selected final design.
 
 ![Completed baseline response, rotational consistency and parallel-bank impedance](assets/commercial-quarter-baseline.png)
 
