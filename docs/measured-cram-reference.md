@@ -78,3 +78,64 @@ comparison plot, reinspection, runners, hashes and upstream licence. The origina
 failed evaluation remains failed. Local verification passed 758 tests, with
 three platform-dependent skips and 26 CAD tests deselected; the meaningful code
 increment received one bounded review with no material findings.
+
+## Separate rigid-ground experiment
+
+A new calculation from application source
+`93344da6eb9f944541be07c979f9f6d721414169` tests whether ground loading explains
+the earlier shape mismatch. It places the cabinet's minimum-Y base on `y=0`,
+its maximum-Z front on `z=0`, and the microphone at `[0, 0, 10]` metres.
+The existing x reflection reconstructs the cabinet; an added y reflection
+represents an infinite rigid ground plane. Pressure-acoustic symmetry has this
+sound-hard interpretation; see the [COMSOL BEM boundary-condition reference](https://doc.comsol.com/6.3/doc/com.comsol.help.aco/aco_ug_pressure.05.078.html).
+
+Only 133 rigid bottom facets are removed from the BEM surface. Every retained
+facet's coordinates and physical tag are verified unchanged before applying the
+same rigid translation to both FEM and BEM meshes. The first attempt retained
+62 unused BEM vertices and failed a singular factorisation before producing any
+frequency result. A separate retry removes those unused vertices, remaps their
+connectivity and proves that the retained facets are unchanged. It completes all
+nine frequencies with 1,905 BEM triangles and the original 81,691 tetrahedra.
+The failed attempt and its controls remain preserved. A bounded review
+independently identified the unused-vertex problem addressed by the retry.
+
+The two real drivers each have a ground image. The native geometric model thus
+counts four coils, but the images are a boundary condition, not extra physical
+hardware. The microphone pressure is the sum of the two independent 2.83 V
+excitation bases divided by 2.83, with no extra image-count multiplier. Only the
+on-ground on-axis observation is compared; below-ground polar coordinates are
+mathematical image extensions and are not physical measurements.
+
+No driver circuit, damping, cabinet dimension or frequency-dependent correction
+is fitted. The original nine frequencies, three level-offset calibration points,
+six held-out points and ±3 dB limit remain unchanged.
+
+| Held-out frequency (Hz) | Ground-model minus measured (dB), offset applied |
+| --- | ---: |
+| 63 | −0.068 |
+| 80 | +1.223 |
+| 200 | +4.848 |
+| 250 | +4.250 |
+| 315 | −3.286 |
+| 400 | −1.291 |
+
+Maximum held-out error is **4.848 dB**, RMS **3.042 dB**; three of six samples
+still fail ±3 dB. The calibration offset is +3.647 dB. Ground loading reduces
+the earlier maximum error only slightly, from 5.193 dB, and does not resolve the
+mismatch. The electrical reciprocity check also fails its unchanged `1e-8`
+limit, reaching `1.032e-4` at 125 Hz; voltage-equation residuals remain below
+`3.3e-16`. Neither comparison passes qualification.
+
+![Conditional ground-plane comparison](assets/cram-ground-reference.png)
+
+The floor is assumed perfectly rigid and the cabinet upright on its base. The
+measurement notes do not establish floor impedance, exact pose, feet, microphone
+capsule height or build revision. This is therefore a declared reference-condition
+hypothesis, not fully matched physical validation. It does not qualify the MEH,
+absolute sensitivity, phase or source behaviour.
+
+[Ground-reference evidence](../validation/evidence/cram-ground-reference/report.json)
+preserves both attempts, original input files, nine-frequency native fields,
+controls, comparison code, upstream licence and the inspected figure. All 75
+archive members pass SHA-256 and CRC checks. The 11,246,675-byte archive SHA-256 is
+`deb8945ceef4a3f892e863a4b663f7cc0df10fe7469f08a07b58496a75296ecd`.
