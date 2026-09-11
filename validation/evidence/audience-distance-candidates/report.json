@@ -1,0 +1,837 @@
+{
+  "status": "complete",
+  "controls_sha256": "20be415c771a3dd3348af133e412d6f802d7b4ebd0c6a4f5970dfdaa3808537f",
+  "new_acoustic_objectives": {
+    "schema_version": 1,
+    "observation_distance_m": 20.0,
+    "mid_highpass_hz": 350.0,
+    "upper_crossovers_hz": [
+      3000.0,
+      4000.0,
+      5000.0
+    ],
+    "mid_polarities": [
+      1,
+      -1
+    ],
+    "hf_delays_s": [
+      0.0,
+      0.00015,
+      0.0003,
+      0.00045,
+      0.0006,
+      0.00075,
+      0.0009
+    ],
+    "horizontal_coverage_deg": 90.0,
+    "vertical_coverage_deg": 90.0,
+    "directivity_weight": 0.5,
+    "minimum_bank_impedance_ohm": 2.0,
+    "sphere": {
+      "schema_version": 1,
+      "angle_precision_deg": 10.0,
+      "control_from_hz": 1000.0,
+      "rear_attenuation_db": 30.0
+    },
+    "acoustic_handover_hz": [
+      3000.0,
+      5000.0
+    ]
+  },
+  "trials": [
+    {
+      "trial_index": 0,
+      "reproduction": {
+        "maximum_magnitude_change_db": 5.17719399795169e-07,
+        "maximum_phase_change_deg": 1.3169104704502388e-06,
+        "excluded_samples": 1,
+        "total_samples": 5840,
+        "passed": true
+      },
+      "original_kernel_replay_passed": true,
+      "original_1m_score": {
+        "ripple_db": 8.248622717820128,
+        "directivity_error_db": 6.743430777548779,
+        "acoustic_objective": 11.620338106594517,
+        "drive_settings": {
+          "side_gain": 0.2,
+          "mid_highpass_hz": 350.0,
+          "upper_crossover_hz": 3000.0,
+          "mid_polarity": 1,
+          "hf_delay_s": 0.00075,
+          "filter": "analogue_lr4",
+          "phasor_convention": "exp(-i omega t)"
+        },
+        "objective": 12.055795158604678,
+        "build_cost": {
+          "basis": "CAD_material_volume_with_declared_allowances",
+          "driver_cost": 180.0,
+          "material_volume_m3": 0.001077519324397003,
+          "solid_material_mass_kg": 1.3684495419841938,
+          "allowed_material_mass_kg": 1.6421394503810325,
+          "material_cost": 26.27423120609652,
+          "other_cost_allowance": 55.0,
+          "estimated_total_cost": 261.2742312060965,
+          "maximum_total_cost": 300.0,
+          "within_budget": true,
+          "slicer_verified": false,
+          "price_provenance": "declared_search_brief",
+          "limitations": [
+            "Nominal solid material and process allowance; no slicer or fabrication qualification",
+            "Only listed CAD parts, drivers and declared other allowance are costed"
+          ]
+        }
+      },
+      "20m_original_dsp": {
+        "ripple_db": 8.903753619023226,
+        "directivity_error_db": 6.992139173627611,
+        "acoustic_objective": 12.39982320583703,
+        "drive_settings": {
+          "side_gain": 0.2,
+          "mid_highpass_hz": 350.0,
+          "upper_crossover_hz": 3000.0,
+          "mid_polarity": 1,
+          "hf_delay_s": 0.00075,
+          "filter": "analogue_lr4",
+          "phasor_convention": "exp(-i omega t)"
+        },
+        "relative_response_db": [
+          -10.018107238293318,
+          -4.0936995747490945,
+          -0.9265956320040658,
+          -5.694855065839497,
+          -3.9897529868012294,
+          -7.630255297817894,
+          -8.903920970119351,
+          0.0
+        ],
+        "target_residual_db": [
+          -3.997507325013692,
+          -3.5671208003021104,
+          -0.8639638505330665,
+          -5.686712469214089,
+          -3.9881439675533095,
+          -7.629746161836226,
+          -8.903712424412724,
+          4.119461050226098e-05
+        ],
+        "acoustic_handover": {
+          "passed": false,
+          "definition": "on-axis pressure grouped by excitation channel, including mutually induced driver motion",
+          "mid_dominant_through_hz": 3000.0,
+          "hf_dominant_from_hz": 5000.0,
+          "frequencies_hz": [
+            350.0,
+            700.0,
+            1200.0,
+            2000.0,
+            3000.0,
+            4000.0,
+            5000.0,
+            7500.0
+          ],
+          "mid_over_hf_db": [
+            83.51571537116826,
+            52.6851719703201,
+            29.328923885532674,
+            -3.216043664046735,
+            -12.930763562891734,
+            -21.905025631111812,
+            -31.329775227722273,
+            -59.7152402002303
+          ],
+          "ratio_display_clip_db": 120.0,
+          "mid_channel_null": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "hf_channel_null": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "mid_dominance_failed_hz": [
+            2000.0,
+            3000.0
+          ],
+          "hf_dominance_failed_hz": [],
+          "exact_crossover_frequency_inferred": false,
+          "off_axis_handover_validated": false
+        }
+      },
+      "20m_handover_constrained_selection": {
+        "selected": {
+          "ripple_db": 12.362518318849649,
+          "directivity_error_db": 6.502977324627575,
+          "acoustic_objective": 15.614006981163437,
+          "drive_settings": {
+            "side_gain": 0.2,
+            "mid_highpass_hz": 350.0,
+            "upper_crossover_hz": 5000.0,
+            "mid_polarity": 1,
+            "hf_delay_s": 0.0009,
+            "filter": "analogue_lr4",
+            "phasor_convention": "exp(-i omega t)"
+          },
+          "relative_response_db": [
+            -9.348455291988582,
+            -3.4203280252401624,
+            0.0,
+            -11.099466365808128,
+            -5.650820555891838,
+            -11.25768108418313,
+            -12.300095083085276,
+            -0.6760056324759267
+          ],
+          "target_residual_db": [
+            -3.327855378708956,
+            -2.8937492507931784,
+            0.06263178147099939,
+            -11.09132376918272,
+            -5.649211536643918,
+            -11.257171948201462,
+            -12.299886537378649,
+            -0.6759644378654245
+          ],
+          "acoustic_handover": {
+            "passed": true,
+            "definition": "on-axis pressure grouped by excitation channel, including mutually induced driver motion",
+            "mid_dominant_through_hz": 3000.0,
+            "hf_dominant_from_hz": 5000.0,
+            "frequencies_hz": [
+              350.0,
+              700.0,
+              1200.0,
+              2000.0,
+              3000.0,
+              4000.0,
+              5000.0,
+              7500.0
+            ],
+            "mid_over_hf_db": [
+              101.26361534047678,
+              70.4330719396286,
+              47.07682385484118,
+              14.531856305261769,
+              4.81713640641678,
+              -4.157125661803307,
+              -13.581875258413758,
+              -41.96734023092179
+            ],
+            "ratio_display_clip_db": 120.0,
+            "mid_channel_null": [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "hf_channel_null": [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "mid_dominance_failed_hz": [],
+            "hf_dominance_failed_hz": [],
+            "exact_crossover_frequency_inferred": false,
+            "off_axis_handover_validated": false
+          },
+          "objective": 16.0494640331736
+        },
+        "handover_rejections": 140,
+        "options": 252
+      },
+      "parallel_mid_bank": {
+        "wiring": "parallel",
+        "amplifier_channels_for_mids": 1,
+        "hf_termination": "zero-voltage ideal amplifier",
+        "mid_count": 4,
+        "impedance_real_ohm": [
+          3.3736212690986376,
+          3.1625304463159014,
+          3.134388673728681,
+          3.0844761146179485,
+          3.107999081360515,
+          3.0762367431217488,
+          3.077397289072937,
+          3.075205419103744
+        ],
+        "impedance_imag_ohm": [
+          0.4589024540683741,
+          -0.06068703589190442,
+          -0.3737503399255856,
+          -0.547323952422387,
+          -1.0734039619722024,
+          -1.4747588068929955,
+          -1.8124715297444713,
+          -2.905484611312252
+        ],
+        "minimum_impedance_magnitude_ohm": 3.132659638477168,
+        "maximum_current_per_volt_a": 0.3192175708198274
+      },
+      "projection_result_sha256": "02e9ec6e223bc913b3d0fb1bc8a96f9c554aa0bb165022a44c00497e33749a2a"
+    },
+    {
+      "trial_index": 2,
+      "reproduction": {
+        "maximum_magnitude_change_db": 5.17719399795169e-07,
+        "maximum_phase_change_deg": 1.3246452681414667e-06,
+        "excluded_samples": 0,
+        "total_samples": 5840,
+        "passed": true
+      },
+      "original_kernel_replay_passed": true,
+      "original_1m_score": {
+        "ripple_db": 10.537155029385186,
+        "directivity_error_db": 7.166906224111281,
+        "acoustic_objective": 14.120608141440826,
+        "drive_settings": {
+          "side_gain": 0.1,
+          "mid_highpass_hz": 350.0,
+          "upper_crossover_hz": 3000.0,
+          "mid_polarity": -1,
+          "hf_delay_s": 0.0,
+          "filter": "analogue_lr4",
+          "phasor_convention": "exp(-i omega t)"
+        },
+        "objective": 14.556619697066465,
+        "build_cost": {
+          "basis": "CAD_material_volume_with_declared_allowances",
+          "driver_cost": 180.0,
+          "material_volume_m3": 0.0010911636062739074,
+          "solid_material_mass_kg": 1.3857777799678623,
+          "allowed_material_mass_kg": 1.6629333359614347,
+          "material_cost": 26.606933375382955,
+          "other_cost_allowance": 55.0,
+          "estimated_total_cost": 261.60693337538294,
+          "maximum_total_cost": 300.0,
+          "within_budget": true,
+          "slicer_verified": false,
+          "price_provenance": "declared_search_brief",
+          "limitations": [
+            "Nominal solid material and process allowance; no slicer or fabrication qualification",
+            "Only listed CAD parts, drivers and declared other allowance are costed"
+          ]
+        }
+      },
+      "20m_original_dsp": {
+        "ripple_db": 10.803334885053092,
+        "directivity_error_db": 7.435723284730675,
+        "acoustic_objective": 14.521196527418429,
+        "drive_settings": {
+          "side_gain": 0.1,
+          "mid_highpass_hz": 350.0,
+          "upper_crossover_hz": 3000.0,
+          "mid_polarity": -1,
+          "hf_delay_s": 0.0,
+          "filter": "analogue_lr4",
+          "phasor_convention": "exp(-i omega t)"
+        },
+        "relative_response_db": [
+          -16.823893603722215,
+          -10.318617797197307,
+          -4.102834463138851,
+          -9.536213630133847,
+          -2.960946587318456,
+          -6.733325508018031,
+          -10.31693540371164,
+          0.0
+        ],
+        "target_residual_db": [
+          -10.80329369044259,
+          -9.792039022750323,
+          -4.040202681667852,
+          -9.52807103350844,
+          -2.959337568070536,
+          -6.732816372036363,
+          -10.316726858005012,
+          4.119461050226098e-05
+        ],
+        "acoustic_handover": {
+          "passed": false,
+          "definition": "on-axis pressure grouped by excitation channel, including mutually induced driver motion",
+          "mid_dominant_through_hz": 3000.0,
+          "hf_dominant_from_hz": 5000.0,
+          "frequencies_hz": [
+            350.0,
+            700.0,
+            1200.0,
+            2000.0,
+            3000.0,
+            4000.0,
+            5000.0,
+            7500.0
+          ],
+          "mid_over_hf_db": [
+            78.06595908674053,
+            47.7320044605254,
+            28.53407602674845,
+            -15.589091513304494,
+            -27.86137095200929,
+            -31.56638596292435,
+            -41.783007780607505,
+            -70.35232839084327
+          ],
+          "ratio_display_clip_db": 120.0,
+          "mid_channel_null": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "hf_channel_null": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "mid_dominance_failed_hz": [
+            2000.0,
+            3000.0
+          ],
+          "hf_dominance_failed_hz": [],
+          "exact_crossover_frequency_inferred": false,
+          "off_axis_handover_validated": false
+        }
+      },
+      "20m_handover_constrained_selection": {
+        "selected": {
+          "ripple_db": 22.69222598529061,
+          "directivity_error_db": 6.90674707675617,
+          "acoustic_objective": 26.145599523668693,
+          "drive_settings": {
+            "side_gain": 0.4,
+            "mid_highpass_hz": 350.0,
+            "upper_crossover_hz": 5000.0,
+            "mid_polarity": -1,
+            "hf_delay_s": 0.00075,
+            "filter": "analogue_lr4",
+            "phasor_convention": "exp(-i omega t)"
+          },
+          "relative_response_db": [
+            -12.654303968073258,
+            -6.162729328542744,
+            0.0,
+            -22.63773680044502,
+            -16.744060331686022,
+            -18.08949419351602,
+            -21.20598176636897,
+            -9.140284569116062
+          ],
+          "target_residual_db": [
+            -6.633704054793632,
+            -5.63615055409576,
+            0.06263178147099939,
+            -22.62959420381961,
+            -16.742451312438103,
+            -18.08898505753435,
+            -21.205773220662344,
+            -9.14024337450556
+          ],
+          "acoustic_handover": {
+            "passed": true,
+            "definition": "on-axis pressure grouped by excitation channel, including mutually induced driver motion",
+            "mid_dominant_through_hz": 3000.0,
+            "hf_dominant_from_hz": 5000.0,
+            "frequencies_hz": [
+              350.0,
+              700.0,
+              1200.0,
+              2000.0,
+              3000.0,
+              4000.0,
+              5000.0,
+              7500.0
+            ],
+            "mid_over_hf_db": [
+              107.85505888260829,
+              77.52110425639316,
+              58.32317582261619,
+              14.200008282563257,
+              1.9277288438584694,
+              -1.7772861670565954,
+              -11.993907984739742,
+              -40.5632285949755
+            ],
+            "ratio_display_clip_db": 120.0,
+            "mid_channel_null": [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "hf_channel_null": [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "mid_dominance_failed_hz": [],
+            "hf_dominance_failed_hz": [],
+            "exact_crossover_frequency_inferred": false,
+            "off_axis_handover_validated": false
+          },
+          "objective": 26.581611079294333
+        },
+        "handover_rejections": 168,
+        "options": 252
+      },
+      "parallel_mid_bank": {
+        "wiring": "parallel",
+        "amplifier_channels_for_mids": 1,
+        "hf_termination": "zero-voltage ideal amplifier",
+        "mid_count": 4,
+        "impedance_real_ohm": [
+          3.4084205141660213,
+          3.184846531434857,
+          3.219362798356096,
+          3.079772362060097,
+          3.0902269974273375,
+          3.0759849736465905,
+          3.077257612084328,
+          3.0751915213692538
+        ],
+        "impedance_imag_ohm": [
+          0.4680941058256279,
+          -0.08450091443337608,
+          -0.4327681796571124,
+          -0.5884219313284031,
+          -1.0602114015476263,
+          -1.4812645902085533,
+          -1.814432570159843,
+          -2.905871292964089
+        ],
+        "minimum_impedance_magnitude_ohm": 3.1354805327696544,
+        "maximum_current_per_volt_a": 0.31893038070202046
+      },
+      "projection_result_sha256": "b19a8bd5866b9ff93382be6c5dcefd45d77478772f7636f14c9ece9321dbfb9a"
+    },
+    {
+      "trial_index": 7,
+      "reproduction": {
+        "maximum_magnitude_change_db": 5.17719399795169e-07,
+        "maximum_phase_change_deg": 1.3549594086725847e-06,
+        "excluded_samples": 1,
+        "total_samples": 5840,
+        "passed": true
+      },
+      "original_kernel_replay_passed": true,
+      "original_1m_score": {
+        "ripple_db": 7.346431320132774,
+        "directivity_error_db": 6.412328622339901,
+        "acoustic_objective": 10.552595631302724,
+        "drive_settings": {
+          "side_gain": 0.2,
+          "mid_highpass_hz": 350.0,
+          "upper_crossover_hz": 3000.0,
+          "mid_polarity": 1,
+          "hf_delay_s": 0.00075,
+          "filter": "analogue_lr4",
+          "phasor_convention": "exp(-i omega t)"
+        },
+        "objective": 10.988101881147923,
+        "build_cost": {
+          "basis": "CAD_material_volume_with_declared_allowances",
+          "driver_cost": 180.0,
+          "material_volume_m3": 0.0010787299010465831,
+          "solid_material_mass_kg": 1.3699869743291606,
+          "allowed_material_mass_kg": 1.6439843691949927,
+          "material_cost": 26.303749907119883,
+          "other_cost_allowance": 55.0,
+          "estimated_total_cost": 261.3037499071199,
+          "maximum_total_cost": 300.0,
+          "within_budget": true,
+          "slicer_verified": false,
+          "price_provenance": "declared_search_brief",
+          "limitations": [
+            "Nominal solid material and process allowance; no slicer or fabrication qualification",
+            "Only listed CAD parts, drivers and declared other allowance are costed"
+          ]
+        }
+      },
+      "20m_original_dsp": {
+        "ripple_db": 6.942082806759374,
+        "directivity_error_db": 6.353039147508561,
+        "acoustic_objective": 10.118602380513654,
+        "drive_settings": {
+          "side_gain": 0.2,
+          "mid_highpass_hz": 350.0,
+          "upper_crossover_hz": 3000.0,
+          "mid_polarity": 1,
+          "hf_delay_s": 0.00075,
+          "filter": "analogue_lr4",
+          "phasor_convention": "exp(-i omega t)"
+        },
+        "relative_response_db": [
+          -7.592565681063719,
+          -1.5666130673878476,
+          -0.31549994838547146,
+          -3.5846540410951144,
+          0.0,
+          -6.940982923493122,
+          -4.511760178625819,
+          -1.5994587050318954
+        ],
+        "target_residual_db": [
+          -1.5719657677840928,
+          -1.0400342929408635,
+          -0.25286816691447206,
+          -3.576511444469707,
+          0.0016090192479197238,
+          -6.940473787511454,
+          -4.511551632919192,
+          -1.599417510421393
+        ],
+        "acoustic_handover": {
+          "passed": false,
+          "definition": "on-axis pressure grouped by excitation channel, including mutually induced driver motion",
+          "mid_dominant_through_hz": 3000.0,
+          "hf_dominant_from_hz": 5000.0,
+          "frequencies_hz": [
+            350.0,
+            700.0,
+            1200.0,
+            2000.0,
+            3000.0,
+            4000.0,
+            5000.0,
+            7500.0
+          ],
+          "mid_over_hf_db": [
+            84.8956100183773,
+            53.41810567903739,
+            28.87752625945206,
+            0.5035750315863918,
+            -20.08884336423469,
+            -16.274638033511057,
+            -29.596520236731703,
+            -66.51056151625184
+          ],
+          "ratio_display_clip_db": 120.0,
+          "mid_channel_null": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "hf_channel_null": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "mid_dominance_failed_hz": [
+            3000.0
+          ],
+          "hf_dominance_failed_hz": [],
+          "exact_crossover_frequency_inferred": false,
+          "off_axis_handover_validated": false
+        }
+      },
+      "20m_handover_constrained_selection": {
+        "selected": {
+          "ripple_db": 11.766761964174925,
+          "directivity_error_db": 7.2530122668945625,
+          "acoustic_objective": 15.393268097622206,
+          "drive_settings": {
+            "side_gain": 0.4,
+            "mid_highpass_hz": 350.0,
+            "upper_crossover_hz": 5000.0,
+            "mid_polarity": -1,
+            "hf_delay_s": 0.00075,
+            "filter": "analogue_lr4",
+            "phasor_convention": "exp(-i omega t)"
+          },
+          "relative_response_db": [
+            -7.595137409450913,
+            -1.5673137740905063,
+            0.0,
+            -8.444059190170863,
+            -10.74864722618867,
+            -9.35385921391468,
+            -11.704338728410553,
+            -8.955545748642406
+          ],
+          "target_residual_db": [
+            -1.5745374961712875,
+            -1.0407349996435222,
+            0.06263178147099939,
+            -8.435916593545455,
+            -10.74703820694075,
+            -9.353350077933012,
+            -11.704130182703926,
+            -8.955504554031904
+          ],
+          "acoustic_handover": {
+            "passed": true,
+            "definition": "on-axis pressure grouped by excitation channel, including mutually induced driver motion",
+            "mid_dominant_through_hz": 3000.0,
+            "hf_dominant_from_hz": 5000.0,
+            "frequencies_hz": [
+              350.0,
+              700.0,
+              1200.0,
+              2000.0,
+              3000.0,
+              4000.0,
+              5000.0,
+              7500.0
+            ],
+            "mid_over_hf_db": [
+              108.66410990096543,
+              77.18660556162553,
+              52.646026142040185,
+              24.272074914174517,
+              3.679656518353447,
+              7.493861849077077,
+              -5.828020354143573,
+              -42.74206163366371
+            ],
+            "ratio_display_clip_db": 120.0,
+            "mid_channel_null": [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "hf_channel_null": [
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "mid_dominance_failed_hz": [],
+            "hf_dominance_failed_hz": [],
+            "exact_crossover_frequency_inferred": false,
+            "off_axis_handover_validated": false
+          },
+          "objective": 15.828774347467407
+        },
+        "handover_rejections": 196,
+        "options": 252
+      },
+      "parallel_mid_bank": {
+        "wiring": "parallel",
+        "amplifier_channels_for_mids": 1,
+        "hf_termination": "zero-voltage ideal amplifier",
+        "mid_count": 4,
+        "impedance_real_ohm": [
+          3.461949291191009,
+          3.187048559268021,
+          3.1245746517090915,
+          3.089940033306071,
+          3.101722166323547,
+          3.0778140724413254,
+          3.0783543468630796,
+          3.075205392389416
+        ],
+        "impedance_imag_ohm": [
+          0.5317167449038713,
+          -0.00934937816111579,
+          -0.3079020155362228,
+          -0.5453252060338969,
+          -1.0837927428488934,
+          -1.4670535501615105,
+          -1.8022631048400104,
+          -2.905475504854875
+        ],
+        "minimum_impedance_magnitude_ohm": 3.1376916658211393,
+        "maximum_current_per_volt_a": 0.3187056302864285
+      },
+      "projection_result_sha256": "7b60417a00e07446f8d6d4566bbadebc064a0081c755cb02a753d57bfce27b14"
+    }
+  ],
+  "physical_validation": false,
+  "qualified": false,
+  "new_native_coupled_solve": false,
+  "original_search_changed": false,
+  "limitations": [
+    "Reanalysis of existing unconverged eight-frequency candidates; not a fresh shape search or frequency holdout",
+    "Reported mid circuits and synthetic HF; no physical source qualification",
+    "20 m finite-distance pressure; the previous 20-to-40 m stability test remains failed",
+    "Original electrical consistency remains failed due to complex64 native storage",
+    "No measured SPL, power handling, commercial mount or print qualification"
+  ],
+  "archives": [
+    {
+      "file": "trial-000.zip",
+      "sha256": "13a5e00fa96cca126d857e47735f5d896f4a22b518fe16736169b089f0746c27",
+      "size_bytes": 3892660
+    },
+    {
+      "file": "trial-002.zip",
+      "sha256": "d9490efec7d80c4d325bd5c297c9437c6be82e77a2679494ad14632b7145cdee",
+      "size_bytes": 3891644
+    },
+    {
+      "file": "trial-007.zip",
+      "sha256": "25b3f19ae7668ebdeaa5cf1bffb2111af167b8b62bbd074fb9925425cb4ac382",
+      "size_bytes": 3988702
+    },
+    {
+      "file": "controls-and-runners.zip",
+      "sha256": "40e27b4bea9ec772b6f4c9807db234b198509fa372c1f1dda43437af381835ad",
+      "size_bytes": 179216
+    }
+  ],
+  "source_provenance": {
+    "application_source_commit": "b13c176",
+    "native_source_commit": "a0a604e",
+    "native_evidence_commit": "e1696b3c963a44c6f36eb822adee71e99aef58ad",
+    "pinned_boundary_lab_revision": "8cb166226e412877d3f71f2845918e479b97aa85"
+  },
+  "minimum_response_ripple_db": 11.766761964174925,
+  "response_screen_limit_db": 6.0,
+  "any_candidate_passes_response_screen": false
+}
