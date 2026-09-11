@@ -34,6 +34,14 @@ fails acoustic-field agreement despite similar response scores. The source,
 failed limits and completed baseline are archived; a reliable commercial-band
 ranking and a buildable target design remain unfinished.
 
+The [complete twelve-proposal commercial search](commercial-quarter-search.md)
+now retains six full native evaluations, six preparation failures, verified replay
+and the selected five-driver export. Its best response residual is 13.6641 dB;
+all completed proposals fail the 6 dB screen. Two pass rotational consistency and
+all six pass electrical validation. The original rear-mesh limitation remains
+explicit. A separate six-proposal search with refined rear meshing and closer
+entries is still running.
+
 A separate [raw exterior preparation budget](mesh-workloads.md#separate-raw-exterior-preparation-limit)
 now permits the 3 mm commercial refinement to prepare without increasing its final
 solver cap. The successful retry retains byte-identical FEM and raw exterior
