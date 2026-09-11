@@ -41,6 +41,11 @@ Commercial source calibration,
 full-band numerical convergence, comparable measured performance, manufacturing
 qualification and an actual finished affordable design remain open.
 
+A completed [coarse screening comparison](coarse-screening.md) reverses the
+ranking of two retained candidates and fails the declared complex-field agreement
+limit. Both native runs and the original preparation failure are preserved.
+This cheaper pipeline is not established as a reliable search screen.
+
 The [measured CRAM reference](measured-cram-reference.md) now completes native
 FP64 evaluation and verification after correcting named FEM volume selection.
 Its fixed conditional comparison fails the 3 dB held-out response-shape limit
