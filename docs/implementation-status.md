@@ -70,6 +70,10 @@ meshes distinguish actual surface area from the projected moving area. Rear air
 and its printed cup use the same declared swept profile. This supplies a way to
 represent cone depth; no manufacturer's cone geometry, basket displacement or
 acoustic qualification is inferred from T/S parameters.
+The separate three-frequency synthetic-source native comparison passes electrical
+and independently integrated source-force checks. Its curved 5 kHz polar basis
+misses the unchanged 2% rotation limit at 2.127%; both cases and that failure are
+archived. This is working curved-source coupling, not upper-band convergence.
 
 Merged increments now include the foundation, geometry generator, durable job ledger and initial complex metric library. These implement parts of B01/B02/B04/B05 and independent-reference infrastructure for A05. It does **not** pass G0 or any physical release gate. A01's example brief is provisional; its measurement protocol has not been ratified. The pinned Boundary Lab CPU solver has now executed the interior compression-driver fixture at one and three frequencies; see the [adapter and evidence](boundary-lab-adapter.md). This demonstrates integration and repeatability, not independent acoustic accuracy. The experimental search now also executes generated multiple-entry FEM/BEM evaluations; see [the end-to-end workflow](end-to-end-search.md).
 
