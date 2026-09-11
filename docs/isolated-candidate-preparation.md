@@ -61,3 +61,8 @@ completed a native solve. The first seed instead fails in native mouth conformin
 the reduced opening/rim perimeter selection needs a separate correction. These
 results establish successful preparation and containment of an actual hard CAD
 failure, without claiming a completed commercial acoustic search.
+
+The [preparation and containment evidence](../validation/evidence/isolated-candidate-preparation/report.json)
+archives both the successful reference and the twelve-proposal commercial
+attempt, including the killed child's partial files, the next proposal's failure
+report, immutable controls and source fingerprints.
