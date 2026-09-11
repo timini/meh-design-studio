@@ -118,3 +118,50 @@ replacement source. A completed score is not itself acoustic acceptance.
 If no DSP setting satisfies the constraints, the command fails and records the
 failed scoring status and reason while retaining all recombined fields. Failed
 experiments can therefore be inspected without weakening the declared constraints.
+
+## Production scoring replay
+
+Source `93da10c` uses one DSP kernel for both native and derived bases. Its
+predeclared replay checked three preserved native scores: the small periodic
+reference, the fresh alternate-HF reference, and completed trial zero of the
+full-size periodic-profile search. All numeric values and selected DSP settings
+were unchanged (2,527 numeric values compared; absolute limit `1e-10`).
+
+The real `reanalyse-circuits --brief` CLI also reproduced the small fresh-native
+alternate-HF score: the largest absolute difference across 508 numeric values
+was `3.2009950245992513e-12`, below the declared `1e-8` limit. Its full-size score
+matched the independently recorded circuit diagnostic exactly for the compared
+metrics and settings, within the declared `1e-10` limit.
+
+The [scoring evidence archive](../validation/evidence/derived-circuit-scoring/report.json)
+contains the complete full-size native **trial zero**, derived fields, replay
+controls and runners. The enclosing four-proposal geometry search was still
+running at archival time; this is not a completed-search or winner claim.
+The earlier unscored circuit fields were byte-identical to the new scored fields
+and are retained once, with an explicit relocation map in the archive report.
+
+### Full-size result remains outside the response target
+
+On the 15 training frequencies from 350 to 7500 Hz at 20 m, the synthetic-HF
+reference has 14.47 dB response variation; the provisional Peerless substitution
+has 15.00 dB. Both fail the unchanged 6 dB screen. The replacement selects a 5 kHz
+electrical crossover, positive mid polarity, gain 0.8 and 0.9 ms HF delay. Its
+sampled acoustic handover satisfies mid dominance through 3 kHz and HF dominance
+from 5 kHz; the predicted parallel mid-bank magnitude stays above 3.131 Ω.
+These results do not qualify an amplifier or an acoustic design.
+
+![Sampled full-size response and raw common-mid transfer](assets/quarter-turn-response-diagnostic.png)
+
+The upper plot removes the declared low-crossover roll-off and centres each
+response range; connecting lines only join evaluated samples. The lower plot
+uses one common mid-bank volt before DSP with the HF amplifier held at zero
+volts. At 3 kHz, the coherent sum of the four mid-excitation fields is only
+0.018 dB below the sum of their magnitudes, while the common response still dips.
+Every excitation field includes mutually induced motion of all diaphragms; this
+decomposition does not isolate a unique physical cause of the dip.
+
+The full-size data retain complex64 native precision, the failed separate
+electrical qualification gate, idealised cavities and unqualified sources. The
+15-frequency grid is not held-out validation, and 20 m has not been qualified as
+far field. No acoustic, output, source, mechanical-fit or print acceptance is
+claimed by these scoring checks.

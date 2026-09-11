@@ -1,0 +1,166 @@
+{
+  "status": "completed_native_and_derived_scoring_replay",
+  "application_source_commit": "93da10c",
+  "native_source_commits": [
+    "ab6714f",
+    "40e23d4"
+  ],
+  "small_native_archive_reports": [
+    "../periodic-profile-symmetry/report.json",
+    "../circuit-reanalysis/report.json"
+  ],
+  "archives": [
+    {
+      "file": "evidence-00.zip",
+      "sha256": "4799e245b0222c77873f8441a558bc5534c0eac714dd925b01b99a2b66fe603f",
+      "size_bytes": 67723755
+    },
+    {
+      "file": "evidence-01.zip",
+      "sha256": "bac8ea15831ec3964aa2797c574c914d5498d9420dc2576009275c2183d87004",
+      "size_bytes": 68049436
+    },
+    {
+      "file": "evidence-02.zip",
+      "sha256": "27320c31cc4f9f1915d7f1a4404d821f86615ac440548482a5023b36176252b7",
+      "size_bytes": 71021295
+    },
+    {
+      "file": "evidence-03.zip",
+      "sha256": "b2dacb08bd3d9bca68875a0d3233659aa1140abdeada4641313eb6e8a47e641e",
+      "size_bytes": 51817587
+    },
+    {
+      "file": "evidence-04.zip",
+      "sha256": "62cb66c01d205ca2d96a44ba46085cd359b4b378308d8c526aad3b115a2b9ab3",
+      "size_bytes": 12259110
+    }
+  ],
+  "replay": {
+    "status": "complete",
+    "application_source_commit": "93da10c",
+    "controls_sha256": "e050b068b60ec1c117890c66a68a1b3e3070607057bffe453eb8d2170b09d453",
+    "runner_sha256": "9a97daf80d89f40637c7c5717edb16a85c018f27e1c42ed7298033a95a756317",
+    "native": [
+      {
+        "trial": "/Users/timrichardson/Documents/projects/personal/speakers/meh-design-studio/runs/periodic-symmetry-search/trial-000",
+        "comparison": {
+          "maximum_absolute_difference": 0.0,
+          "numeric_leaves_compared": 526,
+          "limit": 1e-10,
+          "passed": true
+        }
+      },
+      {
+        "trial": "/Users/timrichardson/Documents/projects/personal/speakers/meh-design-studio/runs/circuit-reanalysis-search/trial-000",
+        "comparison": {
+          "maximum_absolute_difference": 0.0,
+          "numeric_leaves_compared": 526,
+          "limit": 1e-10,
+          "passed": true
+        }
+      },
+      {
+        "trial": "/Users/timrichardson/Documents/projects/personal/speakers/meh-design-studio/runs/quarter-turn-vocal-search/trial-000",
+        "comparison": {
+          "maximum_absolute_difference": 0.0,
+          "numeric_leaves_compared": 1475,
+          "limit": 1e-10,
+          "passed": true
+        }
+      }
+    ],
+    "derived": [
+      {
+        "label": "small",
+        "derived_report_sha256": "6a1e4690a0cd1ff75457fb5f83c2a6722e769b338c5b0870b8d664b6a5ff819a",
+        "comparison": {
+          "maximum_absolute_difference": 3.2009950245992513e-12,
+          "numeric_leaves_compared": 508,
+          "limit": 1e-08,
+          "passed": true
+        },
+        "ripple_db": 12.456529422957948,
+        "drive_settings": {
+          "side_gain": 1.6,
+          "mid_highpass_hz": 350.0,
+          "upper_crossover_hz": 2000.0,
+          "mid_polarity": -1,
+          "hf_delay_s": 0.0,
+          "filter": "analogue_lr4",
+          "phasor_convention": "exp(-i omega t)"
+        },
+        "native_storage_dtypes": [
+          "complex128"
+        ],
+        "qualified": false
+      },
+      {
+        "label": "full-size",
+        "derived_report_sha256": "7e9c832f509b9363345d53d6d6a67e3bbc4f0ffc13d8ea7a85f47d35eea12628",
+        "comparison": {
+          "maximum_absolute_difference": 0.0,
+          "numeric_leaves_compared": 56,
+          "limit": 1e-10,
+          "passed": true
+        },
+        "ripple_db": 14.99597492691643,
+        "drive_settings": {
+          "side_gain": 0.8,
+          "mid_highpass_hz": 350.0,
+          "upper_crossover_hz": 5000.0,
+          "mid_polarity": 1,
+          "hf_delay_s": 0.0009,
+          "filter": "analogue_lr4",
+          "phasor_convention": "exp(-i omega t)"
+        },
+        "native_storage_dtypes": [
+          "complex64"
+        ],
+        "qualified": false
+      }
+    ],
+    "qualified": false,
+    "physical_validation": false,
+    "limitations": [
+      "Replay of previously completed native fields, no new acoustic solve or geometry search",
+      "Small reference uses synthetic mids and provisional HF; full-size replacement still fails the 6 dB response screen",
+      "No new source, physical, convergence, manufacturing or output qualification"
+    ]
+  },
+  "full_size_native_trial_archive": "quarter-turn-vocal-search/trial-000",
+  "full_size_search_completion_claimed": false,
+  "identical_earlier_derived_array_relocation": {
+    "from": "quarter-turn-commercial-circuit",
+    "to": "derived-scoring-replay/full-size",
+    "files": [
+      "circuit-basis.npz",
+      "frequency-000000.npz",
+      "frequency-000001.npz",
+      "frequency-000002.npz",
+      "frequency-000003.npz",
+      "frequency-000004.npz",
+      "frequency-000005.npz",
+      "frequency-000006.npz",
+      "frequency-000007.npz",
+      "frequency-000008.npz",
+      "frequency-000009.npz",
+      "frequency-000010.npz",
+      "frequency-000011.npz",
+      "frequency-000012.npz",
+      "frequency-000013.npz",
+      "frequency-000014.npz"
+    ]
+  },
+  "native_response_variation_db": 14.467794071242732,
+  "derived_response_variation_db": 14.99597492691643,
+  "response_screen_limit_db": 6.0,
+  "response_screen_passed": false,
+  "qualified": false,
+  "physical_validation": false,
+  "limitations": [
+    "Target trial zero is complete, but its four-proposal search remains running and is not archived as complete",
+    "Full-size complex64 basis fails the separate unchanged 1e-8 electrical gate",
+    "No target acceptance, source measurement, convergence, physical fit, manufacturing or output qualification"
+  ]
+}
