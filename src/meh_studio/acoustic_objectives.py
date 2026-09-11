@@ -22,11 +22,13 @@ class AcousticObjectives(Record):
     directivity_weight: Annotated[float,Field(strict=True,ge=0)] = .5
     minimum_bank_impedance_ohm: Positive | None = 2.
     sphere: SphericalObjectives | None = None
+    acoustic_handover_hz: tuple[Positive,Positive] | None = None
 
     @model_serializer(mode='wrap')
     def preserve_legacy_objectives(self,handler):
         result=handler(self)
         if self.sphere is None:result.pop('sphere',None)
+        if self.acoustic_handover_hz is None:result.pop('acoustic_handover_hz',None)
         return result
 
     @model_validator(mode='after')
@@ -38,6 +40,10 @@ class AcousticObjectives(Record):
             raise ValueError('mid polarity must be +1 or -1')
         if min(self.upper_crossovers_hz)<=self.mid_highpass_hz:
             raise ValueError('upper crossover must exceed mid high-pass')
+        if self.acoustic_handover_hz is not None:
+            low,high=self.acoustic_handover_hz
+            if not self.mid_highpass_hz<low<high:
+                raise ValueError('acoustic handover bounds must increase above the mid high-pass')
         return self
 
 
@@ -158,6 +164,7 @@ def score_acoustics(project,evaluation,gains,objectives):
     sphere_basis=np.asarray(sphere_basis)
     winner=None
     winner_key=None
+    handover_rejections=0
     for gain in gains:
         for crossover in objectives.upper_crossovers_hz:
             for polarity in objectives.mid_polarities:
@@ -170,6 +177,17 @@ def score_acoustics(project,evaluation,gains,objectives):
                     axis=np.flatnonzero(angles['horizontal']==0)
                     if len(axis)!=1:raise ValueError('unique horizontal on-axis sample required')
                     axial=pressure['horizontal'][:,axis[0]]
+                    handover=None
+                    if objectives.acoustic_handover_hz is not None:
+                        from .acoustic_handover import acoustic_handover
+                        terms=bases['horizontal'][:,:,axis[0]]*weights
+                        hf=ids.index('component:throat')
+                        mids=[i for i in range(len(ids)) if i!=hf]
+                        handover=acoustic_handover(frequencies,terms[:,mids].sum(axis=1),terms[:,hf],
+                            objectives.mid_highpass_hz,objectives.acoustic_handover_hz)
+                        if not handover['passed']:
+                            handover_rejections+=1
+                            continue
                     try:
                         relative=relative_response(axial)
                         # Target the declared low crossover roll-off, rather than boosting it away.
@@ -189,10 +207,14 @@ def score_acoustics(project,evaluation,gains,objectives):
                         'acoustic_objective':ripple+objectives.directivity_weight*directivity,
                         'directivity_error_db':directivity,'polars':polars,'drive_settings':settings}
                     if spherical is not None:option['sphere']=spherical
+                    if handover is not None:option['acoustic_handover']=handover
                     key=(option['acoustic_objective'],gain,crossover)
                     if winner_key is None or key<winner_key:
                         winner,winner_key=option,key
-    if winner is None:raise ValueError('all acoustic DSP options contain undefined responses')
+    if winner is None:
+        if handover_rejections:
+            raise ValueError(f'no defined acoustic DSP response satisfies the declared mid/HF handover window ({handover_rejections} handover rejections)')
+        raise ValueError('all acoustic DSP options contain undefined responses')
     weights=drive_weights(frequencies,ids,winner['drive_settings'])
     operating=np.einsum('fet,fe->ft',np.asarray(currents),weights)
     mids=[i for i,c in enumerate(ids) if c!='component:throat']

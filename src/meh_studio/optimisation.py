@@ -76,6 +76,9 @@ class SearchBrief(Record):
                 raise ValueError('acoustic search grid must cover the low crossover and extend 50 percent above every upper crossover')
             if targets.sphere is not None and targets.sphere.control_from_hz>self.frequencies_hz[-1]:
                 raise ValueError('sphere coverage control frequency must be inside the search band')
+            if targets.acoustic_handover_hz is not None:
+                from .acoustic_handover import validate_handover_grid
+                validate_handover_grid(self.frequencies_hz,targets.mid_highpass_hz,targets.acoustic_handover_hz)
         if math.prod(map(len,groups[:-1])) * max(1,len(self.profiles)) > 10000:
             raise ValueError('candidate grid exceeds 10000 combinations')
         if any(len(row) not in (1,2) or any(v>=1 for v in row) for row in self.entry_fractions):
