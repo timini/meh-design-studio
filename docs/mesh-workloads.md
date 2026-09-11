@@ -64,3 +64,13 @@ The commercial 3 mm refinement exposed this need when its temporary surface
 contained 41,972 triangles and failed the original 32,000 preparation limit.
 That failed attempt remains preserved; an expanded preparation budget is a new
 experiment, not a retrospective pass.
+
+The separate retry from source `7e2cc14d96d320ff5e99fd0b2046d7657882ac03`
+now prepares successfully: 422,377 total tetrahedra, 41,972 raw exterior triangles
+and 12,464 final exterior triangles, below its declared 750,000 / 16,000 final
+limits. The original three FEM meshes and raw exterior mesh are byte-identical
+between the failed and successful attempts. Exterior volume differs from CAD by
+0.192%, within the unchanged 2% limit; protected mouth facets and topology checks
+pass. [Raw preparation evidence](../validation/evidence/raw-exterior-preparation/report.json)
+retains both attempts and verifies every archived file. This archive contains no
+new frequency solve and makes no acoustic convergence claim.
