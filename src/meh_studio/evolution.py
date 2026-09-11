@@ -7,7 +7,7 @@ from __future__ import annotations
 import math
 import random
 from typing import Annotated, Literal
-from pydantic import Field, model_validator
+from pydantic import Field, model_serializer, model_validator
 from .domain import Positive, Record
 from .geometry import HornGeometry
 
@@ -16,12 +16,20 @@ Parameter = Literal['length_m','mouth_radius_m','port_radius_m','port_length_m',
 
 
 class EvolutionSettings(Record):
+    profile_symmetry: Literal['none', 'mirror_xy', 'quarter_turn'] = 'none'
     elite_size: Annotated[int, Field(strict=True,ge=1,le=20)] = 3
     explore_every: Annotated[int, Field(strict=True,ge=2,le=20)] = 4
     mutation_fraction: Annotated[float, Field(strict=True,gt=0,le=1)] = .25
     sigma_fraction: Annotated[float, Field(strict=True,gt=0,le=.5)] = .12
     profile_scale_bounds: tuple[Positive, Positive] = (.65,1.5)
     geometry_bounds: dict[Parameter, tuple[Annotated[float,Field(strict=True)],Annotated[float,Field(strict=True)]]] = {}
+
+    @model_serializer(mode='wrap')
+    def preserve_legacy_controls(self, handler):
+        value = handler(self)
+        if self.profile_symmetry == 'none':
+            value.pop('profile_symmetry', None)
+        return value
 
     @model_validator(mode='after')
     def ordered_bounds(self):
@@ -50,6 +58,15 @@ def _reflect(value,low,high):
     return low+(position if position<=width else 2*width-position)
 
 
+def _profile_groups(symmetry):
+    # Angular control indices are 0,45,...315 degrees around the horn axis.
+    if symmetry == 'mirror_xy':
+        return ((0, 4), (2, 6), (1, 3, 5, 7))
+    if symmetry == 'quarter_turn':
+        return ((0, 2, 4, 6), (1, 3, 5, 7))
+    return tuple((i,) for i in range(8))
+
+
 def validate_bounds(settings,design):
     for name,(low,high) in settings.geometry_bounds.items():
         if name.startswith('entry_fraction'):
@@ -62,6 +79,10 @@ def validate_bounds(settings,design):
     low,high=settings.profile_scale_bounds
     if any(not low<=v<=high for section in design.profile_sections for v in section.radial_scales):
         raise ValueError('profile scales are outside declared evolutionary bounds')
+    for section in design.profile_sections:
+        for group in _profile_groups(settings.profile_symmetry):
+            if any(section.radial_scales[i] != section.radial_scales[group[0]] for i in group):
+                raise ValueError('profile violates declared symmetry; supply a matching explicit seed')
 
 
 def propose(brief, seed_pool, history, previous):
@@ -71,7 +92,8 @@ def propose(brief, seed_pool, history, previous):
     if index==0:
         for candidate in seed_pool:validate_bounds(settings,candidate['design'])
         return seed_pool[0],{'method':'declared_baseline','parent_index':None,'rejected':[]}
-    rng=random.Random(f'{brief.seed}:{index}:evolution-v1')
+    version = 'evolution-v1' if settings.profile_symmetry == 'none' else f'evolution-v2:{settings.profile_symmetry}'
+    rng=random.Random(f'{brief.seed}:{index}:{version}')
     eligible=sorted((i for i,t in enumerate(history) if t['status']=='complete'),
                     key=lambda i:(history[i]['objective'],i))[:settings.elite_size]
     explore=index%settings.explore_every==0 or not eligible
@@ -89,21 +111,26 @@ def propose(brief, seed_pool, history, previous):
         fractions=[v/length for v in data['entry_positions_m']]
         profile=data.get('profile_sections') or [
             {'fraction':fraction,'radial_scales':[1.]*8} for fraction in (.35,.7,1.)]
+        columns = range(8) if settings.profile_symmetry == 'none' else _profile_groups(settings.profile_symmetry)
         genes=[('profile',i,j,*settings.profile_scale_bounds)
-               for i in range(len(profile)) for j in range(8)]
+               for i in range(len(profile)) for j in columns]
         genes += [('geometry',name,None,*bounds) for name,bounds in sorted(settings.geometry_bounds.items())
                   if not name.startswith('entry_fraction') or int(name[-1])<len(fractions)]
         chosen=genes if explore else rng.sample(genes,max(1,math.ceil(settings.mutation_fraction*len(genes))))
         mutations=[]
         for kind,key,column,low,high in chosen:
-            if kind=='profile':old=profile[key]['radial_scales'][column]
+            if kind=='profile':
+                group = (column,) if isinstance(column, int) else column
+                old=profile[key]['radial_scales'][group[0]]
             elif key.startswith('entry_fraction'):old=fractions[int(key[-1])]
             else:old=data.get(key,getattr(selected['design'],key))
             value=rng.uniform(low,high) if explore else _reflect(old+rng.gauss(0,settings.sigma_fraction*(high-low)),low,high)
-            if kind=='profile':profile[key]['radial_scales'][column]=value
+            if kind=='profile':
+                for j in group:profile[key]['radial_scales'][j]=value
             elif key.startswith('entry_fraction'):fractions[int(key[-1])]=value
             else:data[key]=value
-            mutations.append({'kind':kind,'key':key,'column':column,'before':old,'after':value})
+            location = {'columns': list(column)} if isinstance(column, tuple) else {'column': column}
+            mutations.append({'kind':kind,'key':key,**location,'before':old,'after':value})
         data['entry_positions_m']=[fraction*data['length_m'] for fraction in fractions]
         data['profile_sections']=profile
         try:
