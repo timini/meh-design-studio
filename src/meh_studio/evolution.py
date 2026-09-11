@@ -70,6 +70,8 @@ def _profile_groups(symmetry):
 
 
 def validate_bounds(settings,design):
+    if design.solver_symmetry == 'xy' and design.profile_sections and settings.profile_symmetry == 'none':
+        raise ValueError('quarter model profile evolution requires mirror_xy or quarter_turn mutations')
     if settings.profile_symmetry != 'none' and design.profile_interpolation != 'periodic_cubic':
         raise ValueError('symmetric profile search requires explicit periodic_cubic interpolation')
     for name,(low,high) in settings.geometry_bounds.items():

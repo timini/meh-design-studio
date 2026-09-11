@@ -19,11 +19,17 @@ def require_cad_dependencies():
         raise ImportError('Radiating compilation requires optional CAD dependencies; install meh-design-studio[cad]') from exc
 
 
-def conform_mouth_interface(runtime,front,exterior,output,report_path,mouth_z,timeout_s):
+def conform_mouth_interface(runtime,front,exterior,output,report_path,mouth_z,timeout_s,*,symmetry='off'):
+    if symmetry not in ('off', 'xy'):
+        raise ValueError('generated conformer supports off or xy symmetry')
     helper=Path(__file__).with_name('native_mouth_conform.py')
     identity={'helper_sha256':sha256(helper),'input_sha256':{'front':sha256(front),'exterior':sha256(exterior)}}
-    _execute([str(Path(runtime.python).absolute()),'-I',str(helper),str(front),str(exterior),
-              str(output),str(report_path),'--mouth-z',str(mouth_z)],
+    command = [str(Path(runtime.python).absolute()),'-I',str(helper),str(front),str(exterior),
+               str(output),str(report_path),'--mouth-z',str(mouth_z)]
+    if symmetry != 'off':
+        command += ['--symmetry', symmetry]
+        identity['symmetry_mode'] = symmetry
+    _execute(command,
              Path(runtime.checkout),report_path.with_suffix('.log'),timeout_s)
     report=_read_json(report_path)
     if (report.get('status')!='complete' or any(report.get(k)!=v for k,v in identity.items())
@@ -82,10 +88,12 @@ def _compile_radiating_system(geometry_directory, sources, output, runtime, *, e
         destination = output / "meshes/exterior.msh"
         raw_destination = output / 'meshes/exterior-conformed-raw.msh'
         report['mouth_conforming']=conform_mouth_interface(runtime,output/'meshes/front.msh',
-            output/'exterior/exterior.msh',raw_destination,output/'conform-interface.json',design.length_m,timeout_s)
+            output/'exterior/exterior.msh',raw_destination,output/'conform-interface.json',design.length_m,timeout_s,
+            **({'symmetry': 'xy'} if design.solver_symmetry == 'xy' else {}))
         report['interface_coordinate_restoration']=restore_fem_interface_coordinates(
             raw_destination,output/'meshes/front.msh',destination)
-        integrity = surface_integrity(destination,maximum_triangles=design.maximum_exterior_triangles)
+        integrity = surface_integrity(destination,maximum_triangles=design.maximum_exterior_triangles,
+                                      symmetry=design.solver_symmetry)
         verify_exterior_groups(destination, output / "meshes/front.msh")
         if abs(integrity["enclosed_volume_m3"] / exterior["cad_volume_m3"] - 1) > .02:
             raise ValueError("conforming changed the exterior volume beyond the supported tolerance")
