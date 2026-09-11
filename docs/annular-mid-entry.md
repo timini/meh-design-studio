@@ -57,3 +57,20 @@ The archive retains all fields, CAD/mesh exports, controls, source identities,
 force/rotation checks and comparison scripts. No candidate is selected from
 these three frequencies. Refinement, dense frequency sampling and the existing
 commercial-source/physical checks remain necessary.
+
+### 4 kHz refinement
+
+[A separate refinement](../validation/evidence/annular-mid-refinement/report.json)
+retains exactly the same 11 STEP geometries and circuits while changing the front
+target from 8 to 6 mm and rear layers from 2 to 1 mm. The 20 mm exterior target
+is unchanged, but the refined mouth interface increases the actual exterior
+mesh to 3,332 triangles. Preparation first failed its 3,000-triangle compute cap;
+that failure is preserved. A separate run reused the completed 149,441-tetrahedron
+mesh with an explicitly declared 4,000-triangle cap. No acoustic limit changed.
+
+Electrical and pressure-force checks pass; the maximum force residual is
+`1.64e-15`. Rotational error remains 46.31383%, failing 2%. Coarse-to-refined
+horizontal and vertical pressure changes are 12.08233% and 11.51388%, also failing
+2%; velocity and current changes pass at 0.14911% and 0.02297%. The acoustic
+field around this predicted dip remains numerically unresolved. This result
+neither qualifies the annular candidate nor establishes a reliable dip depth.
