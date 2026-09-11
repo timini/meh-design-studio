@@ -17,9 +17,16 @@ from .domain import Positive, Record
 from .waveguide_profile import ProfileSection, validate_profile, horn_solids, mouth_face, entry_support_radius, cad_volume, imported_volume
 
 
+class ThroatBody(Record):
+    """Rigid cylindrical HF package behind the throat; not a printable part."""
+    radius_m: Annotated[float, Field(strict=True, gt=0, le=.5)]
+    depth_m: Annotated[float, Field(strict=True, gt=0, le=.5)]
+
+
 class HornGeometry(Record):
     length_m: Positive
     throat_radius_m: Positive
+    throat_body: ThroatBody | None = None
     mouth_radius_m: Positive
     wall_m: Positive
     entry_positions_m: tuple[Positive, ...]
@@ -45,6 +52,8 @@ class HornGeometry(Record):
     @model_serializer(mode='wrap')
     def preserve_legacy_pair_identity(self, handler):
         value = handler(self)
+        if self.throat_body is None:
+            value.pop('throat_body', None)
         if self.entry_layout == 'opposed_pairs':
             value.pop('entry_layout', None)
         if self.driver_axial_offset_m == 0:
@@ -80,6 +89,8 @@ class HornGeometry(Record):
             raise ValueError('four-driver ring requires exactly one axial entry position')
         if self.mouth_radius_m <= self.throat_radius_m:
             raise ValueError("mouth must exceed throat radius")
+        if self.throat_body is not None and self.throat_body.radius_m < self.throat_radius_m + self.wall_m:
+            raise ValueError('throat body must cover the throat and its wall')
         if self.front_radius_m <= self.port_radius_m:
             raise ValueError("front chamber radius must exceed port radius")
         if self.driver_tilt_deg and self.driver_axial_offset_m:
@@ -96,7 +107,9 @@ class HornGeometry(Record):
                 raise ValueError('adjacent ring chamber envelopes overlap')
         if self.tessellation_tolerance_m < 1e-6:
             raise ValueError("tessellation tolerance must be at least 1 micrometre")
-        if any(not margin < z+self.driver_axial_offset_m < self.length_m - margin for z in self.entry_positions_m):
+        if any(z+self.driver_axial_offset_m >= self.length_m-margin or
+               (self.throat_body is None and z+self.driver_axial_offset_m <= margin)
+               for z in self.entry_positions_m):
             raise ValueError("entry chambers must clear throat and mouth planes")
         port_margin=self.port_radius_m+self.wall_m
         if any(not port_margin < z < self.length_m-port_margin for z in self.entry_positions_m):
@@ -170,7 +183,7 @@ def build_geometry(design: HornGeometry):
         if design.driver_tilt_deg:
             envelope = cylinder(design.front_radius_m * mm + wall, duct_end - wall,
                                 design.front_depth_m * mm + 2 * wall, driver_z).BoundingBox()
-            if envelope.zmin <= 0 or envelope.zmax >= length:
+            if (design.throat_body is None and envelope.zmin <= 0) or envelope.zmax >= length:
                 raise ValueError('tilted front chamber must clear throat and mouth planes')
         front_air = front_air.fuse(tube, chamber)
         material = material.fuse(
@@ -189,6 +202,15 @@ def build_geometry(design: HornGeometry):
                         "motion_axis": list(axis), "radius_m": design.front_radius_m})
     parts["horn"] = material.cut(front_air).clean()
     air_regions["front"] = front_air.clean()
+    if design.throat_body is not None:
+        body = throat_body_solid(design)
+        occupied = list(air_regions.values()) + list(parts.values())
+        for source in sources:
+            occupied.append(cq.Solid.makeCylinder(source['radius_m'] * mm, wall,
+                cq.Vector(*[v * mm for v in source['front_center_m']]),
+                cq.Vector(*source['motion_axis'])))
+        if any(body.intersect(shape).Volume() > 1e-3 for shape in occupied):
+            raise ValueError('mid chamber, air or reserved diaphragm intersects the throat body')
     for name, solid in {**parts, **air_regions}.items():
         if not solid.isValid() or solid.Volume() <= 0 or len(solid.Solids()) != 1:
             raise ValueError(f"geometry kernel produced an invalid or disconnected solid: {name}")
@@ -201,6 +223,17 @@ def build_geometry(design: HornGeometry):
         if any(a.intersect(b).Volume()>1e-3 for i,a in enumerate(solids) for b in solids[i+1:]):
             raise ValueError('freeform driver chamber parts intersect')
     return air_regions, parts, sources
+
+
+def throat_body_solid(design: HornGeometry):
+    """Assembly-coordinate package used for both clearance and BEM geometry."""
+    if design.throat_body is None:
+        raise ValueError('no throat body declared')
+    from .cad_runtime import load_cadquery
+    cq = load_cadquery()
+    body = design.throat_body
+    return cq.Solid.makeCylinder(body.radius_m * 1000, body.depth_m * 1000,
+        cq.Vector(0, 0, -body.depth_m * 1000), cq.Vector(0, 0, 1))
 
 
 def verify_front_chamber_back_walls(design, front_air, horn, *, unported_air=None):
@@ -251,6 +284,19 @@ def export_geometry(design: HornGeometry, output: Path) -> dict:
                     files.append({"path": path.relative_to(output).as_posix(),
                                   "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
                                   "size_bytes": path.stat().st_size})
+        if design.throat_body is not None:
+            directory = output / 'reference'
+            directory.mkdir()
+            path = directory / 'throat-body.step'
+            body = throat_body_solid(design)
+            cq.exporters.export(body, str(path))
+            files.append({'path': path.relative_to(output).as_posix(),
+                          'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
+                          'size_bytes': path.stat().st_size})
+            state['throat_body'] = {'kind': 'ideal_rigid_driver_envelope', 'print_part': False,
+                'clearance_checked': True, 'file': path.relative_to(output).as_posix(),
+                'volume_m3': body.Volume() / 1e9,
+                'limitations': ['Cylindrical package approximation; mounting holes, terminals and internal driver acoustics are not represented.']}
         state.update(status="complete", design=design.model_dump(mode="json"),
                      driver_count=design.driver_count, sources=sources, files=files,
                      mouth_interface={'center_m':[v/1000 for v in mouth_cap.Center().toTuple()],
