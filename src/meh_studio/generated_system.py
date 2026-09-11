@@ -197,6 +197,8 @@ def _compile_interior_system(geometry_directory: Path, sources: HornSources, out
                           "Throat piston omits compression-driver internals and rear load",
                           "Ideal source disks, no breakup, nonlinear or measured qualification",
                           "Mesh convergence and independent accuracy remain unestablished"])
+        if design.diaphragm_profile_m:
+            report['limitations'][2] = 'Explicit rigid source profiles, no breakup, nonlinear or measured qualification'
     except BaseException as exc:
         if report["status"] != "cancelled":
             report.update(status="failed", error=f"{type(exc).__name__}: {exc}")
