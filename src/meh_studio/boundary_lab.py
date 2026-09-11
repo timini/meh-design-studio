@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from contextlib import contextmanager, ExitStack
+from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import hashlib
@@ -631,13 +632,33 @@ def _process_cancellation_guard():
             signal.signal(sig,handler)
 
 
+_inherit_process_group = ContextVar('meh_inherit_process_group', default=False)
+
+
+@contextmanager
+def _preparation_process_group():
+    """Keep nested conformers inside the group owned by the search parent.
+
+    Windows uses the enclosing Job Object instead. On POSIX this context is
+    valid only in the isolated group leader created for candidate preparation.
+    """
+    if os.name != 'nt' and os.getpgrp() != os.getpid():
+        raise ValueError('preparation child must lead its isolated process group')
+    token = _inherit_process_group.set(os.name != 'nt')
+    try:
+        yield
+    finally:
+        _inherit_process_group.reset(token)
+
+
 def _execute(command: list[str], cwd: Path, log: Path, timeout_s: float,
-             stderr_log: Path | None = None) -> None:
+             stderr_log: Path | None = None, *, process_name: str = 'Boundary Lab') -> None:
     if not math.isfinite(timeout_s) or timeout_s <= 0:
         raise ValueError("timeout must be positive and finite")
     with ExitStack() as stack:
         job = None
-        options = {"start_new_session": True}
+        inherited = _inherit_process_group.get()
+        options = {"start_new_session": not inherited}
         if os.name == "nt":
             from .windows_job import WindowsJob, CREATE_SUSPENDED
             job = stack.enter_context(WindowsJob())
@@ -663,7 +684,7 @@ def _execute(command: list[str], cwd: Path, log: Path, timeout_s: float,
                 try:
                     if job is not None:
                         job.close()
-                    else:
+                    elif not inherited:
                         _kill_process_group(process.pid)
                 finally:
                     if process.poll() is None:
@@ -671,7 +692,7 @@ def _execute(command: list[str], cwd: Path, log: Path, timeout_s: float,
                     process.wait()
             activate()
     if code:
-        raise ValueError(f"Boundary Lab exited with code {code}; see {log.name}")
+        raise ValueError(f"{process_name} exited with code {code}; see {log.name}")
 
 
 @dataclass(frozen=True)
