@@ -3,12 +3,18 @@ from pathlib import Path
 import pytest
 
 spec = importlib.util.spec_from_file_location('reference_runner', Path(__file__).resolve().parents[1] / 'validation/fixtures/run_coupled_reference.py')
-module = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(module)
+legacy_module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(legacy_module)
+from meh_studio import native_reference
+
+
+@pytest.fixture(params=[legacy_module, native_reference], ids=['legacy-fixture','packaged-runner'])
+def module(request):
+    return request.param
 
 
 @pytest.mark.parametrize('version', ['julia version 1.12.6', 'julia version 1.11.0'])
-def test_reference_requires_exact_julia_runtime(tmp_path, monkeypatch, version):
+def test_reference_requires_exact_julia_runtime(tmp_path, monkeypatch, version, module):
     calls = []
     def probe(command, **kwargs):
         calls.append(command)
@@ -23,7 +29,7 @@ def test_reference_requires_exact_julia_runtime(tmp_path, monkeypatch, version):
     assert calls == [[str(path), '--version']]
 
 
-def test_reference_python_inventory_and_version_gate(monkeypatch):
+def test_reference_python_inventory_and_version_gate(monkeypatch, module):
     monkeypatch.setattr(module.sys, 'version_info', (3, 11, 15))
     identity = module.python_identity()
     assert identity['python'] and identity['python_executable'] and identity['packages']
@@ -32,7 +38,7 @@ def test_reference_python_inventory_and_version_gate(monkeypatch):
         module.python_identity()
 
 
-def test_reference_failure_is_finalized_despite_cleanup_error():
+def test_reference_failure_is_finalized_despite_cleanup_error(module):
     class Session:
         def stop(self): raise RuntimeError('cleanup failed')
     class Writer:
@@ -44,7 +50,7 @@ def test_reference_failure_is_finalized_despite_cleanup_error():
     assert 'cleanup failed' in error.__notes__[0]
 
 
-def test_request_preparation_uses_one_snapshot(tmp_path):
+def test_request_preparation_uses_one_snapshot(tmp_path, module):
     import json
     path = tmp_path/'request.json'
     path.write_text('{"frequencies_hz":[1000]}')
@@ -57,7 +63,7 @@ def test_request_preparation_uses_one_snapshot(tmp_path):
 
 
 @pytest.mark.parametrize('fault', [None, 'setup', 'runtime_write', 'request_change', 'runtime_change'])
-def test_reference_setup_and_evidence_are_finalized(tmp_path, monkeypatch, fault):
+def test_reference_setup_and_evidence_are_finalized(tmp_path, monkeypatch, fault, module):
     import json
     request = tmp_path/'input.json'
     request.write_text('{}')

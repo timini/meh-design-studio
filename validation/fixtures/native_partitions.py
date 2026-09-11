@@ -174,7 +174,13 @@ def main():
     parser.add_argument('search',type=Path);parser.add_argument('output',type=Path)
     parser.add_argument('--parts',type=Path);parser.add_argument('--level',choices=LEVELS);parser.add_argument('--chunk',type=int)
     for name in ('checkout','python','julia'):parser.add_argument('--'+name,type=Path,required=True)
-    args=parser.parse_args();runtime=BoundaryLabRuntime(args.checkout,args.python,args.julia,julia_threads=1)
+    parser.add_argument('--backend',choices=['beat_cpu','beat_cuda','beat_rocm','coupled_reference'],help='must match the search; defaults to its backend')
+    parser.add_argument('--julia-threads',type=int,help='must match the search; defaults to its thread setting')
+    args=parser.parse_args()
+    original=_read_json(args.search/'search.json')['runtime']
+    threads=args.julia_threads if args.julia_threads is not None else original.get('julia_threads','upstream_default')
+    if threads=='upstream_default':threads=None
+    runtime=BoundaryLabRuntime(args.checkout,args.python,args.julia,args.backend or original['backend'],julia_threads=threads)
     if args.mode=='run':run_partition(args.search,args.output,runtime,args.level,args.chunk)
     else:assemble(args.search,args.parts,args.output,runtime)
 

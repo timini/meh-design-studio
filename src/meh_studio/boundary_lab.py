@@ -365,6 +365,14 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
     artifact_paths = {"manifest": root / "manifest.json",
                       "domains_metadata": _contained(root, manifest["domains_metadata_file"]),
                       "domains_arrays": _contained(root, manifest["domains_file"])}
+    if backend == 'coupled_reference':
+        reference = manifest['reference_runtime']
+        runtime_path = _contained(root, reference['file'])
+        if (sha256(runtime_path) != reference['sha256']
+                or _read_json(runtime_path) != reference['identity']
+                or reference['identity'].get('revision') != BOUNDARY_LAB_REVISION):
+            raise ValueError('FP64 reference runtime evidence mismatch')
+        artifact_paths['reference_runtime'] = runtime_path
     artifact_hashes = {name: sha256(path) for name, path in artifact_paths.items()}
     if artifact_hashes["manifest"] != manifest_hash:
         raise ValueError("manifest changed while inspecting results")
@@ -435,6 +443,8 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
                 if (list(values.shape) != quantity["shape"] or str(values.dtype) != quantity["dtype"]
                         or values.dtype not in (np.dtype("complex64"), np.dtype("complex128")) or not np.all(np.isfinite(values))):
                     raise ValueError("non-finite or inconsistent quantity array")
+                if backend == 'coupled_reference' and values.dtype != np.dtype('complex128'):
+                    raise ValueError('FP64 reference requires complex128 quantity storage')
                 axes = quantity["axes"]
                 name = quantity.get("quantity")
                 if name not in QUANTITY_UNITS or quantity.get("unit") != QUANTITY_UNITS[name]:
@@ -595,13 +605,13 @@ class BoundaryLabRuntime:
     checkout: Path
     python: Path
     julia: Path
-    backend: Literal["beat_cpu", "beat_cuda", "beat_rocm"] = "beat_cpu"
+    backend: Literal["beat_cpu", "beat_cuda", "beat_rocm", "coupled_reference"] = "beat_cpu"
     julia_threads: int | None = None
 
     def verify(self) -> dict:
         if self.julia_threads is not None and (type(self.julia_threads) is not int or not 1 <= self.julia_threads <= 64):
             raise ValueError("Julia thread count must be an integer in [1, 64]")
-        if self.backend not in {"beat_cpu", "beat_cuda", "beat_rocm"}:
+        if self.backend not in {"beat_cpu", "beat_cuda", "beat_rocm", "coupled_reference"}:
             raise ValueError("unsupported explicit backend")
         checkout = Path(self.checkout).resolve()
         revision = subprocess.check_output(["git", "-C", str(checkout), "rev-parse", "HEAD"],
@@ -628,9 +638,14 @@ class BoundaryLabRuntime:
                                                text=True, encoding="utf-8", timeout=30).strip()
         if julia_version != "julia version 1.12.6":
             raise ValueError("pinned Boundary Lab dependencies require the manifest-matched Julia 1.12.6 runtime")
+        reference = ({'reference_runner_sha256':sha256(Path(__file__).with_name('native_reference.py')),
+                      'precision':'float64', 'static_condensation':True}
+                     if self.backend == 'coupled_reference' else {})
         return {"revision": revision, "backend": self.backend, "python": environment["python"],
                 "julia": julia_version, "packages": environment["packages"],
-                "julia_threads": self.julia_threads if self.julia_threads is not None else "upstream_default"}
+                "julia_threads": self.julia_threads if self.julia_threads is not None else
+                    (4 if self.backend == 'coupled_reference' else "upstream_default"),
+                **reference}
 
     def solve(self, project: Path, request: SolveRequest, output: Path, *, timeout_s: float = 1800) -> dict:
         if not math.isfinite(timeout_s) or timeout_s <= 0:
@@ -650,7 +665,8 @@ class BoundaryLabRuntime:
                 activate()
                 _write_json(output / "evaluation.json", report)
                 base = [str(Path(self.python).absolute()), "-I", "-m", "blab.cli", "project"]
-                common = [str(project), "--request", str(request_file), "--backend", self.backend,
+                preflight_backend = 'beat_cpu' if self.backend == 'coupled_reference' else self.backend
+                common = [str(project), "--request", str(request_file), "--backend", preflight_backend,
                           "--julia-executable", str(Path(self.julia).absolute())]
                 runtime = self.verify()
                 solve_options = (["--julia-threads", str(self.julia_threads)]
@@ -678,13 +694,27 @@ class BoundaryLabRuntime:
                 observations = _project_observation_ids(project_data, request)
                 if not observations.issubset(expected_outputs):
                     raise ValueError("preflight omitted requested project observations")
-                _execute(base + ["solve"] + common + solve_options + ["--events", "ndjson", "--output", str(output / "upstream")],
-                         Path(self.checkout), output / "solve.ndjson", timeout_s)
+                if self.backend == 'coupled_reference':
+                    if solve_kind != 'coupled_bem_fem':
+                        raise ValueError('FP64 reference backend requires a coupled FEM/BEM project')
+                    runner = Path(__file__).with_name('native_reference.py').resolve()
+                    _execute([str(Path(self.python).absolute()), '-I', str(runner), str(project),
+                              str(request_file), str(output/'upstream'), '--julia', str(Path(self.julia).absolute()),
+                              '--julia-threads', str(self.julia_threads if self.julia_threads is not None else 4)],
+                             Path(self.checkout), output/'solve.ndjson', timeout_s,
+                             stderr_log=output/'solve.stderr.log')
+                else:
+                    _execute(base + ["solve"] + common + solve_options + ["--events", "ndjson", "--output", str(output / "upstream")],
+                             Path(self.checkout), output / "solve.ndjson", timeout_s)
                 result = inspect_result(output / "upstream", request, self.backend,
                                         _result_output_ids(project_data, expected_outputs), solve_kind, project)
                 if sha256(project) != project_hash or sha256(request_file) != report["request_sha256"]:
                     raise ValueError("project or request changed during evaluation")
                 manifest = _read_json(output / "upstream/manifest.json")
+                if self.backend == 'coupled_reference' and (
+                        manifest.get('reference_runner_sha256') != runtime['reference_runner_sha256']
+                        or manifest.get('source_request_sha256') != report['request_sha256']):
+                    raise ValueError('FP64 runner or request identity differs from the evaluated input')
                 if manifest.get("project_sha256") != project_hash:
                     raise ValueError("solver project snapshot differs from evaluated input")
                 meshes = _mesh_inventory(manifest)

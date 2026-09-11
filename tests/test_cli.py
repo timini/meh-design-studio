@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 from meh_studio.cli import main
+import pytest
 
 
 def test_brief_cli_reports_feasibility_not_evaluated(capsys):
@@ -86,3 +87,32 @@ def test_utf8_inputs_do_not_depend_on_locale(tmp_path, driver, capsys, monkeypat
     brief_path.write_text(json.dumps(brief, ensure_ascii=False), encoding="utf-8")
     assert main(["validate-brief", str(brief_path)]) == 0
     assert json.loads(capsys.readouterr().out)["brief"]["level_definition"] == brief["level_definition"]
+
+
+@pytest.mark.parametrize('command',['solve-project','optimise','resume-optimise'])
+def test_explicit_reference_backend_reaches_workflow_commands(command,tmp_path,monkeypatch,capsys):
+    from meh_studio.boundary_lab import BoundaryLabRuntime
+    import meh_studio.optimisation as search
+    import meh_studio.search_resume as resume
+    root=Path(__file__).resolve().parents[1]
+    observed=[]
+    def capture(runtime):
+        observed.append((runtime.backend,runtime.julia_threads))
+        return {'status':'test-dispatch-only'}
+    monkeypatch.setattr(BoundaryLabRuntime,'solve',lambda self,*args,**kwargs:capture(self))
+    monkeypatch.setattr(search,'optimise',lambda brief,base,database,runtime,*args,**kwargs:capture(runtime))
+    monkeypatch.setattr(resume,'resume_optimise',lambda source,runtime,*args:capture(runtime))
+    extra=[]
+    if command=='solve-project':
+        path=tmp_path/'project.json'
+        request=tmp_path/'request.json';request.write_text('{"frequencies_hz":[1000]}')
+        extra=['--request',str(request)]
+    elif command=='optimise':
+        path=root/'examples/synthetic-search-brief.json'
+        extra=['--geometry',str(root/'examples/three-driver-geometry.json'),'--database',str(tmp_path/'db')]
+    else:
+        path=tmp_path/'search'
+    result=main([command,str(path),*extra,'--checkout',str(tmp_path),'--python','python',
+        '--julia','julia','--output',str(tmp_path/'output'),'--backend','coupled_reference','--julia-threads','2'])
+    assert result==0,capsys.readouterr()
+    assert observed==[('coupled_reference',2)]

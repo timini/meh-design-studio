@@ -38,7 +38,9 @@ def main(argv=None) -> int:
     solve.add_argument("--python", type=Path, required=True, help="Boundary Lab environment Python")
     solve.add_argument("--julia", type=Path, required=True)
     solve.add_argument("--output", type=Path, required=True, help="new evaluation directory")
-    solve.add_argument("--backend", choices=["beat_cpu", "beat_cuda", "beat_rocm"], default="beat_cpu")
+    backends = ["beat_cpu", "beat_cuda", "beat_rocm", "coupled_reference"]
+    solve.add_argument("--backend", choices=backends, default="beat_cpu")
+    solve.add_argument('--julia-threads', type=int)
     solve.add_argument("--timeout-per-stage-s", type=float, default=1800)
     compile_system = commands.add_parser("compile-interior", help="compile experimental generated horn air meshes")
     compile_system.add_argument("geometry", type=Path)
@@ -64,6 +66,7 @@ def main(argv=None) -> int:
     search.add_argument('--python', type=Path, required=True)
     search.add_argument('--julia', type=Path, required=True)
     search.add_argument('--julia-threads', type=int, help='explicit Julia thread count')
+    search.add_argument('--backend', choices=backends, default='beat_cpu')
     search.add_argument('--timeout-per-solver-stage-s',type=float,default=1800)
     resume = commands.add_parser('resume-optimise', help='continue a stopped search in a new directory')
     resume.add_argument('search', type=Path)
@@ -72,6 +75,7 @@ def main(argv=None) -> int:
     resume.add_argument('--python', type=Path, required=True)
     resume.add_argument('--julia', type=Path, required=True)
     resume.add_argument('--julia-threads', type=int, help='match the original explicit Julia thread count')
+    resume.add_argument('--backend', choices=backends, default='beat_cpu', help='match the original backend')
     bundle = commands.add_parser('export-search', help='export experimental winning geometry, driver BOM and relative gains')
     bundle.add_argument('search', type=Path)
     bundle.add_argument('--output', type=Path, required=True, help='new ZIP file; existing files are never replaced')
@@ -99,14 +103,14 @@ def main(argv=None) -> int:
         elif args.command == 'resume-optimise':
             from .search_resume import resume_optimise
             from .boundary_lab import BoundaryLabRuntime
-            result = resume_optimise(args.search, BoundaryLabRuntime(args.checkout,args.python,args.julia,julia_threads=args.julia_threads),args.output)
+            result = resume_optimise(args.search, BoundaryLabRuntime(args.checkout,args.python,args.julia,args.backend,julia_threads=args.julia_threads),args.output)
         elif args.command == 'optimise':
             from .optimisation import SearchBrief, optimise
             from .geometry import HornGeometry
             from .boundary_lab import BoundaryLabRuntime
             result = optimise(SearchBrief.model_validate_json(args.brief.read_text()),
                 HornGeometry.model_validate_json(args.geometry.read_text()), args.database,
-                BoundaryLabRuntime(args.checkout,args.python,args.julia,julia_threads=args.julia_threads),args.output,solver_stage_timeout_s=args.timeout_per_solver_stage_s)
+                BoundaryLabRuntime(args.checkout,args.python,args.julia,args.backend,julia_threads=args.julia_threads),args.output,solver_stage_timeout_s=args.timeout_per_solver_stage_s)
         elif args.command == "compile-radiating":
             from .boundary_lab import BoundaryLabRuntime
             from .generated_system import HornSources
@@ -127,7 +131,7 @@ def main(argv=None) -> int:
         elif args.command == "solve-project":
             from .boundary_lab import BoundaryLabRuntime, SolveRequest
             request = SolveRequest.model_validate_json(args.request.read_text(encoding="utf-8"))
-            runtime = BoundaryLabRuntime(args.checkout, args.python, args.julia, args.backend)
+            runtime = BoundaryLabRuntime(args.checkout, args.python, args.julia, args.backend, args.julia_threads)
             result = runtime.solve(args.project, request, args.output, timeout_s=args.timeout_per_stage_s)
         elif args.command == "validate-brief":
             record = DesignBrief.model_validate_json(args.path.read_text(encoding="utf-8"))

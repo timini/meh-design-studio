@@ -1044,3 +1044,76 @@ def test_explicit_julia_thread_count_reaches_only_solve_command(artifact, tmp_pa
     runtime.solve(project,SolveRequest(frequencies_hz=(1000,)),output)
     index=commands[1].index('--julia-threads')
     assert commands[1][index+1]=='1'
+
+
+def reference_artifact(artifact, *, dtype='complex128'):
+    from meh_studio.boundary_lab import BOUNDARY_LAB_REVISION
+    root, manifest = artifact
+    manifest['backend_id'] = 'coupled_reference'
+    runtime = {'revision': BOUNDARY_LAB_REVISION}
+    (root/'runtime.json').write_text(json.dumps(runtime))
+    manifest['reference_runtime'] = {'file':'runtime.json',
+        'sha256':sha256(root/'runtime.json'), 'identity':runtime}
+    with np.load(root/'frequencies/000000.npz') as arrays:
+        values = arrays['q0000'].astype(dtype)
+    np.savez(root/'frequencies/000000.npz', q0000=values)
+    path = root/'frequencies/000000.json'
+    metadata = json.loads(path.read_text())
+    metadata['quantities'][0]['dtype'] = dtype
+    path.write_text(json.dumps(metadata))
+    (root/'manifest.json').write_text(json.dumps(manifest))
+    return root, manifest
+
+
+@pytest.mark.parametrize('fault',[None,'complex64','runtime_changed'])
+def test_reference_precision_and_runtime_artifacts(artifact, fault):
+    root, manifest = reference_artifact(artifact, dtype='complex64' if fault=='complex64' else 'complex128')
+    if fault == 'runtime_changed':
+        (root/'runtime.json').write_text('{}')
+    if fault:
+        with pytest.raises(ValueError, match='complex128|runtime evidence'):
+            inspect_result(root,SolveRequest(frequencies_hz=(1000,)),'coupled_reference')
+    else:
+        result=inspect_result(root,SolveRequest(frequencies_hz=(1000,)),'coupled_reference')
+        assert result['artifact_hashes']['reference_runtime'] == manifest['reference_runtime']['sha256']
+        assert result['evidence'] == 'predicted'
+
+
+@pytest.mark.parametrize('fault',[None,'runner_identity','wrong_topology'])
+def test_reference_adapter_uses_separate_runner_and_retains_identity(artifact,tmp_path,monkeypatch,fault):
+    import shutil
+    import meh_studio.boundary_lab as adapter
+    root,manifest=reference_artifact(artifact)
+    kind='interior_fem' if fault=='wrong_topology' else 'coupled_bem_fem'
+    # This test exercises dispatch/identity. The native integration uses real coupled CAD.
+    monkeypatch.setattr(adapter,'_project_solve_kind',lambda project:kind)
+    manifest['solve_kind']=kind
+    runner=Path(adapter.__file__).with_name('native_reference.py')
+    runtime_identity={'backend':'coupled_reference','reference_runner_sha256':sha256(runner)}
+    monkeypatch.setattr(BoundaryLabRuntime,'verify',lambda self:runtime_identity)
+    output=tmp_path/'reference-output';commands=[]
+    def execute(command,*args,**kwargs):
+        commands.append(command)
+        if 'validate' in command:
+            assert command[command.index('--backend')+1]=='beat_cpu'
+            (output/'preflight.json').write_text(json.dumps({'valid':True,'solve_kind':kind,
+                'meshes':manifest['meshes'],'output_ids':['acoustic:pressure:fem-nodes']}))
+        else:
+            assert command[:3] == [str(Path(sys.executable).absolute()),'-I',str(runner.resolve())]
+            assert command[-2:] == ['--julia-threads','2']
+            assert kwargs['stderr_log'] == output/'solve.stderr.log'
+            manifest['reference_runner_sha256']='changed' if fault=='runner_identity' else sha256(runner)
+            manifest['source_request_sha256']=sha256(output/'request.json')
+            (root/'manifest.json').write_text(json.dumps(manifest))
+            shutil.copytree(root,output/'upstream')
+    monkeypatch.setattr(adapter,'_execute',execute)
+    runtime=BoundaryLabRuntime(tmp_path,Path(sys.executable),tmp_path/'julia','coupled_reference',2)
+    if fault:
+        with pytest.raises(ValueError,match='runner or request|requires a coupled'):
+            runtime.solve(root/'project.snapshot.blab.json',SolveRequest(frequencies_hz=(1000,)),output)
+        assert json.loads((output/'evaluation.json').read_text())['status']=='failed'
+    else:
+        result=runtime.solve(root/'project.snapshot.blab.json',SolveRequest(frequencies_hz=(1000,)),output)
+        assert result['status']=='complete'
+        assert result['runtime']==runtime_identity
+    assert len(commands)==(1 if fault=='wrong_topology' else 2)

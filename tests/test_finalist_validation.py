@@ -10,6 +10,20 @@ module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 
 
+@pytest.mark.parametrize('override',[False,True])
+def test_finalist_cli_preserves_reference_backend_by_default(tmp_path,monkeypatch,override,capsys):
+    import sys
+    search=tmp_path/'search';search.mkdir()
+    (search/'search.json').write_text(json.dumps({'runtime':{'backend':'coupled_reference','julia_threads':2}}))
+    seen=[]
+    monkeypatch.setattr(module,'validate',lambda search,output,runtime,**kwargs:seen.append((runtime.backend,runtime.julia_threads)) or {})
+    arguments=['finalist',str(search),str(tmp_path/'output'),'--checkout','checkout','--python','python','--julia','julia']
+    if override:arguments+=['--backend','beat_cpu','--julia-threads','1']
+    monkeypatch.setattr(sys,'argv',arguments)
+    module.main()
+    assert seen==[('beat_cpu',1) if override else ('coupled_reference',2)]
+
+
 @pytest.mark.parametrize('changed_input',[False,True,'before','wide','collapsed','evaluation_changed','upstream_changed','upstream_late','unstable','gain','both_gains','score_changed','last_runtime',pytest.param('cancel',marks=pytest.mark.skipif(__import__('sys').platform=='win32',reason='POSIX SIGTERM lifecycle'))])
 def test_finalist_replays_catalogue_array_and_freezes_gain(tmp_path, monkeypatch, changed_input):
     examples = Path(__file__).resolve().parents[1] / 'examples'
