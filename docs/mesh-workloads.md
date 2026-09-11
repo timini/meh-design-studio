@@ -74,3 +74,69 @@ between the failed and successful attempts. Exterior volume differs from CAD by
 pass. [Raw preparation evidence](../validation/evidence/raw-exterior-preparation/report.json)
 retains both attempts and verifies every archived file. This archive contains no
 new frequency solve and makes no acoustic convergence claim.
+
+## Axial refinement inside rear cavities
+
+`rear_axial_mesh_size_m` optionally refines the mesh along each cylindrical rear
+cavity's motion axis. For example, `0.0005` requests layers no more than 0.5 mm
+apart while `mesh_size_m` continues to control the cross-section and front horn.
+Omission preserves the original unstructured mesher and geometry identity.
+The setting must be at least 0.1 mm and no larger than `mesh_size_m`.
+
+The mesher extrudes the actual imported source face into linear tetrahedra. It
+checks the new volume and its intersection with the original CAD at the existing
+1 ppm tolerance, so a wrong direction or a different cavity shape is rejected.
+This supports full and quarter models, including tilted drivers. It changes
+neither the physical rear cup nor its exterior scattering surface. Tests verify
+that enabling it leaves the front FEM mesh byte-identical.
+
+The actual source triangulation determines the layer workload before the 3D mesh
+is generated. Both that count and the final tetrahedral count must fit
+`maximum_tetrahedra`. The region report retains the layer count, actual spacing,
+source triangle count, CAD overlap and mesher identity. Fine layers can increase
+memory requirements; a region count is not a whole-solver memory guarantee.
+
+This option addresses an observed longitudinal standing-wave discretisation
+error in the ideal 70 mm sealed rear cylinder. An independent P1 calculation on
+the original commercial 4 mm mesh reproduces its coupled-native rear impedance,
+but differs from the analytic cylinder impedance by over 400% at 7.5 kHz. The
+prepared isotropic 3 mm rear meshes still differ by about 94%. An exploratory
+0.5 mm axial mesh reduces that isolated error to 0.84%, retaining a 4 mm
+cross-section target. These comparisons are numerical diagnostics, not measured
+driver performance or whole-horn convergence.
+
+The regression solves the independent P1 Helmholtz equations on a generated
+layered cylinder at 350, 2,000, 5,000 and 7,500 Hz and compares its force/velocity
+impedance with `i rho c S cot(k L)` for the native `exp(-i omega t)` convention,
+at a 2% relative limit. This is the distributed sealed-cylinder solution, which
+retains its longitudinal resonances; a low-frequency compliance approximation
+would not suffice. See the [IIT Kanpur tube-acoustics lecture](https://archive.nptel.ac.in/content/storage2/courses/112104176/pdf/31.pdf).
+The test does not qualify arbitrary cavities, cone/basket geometry, damping,
+front/BEM meshes, response flatness or printing.
+
+The separate commercial coupled comparison now completes those same four
+frequencies using source `bb727b59542b46dc915894be805ec404b31722fb`, with
+505,927 tetrahedra and 8,064 exterior triangles. Front FEM and final exterior
+meshes are byte-identical to the original commercial seed. The integrated native
+rear force/velocity load agrees with the analytic cylinder within 0.837% for
+both mid groups; the full force equation residual is below `9e-15` and the
+native electrical check passes its unchanged `1e-8` limit.
+
+| Four-frequency check | Maximum relative difference | 2% limit |
+| --- | ---: | --- |
+| Original versus layered raw excitation basis | 50.37% | Fail |
+| Original versus layered pressure with frozen DSP | 0.798% | Pass |
+| Original versus layered parallel-bank impedance | 0.519% | Pass |
+| Layered polar rotation between equivalent mid groups | 1.322% | Pass |
+
+The large raw-basis change shows why the original mesh cannot be accepted as
+converged. The crossover suppresses some affected responses, so the smaller
+frozen-DSP change does not establish general basis accuracy. These four samples
+also do not establish front/BEM or full-band convergence, response compliance,
+commercial-driver accuracy or a buildable optimised design.
+
+[Layered rear evidence](../validation/evidence/layered-rear-mesh/report.json)
+preserves the fresh CAD, meshes, native fields, controls, comparison scripts and
+earlier failed isolated refinements. All 114 archive members pass SHA-256 and CRC
+verification. The 43,637,991-byte archive SHA-256 is
+`106c38be3801bd06a4d184cbe779647f37e66a5caac790885061809836b1ec1b`.

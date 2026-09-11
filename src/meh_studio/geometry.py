@@ -35,6 +35,7 @@ class HornGeometry(Record):
     front_depth_m: Positive
     rear_depth_m: Positive
     mesh_size_m: Positive
+    rear_axial_mesh_size_m: Annotated[float, Field(strict=True, ge=0.0001)] | None = None
     solver_symmetry: Literal['off', 'xy'] = 'off'
     tessellation_tolerance_m: Positive = 0.0001
     maximum_tetrahedra: Annotated[int, Field(strict=True, ge=1, le=10_000_000)] = 2_000_000
@@ -56,6 +57,8 @@ class HornGeometry(Record):
             value.pop('profile_interpolation', None)
         if self.profile_loft == 'smooth':
             value.pop('profile_loft', None)
+        if self.rear_axial_mesh_size_m is None:
+            value.pop('rear_axial_mesh_size_m', None)
         if self.maximum_tetrahedra == 2_000_000:
             value.pop('maximum_tetrahedra', None)
         if self.maximum_exterior_triangles == 8000:
@@ -69,6 +72,8 @@ class HornGeometry(Record):
     @model_validator(mode="after")
     def valid_family(self):
         validate_profile(self.profile_sections)
+        if self.rear_axial_mesh_size_m is not None and self.rear_axial_mesh_size_m > self.mesh_size_m:
+            raise ValueError('rear axial mesh spacing must not exceed the general mesh size')
         if len(self.entry_positions_m) not in (1, 2):
             raise ValueError("one or two symmetric entry pairs are supported")
         if self.entry_layout == 'four_driver_ring' and len(self.entry_positions_m) != 1:
@@ -398,6 +403,13 @@ def mesh_geometry(output: Path) -> dict:
                         walls.append(tag)
                 if any(len(values) != 1 for values in tags.values()) or not walls:
                     raise ValueError("an expected source/interface face was not uniquely identified")
+                layered = None
+                if region != 'front' and design.rear_axial_mesh_size_m is not None:
+                    from .rear_meshing import layered_rear_volume
+                    name = next(iter(tags))
+                    volumes, tags[name], walls, layered = layered_rear_volume(
+                        gmsh, volumes, tags[name][0], source['motion_axis'],
+                        design.rear_depth_m, design.rear_axial_mesh_size_m)
                 gmsh.model.addPhysicalGroup(3, [volumes[0][1]], 1, name="air_" + region)
                 groups = []
                 for physical_tag, (name, surfaces) in enumerate(tags.items(), start=10):
@@ -411,6 +423,9 @@ def mesh_geometry(output: Path) -> dict:
                 gmsh.option.setNumber("Mesh.ElementOrder", 1)
                 gmsh.option.setNumber("Mesh.MshFileVersion", 4.1)
                 gmsh.option.setNumber("Mesh.Binary", 0)
+                if layered is not None:
+                    from .rear_meshing import check_layered_workload
+                    check_layered_workload(gmsh, layered, design.maximum_tetrahedra)
                 gmsh.model.mesh.generate(3)
                 tetrahedra, _ = gmsh.model.mesh.getElementsByType(4)
                 if len(tetrahedra)>design.maximum_tetrahedra:
@@ -426,6 +441,8 @@ def mesh_geometry(output: Path) -> dict:
                 report["regions"].append({"id": region, "estimated_tetrahedra":estimated, "source_area_checks":areas, "path": path.relative_to(output).as_posix(),
                     "sha256": hashlib.sha256(path.read_bytes()).hexdigest(), "volume_m3": volume,
                     "tetrahedra": len(tetrahedra), "minimum_quality": float(min(qualities)), "boundaries": groups})
+                if layered is not None:
+                    report['regions'][-1]['layered_rear_mesh'] = layered
             finally:
                 gmsh.finalize()
         report["status"] = "complete"

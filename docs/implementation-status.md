@@ -38,7 +38,16 @@ A separate [raw exterior preparation budget](mesh-workloads.md#separate-raw-exte
 now permits the 3 mm commercial refinement to prepare without increasing its final
 solver cap. The successful retry retains byte-identical FEM and raw exterior
 meshes from the original budget failure; it produces 422,377 tetrahedra and 12,464
-final exterior triangles. Acoustic refinement results remain pending.
+final exterior triangles. That whole-mesh frequency experiment remains unrun:
+isolated checks found about 94% rear-cylinder impedance error even at 3 mm.
+
+[Targeted axial rear refinement](mesh-workloads.md#axial-refinement-inside-rear-cavities)
+now completes a separate four-frequency commercial coupled check with unchanged
+front and exterior meshes. A 0.5 mm rear spacing reduces analytic rear-load error
+below 0.84%, and the refined polar rotation check passes at 1.32%. The raw native
+basis changes by up to 50.37%, although frozen-DSP pressure changes by less than
+0.80%. This resolves the observed rear discretisation error at those samples;
+full-band front/BEM convergence and the commercial response target remain open.
 
 Merged increments now include the foundation, geometry generator, durable job ledger and initial complex metric library. These implement parts of B01/B02/B04/B05 and independent-reference infrastructure for A05. It does **not** pass G0 or any physical release gate. A01's example brief is provisional; its measurement protocol has not been ratified. The pinned Boundary Lab CPU solver has now executed the interior compression-driver fixture at one and three frequencies; see the [adapter and evidence](boundary-lab-adapter.md). This demonstrates integration and repeatability, not independent acoustic accuracy. The experimental search now also executes generated multiple-entry FEM/BEM evaluations; see [the end-to-end workflow](end-to-end-search.md).
 
