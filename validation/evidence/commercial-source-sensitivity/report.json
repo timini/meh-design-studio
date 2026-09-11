@@ -1,0 +1,297 @@
+{
+  "status": "complete",
+  "scope": "Synthetic HF sensitivity on completed trials0/2; includes trial2 native inputs/results, references already archived trial0.",
+  "application_source_commit": "7e2cc14d96d320ff5e99fd0b2046d7657882ac03",
+  "native_application_source_commit": "188a933137c3d11f9df7bb7fa35c7f188827a6e1",
+  "archives": [
+    {
+      "file": "evidence.zip",
+      "size_bytes": 48664795,
+      "sha256": "1fe22f9b7ffdc45eb7b7cb5e0135671c1e98105771fe6b45ad8e90b13c5ca978"
+    }
+  ],
+  "archived_file_sha256": {
+    "archive-commercial-source-sensitivity.py": "8a4075d41a5cf49b74b468faff7b09b362b8a9d1e62e63fc16b9557ba7259c13",
+    "check-quarter-commercial-rim-trial.py": "dc73a7e98af359e0c2d419cffc32332c2ad5a35fbae24fe98c4fc89b038a3a7c",
+    "check-source-sensitivity-handover.py": "ca5984c958eb05e141e2b4dbdf85af2968bda096ce7db7883c1ff8ce81be12e5",
+    "commercial-source-sensitivity/rejected-handover.json": "83bfe0a21fc68b60c64621045e5a22d3b6ffb7933bfd868b387912480582ca6e",
+    "commercial-source-sensitivity/results.json": "d9d9a70d776ea0800b624fc2594ea21e78cc84f92f9a938a13052ba63cfbd44f",
+    "commercial-source-sensitivity/trial-0-bl_n_a-0.9.npz": "145f22c05fb7287aaeebaf76ce425c423bfa1d46deb0fe2a4ccd15e42a886ed9",
+    "commercial-source-sensitivity/trial-0-bl_n_a-1.1.npz": "e474113781609f265b1a3261064ad75a8a1be6ed2ac905e8577d0dfc83dfe383",
+    "commercial-source-sensitivity/trial-0-cms_m_n-0.9.npz": "b8dba26111850053220fcea48d55b7e3c0b9ec1bdee561f129b94aed3bb8f559",
+    "commercial-source-sensitivity/trial-0-cms_m_n-1.1.npz": "3499c58757a1c7f015c5cd6964722d913be0ad52f364acf4d84c075de93f4273",
+    "commercial-source-sensitivity/trial-0-le_h-0.9.npz": "24ca20e150f9998c2067fd21634744f5bd0ef78c1554f29d1d11c9f1be4944f2",
+    "commercial-source-sensitivity/trial-0-le_h-1.1.npz": "1f98adfae5530abe7c9548a70fd50239f213ad016707ab1507169cb2f24723b4",
+    "commercial-source-sensitivity/trial-0-mmd_kg-0.9.npz": "89feca8cc507b99d0ebcbc5e4b200864142f8be492eafff795aebf2decdcc925",
+    "commercial-source-sensitivity/trial-0-mmd_kg-1.1.npz": "814a8aa078ecd3bddc53ae746bf06915af6d41ededd8c084d24b6245f1362bc2",
+    "commercial-source-sensitivity/trial-0-nominal.npz": "f56d04fdb34f154fd8650855ca1904dcc2a638db9d4c4ccf053f61588adfc178",
+    "commercial-source-sensitivity/trial-0-re_ohm-0.9.npz": "343f80955adcc1249c014a0a696a1dbdbd1258b3774fce78b86a24525224d67a",
+    "commercial-source-sensitivity/trial-0-re_ohm-1.1.npz": "a60794d677ae507c9225752f6a74a51004cc801d7c9ed9f83606b7da03dd3542",
+    "commercial-source-sensitivity/trial-0-rms_ns_m-0.9.npz": "44d23040a04256c86ac649d4f0d00d9cab5ffc52c1ef6b0d08ab87d01aa0e1f0",
+    "commercial-source-sensitivity/trial-0-rms_ns_m-1.1.npz": "7be35a93aede7a781d6abe391851d9ea277b535ef93f9df8e24bef02ebf195e1",
+    "commercial-source-sensitivity/trial-2-bl_n_a-0.9.npz": "52c46f66cc91af2292e99e2da467040dcb1bf8db28efff4dd200ebde6802b420",
+    "commercial-source-sensitivity/trial-2-bl_n_a-1.1.npz": "7c881114bb25affd2b02225eae00c6704fe3b4c4ee993c3be1989a77dd1bcff5",
+    "commercial-source-sensitivity/trial-2-cms_m_n-0.9.npz": "0e4dc2096d7d10edf437e5f3af8198f740863e702ad76524de1f6d52c8346735",
+    "commercial-source-sensitivity/trial-2-cms_m_n-1.1.npz": "b4c40a1896b1776ba7b789eca52e97142252ed5001bfc54aef2c434ec52b5961",
+    "commercial-source-sensitivity/trial-2-le_h-0.9.npz": "7f8062d06253206cfcdb0d86558384733053afe950cbfc232f3591e3e2822c8b",
+    "commercial-source-sensitivity/trial-2-le_h-1.1.npz": "690d28de4d2d2857230d08d931e6042ba14cf195ea3e0b69c365800d9023abd1",
+    "commercial-source-sensitivity/trial-2-mmd_kg-0.9.npz": "a20c6e4abe142586885bffd6572d0e13c41e49d918349e5ed7cbb4805ce6b42d",
+    "commercial-source-sensitivity/trial-2-mmd_kg-1.1.npz": "5aeb7e929ddbaa8e1aae959972b4b173be8446a4f9715c34116103eb49109c79",
+    "commercial-source-sensitivity/trial-2-nominal.npz": "349445a0136ca3ae8e0e7c85558196613f38ae6c849f1269d1c3768357b466a8",
+    "commercial-source-sensitivity/trial-2-re_ohm-0.9.npz": "05f8a46f6db44b7d8179b6bb0305e25af4a6573cd0efb807055d2d59a9874d88",
+    "commercial-source-sensitivity/trial-2-re_ohm-1.1.npz": "1b9b12a2edf6a3aeff67fc0d1f5cbb12e259fc535e2b524b95603f275ada2d87",
+    "commercial-source-sensitivity/trial-2-rms_ns_m-0.9.npz": "92dec7d4063b855581c8dd5b735f97de2f5dbdb0dea94e6edd71c26e16263e21",
+    "commercial-source-sensitivity/trial-2-rms_ns_m-1.1.npz": "1270bf85170b5b4af93b9b00621ecbab0f8f696c88075d754147b03fc3028954",
+    "commercial-source-sensitivity-controls.json": "ed9ae347a0377d2389f81193cdae16c42871a4d298c3fd87ec4bc23f21759629",
+    "commercial-source-sensitivity.log": "5f59ed3100484647717b2dc522f1e74d8f4e426306a9ac884dfdd235343a52d1",
+    "quarter-commercial-rim-search/brief.json": "89c21eac85422bb01c1d8649ab32d85d74e6ca6c310f8f422b8d31b00faeb698",
+    "quarter-commercial-rim-search/trial-002/candidate.json": "19c4a025a6ff7860cd7908934fd349d57c4ae0191872b85025ec38a9eb265638",
+    "quarter-commercial-rim-search/trial-002/evaluation/evaluation.json": "57d598fe0fed5c3ddaa4619ee59fdeaeddaa244162c50ea391ddeba324f213c6",
+    "quarter-commercial-rim-search/trial-002/evaluation/preflight.json": "68621f58dca5bbb0a57a26bdd0c720a25fbb580163766645b229f13f8c67409b",
+    "quarter-commercial-rim-search/trial-002/evaluation/preflight.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "quarter-commercial-rim-search/trial-002/evaluation/request.json": "894ccaf78b5ed059173e1e1c9c314135ca8b02b2213b5bc7120f88bef6c3a656",
+    "quarter-commercial-rim-search/trial-002/evaluation/solve.ndjson": "1aadde9d58cc9c4a90553a9d92bb6c09f283f7350e6da44c93116e16fb91b87e",
+    "quarter-commercial-rim-search/trial-002/evaluation/solve.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/compiled-system.json": "7e537ac9a2b983adc0f159c539bd0e974c13a348a68256fcbc29eb5e2d4cbd97",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/domains.json": "ab57335b0abe392feb46cbf2732d803e7ad6e3c158b2a79812df5c33bbc87c6c",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/domains.npz": "d28020b737ce381a31474ee55c42b1ee75eb024d78632764b5399e86f7cab79e",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/frequencies/000000.json": "8a62aa40da8c56bb53a73ba5ab9349e823f9c6dfc9ff59ae784a176d6ff2a3bb",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/frequencies/000000.npz": "2e850fdbedff520cd9071e991de3925362f0649b5abbce5aea63d969082270ea",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/frequencies/000001.json": "3ea94561711cb1f75af12ccc840cebdc51419c2a18b9bf2fbe9bc82d8c73d391",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/frequencies/000001.npz": "96d4a4f8cd986776501eee5b6f64dc8092a6b810695429d19ab64c21f6d11ffb",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/frequencies/000002.json": "2ad827531ae885fdeb69cce73f84a1b7ca906a5db6b897a13d7bf2b034d917cb",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/frequencies/000002.npz": "5aee1b3aa3f135855aeb7f132655f49e4f2cc8dca50014813feeff1125fe8bdb",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/frequencies/000003.json": "da47b35dfe734bc66f0c7e486800729588e32e3a385bf633690c46722c7ab5e2",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/frequencies/000003.npz": "0724bf93143d56ee4638d8a5f32082aeabc32553dcd876b55c64d4906b34bcaa",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/frequencies/000004.json": "5e5abe14c99e2aa572126db4156672cb4e5bd6d4d670de0214350b63bd58a1c6",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/frequencies/000004.npz": "2a6ebfd13b8b22cd4750cc76cd72dce6cdf8693743da67a354334734218c73cc",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/frequencies/000005.json": "5a277873339e1753f799bcbb08d583e8d36d3bbfee060c091e0026308e6feb02",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/frequencies/000005.npz": "c4954c52c059b03d49c3921b2498a039ade80521978482672cc38a058afa2d53",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/frequencies/000006.json": "81d47ee236dac0447f01eb0cec859575e671fb348c53d35b79f98800a681e17f",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/frequencies/000006.npz": "a2ccfa59695683f011c7b72e7179dcac6626caaf0b855f1cb1499e73520bdef5",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/frequencies/000007.json": "d4da83de40a57400d6cc95b01aa502d83690dfd4b3699122b7a9fbaec5ff58df",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/frequencies/000007.npz": "f3839e64b696b8e0dcdf00f60ec8669a5f544175280b489536cb2bc9a84e0667",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/frequencies/000008.json": "3bfb70f77fee6e04a83ebb82a911360099209845c3f5a3b92e6ac4328d4c8708",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/frequencies/000008.npz": "06d5ee4558e5895bd2de4d68c77ebe0103969f3f5502f7db681c1b470f8fc549",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/frequencies/000009.json": "e0e10d59b8fccd601edbfe0ee54264760eaeb7b86a94b366580c64adf9f8f71d",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/frequencies/000009.npz": "91bfadc5d307a3331bf88e6ea72d8509d0423a11ae1efae5c34ffe34a786e3e9",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/frequencies/000010.json": "e290d362580e5740a97e10f8c733d9a2a1a1f76c73b60578033f28b7e32d25cc",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/frequencies/000010.npz": "317a8b702e04dc57e93f6b9249f2143026bc128c80f3f4f436010774d559069c",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/frequencies/000011.json": "d9fee7eba73d6b4b59a920fb66b8d3878c502b698ce266824f6646ff610b421e",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/frequencies/000011.npz": "a425c76af7b560c01baa327ad3855df523c7afd52b40eb5eec1c04e1778b2a1a",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/frequencies/000012.json": "b73fd93529fa56deed5867e8a80814b669ca0a44863fcf571ccbaffb74205e4a",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/frequencies/000012.npz": "a1b37323f74f346a37e40542ba31e3d64163238ff1d61a2dd6fb1db0cac884ab",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/frequencies/000013.json": "5d0753deb70ad28b5770c81907b8b8c78fa5b289b4af5e03bbfcc4130bcb3552",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/frequencies/000013.npz": "494988e2e78344fb6934b282b8bf250aa58849145aaa64c2b650b5316033a883",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/frequencies/000014.json": "257b167bc1e095be19bf864f2f4a5cdd66a6ad9868ceb923759afbd9539a8ed7",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/frequencies/000014.npz": "1a33b70b84adcc942cef41a2c9a3d5fe21aca7d1828d2263d90c083a851bdb9f",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/manifest.json": "d39995965a4b15b8b3734ef9e69fb77758a89948a3c31734ce2faaf8fde3a267",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/project.snapshot.blab.json": "0d1170f4d62246a4c3e09dd383b762617009c817c8916e5219e55407e97e5e79",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/request.json": "71afa6d73260672bd651314b399b56131873228281e911caf4a3f192549c3df1",
+    "quarter-commercial-rim-search/trial-002/evaluation/upstream/runtime.json": "09628cd9bb59362e4927ec2e47becddf9fe94841bba1446c1acc576a21a69bca",
+    "quarter-commercial-rim-search/trial-002/geometry/geometry.json": "718c26ac1f19c888ce660eff31e0ab17552937e3281a43eb472bef998a1400d8",
+    "quarter-commercial-rim-search/trial-002/score.json": "2b833f5bc8d43208097fcbc703e32109c467942126670d71e82d0f058aba61aa",
+    "quarter-commercial-rim-search/trial-002/system/compilation.json": "d23fd0b70f33c086b4f1e7d242f4826a36560cde5b810d127346b7c9dfe13166",
+    "quarter-commercial-rim-search/trial-002/system/conform-interface.json": "a8bb2c2de902caa7ce90a151bd4f21da356cf496b910e57bcb458fea5075a3c2",
+    "quarter-commercial-rim-search/trial-002/system/conform-interface.log": "75a11da44c802486bc6f65640aa48a730f0f684c5c07a42ba3cd1735eb3fb070",
+    "quarter-commercial-rim-search/trial-002/system/exterior/envelope.step": "107f130397d5c2da2b3075bca0d7a87a8a6193d5f7e6298de4295d17217eead2",
+    "quarter-commercial-rim-search/trial-002/system/exterior/exterior.json": "4c432a482daf6b3fdbb4ca5bb23669f1f46aa69fdda15ca108d5ce5eb0a2ffe4",
+    "quarter-commercial-rim-search/trial-002/system/exterior/exterior.msh": "92312261e690353a2db278592bf5eddcde1d47dfff945ab9b2a7d1d3471adb00",
+    "quarter-commercial-rim-search/trial-002/system/exterior/fragmented.step": "5bde635fd4b574696de927e72ad1c3ed1c4a35d30f7983a5a1fb19636af06128",
+    "quarter-commercial-rim-search/trial-002/system/exterior/mouth.step": "3226ef058014ca64ffb33b6d588d4c46811431d267085a3251a0a5b3bd319e92",
+    "quarter-commercial-rim-search/trial-002/system/meshes/exterior-conformed-raw.msh": "78fdc6b7b4d566cc34a49e8df3d8da5303656a40ee5271910aefe8807f306667",
+    "quarter-commercial-rim-search/trial-002/system/meshes/exterior.msh": "61a3c372ad107b2faf02e4969cce7517b0c315650394ada7edbe73c390e12de3",
+    "quarter-commercial-rim-search/trial-002/system/meshes/front.msh": "649e1d0f6e934486ef4b163c0fd507d9e4e3203b615212c18fc69e4ebfbc9eee",
+    "quarter-commercial-rim-search/trial-002/system/meshes/rear_entry_0_positive.msh": "3fc39c7ec25ddad21adf899f88461976308ecf87e9e817d5e2c2278b1643ed94",
+    "quarter-commercial-rim-search/trial-002/system/meshes/rear_entry_0_positive_y.msh": "ccb5ddb9466c83c8277c5c9cdce40f585d8791bb52d4a693dfbf2adebb9f25b4",
+    "quarter-commercial-rim-search/trial-002/system/project.blab.json": "0d1170f4d62246a4c3e09dd383b762617009c817c8916e5219e55407e97e5e79",
+    "quarter-commercial-rim-search/trial-002/system/sources.json": "d32b2faf82e8721af13a365de1ec9911c364dbbdf57ff1a0929104e4239d7d1a",
+    "quarter-commercial-rim-trial-002-validation.json": "0c197a4dab5b22e22249fba0d49dc59d842e2b65e7c47e28a356704eec63e66d",
+    "quarter-commercial-rim-trial-002-validation.log": "dc4c3dea25a0a2bfbd5215d0221f82cafec78c51399f55eb85bc0f8b05b0bc45",
+    "quarter-commercial-rim-validation-controls.json": "d536962a08dc326a82970ee4b00c5d0986e18a9734737d71d055371f9b9dd9f5",
+    "run-commercial-source-sensitivity.py": "954a74d19cd9add677911152ef9e4c821f387a00d096ab4261b7cc39fd7212b0",
+    "source-sensitivity-handover.log": "39b6099545361172c22dbe726acb330484ea2885d7cb88e6820af7f58768131a"
+  },
+  "baseline_evidence_report": "validation/evidence/commercial-quarter-baseline/report.json",
+  "baseline_evidence_report_sha256": "56efcff0eebb95d8ab247dbffad9d9c475bf951ac343c65a012413158664bcb5",
+  "cases": 26,
+  "comparisons": [
+    {
+      "probe": {
+        "name": "nominal",
+        "parameter": null,
+        "factor": 1.0
+      },
+      "statuses": [
+        "scored",
+        "scored"
+      ],
+      "mutation_minus_seed_acoustic_objective": -0.6499838397080708,
+      "mutation_better": true
+    },
+    {
+      "probe": {
+        "name": "re_ohm-0.9",
+        "parameter": "re_ohm",
+        "factor": 0.9
+      },
+      "statuses": [
+        "scored",
+        "scored"
+      ],
+      "mutation_minus_seed_acoustic_objective": -0.44127813959902085,
+      "mutation_better": true
+    },
+    {
+      "probe": {
+        "name": "re_ohm-1.1",
+        "parameter": "re_ohm",
+        "factor": 1.1
+      },
+      "statuses": [
+        "scored",
+        "scored"
+      ],
+      "mutation_minus_seed_acoustic_objective": -0.6859906314921638,
+      "mutation_better": true
+    },
+    {
+      "probe": {
+        "name": "le_h-0.9",
+        "parameter": "le_h",
+        "factor": 0.9
+      },
+      "statuses": [
+        "scored",
+        "scored"
+      ],
+      "mutation_minus_seed_acoustic_objective": -0.6197903167192074,
+      "mutation_better": true
+    },
+    {
+      "probe": {
+        "name": "le_h-1.1",
+        "parameter": "le_h",
+        "factor": 1.1
+      },
+      "statuses": [
+        "scored",
+        "scored"
+      ],
+      "mutation_minus_seed_acoustic_objective": -0.6819521183301553,
+      "mutation_better": true
+    },
+    {
+      "probe": {
+        "name": "bl_n_a-0.9",
+        "parameter": "bl_n_a",
+        "factor": 0.9
+      },
+      "statuses": [
+        "scored",
+        "scored"
+      ],
+      "mutation_minus_seed_acoustic_objective": -0.5839426509937482,
+      "mutation_better": true
+    },
+    {
+      "probe": {
+        "name": "bl_n_a-1.1",
+        "parameter": "bl_n_a",
+        "factor": 1.1
+      },
+      "statuses": [
+        "scored",
+        "scored"
+      ],
+      "mutation_minus_seed_acoustic_objective": -0.4980071769777794,
+      "mutation_better": true
+    },
+    {
+      "probe": {
+        "name": "mmd_kg-0.9",
+        "parameter": "mmd_kg",
+        "factor": 0.9
+      },
+      "statuses": [
+        "scored",
+        "scored"
+      ],
+      "mutation_minus_seed_acoustic_objective": -0.45257147028357636,
+      "mutation_better": true
+    },
+    {
+      "probe": {
+        "name": "mmd_kg-1.1",
+        "parameter": "mmd_kg",
+        "factor": 1.1
+      },
+      "statuses": [
+        "rejected",
+        "rejected"
+      ]
+    },
+    {
+      "probe": {
+        "name": "cms_m_n-0.9",
+        "parameter": "cms_m_n",
+        "factor": 0.9
+      },
+      "statuses": [
+        "scored",
+        "scored"
+      ],
+      "mutation_minus_seed_acoustic_objective": -0.757659386038263,
+      "mutation_better": true
+    },
+    {
+      "probe": {
+        "name": "cms_m_n-1.1",
+        "parameter": "cms_m_n",
+        "factor": 1.1
+      },
+      "statuses": [
+        "scored",
+        "scored"
+      ],
+      "mutation_minus_seed_acoustic_objective": -0.5627426179423161,
+      "mutation_better": true
+    },
+    {
+      "probe": {
+        "name": "rms_ns_m-0.9",
+        "parameter": "rms_ns_m",
+        "factor": 0.9
+      },
+      "statuses": [
+        "scored",
+        "scored"
+      ],
+      "mutation_minus_seed_acoustic_objective": -0.6206189495382581,
+      "mutation_better": true
+    },
+    {
+      "probe": {
+        "name": "rms_ns_m-1.1",
+        "parameter": "rms_ns_m",
+        "factor": 1.1
+      },
+      "statuses": [
+        "scored",
+        "scored"
+      ],
+      "mutation_minus_seed_acoustic_objective": -0.6793932106412548,
+      "mutation_better": true
+    }
+  ],
+  "response_limit_passes": 0,
+  "qualified": false,
+  "physical_validation": false,
+  "limitations": [
+    "Existing 4mm acoustic basis is not converged in the upper band.",
+    "Changing lumped circuit parameters does not model phase-plug geometry, breakup, nonlinear motion or actual part-to-part variation.",
+    "This does not qualify any source or create a native search winner.",
+    "+/-10% probes are synthetic engineering perturbations, not claimed manufacturing tolerances or a statistical interval.",
+    "No native solver rerun for perturbations, no recalibrated DSP, no new selected driver or accepted horn."
+  ]
+}
