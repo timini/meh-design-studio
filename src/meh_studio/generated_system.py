@@ -8,6 +8,7 @@ from __future__ import annotations
 import math
 from pathlib import Path
 import shutil
+from pydantic import model_validator
 
 from .boundary_lab import _contained, _read_json, _write_json, sha256
 from .domain import Positive, Record, SourceModel
@@ -19,6 +20,12 @@ class HornSources(Record):
     side: SourceModel
     density_kg_m3: Positive = 1.21
     sound_speed_m_s: Positive = 343.0
+
+    @model_validator(mode='after')
+    def throat_only_transform(self):
+        if self.side.ideal_outlet_area_m2 is not None:
+            raise ValueError('ideal outlet transform is supported only for the throat; mids have explicit front and rear air')
+        return self
 
 
 def compile_interior_system(geometry_directory: Path, sources: HornSources, output: Path, *, _report=None, _activate=None) -> dict:
@@ -60,7 +67,7 @@ def _compile_interior_system(geometry_directory: Path, sources: HornSources, out
             or design.content_hash != mesh.get("design_hash") or mesh.get("units") != "m"):
         raise ValueError("complete matching geometry and metre-scale meshes are required")
     for source, radius in ((sources.throat, design.throat_radius_m), (sources.side, design.front_radius_m)):
-        if not math.isclose(source.sd_m2, math.pi * radius**2, rel_tol=1e-6):
+        if not math.isclose(source.outlet_area_m2, math.pi * radius**2, rel_tol=1e-6):
             raise ValueError("source effective area must match its ideal diaphragm disk")
     axes = {name: list(axis) for name, _, axis in design.entry_sites}
     expected_sources = set(axes)
@@ -129,10 +136,15 @@ def _compile_interior_system(geometry_directory: Path, sources: HornSources, out
                 [f"boundary:front:{name}_front_source", f"boundary:rear_{name}:{name}_rear_source"]))
         for name, source, axis, boundary_ids in assignments:
             component = "component:" + name
+            if source.ideal_outlet_area_m2 is not None:
+                system['metadata'].setdefault('ideal_outlet_transforms', {})[component] = {
+                    'source_sha256': source.content_hash, 'diaphragm_area_m2': source.sd_m2,
+                    'outlet_area_m2': source.outlet_area_m2,
+                    'outlet_velocity_per_diaphragm_velocity': source.outlet_velocity_ratio,
+                    'model': 'lossless_zero_length_area_transformer'}
             system["components"].append({"id": component, "name": name, "kind": "electrodynamic_transducer",
-                "boundary_ids": boundary_ids, "parameters": {"re_ohm": source.re_ohm, "le_h": source.le_h,
-                    "bl_n_per_a": source.bl_n_a, "mmd_kg": source.mmd_kg, "cms_m_per_n": source.cms_m_n,
-                    "rms_n_s_per_m": source.rms_ns_m, "motion_axis": axis, "motion_profile": "rigid_translation"}})
+                "boundary_ids": boundary_ids, "parameters": source.outlet_piston_parameters() |
+                    {"motion_axis": axis, "motion_profile": "rigid_translation"}})
             system["excitation_ports"].append({"id": "excitation:" + name, "name": name + " native 2.83 V",
                 "kind": "voltage", "component_id": component})
         project = {"schema_version": 9, "physical_system": system, "symmetry": "off",

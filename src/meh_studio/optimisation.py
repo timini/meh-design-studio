@@ -113,7 +113,7 @@ def candidates(brief, base, drivers):
             design = HornGeometry.model_validate(base.model_dump() | {'length_m':length,
                 'mouth_radius_m':mouth,'entry_positions_m':tuple(length*z for z in entries),
                 'profile_sections':profile,
-                'throat_radius_m':math.sqrt(t.source_model.sd_m2/math.pi),
+                'throat_radius_m':math.sqrt(t.source_model.outlet_area_m2/math.pi),
                 'front_radius_m':math.sqrt(s.source_model.sd_m2/math.pi)})
         except ValueError:
             continue

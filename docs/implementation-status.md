@@ -68,6 +68,11 @@ Historical one-metre results remain one-metre results. Commercial HF source
 qualification is still open; the [source audit](research/commercial-hf-source-audit.md)
 records the available manufacturer evidence and remaining gaps.
 
+An explicit [ideal diaphragm-to-outlet transformer](ideal-compression-source.md)
+now separates physical throat-driver area from horn-exit area, including circuit
+conversion and physical diaphragm excursion reporting. Its circuit equivalence
+checks do not qualify a commercial compression driver or its phase plug.
+
 An [independent pulsating-sphere comparison](pulsating-sphere-reference.md)
 passed its predeclared 2% complex-pressure limit at 350, 2,000, 5,000 and 7,500 Hz
 (maximum 0.708%). This validates the tested exterior formulation and normalisation

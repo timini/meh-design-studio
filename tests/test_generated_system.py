@@ -69,6 +69,27 @@ def test_effective_area_mismatch_is_not_silently_rescaled(generated):
     assert not output.exists()
 
 
+def test_explicit_throat_transform_compiles_outlet_circuit_and_retains_physical_source(generated):
+    from meh_studio.operating import diaphragm_velocity_ratios
+    root, original, output = generated
+    data = original.model_dump(mode='json')
+    data['throat']['ideal_outlet_area_m2'] = data['throat']['sd_m2']
+    data['throat']['sd_m2'] *= 3
+    sources = HornSources.model_validate(data)
+    compile_interior_system(root, sources, output)
+    system = json.loads((output / 'project.blab.json').read_text())['physical_system']
+    throat = next(c for c in system['components'] if c['id'] == 'component:throat')
+    assert throat['parameters']['mmd_kg'] == pytest.approx(sources.throat.mmd_kg / 9)
+    assert throat['parameters']['bl_n_per_a'] == pytest.approx(sources.throat.bl_n_a / 3)
+    assert HornSources.model_validate_json((output / 'sources.json').read_text()) == sources
+    ids = [c['id'] for c in system['components']]
+    ratios = diaphragm_velocity_ratios(system, ids, output / 'sources.json')
+    assert ratios.tolist() == pytest.approx([3., 1., 1.])
+    system['metadata']['ideal_outlet_transforms']['component:throat']['diaphragm_area_m2'] *= 2
+    with pytest.raises(ValueError, match='physical source record'):
+        diaphragm_velocity_ratios(system, ids, output / 'sources.json')
+
+
 @pytest.mark.parametrize("fault", ["units", "hash", "region", "boundary", "file"])
 def test_incomplete_or_changed_mesh_cannot_compile(generated, fault):
     root, sources, output = generated

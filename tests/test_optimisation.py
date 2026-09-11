@@ -22,6 +22,23 @@ def test_candidate_search_is_bounded_deterministic_and_varies_models_geometry():
     assert all(c['sources'].throat.provenance.kind=='synthetic' for c in a)
 
 
+def test_compression_source_uses_outlet_for_geometry_and_retains_diaphragm_area():
+    import math
+    brief, base, drivers = inputs()
+    original = candidates(brief, base, drivers)[0]
+    records = []
+    for driver in drivers:
+        data = driver.model_dump(mode='json')
+        if driver.id in brief.throat_ids:
+            data['source_model']['ideal_outlet_area_m2'] = driver.source_model.sd_m2
+            data['source_model']['sd_m2'] *= 3
+        records.append(DriverRevision.model_validate(data))
+    selected = candidates(brief, base, records)[0]
+    assert selected['design'] == original['design']
+    assert selected['sources'].throat.sd_m2 == pytest.approx(3 * math.pi * selected['design'].throat_radius_m**2)
+    assert selected['sources'].throat.outlet_velocity_ratio == pytest.approx(3.)
+
+
 def test_cost_and_driver_limits_prune_before_solving():
     brief,base,drivers=inputs()
     brief=SearchBrief.model_validate(brief.model_dump()|{'max_drivers':3,'max_driver_cost':14})

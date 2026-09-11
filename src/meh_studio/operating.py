@@ -11,6 +11,28 @@ import numpy as np
 from .metrics import sum_voltage_basis, electrical_power_rms, pressure_levels_rms
 
 
+def diaphragm_velocity_ratios(system, ids, sources_path):
+    """Recover physical motion from the verified compiled outlet coordinate."""
+    from .generated_system import HornSources
+    transforms = system.get('metadata', {}).get('ideal_outlet_transforms', {})
+    ratios = np.ones(len(ids))
+    if not transforms:
+        return ratios
+    source = HornSources.model_validate_json(sources_path.read_text()).throat
+    expected = {'component:throat': {
+        'source_sha256': source.content_hash, 'diaphragm_area_m2': source.sd_m2,
+        'outlet_area_m2': source.outlet_area_m2,
+        'outlet_velocity_per_diaphragm_velocity': source.outlet_velocity_ratio,
+        'model': 'lossless_zero_length_area_transformer'}}
+    if source.ideal_outlet_area_m2 is None or transforms != expected:
+        raise ValueError('compiled outlet transform differs from the physical source record')
+    component = next(c for c in system['components'] if c['id'] == 'component:throat')
+    if any(component['parameters'].get(k) != v for k, v in source.outlet_piston_parameters().items()):
+        raise ValueError('compiled outlet circuit differs from the physical source record')
+    ratios[ids.index('component:throat')] = source.outlet_velocity_ratio
+    return ratios
+
+
 def operating_quantities(frequencies, ids, voltage_rms, pressure_per_volt,
                          current_per_volt, velocity_per_volt, resistance_ohm):
     """All receiving drivers, including induced motion, remain in the basis."""
@@ -83,7 +105,9 @@ def search_operating_report(search: Path, input_rms_v: float):
                     raise ValueError('operating report requires individually represented physical drivers')
                 destination.append(arrays[q['key']][:,[order.index(c) for c in ids]].copy()/reference)
     voltage=input_rms_v*drive_weights(frequencies,list(ids),settings)
-    values=operating_quantities(frequencies,ids,voltage,pressures,currents,velocities,resistance)
+    motion_ratios=diaphragm_velocity_ratios(system,ids,trial/'system/sources.json')
+    physical_velocities=np.asarray(velocities)/motion_ratios
+    values=operating_quantities(frequencies,ids,voltage,pressures,currents,physical_velocities,resistance)
     hf=ids.index('component:throat');mids=[i for i in range(len(ids)) if i!=hf]
     channel_current=np.column_stack((values['current'][:,mids].sum(axis=1),values['current'][:,hf]))
     channel_voltage=voltage[:,[mids[0],hf]]
@@ -108,6 +132,11 @@ def search_operating_report(search: Path, input_rms_v: float):
             'No thermal, excursion, amplifier clipping or distortion limits inferred; no safe drive recommendation',
             'Includes all modelled mutual coupling; ideal rigid diaphragms and supplied source models remain approximations',
             'Reported pressure levels are numerical predictions at saved coordinates, not measured or far-field-qualified SPL']}
+    if system.get('metadata',{}).get('ideal_outlet_transforms'):
+        report['ideal_outlet_transforms']=system['metadata']['ideal_outlet_transforms']
+        report['component_outlet_velocity_rms_m_s']=complex_values(values['velocity']*motion_ratios)
+        report['velocity_definition']='Component velocity and excursion refer to physical diaphragms; outlet velocity is reported separately'
+        report['limitations'].append('Ideal throat area transformer omits phase-plug propagation, internal losses and breakup; it does not qualify a commercial source')
     if verified_assessment(project,evaluation)!=evidence or load_completed_search(search)[0]!=hashes:
         raise ValueError('search evidence changed during operating report')
     return report
