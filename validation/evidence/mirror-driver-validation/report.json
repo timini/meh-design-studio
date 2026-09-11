@@ -1,0 +1,608 @@
+{
+  "status": "complete_mirror_driver_validation_study",
+  "native_source_commit": "9fdafd6a57e4f83ef24562a471ddb059dcc0b686",
+  "reanalysis": {
+    "status": "complete_reanalysis",
+    "native_source_commit": "9fdafd6a57e4f83ef24562a471ddb059dcc0b686",
+    "cram_native_source_commit": "852a5a33af9617ac3a40f9956ca12f744e3d0ba8",
+    "postprocessor_parent_commit": "7db19be4a8f38894bd1d8799abd4a6118ca70b67",
+    "postprocessor_source_sha256": {
+      "src/meh_studio/__init__.py": "a23171cf505892cc316566fa1783c771de609b8cda270d2740018015a785d7a2",
+      "src/meh_studio/acoustic_handover.py": "897380429182eec9549e46fb76d38798ca343d9db5b1eb9bfed2a2904924fe27",
+      "src/meh_studio/acoustic_objectives.py": "f3b9750848308b5b050ccd38641b1b0fbcdd678f7c3c1caee58099ec59574350",
+      "src/meh_studio/boundary_lab.py": "93fe6b32e138ecab71c4b206c9781a79741407ab67833851faa74a714652a3c1",
+      "src/meh_studio/build_bundle.py": "90454b16f29c89ae15a742f7da596cecf75afc8ba77ac4da016921df72b7bd96",
+      "src/meh_studio/build_cost.py": "8b3d7de8a7921f18aa39f4241284e664c2e344f265df7ee7824e8dace21edd71",
+      "src/meh_studio/cad_runtime.py": "e96de4e3575841d3bbdf446f8ef7c49591e5c0e02248b671b1a601c47c1424f7",
+      "src/meh_studio/catalogue.py": "f4f6f5f8d88151c9c9ff10370bb7cf630f5311789f55eb96d380ef3a43e82652",
+      "src/meh_studio/circuit_reanalysis.py": "792c34d8ef4261938db26268d85240d27a2e1a4335e744df869c2597ec4f07bb",
+      "src/meh_studio/cli.py": "12ade13077818f0fa76c198cee4f9c00f536ccb54108d136ed94f3c1cecb6cfa",
+      "src/meh_studio/domain.py": "eb61bf4469f5b3e210c3b45b8e892ebbe14888ee9331024b8142e97d2bdd4a39",
+      "src/meh_studio/driver_symmetry.py": "c771d91daa790f2ef2eefd2cc8081f939e208b26ca476a3b5a9bac79fa2438de",
+      "src/meh_studio/evolution.py": "d47cf47eb150162b645719b17223597c475c2f24a7520e1ea19f256e2cb1dc63",
+      "src/meh_studio/export_validation.py": "fffc51cfa37c8415503ec0a02cfb5c7dfd8f9c6ed8df5766a7977639e2de6a4d",
+      "src/meh_studio/generated_system.py": "a05f415e622486b647f97255f1f7daf16e1a8fc4459c88473e9ea250a0ce1c02",
+      "src/meh_studio/geometry.py": "affa2a065286fdfc6888cbc05e1465d012d5a845b8fdc82afcfdbd7e0b4b7e90",
+      "src/meh_studio/geometry_cli.py": "c0b634ce535536ac2510f41cfc0218e70097d7005a5c0b77df4743300c5f31f4",
+      "src/meh_studio/geometry_worker.py": "286fad74c865b233c6ff768ec118425b641edc93b6ab8b6e8d5cc672a645627a",
+      "src/meh_studio/interface_coordinates.py": "8136946a855e874f2f1d0b33fb3409372c06ca49cc9b868d0460711495b11fa3",
+      "src/meh_studio/job_cli.py": "dece779e13937667800f5a4a3213bc8569acae843eb56da0e2f74d7f4641df3c",
+      "src/meh_studio/jobs.py": "4a35f9e8eb86c8f2550dd7afc30390a109cdffe84d10c47bcc4c278f099d3ca4",
+      "src/meh_studio/measurement_cli.py": "e385a8098ecbb353be3da8310c325c810e129f438cb2f2b86b5d1f71aff518d6",
+      "src/meh_studio/measurements.py": "20feb062e8b282e818ae162a88965ea5b2428a6cd0d75f3c10bfbf11be9967f3",
+      "src/meh_studio/metrics.py": "04d16093cff5ff1459d229ada4b762b85e1de290619517564e34965ab403fc76",
+      "src/meh_studio/native_mouth_conform.py": "990d1b0a6394916505839a445005afb12e145619bf94d64ee96f003eab931349",
+      "src/meh_studio/native_reference.py": "f765b252cab3e2ad33e14b9a54438613480b04e1701a23d149b66d0d479fa50c",
+      "src/meh_studio/operating.py": "1f0c6fd589b14745cda55ae74932941745d0b4ae1075aee090a5b615b6f86a77",
+      "src/meh_studio/optimisation.py": "b4819ea7c27921c7f00a5c095ad19c61f4644d347932122b42043a89420db624",
+      "src/meh_studio/partial_results.py": "408d0f5662362b302241b9cf8acbfec0b98698c2492250d4c98e4c69746c493a",
+      "src/meh_studio/radiating_system.py": "77eb1d6dd29177a85cc463fc82684cf8d6422a242bcc0e600c0515715b0be5a4",
+      "src/meh_studio/radiation_geometry.py": "8735329874d8ad986055e3cc780a61566e93a9b93961b4134e82a6fef6f723ad",
+      "src/meh_studio/references.py": "7b65b7aecd1cae413708c848b21237ea2609d87e08d1f02e80407947c213bef2",
+      "src/meh_studio/result_domains.py": "dd8e274cd8452654cafeed457bbaf9cd4e82b437782d4f7224c48db576f4114e",
+      "src/meh_studio/search_results.py": "5ecd21b437313a6c6f1478d53baa49a9a32588886c12bffd2ed9609acf087df2",
+      "src/meh_studio/search_resume.py": "3b3638a2b5c0d545036a11c2ca0b87aba218b60921dec86d2b35229018ae9f16",
+      "src/meh_studio/snapshots.py": "604c69f4ea993d384dfbe893c09fb579b730627547564a3843387bfb5feb19bd",
+      "src/meh_studio/spherical_metrics.py": "99d56eca708cfbe692659e3e0abd02bdd2ca6e521c5bcbef3d4bdf4eeddc47b9",
+      "src/meh_studio/validation.py": "5ed86f58b150d6fb08a5b48c5189ccc40bfa04606ca78b623d9891950614ae15",
+      "src/meh_studio/waveguide_profile.py": "dd54a4b9d1ecfeb74cd705768bc83751a5c84a5550a1623e67f3e8714b7519a4",
+      "src/meh_studio/windows_job.py": "73f3eb6a671cef7b67bacdcd030931da76eccddc583f15ffcfc9057541866626"
+    },
+    "runner_sha256": "3073c7becce8e1c82bf3e5eda641caec4253429d9eb43fba4053f4168cf7a813",
+    "quarter_electrical_validation": {
+      "schema_version": 1,
+      "evidence": "independent_equation_consistency",
+      "passed": true,
+      "project_sha256": "fd2219d989491a1ae992f2dde2dc14aa1edd45d21816c50588861dd238dc6b51",
+      "evaluation_sha256": "81637c92dd1e37fde06e0c7e7b4d1aac702ab405433dabff062e376d361fee27",
+      "rows": [
+        {
+          "frequency_hz": 350.0,
+          "passed": true,
+          "circuit_voltage_relative_residual": 2.102924087975046e-16,
+          "electrical_reciprocity_relative_residual": 6.597735171647413e-10,
+          "minimum_hermitian_admittance_eigenvalue_s": 0.09490299118458634
+        },
+        {
+          "frequency_hz": 1000.0,
+          "passed": true,
+          "circuit_voltage_relative_residual": 7.559684458374993e-17,
+          "electrical_reciprocity_relative_residual": 7.194631483672578e-10,
+          "minimum_hermitian_admittance_eigenvalue_s": 0.01739028750947191
+        },
+        {
+          "frequency_hz": 2000.0,
+          "passed": true,
+          "circuit_voltage_relative_residual": 1.174124250358467e-16,
+          "electrical_reciprocity_relative_residual": 1.3482639109670388e-10,
+          "minimum_hermitian_admittance_eigenvalue_s": 0.09521604285375027
+        },
+        {
+          "frequency_hz": 3000.0,
+          "passed": true,
+          "circuit_voltage_relative_residual": 1.6078222935701872e-16,
+          "electrical_reciprocity_relative_residual": 7.809240366008232e-10,
+          "minimum_hermitian_admittance_eigenvalue_s": 0.1473004459233951
+        }
+      ],
+      "relative_tolerance": 1e-08,
+      "acoustic_accuracy_validated": false,
+      "limitations": [
+        "Circuit consistency cannot establish acoustic field accuracy",
+        "No measured driver or speaker comparison",
+        "No RMS or absolute SPL qualification"
+      ],
+      "symmetry": {
+        "mode": "xy",
+        "components": {
+          "component:throat": {
+            "physical_driver_orbit_count": 1,
+            "surface_completion_factor": 4,
+            "fractional_symmetry_axes": [
+              "x",
+              "y"
+            ]
+          },
+          "component:entry_0_positive": {
+            "physical_driver_orbit_count": 2,
+            "surface_completion_factor": 2,
+            "fractional_symmetry_axes": [
+              "y"
+            ]
+          },
+          "component:entry_0_positive_y": {
+            "physical_driver_orbit_count": 2,
+            "surface_completion_factor": 2,
+            "fractional_symmetry_axes": [
+              "x"
+            ]
+          }
+        },
+        "admittance_current_convention": "sum_of_physical_driver_orbit_currents",
+        "circuit_voltage_convention": "per_physical_coil"
+      }
+    },
+    "unreduced_regression": [
+      {
+        "trial": "trial-000",
+        "report": {
+          "schema_version": 1,
+          "evidence": "independent_equation_consistency",
+          "passed": false,
+          "project_sha256": "f24e24f8c6d3fb6e5bb918e0b215be1ac3edc5d2120a5822c74329df0ed663dd",
+          "evaluation_sha256": "473531e1f62a51b5639c82b439ae75af3bfa16cf01dd03a3675cbc5632409617",
+          "rows": [
+            {
+              "frequency_hz": 350.0,
+              "passed": false,
+              "circuit_voltage_relative_residual": 9.568237128516695e-17,
+              "electrical_reciprocity_relative_residual": 1.8176575205774103e-08,
+              "minimum_hermitian_admittance_eigenvalue_s": 0.0948990727684612
+            },
+            {
+              "frequency_hz": 1000.0,
+              "passed": false,
+              "circuit_voltage_relative_residual": 1.9704577257018134e-16,
+              "electrical_reciprocity_relative_residual": 3.824099647164616e-08,
+              "minimum_hermitian_admittance_eigenvalue_s": 0.017410741033255045
+            },
+            {
+              "frequency_hz": 2000.0,
+              "passed": false,
+              "circuit_voltage_relative_residual": 2.3444433552847535e-16,
+              "electrical_reciprocity_relative_residual": 1.634697483115493e-08,
+              "minimum_hermitian_admittance_eigenvalue_s": 0.095229657617434
+            },
+            {
+              "frequency_hz": 3000.0,
+              "passed": false,
+              "circuit_voltage_relative_residual": 1.5142976223879765e-16,
+              "electrical_reciprocity_relative_residual": 1.6351815967438893e-08,
+              "minimum_hermitian_admittance_eigenvalue_s": 0.14730240325719454
+            }
+          ],
+          "relative_tolerance": 1e-08,
+          "acoustic_accuracy_validated": false,
+          "limitations": [
+            "Circuit consistency cannot establish acoustic field accuracy",
+            "No measured driver or speaker comparison",
+            "No RMS or absolute SPL qualification"
+          ]
+        },
+        "exactly_matches_original": true
+      },
+      {
+        "trial": "trial-001",
+        "report": {
+          "schema_version": 1,
+          "evidence": "independent_equation_consistency",
+          "passed": false,
+          "project_sha256": "96fe9a02b4dbb5fc7bc97052753d79e79f774a64671a6753fe96ecd145865f69",
+          "evaluation_sha256": "520e9759101e2e5ab95a59220ab4e2b0ae2733dc57f0a30639d9f05924b39a43",
+          "rows": [
+            {
+              "frequency_hz": 350.0,
+              "passed": false,
+              "circuit_voltage_relative_residual": 2.796874779626329e-16,
+              "electrical_reciprocity_relative_residual": 6.424034743331842e-08,
+              "minimum_hermitian_admittance_eigenvalue_s": 0.09488970106518949
+            },
+            {
+              "frequency_hz": 1000.0,
+              "passed": false,
+              "circuit_voltage_relative_residual": 1.2819359583826792e-16,
+              "electrical_reciprocity_relative_residual": 1.1649792115618793e-07,
+              "minimum_hermitian_admittance_eigenvalue_s": 0.017316642731372112
+            },
+            {
+              "frequency_hz": 2000.0,
+              "passed": false,
+              "circuit_voltage_relative_residual": 2.485905209008276e-16,
+              "electrical_reciprocity_relative_residual": 6.302971043545225e-08,
+              "minimum_hermitian_admittance_eigenvalue_s": 0.09522189514326754
+            },
+            {
+              "frequency_hz": 3000.0,
+              "passed": false,
+              "circuit_voltage_relative_residual": 1.0897474656640952e-16,
+              "electrical_reciprocity_relative_residual": 2.151152334964303e-08,
+              "minimum_hermitian_admittance_eigenvalue_s": 0.14716530007575868
+            }
+          ],
+          "relative_tolerance": 1e-08,
+          "acoustic_accuracy_validated": false,
+          "limitations": [
+            "Circuit consistency cannot establish acoustic field accuracy",
+            "No measured driver or speaker comparison",
+            "No RMS or absolute SPL qualification"
+          ]
+        },
+        "exactly_matches_original": true
+      }
+    ],
+    "fractional_driver_regression": [
+      {
+        "case": "q2-s2",
+        "report": {
+          "schema_version": 1,
+          "evidence": "independent_equation_consistency",
+          "passed": false,
+          "project_sha256": "2d82ede63210cb2863132a7c8ae0f91f548cd2b6076420bcf1d23ded5a8366b6",
+          "evaluation_sha256": "dfa5065835a718ee959a6162d1873ed3ae2b5864446b48432b76037d7de018fd",
+          "rows": [
+            {
+              "frequency_hz": 125.0,
+              "passed": false,
+              "circuit_voltage_relative_residual": 1.0563134205444906e-16,
+              "electrical_reciprocity_relative_residual": 8.096040256584884e-05,
+              "minimum_hermitian_admittance_eigenvalue_s": 0.021909192870406366
+            }
+          ],
+          "relative_tolerance": 1e-08,
+          "acoustic_accuracy_validated": false,
+          "limitations": [
+            "Circuit consistency cannot establish acoustic field accuracy",
+            "No measured driver or speaker comparison",
+            "No RMS or absolute SPL qualification"
+          ],
+          "symmetry": {
+            "mode": "x",
+            "components": {
+              "component:12nw100-a": {
+                "physical_driver_orbit_count": 1,
+                "surface_completion_factor": 2,
+                "fractional_symmetry_axes": [
+                  "x"
+                ]
+              },
+              "component:12nw100-b": {
+                "physical_driver_orbit_count": 1,
+                "surface_completion_factor": 2,
+                "fractional_symmetry_axes": [
+                  "x"
+                ]
+              }
+            },
+            "admittance_current_convention": "sum_of_physical_driver_orbit_currents",
+            "circuit_voltage_convention": "per_physical_coil"
+          }
+        },
+        "all_original_metrics_unchanged": true
+      },
+      {
+        "case": "q4-s2",
+        "report": {
+          "schema_version": 1,
+          "evidence": "independent_equation_consistency",
+          "passed": false,
+          "project_sha256": "2d82ede63210cb2863132a7c8ae0f91f548cd2b6076420bcf1d23ded5a8366b6",
+          "evaluation_sha256": "2658f69a4844265376c724674133ab29be88a55ca800d8afce6baa1cc21dacd4",
+          "rows": [
+            {
+              "frequency_hz": 125.0,
+              "passed": false,
+              "circuit_voltage_relative_residual": 2.3579127029703335e-16,
+              "electrical_reciprocity_relative_residual": 8.042988469443819e-05,
+              "minimum_hermitian_admittance_eigenvalue_s": 0.021908822921053967
+            }
+          ],
+          "relative_tolerance": 1e-08,
+          "acoustic_accuracy_validated": false,
+          "limitations": [
+            "Circuit consistency cannot establish acoustic field accuracy",
+            "No measured driver or speaker comparison",
+            "No RMS or absolute SPL qualification"
+          ],
+          "symmetry": {
+            "mode": "x",
+            "components": {
+              "component:12nw100-a": {
+                "physical_driver_orbit_count": 1,
+                "surface_completion_factor": 2,
+                "fractional_symmetry_axes": [
+                  "x"
+                ]
+              },
+              "component:12nw100-b": {
+                "physical_driver_orbit_count": 1,
+                "surface_completion_factor": 2,
+                "fractional_symmetry_axes": [
+                  "x"
+                ]
+              }
+            },
+            "admittance_current_convention": "sum_of_physical_driver_orbit_currents",
+            "circuit_voltage_convention": "per_physical_coil"
+          }
+        },
+        "all_original_metrics_unchanged": true
+      },
+      {
+        "case": "q4-s4",
+        "report": {
+          "schema_version": 1,
+          "evidence": "independent_equation_consistency",
+          "passed": false,
+          "project_sha256": "2d82ede63210cb2863132a7c8ae0f91f548cd2b6076420bcf1d23ded5a8366b6",
+          "evaluation_sha256": "067e08d24baef5c8d24e3c7eed1b6e8412e7d81d0c667af4ced9c3f1ffbd8327",
+          "rows": [
+            {
+              "frequency_hz": 125.0,
+              "passed": false,
+              "circuit_voltage_relative_residual": 1.3730673449427732e-16,
+              "electrical_reciprocity_relative_residual": 7.913925379008853e-05,
+              "minimum_hermitian_admittance_eigenvalue_s": 0.021907868613785374
+            }
+          ],
+          "relative_tolerance": 1e-08,
+          "acoustic_accuracy_validated": false,
+          "limitations": [
+            "Circuit consistency cannot establish acoustic field accuracy",
+            "No measured driver or speaker comparison",
+            "No RMS or absolute SPL qualification"
+          ],
+          "symmetry": {
+            "mode": "x",
+            "components": {
+              "component:12nw100-a": {
+                "physical_driver_orbit_count": 1,
+                "surface_completion_factor": 2,
+                "fractional_symmetry_axes": [
+                  "x"
+                ]
+              },
+              "component:12nw100-b": {
+                "physical_driver_orbit_count": 1,
+                "surface_completion_factor": 2,
+                "fractional_symmetry_axes": [
+                  "x"
+                ]
+              }
+            },
+            "admittance_current_convention": "sum_of_physical_driver_orbit_currents",
+            "circuit_voltage_convention": "per_physical_coil"
+          }
+        },
+        "all_original_metrics_unchanged": true
+      },
+      {
+        "case": "q4-s8",
+        "report": {
+          "schema_version": 1,
+          "evidence": "independent_equation_consistency",
+          "passed": false,
+          "project_sha256": "2d82ede63210cb2863132a7c8ae0f91f548cd2b6076420bcf1d23ded5a8366b6",
+          "evaluation_sha256": "a8c980b02e6e0640a4f749848a26d9e9430120f0ba614c57861f675f7bd5121a",
+          "rows": [
+            {
+              "frequency_hz": 125.0,
+              "passed": false,
+              "circuit_voltage_relative_residual": 1.448078314133179e-16,
+              "electrical_reciprocity_relative_residual": 7.915225751171195e-05,
+              "minimum_hermitian_admittance_eigenvalue_s": 0.021907927166696185
+            }
+          ],
+          "relative_tolerance": 1e-08,
+          "acoustic_accuracy_validated": false,
+          "limitations": [
+            "Circuit consistency cannot establish acoustic field accuracy",
+            "No measured driver or speaker comparison",
+            "No RMS or absolute SPL qualification"
+          ],
+          "symmetry": {
+            "mode": "x",
+            "components": {
+              "component:12nw100-a": {
+                "physical_driver_orbit_count": 1,
+                "surface_completion_factor": 2,
+                "fractional_symmetry_axes": [
+                  "x"
+                ]
+              },
+              "component:12nw100-b": {
+                "physical_driver_orbit_count": 1,
+                "surface_completion_factor": 2,
+                "fractional_symmetry_axes": [
+                  "x"
+                ]
+              }
+            },
+            "admittance_current_convention": "sum_of_physical_driver_orbit_currents",
+            "circuit_voltage_convention": "per_physical_coil"
+          }
+        },
+        "all_original_metrics_unchanged": true
+      }
+    ],
+    "original_comparison_sha256": "6221130af25cf48cba15af8050c498532324f6fcbc101a5bddca04ade8e57568",
+    "original_reduced_electrical_validation": {
+      "schema_version": 1,
+      "evidence": "independent_equation_consistency",
+      "passed": false,
+      "project_sha256": "fd2219d989491a1ae992f2dde2dc14aa1edd45d21816c50588861dd238dc6b51",
+      "evaluation_sha256": "81637c92dd1e37fde06e0c7e7b4d1aac702ab405433dabff062e376d361fee27",
+      "rows": [
+        {
+          "frequency_hz": 350.0,
+          "passed": false,
+          "circuit_voltage_relative_residual": 2.102924087975046e-16,
+          "electrical_reciprocity_relative_residual": 0.004237742914198667,
+          "minimum_hermitian_admittance_eigenvalue_s": 0.09489749519313663
+        },
+        {
+          "frequency_hz": 1000.0,
+          "passed": false,
+          "circuit_voltage_relative_residual": 7.559684458374993e-17,
+          "electrical_reciprocity_relative_residual": 0.00974874685966408,
+          "minimum_hermitian_admittance_eigenvalue_s": 0.01738556415748441
+        },
+        {
+          "frequency_hz": 2000.0,
+          "passed": false,
+          "circuit_voltage_relative_residual": 1.174124250358467e-16,
+          "electrical_reciprocity_relative_residual": 0.0003464897965382459,
+          "minimum_hermitian_admittance_eigenvalue_s": 0.0952160266690482
+        },
+        {
+          "frequency_hz": 3000.0,
+          "passed": false,
+          "circuit_voltage_relative_residual": 1.6078222935701872e-16,
+          "electrical_reciprocity_relative_residual": 9.500645508901743e-05,
+          "minimum_hermitian_admittance_eigenvalue_s": 0.14730037018765654
+        }
+      ],
+      "relative_tolerance": 1e-08,
+      "acoustic_accuracy_validated": false,
+      "limitations": [
+        "Circuit consistency cannot establish acoustic field accuracy",
+        "No measured driver or speaker comparison",
+        "No RMS or absolute SPL qualification"
+      ]
+    },
+    "fields_passed": false,
+    "maximum_field_relative_l2": 0.058468515602188624,
+    "bank_impedance_passed": true,
+    "maximum_bank_relative_error": 0.0013593039905287392,
+    "qualified": false,
+    "physical_validation": false,
+    "limitations": [
+      "Postprocessing of existing native arrays, not new solver runs",
+      "Mesh-verified group current accounting only; acoustic fields are unchanged",
+      "Original full-model electrical and quarter/full acoustic discrepancies remain",
+      "Quarter geometry is a standalone experiment, not an integrated search feature"
+    ]
+  },
+  "archives": [
+    {
+      "file": "evidence.zip",
+      "size_bytes": 3717756,
+      "sha256": "47d17fba3cbad2ef2de89541cf95298f167ee10c2670d4f5db46012197bb95b3"
+    }
+  ],
+  "archived_file_sha256": {
+    "mirror-quarter-reference-preparation/controls.json": "8ce2e0ff06dc342791d8c2e10c8c0b8260dc1edaf111bbd43bbb1caa1a2f4efc",
+    "mirror-quarter-reference-preparation/front.step": "6717f6510c2d23c65834fb3fccf61754e448ea7fded1dbed464bd37e0d61e101",
+    "mirror-quarter-reference-preparation/rear_entry_0_positive.step": "f2da644b6e21b03144e5d3e0f529475b263d6e91c4b82c5f554f1a068bccf69e",
+    "mirror-quarter-reference-preparation/rear_entry_0_positive_y.step": "381675641eed3e3c03b4ecdfe41599f3a39ddf4326f49d015f2193b5182d0b24",
+    "mirror-quarter-reference-preparation/report.json": "a618a26c67147864e0acb8a50ea37861e9d408b223923ebf317d7048245d3f93",
+    "mirror-quarter-reference-partition/controls.json": "a6f1574b57341e05a8c7c35aa0024ca92cfb80842d30e44b75f667773faed55c",
+    "mirror-quarter-reference-partition/envelope.step": "c22ea976602871cc86a48cd731cd00e3f462a2b4df958837b563c1dbeb1b8788",
+    "mirror-quarter-reference-partition/front.step": "19c446ad254c440e4dc296865a4a89cc33d894cc05c3c84a9f2c3ba13769a76c",
+    "mirror-quarter-reference-partition/rear_entry_0_positive.step": "db0b4a2c67c8264d9ff3a16716524a37e9a42e6e6da2f870a1c195b06367ae7a",
+    "mirror-quarter-reference-partition/rear_entry_0_positive_y.step": "c98dbbd9ae70b9beb8a9d0fb01f6781974c417ad09c95801efb4bb0f51edd80a",
+    "mirror-quarter-reference-partition/report.json": "e981fa001e4b6f7604086c46105eead69292358fac23e7e4bd9e01c2e5c3b4e7",
+    "mirror-quarter-reference-adaptive/controls.json": "1aa895f10c9c2af19da1acaba55fd49b3b258cad62d38ea51044a52095c74da9",
+    "mirror-quarter-reference-adaptive/envelope.step": "df5847d56643fef6dd3272f140f0139671786160bae23d0f48bb99b3e2e340b9",
+    "mirror-quarter-reference-adaptive/front.step": "807a59dae2f357d9f6998bececbec677a96c4a07f177fa934ab551076e3f180e",
+    "mirror-quarter-reference-adaptive/rear_entry_0_positive.step": "8d3605ffdabcb68528c48018e42617756e5284886ca46d0226051c477b128c6c",
+    "mirror-quarter-reference-adaptive/rear_entry_0_positive_y.step": "823285374d1d19c7a4b102db9d4e8b369eb9d7b6d713a40aead79ba093fe8bb0",
+    "mirror-quarter-reference-adaptive/report.json": "91a820aedc2d76bc492af4336d3c1e90db3303198919cce81e899b2297a1c409",
+    "mirror-quarter-reference-mesh/conform-interface.json": "6dc20c181b68878ab542569bf661b7e8e6d31dbc352ff4952d4a9a96aef9d0eb",
+    "mirror-quarter-reference-mesh/conform-interface.log": "75a11da44c802486bc6f65640aa48a730f0f684c5c07a42ba3cd1735eb3fb070",
+    "mirror-quarter-reference-mesh/controls.json": "52c1b9a4c1d12822f246a79b3dd2f0750fef7a5833367ecc0cae9630b0228d68",
+    "mirror-quarter-reference-mesh/envelope-imported.step": "4943e11a880ff15def5b6034c854e45eeefe9dfb5c9a83565f9c5645d49dab1b",
+    "mirror-quarter-reference-mesh/exterior-conformed-raw.msh": "931bec041725e2f1843a3473338cbd3ddbfa77ea99a05ebcd3d1bc8f715fea4f",
+    "mirror-quarter-reference-mesh/exterior-raw.msh": "59bc04a501639e7d810375c5326488bcedf25876a2ad3a1cd9ed46dbd1dd3c9b",
+    "mirror-quarter-reference-mesh/front-imported.step": "c3699d02ad40337c79b9f0a5079a883aefe21f513be1eec5aaa91ae0b3355794",
+    "mirror-quarter-reference-mesh/meshes/exterior.msh": "5c07a3d53a81da835f750e846162d258f74db6bd7187edc2ae1045c11ba81a8b",
+    "mirror-quarter-reference-mesh/meshes/front.msh": "766fc898f188332d50281dc2bd65f8832f5bfeb4140d902ff9d2c5a173705393",
+    "mirror-quarter-reference-mesh/meshes/rear_entry_0_positive.msh": "d686a71ab721fec1fb8d77c379fd63a4ccff6d058add076b8698296e77333033",
+    "mirror-quarter-reference-mesh/meshes/rear_entry_0_positive_y.msh": "9991e81cbf846dab654365c4df9393b9c9dac4fa3ce17934378f154e62eb40f2",
+    "mirror-quarter-reference-mesh/mouth.step": "7b0abb67500265049bcb06ee276121310e11530c2474f97b2ab1aa0983ae7c73",
+    "mirror-quarter-reference-mesh/project.blab.json": "fd2219d989491a1ae992f2dde2dc14aa1edd45d21816c50588861dd238dc6b51",
+    "mirror-quarter-reference-mesh/rear_entry_0_positive-imported.step": "ac257f87d5705b22e477028bbfcb567743218c8cb51ea64d5cebff8b70e51c42",
+    "mirror-quarter-reference-mesh/rear_entry_0_positive_y-imported.step": "6d7f8c7c71e13bdcc4e97a271e6278a41242b53f3735d70d69830fc22a2db550",
+    "mirror-quarter-reference-mesh/reflected-exterior-diagnostic.msh": "8ce485fdcc824a5acb78ca2e1182c16002c65dae4d59d5111c13031e43cec9ca",
+    "mirror-quarter-reference-mesh/report.json": "4ef557d0eda2a22de7a7adaaf14994415443f98e99b4ba872ae407cdacc45fe4",
+    "mirror-quarter-reference-native/comparison.json": "6221130af25cf48cba15af8050c498532324f6fcbc101a5bddca04ade8e57568",
+    "mirror-quarter-reference-native/evaluation/evaluation.json": "81637c92dd1e37fde06e0c7e7b4d1aac702ab405433dabff062e376d361fee27",
+    "mirror-quarter-reference-native/evaluation/preflight.json": "1b67e4c9651e90837399096bf866a1e5c791e2893320c49c2651424d8c38105a",
+    "mirror-quarter-reference-native/evaluation/preflight.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "mirror-quarter-reference-native/evaluation/request.json": "26412404b5d897026dc9adf040664b98410eb537fa9a969139a34eff073543c0",
+    "mirror-quarter-reference-native/evaluation/solve.ndjson": "6beafa9fc4768081804b852e6b9e9fd3f899a31d999fbf4210df932db3374e5f",
+    "mirror-quarter-reference-native/evaluation/solve.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "mirror-quarter-reference-native/evaluation/upstream/compiled-system.json": "6235856f083e8da1aedb5bf89d44ce25210872430538061125db55ea9233d7d1",
+    "mirror-quarter-reference-native/evaluation/upstream/domains.json": "ce1c4184d8bbc10131b6f83fefdb32c6a411fb50353d1e573c8795fdf83f5ab4",
+    "mirror-quarter-reference-native/evaluation/upstream/domains.npz": "1824a244ebe7ea593ba33a57658906c4624db81bce26c2ff2442f6473c1c2b07",
+    "mirror-quarter-reference-native/evaluation/upstream/frequencies/000000.json": "833f3a7df222a270ae8b954f3abd44ffdfa3c1ba6ad3cd68e2083bd043a30f0c",
+    "mirror-quarter-reference-native/evaluation/upstream/frequencies/000000.npz": "2635568ecab5a8525cbfbf4e920296d629428857a563fdf5441d06b3dfc28226",
+    "mirror-quarter-reference-native/evaluation/upstream/frequencies/000001.json": "3ef5df6b9c048f0b9c26a8272b43a34df548728f4fee1408f8911848ce8d13ac",
+    "mirror-quarter-reference-native/evaluation/upstream/frequencies/000001.npz": "e28ed59da5e70b3c58df31a86af6f1c1ec61a24eacf24a49a320e144df2193fd",
+    "mirror-quarter-reference-native/evaluation/upstream/frequencies/000002.json": "3964f2846917a7e0e22acab9ef1dbd36fb84987d9cd50ca3af3909505d276ec6",
+    "mirror-quarter-reference-native/evaluation/upstream/frequencies/000002.npz": "dc0e8abf9f2d039703e9b8da12bde183e431a3db1ce82a90e56a30708e3ca6a5",
+    "mirror-quarter-reference-native/evaluation/upstream/frequencies/000003.json": "98a6f2be39f8108ae5b841a9e384119cc32ad92b231deebd15ad7abc02a969af",
+    "mirror-quarter-reference-native/evaluation/upstream/frequencies/000003.npz": "303fc5cd709e8461ff6fece827a842a74b5aa8763e2b5df7d51df9a7bb2384f2",
+    "mirror-quarter-reference-native/evaluation/upstream/manifest.json": "a47308d2e9a4198c5a5ee0370e4ff1433ef56af39fe93e0d3ec19d8bb586d7a5",
+    "mirror-quarter-reference-native/evaluation/upstream/project.snapshot.blab.json": "fd2219d989491a1ae992f2dde2dc14aa1edd45d21816c50588861dd238dc6b51",
+    "mirror-quarter-reference-native/evaluation/upstream/request.json": "e6ef767a2d0b9541119f35471b573d6d118b1dcfb121403d3a5a104f432b695b",
+    "mirror-quarter-reference-native/evaluation/upstream/runtime.json": "09628cd9bb59362e4927ec2e47becddf9fe94841bba1446c1acc576a21a69bca",
+    "mirror-quarter-reference-native/report.json": "fcc54d479b1d0a831a420e91aa89c07d9b64c7921f291de9563017b5d7518844",
+    "compare-mirror-quarter-reference.py": "e1e4b8efc506e3c059484fbe1e63711b0feccdcda7f65cfbb5b903f1fee52292",
+    "mesh-mirror-quarter-reference.py": "41daa31acb36c8aafbac5a4ea2464d51105781cf72ca3df906d5170b146a605b",
+    "mirror-quarter-electrical-reanalysis.json": "0677e1b42766f1d63209c5c1cded86e49d4d164a51dee066f9ec0181c7195619",
+    "mirror-quarter-electrical-reanalysis.log": "c9e9b313c6f7feac0a76b181050741becd99e36cf5740546f493e97a88cd5993",
+    "mirror-quarter-orbit-diagnostic.json": "64604f27ebb0e9e533e1f2f5b337395af10dfeacd1d18b3aabdc0cfc8ede27cd",
+    "mirror-quarter-reference-adaptive.log": "7f4035d73ab8ac920b937a1e412475ebb984246491c9f71f71eecf7671fd320f",
+    "mirror-quarter-reference-comparison.log": "a00c6fe21eee41e42532d1697e515116cc02acea9e693707d77150eb0a78e4e8",
+    "mirror-quarter-reference-mesh.log": "05d037263d1734cd8e4bf64776f416200c49f8a47310a97835057c489c0d3ffc",
+    "mirror-quarter-reference-native-controls.json": "69dbeb00bee0ddffb1f74d4c988a4d10bd58508ac8afcdb7c9e46045afcd3a1d",
+    "mirror-quarter-reference-native-prepare.log": "4e663706087131beae456e9b4ca277231e47105cf5795e5b21e9a9e0b41ed576",
+    "mirror-quarter-reference-native.log": "57b950f5951d1540d00bc814d42bdff74c4206b4605fda51ace179ae139edcd6",
+    "mirror-quarter-reference-partition.log": "7172ab9446938512f6d218e2af8b92dcc6ff11a53ae0974426c667ed3b7dbe4f",
+    "mirror-quarter-reference-preparation.log": "6d37da01cad1f1867c5973fb71645289e08413fe091c712964620bed8386e013",
+    "prepare-mirror-quarter-reference-adaptive.py": "6d434c9a0939a90b5f9f6cd9afdaab180560588aaf371090726d8e5180595899",
+    "prepare-mirror-quarter-reference-partition.py": "15963b270398e4f772f5d12434f1a1da3df74cd6557f0c89c53a9edf4f9246ac",
+    "prepare-mirror-quarter-reference.py": "f5381968fd70bb40eb15c52839f044f8615c721a48d49b4b680037f644dbadb6",
+    "run-mirror-quarter-reference.py": "335004e2229199e691fe7c7dc335ae3d3968a137dfb65720a9fdf082c0a3f6eb",
+    "native-quarter-mouth-conform.py": "c7d9784c6e33fa78a74989834d09491f715cc836e3136e1821934ba19c730f83",
+    "recheck-symmetry-bank-validation.py": "3073c7becce8e1c82bf3e5eda641caec4253429d9eb43fba4053f4168cf7a813",
+    "symmetry-bank-validation-tests.log": "2970683eabc1f98a1287886ed761217db08b141d286a201b490978cd061a33e7",
+    "symmetry-bank-validation-noncad.log": "56dc35443f1ea06ad7252f3f6be46347394d5df76f39dd791fa219ef4bd0e41b",
+    "archive-mirror-driver-validation.py": "52e2b0fdcbaa7a92a03a2d799e4d8e45671f09f7c1f4f5229b3b3ea750b53c41",
+    "postprocessor-source/src/meh_studio/__init__.py": "a23171cf505892cc316566fa1783c771de609b8cda270d2740018015a785d7a2",
+    "postprocessor-source/src/meh_studio/acoustic_handover.py": "897380429182eec9549e46fb76d38798ca343d9db5b1eb9bfed2a2904924fe27",
+    "postprocessor-source/src/meh_studio/acoustic_objectives.py": "f3b9750848308b5b050ccd38641b1b0fbcdd678f7c3c1caee58099ec59574350",
+    "postprocessor-source/src/meh_studio/boundary_lab.py": "93fe6b32e138ecab71c4b206c9781a79741407ab67833851faa74a714652a3c1",
+    "postprocessor-source/src/meh_studio/build_bundle.py": "90454b16f29c89ae15a742f7da596cecf75afc8ba77ac4da016921df72b7bd96",
+    "postprocessor-source/src/meh_studio/build_cost.py": "8b3d7de8a7921f18aa39f4241284e664c2e344f265df7ee7824e8dace21edd71",
+    "postprocessor-source/src/meh_studio/cad_runtime.py": "e96de4e3575841d3bbdf446f8ef7c49591e5c0e02248b671b1a601c47c1424f7",
+    "postprocessor-source/src/meh_studio/catalogue.py": "f4f6f5f8d88151c9c9ff10370bb7cf630f5311789f55eb96d380ef3a43e82652",
+    "postprocessor-source/src/meh_studio/circuit_reanalysis.py": "792c34d8ef4261938db26268d85240d27a2e1a4335e744df869c2597ec4f07bb",
+    "postprocessor-source/src/meh_studio/cli.py": "12ade13077818f0fa76c198cee4f9c00f536ccb54108d136ed94f3c1cecb6cfa",
+    "postprocessor-source/src/meh_studio/domain.py": "eb61bf4469f5b3e210c3b45b8e892ebbe14888ee9331024b8142e97d2bdd4a39",
+    "postprocessor-source/src/meh_studio/driver_symmetry.py": "c771d91daa790f2ef2eefd2cc8081f939e208b26ca476a3b5a9bac79fa2438de",
+    "postprocessor-source/src/meh_studio/evolution.py": "d47cf47eb150162b645719b17223597c475c2f24a7520e1ea19f256e2cb1dc63",
+    "postprocessor-source/src/meh_studio/export_validation.py": "fffc51cfa37c8415503ec0a02cfb5c7dfd8f9c6ed8df5766a7977639e2de6a4d",
+    "postprocessor-source/src/meh_studio/generated_system.py": "a05f415e622486b647f97255f1f7daf16e1a8fc4459c88473e9ea250a0ce1c02",
+    "postprocessor-source/src/meh_studio/geometry.py": "affa2a065286fdfc6888cbc05e1465d012d5a845b8fdc82afcfdbd7e0b4b7e90",
+    "postprocessor-source/src/meh_studio/geometry_cli.py": "c0b634ce535536ac2510f41cfc0218e70097d7005a5c0b77df4743300c5f31f4",
+    "postprocessor-source/src/meh_studio/geometry_worker.py": "286fad74c865b233c6ff768ec118425b641edc93b6ab8b6e8d5cc672a645627a",
+    "postprocessor-source/src/meh_studio/interface_coordinates.py": "8136946a855e874f2f1d0b33fb3409372c06ca49cc9b868d0460711495b11fa3",
+    "postprocessor-source/src/meh_studio/job_cli.py": "dece779e13937667800f5a4a3213bc8569acae843eb56da0e2f74d7f4641df3c",
+    "postprocessor-source/src/meh_studio/jobs.py": "4a35f9e8eb86c8f2550dd7afc30390a109cdffe84d10c47bcc4c278f099d3ca4",
+    "postprocessor-source/src/meh_studio/measurement_cli.py": "e385a8098ecbb353be3da8310c325c810e129f438cb2f2b86b5d1f71aff518d6",
+    "postprocessor-source/src/meh_studio/measurements.py": "20feb062e8b282e818ae162a88965ea5b2428a6cd0d75f3c10bfbf11be9967f3",
+    "postprocessor-source/src/meh_studio/metrics.py": "04d16093cff5ff1459d229ada4b762b85e1de290619517564e34965ab403fc76",
+    "postprocessor-source/src/meh_studio/native_mouth_conform.py": "990d1b0a6394916505839a445005afb12e145619bf94d64ee96f003eab931349",
+    "postprocessor-source/src/meh_studio/native_reference.py": "f765b252cab3e2ad33e14b9a54438613480b04e1701a23d149b66d0d479fa50c",
+    "postprocessor-source/src/meh_studio/operating.py": "1f0c6fd589b14745cda55ae74932941745d0b4ae1075aee090a5b615b6f86a77",
+    "postprocessor-source/src/meh_studio/optimisation.py": "b4819ea7c27921c7f00a5c095ad19c61f4644d347932122b42043a89420db624",
+    "postprocessor-source/src/meh_studio/partial_results.py": "408d0f5662362b302241b9cf8acbfec0b98698c2492250d4c98e4c69746c493a",
+    "postprocessor-source/src/meh_studio/radiating_system.py": "77eb1d6dd29177a85cc463fc82684cf8d6422a242bcc0e600c0515715b0be5a4",
+    "postprocessor-source/src/meh_studio/radiation_geometry.py": "8735329874d8ad986055e3cc780a61566e93a9b93961b4134e82a6fef6f723ad",
+    "postprocessor-source/src/meh_studio/references.py": "7b65b7aecd1cae413708c848b21237ea2609d87e08d1f02e80407947c213bef2",
+    "postprocessor-source/src/meh_studio/result_domains.py": "dd8e274cd8452654cafeed457bbaf9cd4e82b437782d4f7224c48db576f4114e",
+    "postprocessor-source/src/meh_studio/search_results.py": "5ecd21b437313a6c6f1478d53baa49a9a32588886c12bffd2ed9609acf087df2",
+    "postprocessor-source/src/meh_studio/search_resume.py": "3b3638a2b5c0d545036a11c2ca0b87aba218b60921dec86d2b35229018ae9f16",
+    "postprocessor-source/src/meh_studio/snapshots.py": "604c69f4ea993d384dfbe893c09fb579b730627547564a3843387bfb5feb19bd",
+    "postprocessor-source/src/meh_studio/spherical_metrics.py": "99d56eca708cfbe692659e3e0abd02bdd2ca6e521c5bcbef3d4bdf4eeddc47b9",
+    "postprocessor-source/src/meh_studio/validation.py": "5ed86f58b150d6fb08a5b48c5189ccc40bfa04606ca78b623d9891950614ae15",
+    "postprocessor-source/src/meh_studio/waveguide_profile.py": "dd54a4b9d1ecfeb74cd705768bc83751a5c84a5550a1623e67f3e8714b7519a4",
+    "postprocessor-source/src/meh_studio/windows_job.py": "73f3eb6a671cef7b67bacdcd030931da76eccddc583f15ffcfc9057541866626",
+    "postprocessor-source/tests/test_electrical_validation.py": "49f669a03bf0c519ee06c418ba79195a34f89c5d8ab36a185d867b306123c29b"
+  },
+  "full_reference_archive": "../tilted-entry-search/report.json",
+  "cram_regression_archive": "../bem-quadrature/report.json",
+  "qualified": false,
+  "physical_validation": false
+}

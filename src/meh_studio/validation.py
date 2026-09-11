@@ -37,7 +37,8 @@ def _validate_electrical_basis(project_path: Path, evaluation_directory: Path) -
     result = inspect_result(root / "upstream", request, backend, project_path=project_path)
     if result != evaluation["result"]:
         raise ValueError("result artifacts differ from the completed evaluation")
-    system = _read_json(project_path)["physical_system"]
+    project = _read_json(project_path)
+    system = project["physical_system"]
     components = {c["id"]: c for c in system["components"]}
     ports = {p["id"]: p for p in system["excitation_ports"]}
     excitation_ids = result["excitation_port_ids"]
@@ -54,6 +55,10 @@ def _validate_electrical_basis(project_path: Path, evaluation_directory: Path) -
     bl = np.array([p["bl_n_per_a"] for p in parameters])
     rows = []
     manifest = _read_json(root / "upstream/manifest.json")
+    from .driver_symmetry import driver_symmetry_from_meshes
+    symmetry = driver_symmetry_from_meshes(project, manifest)
+    orbit_counts = np.array([symmetry[c]['physical_driver_orbit_count'] for c in component_ids])
+    reduced = project.get('symmetry', 'off') != 'off'
     for row in manifest["results"]:
         metadata = _read_json(_contained(root / "upstream", row["metadata_file"]))
         reference_v = metadata.get("diagnostics", {}).get("transducer_reference_voltage_v")
@@ -69,6 +74,16 @@ def _validate_electrical_basis(project_path: Path, evaluation_directory: Path) -
                     raise ValueError("response component identities do not match the voltage basis")
                 if q["axes"] != ["excitation", "transducer"]:
                     raise ValueError("unsupported response axis order")
+                for key, field in (('physical_driver_orbit_counts', 'physical_driver_orbit_count'),
+                                   ('surface_completion_factors', 'surface_completion_factor')):
+                    declared = q['metadata'].get(key)
+                    expected = [symmetry[c][field] for c in ids]
+                    if declared is None and not reduced:
+                        continue  # Unreduced historical records predate these fields.
+                    if (not isinstance(declared, list) or len(declared) != len(ids)
+                            or any(type(v) not in (int, float) or v != n
+                                   for v, n in zip(declared, expected))):
+                        raise ValueError('response symmetry multiplicities differ from the source mesh')
                 values = archive[q["key"]]
                 if values.dtype.kind != "c" or values.dtype.itemsize < 16:
                     raise ValueError("electrical consistency at 1e-8 requires complex128 response storage")
@@ -77,7 +92,10 @@ def _validate_electrical_basis(project_path: Path, evaluation_directory: Path) -
         voltage = reference_v * np.eye(len(component_ids))
         ze = re - 1j * 2 * np.pi * row["freq_hz"] * le
         kvl_relative = float(np.linalg.norm(voltage - ze * current - bl * velocity) / np.linalg.norm(voltage))
-        admittance = current.T / reference_v
+        # Native current is per physical coil. Each reduced voltage port drives
+        # its complete orbit, so reciprocity and input power use the summed
+        # orbit current. Surface-completion factors do not multiply coil current.
+        admittance = orbit_counts[:, None] * current.T / reference_v
         scale = max(float(np.linalg.norm(admittance)), np.finfo(float).tiny)
         reciprocity_relative = float(np.linalg.norm(admittance - admittance.T) / scale)
         passive_min = float(np.linalg.eigvalsh((admittance + admittance.conj().T) / 2).min())
@@ -92,9 +110,14 @@ def _validate_electrical_basis(project_path: Path, evaluation_directory: Path) -
             or sha256(root / "preflight.json") != evaluation["preflight_sha256"]
             or sha256(request_path) != evaluation["request_sha256"]):
         raise ValueError("electrical validation artifacts changed during calculation")
-    return {"schema_version": 1, "evidence": "independent_equation_consistency",
+    report = {"schema_version": 1, "evidence": "independent_equation_consistency",
             "passed": all(r["passed"] for r in rows), "project_sha256": sha256(project_path),
             "evaluation_sha256": sha256(root / "evaluation.json"), "rows": rows,
             "relative_tolerance": 1e-8, "acoustic_accuracy_validated": False,
             "limitations": ["Circuit consistency cannot establish acoustic field accuracy",
                             "No measured driver or speaker comparison", "No RMS or absolute SPL qualification"]}
+    if reduced:
+        report['symmetry'] = {'mode': project['symmetry'], 'components': symmetry,
+                              'admittance_current_convention': 'sum_of_physical_driver_orbit_currents',
+                              'circuit_voltage_convention': 'per_physical_coil'}
+    return report
