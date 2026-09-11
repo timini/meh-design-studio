@@ -55,6 +55,34 @@ def test_complete_complex_result_is_only_a_prediction(artifact):
         assert values["q0000"][0, 1] == 3-4j
 
 
+@pytest.mark.parametrize('group,field,passed', [
+    ({'name':'interior','tag':None,'dimension':3}, [1,3], True),
+    ({'name':'interior','dimension':3}, [1,3], True),
+    ({'name':'interior','tag':1,'dimension':3}, [1,3], True),
+    ({'name':'interior','tag':2,'dimension':3}, [1,3], False),
+    ({'name':'missing','tag':1,'dimension':3}, [1,3], False),
+    ({'name':'interior','tag':None,'dimension':3}, [1,2], False),
+    ({'name':'interior','tag':None,'dimension':2}, [1,3], False),
+    ({'tag':None,'dimension':3}, [1,3], False),
+])
+def test_fem_volume_names_resolve_from_hashed_mesh(artifact,group,field,passed):
+    import meshio
+    root,manifest=artifact
+    source=Path(manifest['meshes'][0]['file'])
+    mesh=meshio.read(source);mesh.field_data['interior']=np.array(field)
+    meshio.write(source,mesh,file_format='gmsh22',binary=False)
+    manifest['meshes'][0].update(sha256=sha256(source),size_bytes=source.stat().st_size)
+    snapshot=root/'project.snapshot.blab.json';project=json.loads(snapshot.read_text())
+    project['physical_system']['regions'][0]['volume_groups']=[{'mesh_id':'mesh:a',**group}]
+    snapshot.write_text(json.dumps(project));manifest['project_sha256']=sha256(snapshot)
+    (root/'manifest.json').write_text(json.dumps(manifest))
+    if passed:
+        assert inspect_result(root,SolveRequest(frequencies_hz=(1000,)),'beat_cpu')['evidence']=='predicted'
+    else:
+        with pytest.raises(ValueError,match='FEM.*(volume|group)'):
+            inspect_result(root,SolveRequest(frequencies_hz=(1000,)),'beat_cpu')
+
+
 @pytest.mark.parametrize("patch", [
     {"status": "running"}, {"completion_mask": [False]}, {"completion_mask": [1]},
     {"frequencies_hz": [999]}, {"backend_id": "beat_cuda"}, {"schema_version": 1},
