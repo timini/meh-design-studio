@@ -1,0 +1,782 @@
+{
+  "schema_version": 1,
+  "source_commit": "2b21d93",
+  "source_state": "clean detached worktree",
+  "status": "simulation_driven_search_completed",
+  "search": {
+    "status": "complete",
+    "schema_version": 1,
+    "kind": "experimental_fem_bem_search",
+    "qualified": false,
+    "physical_validation": false,
+    "runtime": {
+      "revision": "8cb166226e412877d3f71f2845918e479b97aa85",
+      "backend": "beat_cpu",
+      "python": "3.11.16 (main, Aug 12 2026, 23:03:19) [Clang 21.0.0 (clang-2100.1.1.101)]",
+      "julia": "julia version 1.12.6",
+      "packages": {
+        "kiwisolver": "1.5.1",
+        "packaging": "26.3",
+        "fonttools": "4.65.0",
+        "platformdirs": "4.11.8",
+        "Pygments": "2.21.0",
+        "rich": "15.0.0",
+        "contourpy": "1.3.3",
+        "numpy": "2.4.6",
+        "pytools": "2026.1.1",
+        "matplotlib": "3.11.1",
+        "bempp-cl": "0.4.2",
+        "llvmlite": "0.49.0",
+        "mdurl": "0.1.2",
+        "python-dateutil": "2.9.0.post0",
+        "numba": "0.67.0",
+        "scipy": "1.17.1",
+        "pyopencl": "2026.1.4",
+        "cycler": "0.12.1",
+        "gmsh": "4.15.2",
+        "pyparsing": "3.3.2",
+        "markdown-it-py": "4.2.0",
+        "meshio": "5.3.5",
+        "typing_extensions": "4.16.0",
+        "pillow": "12.3.0",
+        "six": "1.17.0",
+        "boundary-lab": "0.4.2",
+        "siphash24": "1.9"
+      },
+      "julia_threads": 1
+    },
+    "application_runtime": {
+      "python": "3.11.16 (main, Aug 12 2026, 23:03:19) [Clang 21.0.0 (clang-2100.1.1.101)]",
+      "implementation": "CPython",
+      "system": "Darwin",
+      "release": "25.6.0",
+      "machine": "arm64",
+      "packages": [
+        [
+          "PyYAML",
+          "6.0.3"
+        ],
+        [
+          "Pygments",
+          "2.21.0"
+        ],
+        [
+          "aiohappyeyeballs",
+          "2.7.1"
+        ],
+        [
+          "aiohttp",
+          "3.14.3"
+        ],
+        [
+          "aiosignal",
+          "1.4.0"
+        ],
+        [
+          "annotated-types",
+          "0.8.0"
+        ],
+        [
+          "attrs",
+          "26.1.0"
+        ],
+        [
+          "cadquery",
+          "2.8.0"
+        ],
+        [
+          "cadquery-ocp",
+          "7.9.3.1.1"
+        ],
+        [
+          "cadquery-ocp-proxy",
+          "7.9.3.1.1"
+        ],
+        [
+          "casadi",
+          "3.8.0"
+        ],
+        [
+          "contourpy",
+          "1.3.3"
+        ],
+        [
+          "cycler",
+          "0.12.1"
+        ],
+        [
+          "ezdxf",
+          "1.4.4"
+        ],
+        [
+          "fonttools",
+          "4.65.0"
+        ],
+        [
+          "frozenlist",
+          "1.8.0"
+        ],
+        [
+          "gmsh",
+          "4.15.2"
+        ],
+        [
+          "idna",
+          "3.19"
+        ],
+        [
+          "iniconfig",
+          "2.3.0"
+        ],
+        [
+          "kiwisolver",
+          "1.5.1"
+        ],
+        [
+          "llvmlite",
+          "0.49.0"
+        ],
+        [
+          "markdown-it-py",
+          "4.2.0"
+        ],
+        [
+          "matplotlib",
+          "3.11.1"
+        ],
+        [
+          "mdurl",
+          "0.1.2"
+        ],
+        [
+          "meh-design-studio",
+          "0.1.0.dev0"
+        ],
+        [
+          "meh-design-studio",
+          "0.1.0.dev0"
+        ],
+        [
+          "meshio",
+          "5.3.5"
+        ],
+        [
+          "more-itertools",
+          "11.1.0"
+        ],
+        [
+          "msgpack",
+          "1.2.2"
+        ],
+        [
+          "multidict",
+          "6.8.0"
+        ],
+        [
+          "multimethod",
+          "1.12"
+        ],
+        [
+          "nlopt",
+          "2.11.0"
+        ],
+        [
+          "numba",
+          "0.67.0"
+        ],
+        [
+          "numpy",
+          "2.4.6"
+        ],
+        [
+          "packaging",
+          "26.3"
+        ],
+        [
+          "pillow",
+          "12.3.0"
+        ],
+        [
+          "pluggy",
+          "1.6.0"
+        ],
+        [
+          "propcache",
+          "0.5.2"
+        ],
+        [
+          "pydantic",
+          "2.13.5"
+        ],
+        [
+          "pydantic_core",
+          "2.46.5"
+        ],
+        [
+          "pyparsing",
+          "3.3.2"
+        ],
+        [
+          "pytest",
+          "9.1.1"
+        ],
+        [
+          "python-dateutil",
+          "2.9.0.post0"
+        ],
+        [
+          "rich",
+          "15.0.0"
+        ],
+        [
+          "runtype",
+          "0.5.3"
+        ],
+        [
+          "scipy",
+          "1.17.1"
+        ],
+        [
+          "six",
+          "1.17.0"
+        ],
+        [
+          "trame",
+          "4.0.0"
+        ],
+        [
+          "trame-client",
+          "4.0.1"
+        ],
+        [
+          "trame-common",
+          "1.2.7"
+        ],
+        [
+          "trame-components",
+          "2.5.0"
+        ],
+        [
+          "trame-server",
+          "4.0.0"
+        ],
+        [
+          "trame-vtk",
+          "2.8.13"
+        ],
+        [
+          "trame-vuetify",
+          "3.2.6"
+        ],
+        [
+          "typing-inspection",
+          "0.4.4"
+        ],
+        [
+          "typing_extensions",
+          "4.16.0"
+        ],
+        [
+          "vtk",
+          "9.6.2"
+        ],
+        [
+          "wslink",
+          "2.5.7"
+        ],
+        [
+          "yarl",
+          "1.24.5"
+        ]
+      ],
+      "code": {
+        "__init__.py": "a23171cf505892cc316566fa1783c771de609b8cda270d2740018015a785d7a2",
+        "boundary_lab.py": "601441a0fa3670e447f1ae941cac60f75131cb7c6330e3d886da632f0182322a",
+        "build_bundle.py": "8eeb40a7806067f2c580cfda31aee305d25bfc825d0b6a284ce7411fe050344e",
+        "cad_runtime.py": "e96de4e3575841d3bbdf446f8ef7c49591e5c0e02248b671b1a601c47c1424f7",
+        "catalogue.py": "f4f6f5f8d88151c9c9ff10370bb7cf630f5311789f55eb96d380ef3a43e82652",
+        "cli.py": "89b60febb472e261a9e3a7d23e85b8741ad8c0c56ecc394227da470d4202244f",
+        "domain.py": "f05d914da1573e8ced58283e1b2a485e863a74a8ebe25cb833c8286fc33450f9",
+        "evolution.py": "d66ea46857b7b4fe5c9d52e9fd19e4ecdbf1e61aef23d57c7743bb194df9b2a2",
+        "export_validation.py": "fffc51cfa37c8415503ec0a02cfb5c7dfd8f9c6ed8df5766a7977639e2de6a4d",
+        "generated_system.py": "e208e7d3a4ec2132284039500361f3426e0952630054cf7476d4b900eee06dbb",
+        "geometry.py": "bfe419c2800be87deee68a1bde3165e86eb8240b2168fe632f026ff225485eec",
+        "geometry_cli.py": "c0b634ce535536ac2510f41cfc0218e70097d7005a5c0b77df4743300c5f31f4",
+        "geometry_worker.py": "286fad74c865b233c6ff768ec118425b641edc93b6ab8b6e8d5cc672a645627a",
+        "job_cli.py": "dece779e13937667800f5a4a3213bc8569acae843eb56da0e2f74d7f4641df3c",
+        "jobs.py": "4a35f9e8eb86c8f2550dd7afc30390a109cdffe84d10c47bcc4c278f099d3ca4",
+        "measurement_cli.py": "e385a8098ecbb353be3da8310c325c810e129f438cb2f2b86b5d1f71aff518d6",
+        "measurements.py": "20feb062e8b282e818ae162a88965ea5b2428a6cd0d75f3c10bfbf11be9967f3",
+        "metrics.py": "04d16093cff5ff1459d229ada4b762b85e1de290619517564e34965ab403fc76",
+        "optimisation.py": "f3af9e5078b9a6258a562af52a77e1f4bf423d7546f7990b565f074533b205b5",
+        "radiating_system.py": "b8741fab5e76a262ad7745dcf7e78d164af3b5577911ce7b1a741e86f2c4e3f6",
+        "radiation_geometry.py": "0012ad61fea93f5839cfbce2d1fc6e13fb82bf36aede8e70d7335b3727a489b4",
+        "references.py": "53957154a5e0d3cf5df3992818dfc5df7b94059be7ac66394c8e1c1a3ee28d71",
+        "result_domains.py": "501c2209b160ae842556f1fb88a7289148f9d12d884e1b4d62d0ee379f25c667",
+        "search_results.py": "9bc36a9668f5d88ec625b80e3d87a44eeddb9c64c16cf97208736895ed5272df",
+        "search_resume.py": "dbd23383e6d100080d62facb57bf016c24faa4f931d18331a75d8f6c5825f441",
+        "snapshots.py": "604c69f4ea993d384dfbe893c09fb579b730627547564a3843387bfb5feb19bd",
+        "validation.py": "29845d09b170e7bae78700445310467a82abede95367c98fcecbb058c68d3622",
+        "waveguide_profile.py": "303ffb8a22f0e05c1c84ae281580e3c808b1c1b0c27735a4d70da908e364e6f8",
+        "windows_job.py": "73f3eb6a671cef7b67bacdcd030931da76eccddc583f15ffcfc9057541866626"
+      }
+    },
+    "trials": [
+      {
+        "index": 0,
+        "status": "complete",
+        "ripple_db": 1.7379990905631377,
+        "side_gain": 0.1,
+        "relative_response_db": [
+          -0.8279860871949085,
+          -1.7379990905631377,
+          0.0
+        ],
+        "electrical_validation": {
+          "passed": false,
+          "status": "unsupported_storage_precision",
+          "reason": "electrical consistency at 1e-8 requires complex128 response storage",
+          "acoustic_accuracy_validated": false
+        },
+        "objective": 2.1379990905631376,
+        "driver_count": 5,
+        "driver_cost": 20.0,
+        "evaluation_sha256": "59c7704a75e186672c2a8a8954d30587d0bd5844871c327417b6f1f8f972387a",
+        "geometry_manifest_sha256": "0368134cd1d70dfb18e3841f6bca0513eb2c7e39eebb771ef6daee0363a93261"
+      },
+      {
+        "index": 1,
+        "status": "complete",
+        "ripple_db": 1.6143891566231494,
+        "side_gain": 0.1,
+        "relative_response_db": [
+          -0.6598846129154801,
+          -1.6143891566231494,
+          0.0
+        ],
+        "electrical_validation": {
+          "passed": false,
+          "status": "unsupported_storage_precision",
+          "reason": "electrical consistency at 1e-8 requires complex128 response storage",
+          "acoustic_accuracy_validated": false
+        },
+        "objective": 2.0143891566231495,
+        "driver_count": 5,
+        "driver_cost": 20.0,
+        "evaluation_sha256": "8d1e295036539df30ca01574fd2595799efba879a6856c7f1512f10dcf3c0ec1",
+        "geometry_manifest_sha256": "f07d586855b8faedff872ad52db3800b9500c153dc427ca1b94d5ba7af13929c"
+      },
+      {
+        "index": 2,
+        "status": "complete",
+        "ripple_db": 1.3303087576345496,
+        "side_gain": 0.2,
+        "relative_response_db": [
+          -0.8457512074676421,
+          -1.3303087576345496,
+          0.0
+        ],
+        "electrical_validation": {
+          "passed": false,
+          "status": "unsupported_storage_precision",
+          "reason": "electrical consistency at 1e-8 requires complex128 response storage",
+          "acoustic_accuracy_validated": false
+        },
+        "objective": 1.7303087576345497,
+        "driver_count": 5,
+        "driver_cost": 20.0,
+        "evaluation_sha256": "68d71ded2e33989cc595e776eecf7c7788a1f6102ba38f79cdc12b2576992f8f",
+        "geometry_manifest_sha256": "5f67b62ae59ae60e36ab24ffb7efb402dc0b4835642c770605061ab5b55f153d"
+      },
+      {
+        "index": 3,
+        "status": "failed",
+        "error": "ValueError: Boundary Lab exited with code 2; see conform-interface.log"
+      }
+    ],
+    "per_solver_stage_timeout_s": 1800,
+    "limitations": [
+      "Synthetic/unqualified sources may be used only for pipeline experiments",
+      "Relative on-axis ripple objective, not calibrated sensitivity or efficiency",
+      "Driver-only prices exclude amplifier, material, printing and assembly",
+      "Bounded straight-axis profiles; finite sampled grid is not a global optimum"
+    ],
+    "control_sha256": {
+      "brief.json": "2cac4c8e7a81dc0327c89eb5bd567c02c22173a79636b50b3cad84e57b091e1c",
+      "base-geometry.json": "0adcc45bdd77d3b268ed75e08784fffa985e3717f033e7da8b91521349ed9ef5",
+      "catalogue-snapshot.json": "73f55f55510bba096045c4918e59fd1c721a3d29c74e9a1c0ccb5db3793342e7"
+    },
+    "proposals": [
+      {
+        "method": "declared_baseline",
+        "parent_index": null,
+        "rejected": []
+      },
+      {
+        "method": "elite_mutation",
+        "parent_index": 0,
+        "rejected": [],
+        "mutations": [
+          {
+            "kind": "profile",
+            "key": 2,
+            "column": 6,
+            "before": 0.8,
+            "after": 0.709566503943908
+          },
+          {
+            "kind": "profile",
+            "key": 1,
+            "column": 5,
+            "before": 1.0,
+            "after": 0.9978185191171924
+          },
+          {
+            "kind": "profile",
+            "key": 0,
+            "column": 2,
+            "before": 0.9,
+            "after": 0.7339032460789747
+          },
+          {
+            "kind": "profile",
+            "key": 1,
+            "column": 7,
+            "before": 1.0,
+            "after": 0.897638644148462
+          },
+          {
+            "kind": "profile",
+            "key": 0,
+            "column": 3,
+            "before": 1.05,
+            "after": 1.1194815549762944
+          },
+          {
+            "kind": "profile",
+            "key": 0,
+            "column": 4,
+            "before": 1.0,
+            "after": 0.9880813183829127
+          },
+          {
+            "kind": "profile",
+            "key": 1,
+            "column": 3,
+            "before": 1.0,
+            "after": 0.9549315962530925
+          }
+        ]
+      },
+      {
+        "method": "elite_mutation",
+        "parent_index": 1,
+        "rejected": [],
+        "mutations": [
+          {
+            "kind": "profile",
+            "key": 0,
+            "column": 2,
+            "before": 0.7339032460789747,
+            "after": 0.6577757227138589
+          },
+          {
+            "kind": "profile",
+            "key": 1,
+            "column": 2,
+            "before": 0.85,
+            "after": 0.8766241890014305
+          },
+          {
+            "kind": "profile",
+            "key": 1,
+            "column": 6,
+            "before": 0.85,
+            "after": 0.8561206074002888
+          },
+          {
+            "kind": "profile",
+            "key": 2,
+            "column": 3,
+            "before": 1.0,
+            "after": 0.8035580473928507
+          },
+          {
+            "kind": "profile",
+            "key": 1,
+            "column": 4,
+            "before": 1.1,
+            "after": 1.3120309452316175
+          },
+          {
+            "kind": "profile",
+            "key": 2,
+            "column": 5,
+            "before": 1.0,
+            "after": 1.0197232207751303
+          },
+          {
+            "kind": "profile",
+            "key": 2,
+            "column": 1,
+            "before": 1.0,
+            "after": 0.9633292203710866
+          }
+        ]
+      },
+      {
+        "method": "random_exploration",
+        "parent_index": null,
+        "rejected": [],
+        "mutations": [
+          {
+            "kind": "profile",
+            "key": 0,
+            "column": 0,
+            "before": 1.0,
+            "after": 1.1869781228244496
+          },
+          {
+            "kind": "profile",
+            "key": 0,
+            "column": 1,
+            "before": 1.05,
+            "after": 0.8102239151751456
+          },
+          {
+            "kind": "profile",
+            "key": 0,
+            "column": 2,
+            "before": 0.9,
+            "after": 1.2126615524115287
+          },
+          {
+            "kind": "profile",
+            "key": 0,
+            "column": 3,
+            "before": 1.05,
+            "after": 1.4323774318827973
+          },
+          {
+            "kind": "profile",
+            "key": 0,
+            "column": 4,
+            "before": 1.0,
+            "after": 0.8139474619718434
+          },
+          {
+            "kind": "profile",
+            "key": 0,
+            "column": 5,
+            "before": 1.05,
+            "after": 1.3538514969173385
+          },
+          {
+            "kind": "profile",
+            "key": 0,
+            "column": 6,
+            "before": 0.9,
+            "after": 1.4407065442579399
+          },
+          {
+            "kind": "profile",
+            "key": 0,
+            "column": 7,
+            "before": 1.05,
+            "after": 0.9488922081273004
+          },
+          {
+            "kind": "profile",
+            "key": 1,
+            "column": 0,
+            "before": 1.1,
+            "after": 1.0833467433786623
+          },
+          {
+            "kind": "profile",
+            "key": 1,
+            "column": 1,
+            "before": 1.0,
+            "after": 0.7877710514472273
+          },
+          {
+            "kind": "profile",
+            "key": 1,
+            "column": 2,
+            "before": 0.85,
+            "after": 1.1248217372954976
+          },
+          {
+            "kind": "profile",
+            "key": 1,
+            "column": 3,
+            "before": 1.0,
+            "after": 1.0382294507960073
+          },
+          {
+            "kind": "profile",
+            "key": 1,
+            "column": 4,
+            "before": 1.1,
+            "after": 1.071808238012632
+          },
+          {
+            "kind": "profile",
+            "key": 1,
+            "column": 5,
+            "before": 1.0,
+            "after": 0.8374619531348848
+          },
+          {
+            "kind": "profile",
+            "key": 1,
+            "column": 6,
+            "before": 0.85,
+            "after": 0.8391438729666888
+          },
+          {
+            "kind": "profile",
+            "key": 1,
+            "column": 7,
+            "before": 1.0,
+            "after": 1.4416171667193343
+          },
+          {
+            "kind": "profile",
+            "key": 2,
+            "column": 0,
+            "before": 1.3,
+            "after": 1.077960637027012
+          },
+          {
+            "kind": "profile",
+            "key": 2,
+            "column": 1,
+            "before": 1.0,
+            "after": 0.9264640275788283
+          },
+          {
+            "kind": "profile",
+            "key": 2,
+            "column": 2,
+            "before": 0.8,
+            "after": 0.9139753606512162
+          },
+          {
+            "kind": "profile",
+            "key": 2,
+            "column": 3,
+            "before": 1.0,
+            "after": 1.013618843847888
+          },
+          {
+            "kind": "profile",
+            "key": 2,
+            "column": 4,
+            "before": 1.3,
+            "after": 1.3610291323183605
+          },
+          {
+            "kind": "profile",
+            "key": 2,
+            "column": 5,
+            "before": 1.0,
+            "after": 1.1614433087231806
+          },
+          {
+            "kind": "profile",
+            "key": 2,
+            "column": 6,
+            "before": 0.8,
+            "after": 0.9398015093792111
+          },
+          {
+            "kind": "profile",
+            "key": 2,
+            "column": 7,
+            "before": 1.0,
+            "after": 1.4427878018576643
+          },
+          {
+            "kind": "geometry",
+            "key": "entry_fraction_0",
+            "column": null,
+            "before": 0.45,
+            "after": 0.4358550220814755
+          },
+          {
+            "kind": "geometry",
+            "key": "length_m",
+            "column": null,
+            "before": 0.125,
+            "after": 0.13763432612265467
+          }
+        ]
+      }
+    ],
+    "winner_index": 2,
+    "winner": {
+      "index": 2,
+      "status": "complete",
+      "ripple_db": 1.3303087576345496,
+      "side_gain": 0.2,
+      "relative_response_db": [
+        -0.8457512074676421,
+        -1.3303087576345496,
+        0.0
+      ],
+      "electrical_validation": {
+        "passed": false,
+        "status": "unsupported_storage_precision",
+        "reason": "electrical consistency at 1e-8 requires complex128 response storage",
+        "acoustic_accuracy_validated": false
+      },
+      "objective": 1.7303087576345497,
+      "driver_count": 5,
+      "driver_cost": 20.0,
+      "evaluation_sha256": "68d71ded2e33989cc595e776eecf7c7788a1f6102ba38f79cdc12b2576992f8f",
+      "geometry_manifest_sha256": "5f67b62ae59ae60e36ab24ffb7efb402dc0b4835642c770605061ab5b55f153d"
+    },
+    "winner_candidate_sha256": "fc9512cd6a6a993dafe3e9623a01485ab87d82177ad3611fbda524958d40e5fd",
+    "winner_score_sha256": "61a0b0eb1be1a6c4e2a35cd13fad68eac324423b32dd6f1487db1daaa0bc7d52",
+    "numerical_consistency_passed": false
+  },
+  "archives": [
+    {
+      "file": "trial-000.zip",
+      "sha256": "08e612c541cede308ddf892dcd58196ab8928ddf8a2d7f25b8b2ce41dfc156e4",
+      "size_bytes": 34263984
+    },
+    {
+      "file": "trial-001.zip",
+      "sha256": "97e6971a05c07a728d14cddc0d3b6ba51b6544da18dbd14bea7de7f99394722f",
+      "size_bytes": 38458240
+    },
+    {
+      "file": "trial-002.zip",
+      "sha256": "a0523cbf5d5c3e7ddefdd94952482cfe1276293e542125f401f71f6f20f0fe63",
+      "size_bytes": 40666143
+    },
+    {
+      "file": "trial-003.zip",
+      "sha256": "0bf94e98e777ef6886c7898c987ba4a04db2138186079ffb150cc51435646719",
+      "size_bytes": 55107731
+    },
+    {
+      "file": "controls-and-winner.zip",
+      "sha256": "353b6f1ab2a6bd1c499f9538e29c5da96cdf77cee9da20be157389b0929076a2",
+      "size_bytes": 1839673
+    }
+  ],
+  "physical_validation": false,
+  "mesh_convergence": false,
+  "commercial_sources": false,
+  "target_band_design": false,
+  "limitations": [
+    "Only three frequencies 1000,2000,3000 Hz and synthetic drivers",
+    "Ripple/cost fitness; predates the wide-mid directivity objective",
+    "Random exploratory candidate failed conforming-interface geometry checks; failure retained",
+    "Strict electrical consistency is unsupported by native complex64 response storage",
+    "Finalist holdout/refinement runs separately; not included as a pass"
+  ]
+}

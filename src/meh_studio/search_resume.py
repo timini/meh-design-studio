@@ -56,6 +56,37 @@ def _inventory(root):
     return result
 
 
+def verify_scored_trial(root,candidate,index,trial,brief,runtime):
+    if _read_json(root / 'candidate.json') != candidate_record(candidate):
+        raise ValueError('recovery candidate differs from declared search')
+    score = _read_json(root / 'score.json')
+    if trial != dict(score, index=index, status='complete'):
+        raise ValueError('recovery score differs from recorded trial')
+    geometry = root / 'geometry/geometry.json'
+    if score.get('geometry_manifest_sha256') != sha256(geometry):
+        raise ValueError('recovery geometry differs from scored trial')
+    manifest = _read_json(geometry)
+    if manifest.get('design') != candidate_record(candidate)['design']:
+        raise ValueError('recovery geometry design differs')
+    from .export_validation import validate_export
+    validate_export(geometry.parent)
+    verify_candidate_project(root, candidate, brief.exterior_mesh_size_m)
+    evaluation = root / 'evaluation'
+    request = SolveRequest(frequencies_hz=brief.frequencies_hz,
+        include_project_observations=True, retain=('fem_nodal_pressure','bem_boundary_traces'))
+    if SolveRequest.model_validate(_read_json(evaluation / 'request.json')) != request:
+        raise ValueError('recovery solve request differs from search')
+    if _read_json(evaluation / 'evaluation.json')['runtime'] != runtime:
+        raise ValueError('recovery evaluation runtime differs')
+    recomputed = response_score(root / 'system/project.blab.json', evaluation, brief.side_gains,brief.acoustic_objectives)
+    recomputed.update(objective=recomputed.get('acoustic_objective',recomputed['ripple_db']) + brief.cost_weight_db*candidate['cost']/brief.max_driver_cost,
+                      driver_count=candidate['design'].driver_count, driver_cost=candidate['cost'],
+                      evaluation_sha256=sha256(evaluation / 'evaluation.json'),
+                      geometry_manifest_sha256=sha256(geometry))
+    if recomputed != score:
+        raise ValueError('recovery score failed independent recomputation')
+    return score
+
 class Recovery:
     def __init__(self, source, output, brief, base, drivers, pool, runtime, application, timeout):
         self.source = Path(source).resolve()
@@ -95,36 +126,22 @@ class Recovery:
         if any(sha256(self.source / name) != digest for name, digest in self.hashes.items()):
             raise ValueError('original search changed during recovery')
 
+    def preserve_failed(self,index,candidate,destination):
+        """Failed adaptive trials are immutable history: retrying changes descendants."""
+        self.check_source()
+        source=self.source/f'trial-{index:03d}'
+        if source.exists():
+            before=_inventory(source)
+            if (source/'candidate.json').exists() and _read_json(source/'candidate.json')!=candidate_record(candidate):
+                raise ValueError('failed adaptive candidate differs from proposal history')
+            shutil.copytree(source,destination)
+            if _inventory(source)!=before or _inventory(destination)!=before:
+                raise ValueError('failed adaptive evidence changed during recovery')
+        self.provenance.setdefault('preserved_failed_trial_indices',[]).append(index)
+        self.check_source()
+
     def _verify_trial(self, root, candidate, index):
-        if _read_json(root / 'candidate.json') != candidate_record(candidate):
-            raise ValueError('recovery candidate differs from declared search')
-        score = _read_json(root / 'score.json')
-        if self.completed[index] != dict(score, index=index, status='complete'):
-            raise ValueError('recovery score differs from recorded trial')
-        geometry = root / 'geometry/geometry.json'
-        if score.get('geometry_manifest_sha256') != sha256(geometry):
-            raise ValueError('recovery geometry differs from scored trial')
-        manifest = _read_json(geometry)
-        if manifest.get('design') != candidate_record(candidate)['design']:
-            raise ValueError('recovery geometry design differs')
-        from .export_validation import validate_export
-        validate_export(geometry.parent)
-        verify_candidate_project(root, candidate, self.brief.exterior_mesh_size_m)
-        evaluation = root / 'evaluation'
-        request = SolveRequest(frequencies_hz=self.brief.frequencies_hz,
-            include_project_observations=True, retain=('fem_nodal_pressure','bem_boundary_traces'))
-        if SolveRequest.model_validate(_read_json(evaluation / 'request.json')) != request:
-            raise ValueError('recovery solve request differs from search')
-        if _read_json(evaluation / 'evaluation.json')['runtime'] != self.runtime:
-            raise ValueError('recovery evaluation runtime differs')
-        recomputed = response_score(root / 'system/project.blab.json', evaluation, self.brief.side_gains)
-        recomputed.update(objective=recomputed['ripple_db'] + self.brief.cost_weight_db*candidate['cost']/self.brief.max_driver_cost,
-                          driver_count=candidate['design'].driver_count, driver_cost=candidate['cost'],
-                          evaluation_sha256=sha256(evaluation / 'evaluation.json'),
-                          geometry_manifest_sha256=sha256(geometry))
-        if recomputed != score:
-            raise ValueError('recovery score failed independent recomputation')
-        return score
+        return verify_scored_trial(root,candidate,index,self.completed[index],self.brief,self.runtime)
 
     def copy_trial(self, index, candidate, destination):
         self.check_source()

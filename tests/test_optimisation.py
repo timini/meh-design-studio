@@ -138,3 +138,15 @@ def test_candidate_score_binds_pre_solve_geometry(tmp_path,monkeypatch,changed):
     else:
         score=search.evaluate_candidate(candidate,root,Runtime(),brief)
         assert score['geometry_manifest_sha256']==search.sha256(root/'geometry/geometry.json')
+
+
+def test_freeform_profile_choices_reach_candidate_identity():
+    brief,base,drivers=inputs()
+    shape=json.loads((Path(__file__).resolve().parents[1]/'examples/freeform-ring-geometry.json').read_text())['profile_sections']
+    brief=SearchBrief.model_validate(brief.model_dump()|{'profiles':[[],shape],
+        'throat_ids':[brief.throat_ids[0]],'side_ids':[brief.side_ids[0]],
+        'lengths_m':[base.length_m],'mouth_radii_m':[base.mouth_radius_m],
+        'entry_fractions':[[.4]],'trial_budget':2})
+    pool=candidates(brief,base,drivers)
+    assert len(pool)==2 and not pool[0]['design'].profile_sections and pool[1]['design'].profile_sections
+    assert pool[0]['design'].content_hash != pool[1]['design'].content_hash

@@ -18,6 +18,8 @@ LEVELS=('baseline','0','1','2')
 def inputs(search,level,chunk):
     if level not in LEVELS or not 0<=chunk<PARTS:raise ValueError('unknown validation partition')
     controls,result,brief,base,winner,gain,frequencies,frozen,sizes=load_search(search)
+    if brief.acoustic_objectives is not None:
+        raise ValueError('fixed-gain partition benchmark does not support crossover searches; use sequential finalist validation')
     if level=='baseline':
         drivers=[DriverRevision.model_validate(d) for d in json.loads((search/'catalogue-snapshot.json').read_text())]
         winner=candidates(brief,base,drivers)[0];gain=1.;size=base.mesh_size_m

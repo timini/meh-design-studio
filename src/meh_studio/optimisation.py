@@ -14,13 +14,16 @@ import shutil
 from typing import Annotated
 
 import numpy as np
-from pydantic import Field, model_validator
+from pydantic import Field, model_validator, model_serializer
 
 from .boundary_lab import BoundaryLabRuntime, SolveRequest, _read_json, _write_json, _contained, sha256, inspect_result, _termination_guard
 from .catalogue import Catalogue
 from .domain import Record, Positive
 from .generated_system import HornSources
 from .geometry import HornGeometry, export_geometry, mesh_geometry
+from .waveguide_profile import ProfileSection, validate_profile
+from .evolution import EvolutionSettings
+from .acoustic_objectives import AcousticObjectives
 from .radiating_system import compile_radiating_system
 from .validation import validate_electrical_basis
 
@@ -36,11 +39,22 @@ class SearchBrief(Record):
     lengths_m: tuple[Positive, ...]
     mouth_radii_m: tuple[Positive, ...]
     entry_fractions: tuple[tuple[Positive, ...], ...]
+    profiles: tuple[tuple[ProfileSection, ...], ...] = ()
+    evolution: EvolutionSettings | None = None
+    acoustic_objectives: AcousticObjectives | None = None
     side_gains: tuple[Positive, ...] = (.5, 1., 2.)
     trial_budget: Annotated[int, Field(strict=True, ge=1, le=100)] = 4
     seed: Annotated[int, Field(strict=True, ge=0)] = 2026
     exterior_mesh_size_m: Annotated[float, Field(ge=.01, le=.05)] = .02
     cost_weight_db: Annotated[float, Field(ge=0, allow_inf_nan=False)] = .5
+
+    @model_serializer(mode='wrap')
+    def preserve_legacy_controls(self, handler):
+        value=handler(self)
+        if not self.profiles:value.pop('profiles',None)
+        if self.evolution is None:value.pop('evolution',None)
+        if self.acoustic_objectives is None:value.pop('acoustic_objectives',None)
+        return value
 
     @model_validator(mode='after')
     def bounded(self):
@@ -50,7 +64,14 @@ class SearchBrief(Record):
         groups = (self.throat_ids,self.side_ids,self.lengths_m,self.mouth_radii_m,self.entry_fractions,self.side_gains)
         if any(not group or len(group)>20 or len(set(group))!=len(group) for group in groups):
             raise ValueError('search choices must be nonempty, unique and bounded to 20 each')
-        if math.prod(map(len,groups[:-1])) > 10000:
+        if len(self.profiles)>20 or len(set(self.profiles))!=len(self.profiles):
+            raise ValueError('at most 20 unique freeform profiles are supported')
+        for profile in self.profiles:validate_profile(profile)
+        if self.acoustic_objectives is not None:
+            targets=self.acoustic_objectives
+            if self.frequencies_hz[0]>targets.mid_highpass_hz or self.frequencies_hz[-1]<1.5*max(targets.upper_crossovers_hz):
+                raise ValueError('acoustic search grid must cover the low crossover and extend 50 percent above every upper crossover')
+        if math.prod(map(len,groups[:-1])) * max(1,len(self.profiles)) > 10000:
             raise ValueError('candidate grid exceeds 10000 combinations')
         if any(len(row) not in (1,2) or any(v>=1 for v in row) for row in self.entry_fractions):
             raise ValueError('one or two entry fractions strictly between zero and one required')
@@ -72,9 +93,9 @@ def candidates(brief, base, drivers):
     if not set(brief.throat_ids+brief.side_ids).issubset(records):
         raise ValueError('selected driver absent from catalogue')
     rows = []
-    for throat,side,length,mouth,entries in itertools.product(brief.throat_ids,brief.side_ids,
-            brief.lengths_m,brief.mouth_radii_m,brief.entry_fractions):
-        count = 1+2*len(entries)
+    for throat,side,length,mouth,entries,profile in itertools.product(brief.throat_ids,brief.side_ids,
+            brief.lengths_m,brief.mouth_radii_m,brief.entry_fractions,brief.profiles or (base.profile_sections,)):
+        count = 5 if base.entry_layout == 'four_driver_ring' else 1+2*len(entries)
         cost = brief.prices[throat]+(count-1)*brief.prices[side]
         if count>brief.max_drivers or cost>brief.max_driver_cost: continue
         t,s = records[throat],records[side]
@@ -83,6 +104,7 @@ def candidates(brief, base, drivers):
         try:
             design = HornGeometry.model_validate(base.model_dump() | {'length_m':length,
                 'mouth_radius_m':mouth,'entry_positions_m':tuple(length*z for z in entries),
+                'profile_sections':profile,
                 'throat_radius_m':math.sqrt(t.source_model.sd_m2/math.pi),
                 'front_radius_m':math.sqrt(s.source_model.sd_m2/math.pi)})
         except ValueError:
@@ -137,7 +159,10 @@ def relative_response(pressure):
     return 20*(np.log10(magnitude)-np.log10(magnitude.max()))
 
 
-def response_score(project, evaluation, gains):
+def response_score(project, evaluation, gains, acoustic_objectives=None):
+    if acoustic_objectives is not None:
+        from .acoustic_objectives import score_acoustics
+        return score_acoustics(project,evaluation,gains,acoustic_objectives)
     assessment=verified_assessment(project,evaluation)
     checks=assessment["checks"]
     root=evaluation/'upstream'
@@ -196,10 +221,10 @@ def evaluate_candidate(candidate, root, runtime, brief, *, mesh_size=None, frequ
     request=SolveRequest(frequencies_hz=frequencies or brief.frequencies_hz,
         include_project_observations=True,retain=('fem_nodal_pressure','bem_boundary_traces'))
     runtime.solve(root/'system/project.blab.json',request,root/'evaluation',timeout_s=timeout_s)
-    score=response_score(root/'system/project.blab.json',root/'evaluation',brief.side_gains)
+    score=response_score(root/'system/project.blab.json',root/'evaluation',brief.side_gains,brief.acoustic_objectives)
     if sha256(root/'geometry/geometry.json')!=geometry_digest:
         raise ValueError('geometry manifest changed during candidate evaluation')
-    score['objective']=score['ripple_db']+brief.cost_weight_db*candidate['cost']/brief.max_driver_cost
+    score['objective']=score.get('acoustic_objective',score['ripple_db'])+brief.cost_weight_db*candidate['cost']/brief.max_driver_cost
     score.update(driver_count=design.driver_count,driver_cost=candidate['cost'],
                  evaluation_sha256=sha256(root/'evaluation/evaluation.json'),
                  geometry_manifest_sha256=geometry_digest)
@@ -225,9 +250,18 @@ def _optimise(brief, base, catalogue_path, runtime, output, report, activate, so
     # JSON normalisation matches the saved runtime representation.
     application_runtime=json.loads(json.dumps(application_runtime))
     recovery=None
+    saved_trials=[]
     if resume_from is not None:
+        if brief.evolution is not None:
+            from .evolution import replay
+            saved_search=_read_json(Path(resume_from)/'search.json')
+            saved_trials=saved_search['trials']
+            recovery_pool,proposals=replay(brief,base,drivers,saved_trials)
+            if saved_search.get('proposals')!=proposals:
+                raise ValueError('adaptive recovery proposal history differs from controls and fitness')
+        else:recovery_pool=pool
         from .search_resume import Recovery
-        recovery=Recovery(resume_from,output,brief,base,drivers,pool,runtime_identity,application_runtime,
+        recovery=Recovery(resume_from,output,brief,base,drivers,recovery_pool,runtime_identity,application_runtime,
                           solver_stage_timeout_s)
     output.mkdir(parents=True,exist_ok=False)
     report.update({'schema_version':1,'status':'running','kind':'experimental_fem_bem_search',
@@ -236,7 +270,7 @@ def _optimise(brief, base, catalogue_path, runtime, output, report, activate, so
         'limitations':['Synthetic/unqualified sources may be used only for pipeline experiments',
             'Relative on-axis ripple objective, not calibrated sensitivity or efficiency',
             'Driver-only prices exclude amplifier, material, printing and assembly',
-            'Straight conical family; finite sampled grid is not a global optimum']})
+            'Bounded straight-axis profiles; finite sampled grid is not a global optimum']})
     try:
         activate()
         if recovery is not None:
@@ -246,18 +280,38 @@ def _optimise(brief, base, catalogue_path, runtime, output, report, activate, so
         _write_json(output/'catalogue-snapshot.json',[d.model_dump(mode='json') for d in drivers])
         report['control_sha256']={name:sha256(output/name) for name in
             ('brief.json','base-geometry.json','catalogue-snapshot.json')}
-        for i,candidate in enumerate(pool):
+        evaluated=[]
+        if brief.evolution is not None:report['proposals']=[]
+        for i in range(brief.trial_budget if brief.evolution is not None else len(pool)):
+            if brief.evolution is not None:
+                from .evolution import propose, ProposalFailure
+                try:candidate,proposal=propose(brief,pool,report['trials'],evaluated)
+                except ProposalFailure as exc:
+                    report['proposals'].append(exc.report)
+                    report['trials'].append({'index':i,'status':'failed','error':str(exc)})
+                    evaluated.append(None)
+                    _write_json(output/'search.json',report)
+                    continue
+                report['proposals'].append(proposal)
+            else:candidate=pool[i]
+            evaluated.append(candidate)
             trial={'index':i,'status':'running'};report['trials'].append(trial)
             _write_json(output/'search.json',report)
             if runtime.verify()!=runtime_identity: raise ValueError('search runtime changed')
             try:
-                if recovery is not None and i in recovery.completed:
+                if saved_trials and i<len(saved_trials) and saved_trials[i]['status']=='failed':
+                    recovery.preserve_failed(i,candidate,output/f'trial-{i:03d}')
+                    trial.update(saved_trials[i])
+                    _write_json(output/'search.json',report)
+                    continue
+                elif recovery is not None and i in recovery.completed:
                     score=recovery.copy_trial(i,candidate,output/f'trial-{i:03d}')
                 else:
                     score=evaluate_candidate(candidate,output/f'trial-{i:03d}',runtime,brief,timeout_s=solver_stage_timeout_s)
                 trial.update(status='complete',**score)
             except Exception as exc:
-                if recovery is not None and i in recovery.completed: raise
+                if recovery is not None and (i in recovery.completed or
+                        (saved_trials and i<len(saved_trials) and saved_trials[i]['status']=='failed')): raise
                 trial.update(status='failed',error=f'{type(exc).__name__}: {exc}')
             _write_json(output/'search.json',report)
         if runtime.verify()!=runtime_identity: raise ValueError('search runtime changed')

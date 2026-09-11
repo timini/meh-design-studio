@@ -236,3 +236,13 @@ def test_cancellation_at_interior_exterior_transition_is_retained(generated, mon
         def verify(self):return {}
     with pytest.raises(KeyboardInterrupt):radiation.compile_radiating_system(root,sources,output,Runtime())
     assert json.loads((output/'compilation.json').read_text())['status']=='cancelled'
+
+
+def test_changed_source_axis_cannot_compile(generated):
+    root, sources, output = generated
+    path = root/'geometry.json'
+    saved = json.loads(path.read_text())
+    saved['sources'][0]['motion_axis'] = [0,1,0]
+    path.write_text(json.dumps(saved))
+    with pytest.raises(ValueError, match='motion axes'):
+        compile_interior_system(root, sources, output)

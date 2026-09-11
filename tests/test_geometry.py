@@ -142,3 +142,55 @@ def test_missing_back_wall_is_rejected_even_for_closed_cad(geometry_data):
     assert damaged.isValid()  # CAD validity/closure alone does not check acoustic wall coverage.
     with pytest.raises(ValueError,match='back wall'):
         verify_front_chamber_back_walls(design,air['front'],damaged)
+
+
+@pytest.mark.cad
+def test_four_driver_ring_air_material_and_compiled_axes(geometry_data, tmp_path):
+    pytest.importorskip('cadquery')
+    pytest.importorskip('gmsh')
+    from meh_studio.generated_system import HornSources, compile_interior_system
+    from meh_studio.radiation_geometry import export_exterior
+    design = HornGeometry.model_validate(geometry_data | {
+        'entry_layout': 'four_driver_ring', 'entry_positions_m': [.09]})
+    air, parts, sources = build_geometry(design)
+    assert design.driver_count == 5 and len(air) == 5 and len(sources) == 4
+    assert {tuple(s['motion_axis']) for s in sources} == {(1,0,0),(-1,0,0),(0,1,0),(0,-1,0)}
+    for region in air.values():
+        for part in parts.values():
+            assert region.intersect(part).Volume()/1e9 < 1e-12
+    solids = list(parts.values())
+    for index, part in enumerate(solids):
+        for other in solids[index+1:]:
+            assert part.intersect(other).Volume()/1e9 < 1e-12
+    export_geometry(design, tmp_path/'geometry')
+    mesh = mesh_geometry(tmp_path/'geometry')
+    front = next(r for r in mesh['regions'] if r['id']=='front')
+    assert sum(b['role']=='source' for b in front['boundaries']) == 5
+    source_models = HornSources.model_validate_json((Path(__file__).resolve().parents[1]/'examples/synthetic-horn-sources.json').read_text())
+    compiled = compile_interior_system(tmp_path/'geometry', source_models, tmp_path/'compiled')
+    assert compiled['driver_count'] == 5
+    system = json.loads((tmp_path/'compiled/project.blab.json').read_text())['physical_system']
+    for source in sources:
+        component = next(c for c in system['components'] if c['name']==source['id'])
+        assert component['parameters']['motion_axis'] == source['motion_axis']
+        assert len(component['boundary_ids']) == 2
+    exterior = export_exterior(design, tmp_path/'exterior', .01)
+    assert exterior['status'] == 'complete' and exterior['surface']['open_edges'] == 0
+
+
+def test_ring_rejects_extra_axial_positions_and_colliding_chambers(geometry_data):
+    with pytest.raises(ValueError, match='exactly one'):
+        HornGeometry.model_validate(geometry_data | {'entry_layout':'four_driver_ring', 'entry_positions_m':[.075,.17]})
+    with pytest.raises(ValueError, match='overlap'):
+        HornGeometry.model_validate(geometry_data | {'entry_layout':'four_driver_ring',
+            'length_m':.5, 'mouth_radius_m':.02, 'entry_positions_m':[.05], 'port_length_m':.001})
+
+
+def test_default_pair_design_preserves_archived_identity(geometry_data):
+    import hashlib
+    design = HornGeometry.model_validate(geometry_data)
+    legacy = geometry_data | {'schema_version':1, 'tessellation_tolerance_m':.0001}
+    assert design.content_hash == hashlib.sha256(json.dumps(legacy, sort_keys=True,
+        separators=(',', ':'), allow_nan=False).encode()).hexdigest()
+    ring = HornGeometry.model_validate(geometry_data | {'entry_layout':'four_driver_ring'})
+    assert ring.content_hash != design.content_hash

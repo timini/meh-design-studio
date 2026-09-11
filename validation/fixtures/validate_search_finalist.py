@@ -12,23 +12,27 @@ from meh_studio.radiation_geometry import step_geometry_sha256
 from meh_studio.optimisation import SearchBrief, candidates, candidate_record, evaluate_candidate, verified_assessment
 
 
-def pressure(project, evaluation, gain):
+def pressure(project, evaluation, gain, drive_settings=None):
     evidence=verified_assessment(project,evaluation)
     root=evaluation/'upstream'
     manifest=_read_json(root/'manifest.json')
     system=_read_json(project)['physical_system']
     ports={p['id']:p['component_id'] for p in system['excitation_ports']}
     weights=np.array([1. if ports[p]=='component:throat' else gain for p in manifest['excitation_port_ids']])
+    if drive_settings is not None:
+        from meh_studio.acoustic_objectives import drive_weights
+        weights=drive_weights([row['freq_hz'] for row in manifest['results']],
+            [ports[p] for p in manifest['excitation_port_ids']],drive_settings)
     domain=next(d for d in _read_json(_contained(root,manifest['domains_metadata_file']))['domains'] if d['id']=='observation:horizontal-polar')
     with np.load(_contained(root,manifest['domains_file']),allow_pickle=False) as archive:
         indices=np.flatnonzero(archive[domain['coordinates']['angle_deg']]==0)
     if len(indices)!=1: raise ValueError('missing unique on-axis observation')
     values=[]
-    for result in manifest['results']:
+    for index,result in enumerate(manifest['results']):
         meta=_read_json(_contained(root,result['metadata_file']))
         q=next(q for q in meta['quantities'] if q['id']=='acoustic:pressure:horizontal-polar')
         with np.load(_contained(root,result['arrays_file']),allow_pickle=False) as archive:
-            values.append(weights@archive[q['key']][:,int(indices[0])])
+            values.append((weights[index] if drive_settings is not None else weights)@archive[q['key']][:,int(indices[0])])
     if verified_assessment(project,evaluation)!=evidence: raise ValueError('changed finalist evidence')
     return np.asarray(values)
 
@@ -59,7 +63,8 @@ def load_search(search):
     from meh_studio.search_results import load_completed_search
     control_hashes,result,brief,base,winner,gain=load_completed_search(search)
     frequencies=validation_frequencies(brief.frequencies_hz)
-    frozen=SearchBrief.model_validate(brief.model_dump()|{'side_gains':(gain,)})
+    from meh_studio.acoustic_objectives import freeze_brief
+    frozen=freeze_brief(brief,gain,result['winner'].get('drive_settings'))
     sizes=(base.mesh_size_m,base.mesh_size_m*.75,base.mesh_size_m*.5)
     if min(sizes)<.0005: raise ValueError('refinement exceeds generator mesh limits')
     return control_hashes,result,brief,base,winner,gain,frequencies,frozen,sizes
@@ -98,12 +103,22 @@ def _validate(search, output, runtime, timeout_s, report, activate):
                 prior=report['levels'][0]['mesh_identity']
                 if any(identity[k]!=prior[k] for k in ('cad_geometry_sha256','exterior_mesh_size_m','compiler_runtime')):
                     raise ValueError('finalist CAD or exterior target changed between levels')
-            values=pressure(root/'system/project.blab.json',root/'evaluation',gain)
-            if not np.isfinite(values).all() or np.any(abs(values)==0): raise ValueError('undefined finalist pressure comparison')
-            responses.append(values)
+            values=pressure(root/'system/project.blab.json',root/'evaluation',gain,result['winner'].get('drive_settings'))
+            comparison=values
+            if brief.acoustic_objectives is not None:
+                from meh_studio.acoustic_objectives import convergence_polars
+                comparison,coordinates=convergence_polars(root/'system/project.blab.json',root/'evaluation',
+                    result['winner']['drive_settings'],brief.acoustic_objectives)
+                if report.get('comparison_coordinates',coordinates)!=coordinates:
+                    raise ValueError('finalist polar observation coordinates changed')
+                report['comparison_coordinates']=coordinates
+                report['fixed_drive_settings']=result['winner']['drive_settings']
+            if not np.isfinite(comparison).all() or np.any(abs(comparison)==0): raise ValueError('undefined finalist pressure comparison')
+            responses.append(comparison)
             report['levels'].append({'mesh_size_m':size,'score':score,
                 'mesh_identity':identity,'export_checks':validate_export(root/'geometry'),
-                'pressure_real':values.real.tolist(),'pressure_imag':values.imag.tolist()})
+                'pressure_real':values.real.tolist(),'pressure_imag':values.imag.tolist(),
+                'comparison_pressure_real':comparison.real.tolist(),'comparison_pressure_imag':comparison.imag.tolist()})
             if len(responses)>1:
                 before,after=responses[-2:]
                 change={'maximum_magnitude_change_db':float(np.max(abs(20*np.log10(abs(after)/abs(before))))),

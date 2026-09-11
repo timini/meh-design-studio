@@ -62,11 +62,13 @@ def _compile_interior_system(geometry_directory: Path, sources: HornSources, out
     for source, radius in ((sources.throat, design.throat_radius_m), (sources.side, design.front_radius_m)):
         if not math.isclose(source.sd_m2, math.pi * radius**2, rel_tol=1e-6):
             raise ValueError("source effective area must match its ideal diaphragm disk")
-    expected_sources = {f"entry_{pair}_{side}" for pair in range(len(design.entry_positions_m))
-                        for side in ("positive", "negative")}
+    axes = {name: list(axis) for name, _, axis in design.entry_sites}
+    expected_sources = set(axes)
     source_locations = {s["id"]: s for s in geometry["sources"]}
     if set(source_locations) != expected_sources or len(source_locations) != len(geometry["sources"]):
         raise ValueError("geometry source inventory differs from the selected family")
+    if any(source_locations[name]['motion_axis'] != axis for name, axis in axes.items()):
+        raise ValueError('geometry source motion axes differ from the selected family')
     expected_regions = {"front"} | {"rear_" + name for name in expected_sources}
     regions = {r["id"]: r for r in mesh["regions"]}
     if set(regions) != expected_regions or len(regions) != len(mesh["regions"]):
@@ -123,7 +125,7 @@ def _compile_interior_system(geometry_directory: Path, sources: HornSources, out
             f"mesh:{name}": region["sha256"] for name, region in regions.items()}
         assignments = [("throat", sources.throat, [0, 0, 1], ["boundary:front:throat_source"])]
         for name in sorted(expected_sources):
-            assignments.append((name, sources.side, [1 if name.endswith("positive") else -1, 0, 0],
+            assignments.append((name, sources.side, axes[name],
                 [f"boundary:front:{name}_front_source", f"boundary:rear_{name}:{name}_rear_source"]))
         for name, source, axis, boundary_ids in assignments:
             component = "component:" + name

@@ -46,8 +46,7 @@ def export_search(search: Path, output: Path) -> dict:
     project = _read_json(trial / 'system/project.blab.json')
     ports = project['physical_system']['excitation_ports']
     expected = {'component:throat'} | {
-        f'component:entry_{i}_{side}' for i in range(len(design.entry_positions_m))
-        for side in ('positive', 'negative')}
+        f'component:{name}' for name, _, _ in design.entry_sites}
     if len(ports) != design.driver_count or {p['component_id'] for p in ports} != expected:
         raise ValueError('winning source layout differs from generated geometry')
     gains = {'kind': 'relative_voltage_basis_gains', 'hardware_preset': False,
@@ -56,6 +55,19 @@ def export_search(search: Path, output: Path) -> dict:
              'channels': [{'excitation_port_id': p['id'], 'component_id': p['component_id'],
                            'gain': 1.0 if p['component_id'] == 'component:throat' else gain,
                            'phase_deg': 0.0, 'delay_s': 0.0} for p in ports]}
+    if brief.acoustic_objectives is not None:
+        settings=result['winner']['drive_settings']
+        from .acoustic_objectives import freeze_brief
+        freeze_brief(brief,gain,settings)
+        gains={'kind':'parallel_mid_bank_and_hf_lr4','hardware_preset':False,
+               'absolute_voltage_calibrated':False,'drive_settings':settings,
+               'parallel_mid_bank':result['winner']['parallel_mid_bank'],
+               'description':'Two ideal amplifier channels; analogue LR4 model requires DSP hardware mapping and calibration.',
+               'channels':[{'id':'mid_bank','component_ids':sorted(expected-{'component:throat'}),
+                            'wiring':'parallel','gain':gain,'polarity':settings['mid_polarity'],
+                            'highpass_hz':settings['mid_highpass_hz'],'lowpass_hz':settings['upper_crossover_hz'],'delay_s':0.},
+                           {'id':'hf','component_ids':['component:throat'],'gain':1.,'polarity':1,
+                            'highpass_hz':settings['upper_crossover_hz'],'delay_s':settings['hf_delay_s']}]}
     side_locations = manifest['sources']
     if len(side_locations)!=design.driver_count-1 or {f"component:{s['id']}" for s in side_locations} != expected-{'component:throat'}:
         raise ValueError('geometry source placements are incomplete or inconsistent')
