@@ -52,9 +52,25 @@ current reports sum all physical receiving coils.
 An independent five-coil circuit test agrees with a three-group reconstruction
 for changed circuits, induced motion, currents and arbitrary observation fields.
 Metadata disagreement and a bank load that passes only when coils are omitted
-are rejected. This extends the algebraic checks; the historical fresh-native
-comparison below used individually represented drivers and does not by itself
-validate this new grouped path.
+are rejected.
+
+At source `2b84de04dd02e37599b91dd46a60fae9742cf2ac`, identity reanalysis of both
+retained production quarter-model candidates reproduces all native quantities
+within `3.63e-16` relative L2 and preserves their scores and four-mid bank loads.
+A separate changed-circuit comparison then replaces the HF with the provisional
+Peerless ideal-outlet model and varies the synthetic mids' Re, Bl and Mmd. It
+retains exactly the same 108,241 tetrahedra and 2,612 exterior triangles.
+
+All 32 fresh-native versus derived quantity/frequency pairs pass the predeclared
+`1e-8` relative complex L2 limit at 350, 1,000, 2,000 and 3,000 Hz. The maximum is
+`7.399211303325249e-12`, in the 3 kHz BEM normal derivative. The fresh solve also
+passes the separate `1e-8` electrical gate, with maximum reciprocity residual
+`5.699618347716415e-10`. The [grouped evidence report](../validation/evidence/grouped-circuit-reanalysis/report.json)
+indexes a [41,078,045-byte archive](../validation/evidence/grouped-circuit-reanalysis/evidence.zip)
+of 135 verified files, SHA-256
+`df9f76ca7db10eb974399a3c2556e7ad3f8ead8c4d87b4d25ca6f75a2c0b7f2f`.
+These are circuit-equivalence checks on an existing discretisation, not physical
+source accuracy or acceptance of the commercial horn design.
 
 ## Numerical screens and limits
 
