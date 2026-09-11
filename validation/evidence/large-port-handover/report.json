@@ -1,0 +1,93 @@
+{
+  "status": "completed_native_solve_rejected_by_handover",
+  "application_source_commits": {
+    "native_search": "c36e357",
+    "diagnostic": "ab6714f",
+    "archival_runner_base": "014e047"
+  },
+  "archives": [
+    {
+      "file": "failed-search-00.zip",
+      "sha256": "0a49e39d972a4369be3167e73222982d46344d2a2298fd1f64d68e2a2c378ff0",
+      "size_bytes": 66370750
+    },
+    {
+      "file": "failed-search-01.zip",
+      "sha256": "20f4d6ef8f72e1fc28feaa90291c3c22fd413429828bbfe168d712874c561c07",
+      "size_bytes": 7774834
+    },
+    {
+      "file": "controls-and-diagnostic.zip",
+      "sha256": "f2aa875647ca7552dce2718ce8c4bb4e99af62f308f151a8cf5369105edc6bf6",
+      "size_bytes": 20921
+    }
+  ],
+  "search_status": "failed",
+  "trial_status": "failed",
+  "native_status": "complete",
+  "frequencies_hz": [
+    350.0,
+    700.0,
+    1000.0,
+    1200.0,
+    1500.0,
+    1750.0,
+    2000.0,
+    2250.0,
+    2500.0,
+    2750.0,
+    3000.0,
+    3500.0,
+    4000.0,
+    5000.0,
+    7500.0
+  ],
+  "gain_feasibility": [
+    {
+      "upper_crossover_hz": 3000.0,
+      "minimum_mid_gain_for_mid_dominance": 3.292470249133414,
+      "maximum_mid_gain_for_hf_dominance": 1.560118618095473,
+      "lower_bound_frequency_hz": 3000.0,
+      "upper_bound_frequency_hz": 5000.0,
+      "continuous_interval_exists": false,
+      "interval_within_declared_gain_span_exists": false,
+      "feasible_declared_gains": []
+    },
+    {
+      "upper_crossover_hz": 4000.0,
+      "minimum_mid_gain_for_mid_dominance": 1.0417581647648693,
+      "maximum_mid_gain_for_hf_dominance": 0.49363128150677094,
+      "lower_bound_frequency_hz": 3000.0,
+      "upper_bound_frequency_hz": 5000.0,
+      "continuous_interval_exists": false,
+      "interval_within_declared_gain_span_exists": false,
+      "feasible_declared_gains": []
+    },
+    {
+      "upper_crossover_hz": 5000.0,
+      "minimum_mid_gain_for_mid_dominance": 0.4267041442876905,
+      "maximum_mid_gain_for_hf_dominance": 0.20219137290517342,
+      "lower_bound_frequency_hz": 3000.0,
+      "upper_bound_frequency_hz": 5000.0,
+      "continuous_interval_exists": false,
+      "interval_within_declared_gain_span_exists": false,
+      "feasible_declared_gains": []
+    }
+  ],
+  "minimum_parallel_mid_impedance_magnitude_ohm": 3.1079898116445217,
+  "diagnostic_sha256": "59db20db6a87c7034ea009baea655e2f77b54eaa5257f9b2f21dbe57a1c42c83",
+  "comparison_baseline_sha256": "69971d2ffc63d3b3d8af9cda4f63af3ebda307a0fac848dc8c7625c184868013",
+  "comparison_baseline_archive_report": "../periodic-profile-symmetry/report.json",
+  "plot_sha256": "01577ef799e754852bf003a2744b0abdeec29bd3ede144da38ee681908c1f041",
+  "winner": null,
+  "qualified": false,
+  "physical_validation": false,
+  "limitations": [
+    "The native solve completed all 15 frequencies, but the search and trial failed scoring and remain failed",
+    "No gain can satisfy this LR4 family and the declared sampled 3-to-5 kHz handover; other filter families are not excluded",
+    "No selected DSP, valid winning response score, or winning export is asserted",
+    "Port radius and idealised cavity depth changed together; this does not isolate their physical effects",
+    "Exploratory complex64 storage does not qualify the unchanged 1e-8 electrical consistency gate",
+    "Reported mid circuits, synthetic HF, idealised cavities, finite 20 m observations; no commercial source, fit, print, convergence or physical qualification"
+  ]
+}
