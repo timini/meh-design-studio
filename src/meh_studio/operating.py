@@ -34,8 +34,12 @@ def diaphragm_velocity_ratios(system, ids, sources_path):
 
 
 def operating_quantities(frequencies, ids, voltage_rms, pressure_per_volt,
-                         current_per_volt, velocity_per_volt, resistance_ohm):
-    """All receiving drivers, including induced motion, remain in the basis."""
+                         current_per_volt, velocity_per_volt, resistance_ohm, *, physical_driver_orbit_counts=None):
+    """Retain per-coil motion/current/loss; total power sums physical orbits.
+
+    A reduced voltage port drives every identical coil in its orbit. Counts
+    multiply receiving electrical currents only, never pressure or excursion.
+    """
     f=np.asarray(frequencies,dtype=float);r=np.asarray(resistance_ohm,dtype=float)
     if f.ndim!=1 or not len(f) or not np.isfinite(f).all() or np.any(f<=0) or np.any(np.diff(f)<=0):
         raise ValueError('positive increasing operating frequencies required')
@@ -47,7 +51,10 @@ def operating_quantities(frequencies, ids, voltage_rms, pressure_per_volt,
     velocity=sum_voltage_basis(velocity_per_volt,ids,voltage,ids)
     if current.shape!=voltage.shape or velocity.shape!=voltage.shape or len(current)!=len(f):
         raise ValueError('operating bases must retain every component and frequency')
-    power,total=electrical_power_rms(voltage,current)
+    from .driver_symmetry import physical_orbit_counts
+    counts=physical_orbit_counts(ids,physical_driver_orbit_counts)
+    power,_=electrical_power_rms(voltage,current)
+    _,total=electrical_power_rms(voltage,current*counts)
     peak_excursion=np.sqrt(2)*abs(velocity)/(2*np.pi*f[:,None])
     coil_loss=abs(current)**2*r
     if not np.isfinite(peak_excursion).all() or not np.isfinite(coil_loss).all():
@@ -62,6 +69,7 @@ def search_operating_report(search: Path, input_rms_v: float):
     from .boundary_lab import _read_json,_contained
     from .optimisation import verified_assessment
     from .acoustic_objectives import drive_weights
+    from .driver_symmetry import driver_symmetry_from_meshes, verify_response_symmetry
     if not math.isfinite(input_rms_v) or input_rms_v<=0:
         raise ValueError('positive finite input RMS voltage required')
     search=search.absolute()
@@ -71,11 +79,13 @@ def search_operating_report(search: Path, input_rms_v: float):
     trial=search/f"trial-{result['winner_index']:03d}"
     project=trial/'system/project.blab.json';evaluation=trial/'evaluation'
     evidence=verified_assessment(project,evaluation)
-    system=_read_json(project)['physical_system'];root=evaluation/'upstream'
+    project_data=_read_json(project);system=project_data['physical_system'];root=evaluation/'upstream'
     manifest=_read_json(root/'manifest.json')
     if manifest.get('phasor_convention')!='exp(-i omega t)':raise ValueError('unsupported native phasor convention')
     port_components={p['id']:p['component_id'] for p in system['excitation_ports']}
     ids=tuple(port_components[p] for p in manifest['excitation_port_ids'])
+    symmetry=driver_symmetry_from_meshes(project_data,manifest)
+    counts=np.array([symmetry[c]['physical_driver_orbit_count'] for c in ids])
     components={c['id']:c for c in system['components']}
     resistance=[components[c]['parameters']['re_ohm'] for c in ids]
     domains=_read_json(_contained(root,manifest['domains_metadata_file']))['domains']
@@ -101,15 +111,16 @@ def search_operating_report(search: Path, input_rms_v: float):
                 q=quantities[key];order=q['metadata']['component_ids']
                 if q['unit']!=unit or len(order)!=len(ids) or set(order)!=set(ids):
                     raise ValueError('complete component identities and physical units required')
-                if q['metadata'].get('physical_driver_orbit_counts')!=[1]*len(ids):
-                    raise ValueError('operating report requires individually represented physical drivers')
+                verify_response_symmetry(q['metadata'],order,symmetry,reduced=project_data.get('symmetry','off')!='off')
                 destination.append(arrays[q['key']][:,[order.index(c) for c in ids]].copy()/reference)
     voltage=input_rms_v*drive_weights(frequencies,list(ids),settings)
     motion_ratios=diaphragm_velocity_ratios(system,ids,trial/'system/sources.json')
     physical_velocities=np.asarray(velocities)/motion_ratios
-    values=operating_quantities(frequencies,ids,voltage,pressures,currents,physical_velocities,resistance)
+    values=operating_quantities(frequencies,ids,voltage,pressures,currents,physical_velocities,resistance,
+                                physical_driver_orbit_counts=counts)
     hf=ids.index('component:throat');mids=[i for i in range(len(ids)) if i!=hf]
-    channel_current=np.column_stack((values['current'][:,mids].sum(axis=1),values['current'][:,hf]))
+    group_current=values['current']*counts
+    channel_current=np.column_stack((group_current[:,mids].sum(axis=1),group_current[:,hf]))
     channel_voltage=voltage[:,[mids[0],hf]]
     channel_power,net_power=electrical_power_rms(channel_voltage,channel_current)
     def complex_values(v):return {'real':v.real.tolist(),'imag':v.imag.tolist()}
@@ -132,6 +143,11 @@ def search_operating_report(search: Path, input_rms_v: float):
             'No thermal, excursion, amplifier clipping or distortion limits inferred; no safe drive recommendation',
             'Includes all modelled mutual coupling; ideal rigid diaphragms and supplied source models remain approximations',
             'Reported pressure levels are numerical predictions at saved coordinates, not measured or far-field-qualified SPL']}
+    if project_data.get('symmetry','off')!='off':
+        report['physical_driver_orbit_counts']=counts.tolist()
+        report['group_current_rms_a']=complex_values(group_current)
+        report['group_coil_joule_loss_w']=(values['coil_loss']*counts).tolist()
+        report['component_quantity_definition']='Current, velocity, excursion and coil loss describe one physical driver; group current and coil loss sum its identical physical orbit'
     if system.get('metadata',{}).get('ideal_outlet_transforms'):
         report['ideal_outlet_transforms']=system['metadata']['ideal_outlet_transforms']
         report['component_outlet_velocity_rms_m_s']=complex_values(values['velocity']*motion_ratios)

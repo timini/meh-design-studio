@@ -30,6 +30,46 @@ def test_parallel_input_includes_mutual_current_and_holds_hf_at_zero_voltage():
     assert bank['amplifier_channels_for_mids']==1
 
 
+def test_reduced_bank_matches_four_physical_mids_and_enforces_two_ohm_limit():
+    from meh_studio.acoustic_objectives import _score_acoustic_basis
+    full_ids=['component:throat','x+','x-','y+','y-']
+    reduced_ids=['component:throat','x','y']
+    y=np.full((5,5),.01);np.fill_diagonal(y,.125);y[0,0]=.2
+    assert np.linalg.eigvalsh(y).min()>0  # Independent passive five-port network.
+    full_current=2.83*y.T
+    groups=[[0],[1,2],[3,4]]
+    reduced_current=np.stack([full_current[g].sum(axis=0)[[0,1,3]] for g in groups])
+    full=parallel_bank([full_current],full_ids)
+    reduced=parallel_bank([reduced_current],reduced_ids,physical_driver_orbit_counts=[1,2,2])
+    assert reduced==full
+    assert reduced['mid_count']==4 and reduced['minimum_impedance_magnitude_ohm']<2.
+    assert parallel_bank([reduced_current],reduced_ids)['minimum_impedance_magnitude_ohm']>2.
+    angles={p:np.array([-45.,0.,45.]) for p in ('horizontal','vertical')}
+    pressure=np.array([1.,.25,.25,.25,.25])[:,None]*np.array([.5,1.,.5])
+    reduced_pressure=np.stack([pressure[g].sum(axis=0) for g in groups])
+    targets=AcousticObjectives(upper_crossovers_hz=(2000.,),mid_polarities=(1,),hf_delays_s=(0.,),minimum_bank_impedance_ohm=2.)
+    for ids,current,p,counts in [(full_ids,full_current,pressure,None),
+                                  (reduced_ids,reduced_current,reduced_pressure,[1,2,2])]:
+        with pytest.raises(ValueError,match='violates 2 ohm'):
+            _score_acoustic_basis([1000.],ids,angles,{plane:[p] for plane in angles},[current],(1.,),targets,
+                                   physical_driver_orbit_counts=counts)
+    unrestricted=targets.model_copy(update={'minimum_bank_impedance_ohm':None})
+    scores=[_score_acoustic_basis([1000.],ids,angles,{plane:[p] for plane in angles},[current],(1.,),unrestricted,
+                                   physical_driver_orbit_counts=counts)
+            for ids,current,p,counts in [(full_ids,full_current,pressure,None),
+                                         (reduced_ids,reduced_current,reduced_pressure,[1,2,2])]]
+    assert scores[0]['drive_settings']==scores[1]['drive_settings']
+    for key in ['mid_bank_real_a','mid_bank_imag_a','hf_real_a','hf_imag_a']:
+        np.testing.assert_allclose(scores[0]['parallel_mid_bank']['selected_drive_currents'][key],
+                                   scores[1]['parallel_mid_bank']['selected_drive_currents'][key],rtol=1e-13)
+
+
+@pytest.mark.parametrize('counts',[[1,True],[1.,2.],[1,0],[1,-2],[1,5],[1],[1,'2']])
+def test_bank_rejects_invalid_physical_multiplicity(counts):
+    with pytest.raises(ValueError,match='orbit count'):
+        parallel_bank([np.eye(2)],['component:throat','mid'],physical_driver_orbit_counts=counts)
+
+
 def test_polar_target_rewards_coverage_and_rejects_a_narrow_beam():
     angles=np.arange(-90,91,5.)
     desired=10**((-6*(angles/45)**2)/20)

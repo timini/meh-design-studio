@@ -2,10 +2,12 @@
 
 The mirror-group electrical validator now distinguishes cut diaphragm area from
 physical coil multiplicity using hashed source meshes. Its native quarter-model
-checks pass at the unchanged 1e-8 limit. The subsequent four-level acoustic
-comparison still fails mesh convergence: the finest adjacent pair differs by
-3.61% against 2%, so mirror reduction remains an experimental route to faster
-search. See [driver accounting and refinement evidence](mirror-driver-validation.md).
+checks pass at the unchanged 1e-8 limit. Scoring and amplifier-current reports
+also sum the physical coils, preventing incorrect parallel-bank load acceptance.
+The latest 4/3 mm quarter-mesh comparison passes 2% at 1.55%, but the new quarter
+model differs by 8.70% from the older full reference. Mirror reduction therefore
+remains an experimental route to faster search. See
+[driver accounting, scoring and refinement evidence](mirror-bank-scoring.md).
 
 Merged increments now include the foundation, geometry generator, durable job ledger and initial complex metric library. These implement parts of B01/B02/B04/B05 and independent-reference infrastructure for A05. It does **not** pass G0 or any physical release gate. A01's example brief is provisional; its measurement protocol has not been ratified. The pinned Boundary Lab CPU solver has now executed the interior compression-driver fixture at one and three frequencies; see the [adapter and evidence](boundary-lab-adapter.md). This demonstrates integration and repeatability, not independent acoustic accuracy. The experimental search now also executes generated multiple-entry FEM/BEM evaluations; see [the end-to-end workflow](end-to-end-search.md).
 

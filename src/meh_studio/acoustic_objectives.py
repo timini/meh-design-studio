@@ -95,11 +95,13 @@ def polar_error(pressure,angles_deg,coverage_deg):
             'relative_db':relative.tolist(),'target_db':target.tolist()}
 
 
-def parallel_bank(current_basis,component_ids,reference_voltage_v=2.83):
+def parallel_bank(current_basis,component_ids,reference_voltage_v=2.83,*,physical_driver_orbit_counts=None):
     """Mid-bank input impedance with HF amplifier held at zero volts.
 
     current_basis axes: frequency, excitation, receiving component, ordered alike.
     Off-diagonal induced currents are included, not just self impedances.
+    Each reduced excitation already drives its whole orbit; only receiving
+    per-coil currents are multiplied by physical driver orbit counts.
     """
     current=np.asarray(current_basis,dtype=complex)
     count=len(component_ids)
@@ -108,13 +110,15 @@ def parallel_bank(current_basis,component_ids,reference_voltage_v=2.83):
     if component_ids.count('component:throat')!=1 or len(set(component_ids))!=count or count<2:
         raise ValueError('one throat and unique mid component identities required')
     if not math.isfinite(reference_voltage_v) or reference_voltage_v<=0:raise ValueError('positive basis voltage required')
+    from .driver_symmetry import physical_orbit_counts
+    counts=physical_orbit_counts(component_ids,physical_driver_orbit_counts)
     mids=[i for i,c in enumerate(component_ids) if c!='component:throat']
     # Sum receiving mid currents from every simultaneously driven mid excitation.
-    current_per_volt=current[:,mids,:][:,:,mids].sum(axis=(1,2))/reference_voltage_v
+    current_per_volt=(current[:,mids,:][:,:,mids]*counts[mids]).sum(axis=(1,2))/reference_voltage_v
     if np.any(abs(current_per_volt)==0):raise ValueError('zero mid-bank admittance')
     impedance=1/current_per_volt
     return {'wiring':'parallel','amplifier_channels_for_mids':1,
-            'hf_termination':'zero-voltage ideal amplifier','mid_count':len(mids),
+            'hf_termination':'zero-voltage ideal amplifier','mid_count':int(counts[mids].sum()),
             'impedance_real_ohm':impedance.real.tolist(),'impedance_imag_ohm':impedance.imag.tolist(),
             'minimum_impedance_magnitude_ohm':float(abs(impedance).min()),
             'maximum_current_per_volt_a':float(abs(current_per_volt).max())}
@@ -139,13 +143,17 @@ def score_acoustics(project,evaluation,gains,objectives):
     """Score preserved polar/current bases with common-bank crossover choices."""
     from .boundary_lab import _read_json,_contained
     from .optimisation import verified_assessment
+    from .driver_symmetry import driver_symmetry_from_meshes, verify_response_symmetry
     evidence=verified_assessment(project,evaluation)
     verify_observation_distance(project, objectives)
     root=evaluation/'upstream';manifest=_read_json(root/'manifest.json')
     if manifest.get('phasor_convention')!='exp(-i omega t)':
         raise ValueError('crossover scoring requires explicit exp(-i omega t) convention')
-    ports={p['id']:p['component_id'] for p in _read_json(project)['physical_system']['excitation_ports']}
+    project_data=_read_json(project)
+    ports={p['id']:p['component_id'] for p in project_data['physical_system']['excitation_ports']}
     ids=[ports[p] for p in manifest['excitation_port_ids']]
+    symmetry=driver_symmetry_from_meshes(project_data,manifest)
+    counts=[symmetry[c]['physical_driver_orbit_count'] for c in ids]
     angles,sphere_points=_acoustic_observations(root,manifest,objectives)
     bases={'horizontal':[],'vertical':[]};currents=[];frequencies=[];sphere_basis=[]
     for row in manifest['results']:
@@ -161,21 +169,25 @@ def score_acoustics(project,evaluation,gains,objectives):
                 bases[plane].append(basis.copy())
             q=quantities['electrical:voice-coil-current'];ordered=q['metadata']['component_ids']
             if len(ordered)!=len(ids) or set(ordered)!=set(ids):raise ValueError('current basis component identities differ')
+            verify_response_symmetry(q['metadata'],ordered,symmetry,reduced=project_data.get('symmetry','off')!='off')
             currents.append(data[q['key']][:,[ordered.index(c) for c in ids]].copy())
             if objectives.sphere is not None:
                 q=quantities['acoustic:pressure:sphere'];basis=data[q['key']]
                 if basis.shape!=(len(ids),len(sphere_points)):raise ValueError('invalid whole-sphere basis shape')
                 sphere_basis.append(basis.copy())
-    score=_score_acoustic_basis(frequencies,ids,angles,bases,currents,gains,objectives,sphere_basis,sphere_points)
+    score=_score_acoustic_basis(frequencies,ids,angles,bases,currents,gains,objectives,sphere_basis,sphere_points,
+                                physical_driver_orbit_counts=counts)
     if verified_assessment(project,evaluation)!=evidence:raise ValueError('acoustic evidence changed while scoring')
     return score|{'electrical_validation':evidence['checks']}
 
 
-def _score_acoustic_basis(frequencies,ids,angles,bases,currents,gains,objectives,sphere_basis=None,sphere_points=None):
+def _score_acoustic_basis(frequencies,ids,angles,bases,currents,gains,objectives,sphere_basis=None,sphere_points=None,*,physical_driver_orbit_counts=None):
     """Common DSP kernel; callers own provenance and qualification of their bases."""
     from .optimisation import relative_response
     frequencies=np.asarray(frequencies)
-    bank=parallel_bank(currents,ids)
+    from .driver_symmetry import physical_orbit_counts
+    counts=physical_orbit_counts(ids,physical_driver_orbit_counts)
+    bank=parallel_bank(currents,ids,physical_driver_orbit_counts=counts)
     if objectives.minimum_bank_impedance_ohm is not None and bank['minimum_impedance_magnitude_ohm']<objectives.minimum_bank_impedance_ohm:
         raise ValueError(f"parallel mid bank minimum {bank['minimum_impedance_magnitude_ohm']:.6g} ohm violates {objectives.minimum_bank_impedance_ohm:g} ohm constraint")
     bases={name:np.asarray(value) for name,value in bases.items()}
@@ -234,7 +246,7 @@ def _score_acoustic_basis(frequencies,ids,angles,bases,currents,gains,objectives
             raise ValueError(f'no defined acoustic DSP response satisfies the declared mid/HF handover window ({handover_rejections} handover rejections)')
         raise ValueError('all acoustic DSP options contain undefined responses')
     weights=drive_weights(frequencies,ids,winner['drive_settings'])
-    operating=np.einsum('fet,fe->ft',np.asarray(currents),weights)
+    operating=np.einsum('fet,fe->ft',np.asarray(currents),weights)*counts
     mids=[i for i,c in enumerate(ids) if c!='component:throat']
     bank_current=operating[:,mids].sum(axis=1)
     hf_current=operating[:,ids.index('component:throat')]

@@ -35,6 +35,22 @@ def test_native_reference_convention_cancels_in_transfer_ratios():
     for key in reports[0]:np.testing.assert_allclose(reports[0][key],reports[1][key])
 
 
+def test_group_power_matches_all_physical_coils_without_scaling_excursion():
+    y=np.array([[.2,.02,.02],[.02,.15,.03],[.02,.03,.15]])
+    voltage=np.array([[.7+.2j,1.1-.4j,1.1-.4j]])
+    pressure=np.array([[[2.],[.3],[.3]]])
+    velocities=np.array([y.T*.01])
+    full=operating_quantities([1000.],('hf','mid+','mid-'),voltage,pressure,[y.T],velocities,[6.,8.,8.])
+    grouped=np.stack([y.T[0],y.T[1]+y.T[2]])[:,[0,1]]
+    reduced=operating_quantities([1000.],('hf','mid'),voltage[:,[0,1]],[[[2.],[.6]]],
+        [grouped],[grouped*.01],[6.,8.],physical_driver_orbit_counts=[1,2])
+    np.testing.assert_allclose(reduced['pressure'],full['pressure'])
+    np.testing.assert_allclose(reduced['total_power'],full['total_power'],rtol=1e-13)
+    np.testing.assert_allclose(reduced['power']*[1,2],full['power'][:,[0,1]]*[1,2])
+    for key in ['current','velocity','peak_excursion','coil_loss']:
+        np.testing.assert_allclose(reduced[key],full[key][:,[0,1]],rtol=1e-13)
+
+
 def test_operating_rejects_missing_receiving_driver():
     with pytest.raises(ValueError,match='every component'):
         operating_quantities([1000.],('a','b'),[[1.,1.]],[[[1.],[1.]]],
@@ -42,7 +58,8 @@ def test_operating_rejects_missing_receiving_driver():
 
 
 @pytest.mark.parametrize('transformed', [False, True])
-def test_report_uses_manifest_coordinates_and_reorders_component_columns(tmp_path,monkeypatch,source,transformed):
+@pytest.mark.parametrize('orbit', [1,2])
+def test_report_uses_manifest_coordinates_and_reorders_component_columns(tmp_path,monkeypatch,source,transformed,orbit):
     import json
     import meh_studio.search_results as search_results
     import meh_studio.optimisation as optimisation
@@ -68,13 +85,21 @@ def test_report_uses_manifest_coordinates_and_reorders_component_columns(tmp_pat
             'source_sha256':physical.content_hash, 'diaphragm_area_m2':physical.sd_m2,
             'outlet_area_m2':physical.outlet_area_m2, 'outlet_velocity_per_diaphragm_velocity':3.,
             'model':'lossless_zero_length_area_transformer'}}}
-    (system_path/'project.blab.json').write_text(json.dumps({'physical_system':system}))
+    project_data={'physical_system':system}
+    if orbit==2:
+        import meh_studio.driver_symmetry as symmetry
+        project_data['symmetry']='x'
+        # Isolate report accounting from the separately mesh-tested inference.
+        monkeypatch.setattr(symmetry,'driver_symmetry_from_meshes',lambda *args:{
+            ids[0]:{'physical_driver_orbit_count':2,'surface_completion_factor':1},
+            ids[1]:{'physical_driver_orbit_count':1,'surface_completion_factor':2}})
+    (system_path/'project.blab.json').write_text(json.dumps(project_data))
     (root/'relocated-domains.json').write_text(json.dumps({'domains':[{
         'id':'observation:horizontal-polar','coordinates':{'angle_deg':'angles','points_m':'points'}}]}))
     np.savez(root/'relocated-domains.npz',angles=[0.],points=[[0.,0.,2.]])
     quantities=[{'id':'acoustic:pressure:horizontal-polar','key':'p','unit':'Pa'}]
     for id,key,unit in [('electrical:voice-coil-current','i','A'),('mechanical:diaphragm-velocity','v','m/s')]:
-        quantities.append({'id':id,'key':key,'unit':unit,'metadata':{'component_ids':ids[::-1],'physical_driver_orbit_counts':[1,1]}})
+        quantities.append({'id':id,'key':key,'unit':unit,'metadata':{'component_ids':ids[::-1],'physical_driver_orbit_counts':[1,orbit],'surface_completion_factors':[2. if orbit==2 else 1.,1.]}})
     (root/'row.json').write_text(json.dumps({'quantities':quantities,'diagnostics':{'transducer_reference_voltage_v':2.83}}))
     # Native output receiving columns are [HF, mid], excitation rows [mid, HF].
     np.savez(root/'row.npz',p=2.83*np.array([[1.],[2.]]),i=2.83*np.array([[.05,.25],[.5,.05]]),v=2.83*np.array([[.001,.002],[.003,.004]]))
@@ -85,6 +110,12 @@ def test_report_uses_manifest_coordinates_and_reorders_component_columns(tmp_pat
     weights=2*drive_weights([1000.],ids,settings)
     current=weights@np.array([[.25,.05],[.05,.5]])
     np.testing.assert_allclose(report['component_current_rms_a']['real'],current.real)
+    np.testing.assert_allclose(report['amplifier_current_rms_a']['real'],(current*[orbit,1]).real)
+    np.testing.assert_allclose(report['net_real_input_power_w'],np.real(weights*np.conj(current)*[orbit,1]).sum(axis=1))
+    if orbit==2:
+        assert report['physical_driver_orbit_counts']==[2,1]
+        np.testing.assert_allclose(report['group_current_rms_a']['real'],(current*[2,1]).real)
+        np.testing.assert_allclose(report['group_coil_joule_loss_w'],np.array(report['component_coil_joule_loss_w'])*[2,1])
     raw_velocity = weights @ np.array([[.002,.001],[.004,.003]])
     physical_velocity = raw_velocity / np.array([1.,3. if transformed else 1.])
     np.testing.assert_allclose(report['component_velocity_rms_m_s']['real'],physical_velocity.real)

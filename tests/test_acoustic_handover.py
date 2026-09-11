@@ -56,7 +56,7 @@ def test_scoring_uses_coherent_mid_bank_and_rejects_filter_only_handover(tmp_pat
     monkeypatch.setattr(optimisation,'verified_assessment',lambda *args:{'checks':{'passed':False}})
     ids=['component:mid_a','component:throat','component:mid_b','component:mid_c','component:mid_d']
     project=tmp_path/'project.json'
-    project.write_text(json.dumps({'physical_system':{'excitation_ports':[
+    project.write_text(json.dumps({'physical_system':{'components':[{'id':c} for c in ids],'excitation_ports':[
         {'id':str(i),'component_id':c} for i,c in enumerate(ids)]}}))
     root=tmp_path/'evaluation/upstream';root.mkdir(parents=True)
     domains=[{'id':f'observation:{p}-polar','coordinates':{'angle_deg':'angles'}} for p in ('horizontal','vertical')]
