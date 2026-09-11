@@ -49,5 +49,24 @@ replay, scores and exported geometry were checked against the actual inputs.
 
 Native source is `5c5fab109c7ae169582d7330b157bf068c46ef0a`; post-processing uses
 `852a5a33af9617ac3a40f9956ca12f744e3d0ba8`. The original field data are not relabelled
-as runs of newer code. The separate quadratic rounded-square case uses the same
-predeclared search protocol and remains in progress.
+as runs of newer code.
+
+## Completed quadratic rounded-square search
+
+The second predeclared search is also complete. Its seed completed all 15 native
+frequencies with 20.3480 dB response variation, 5.6783 dB coverage error and a
+23.6141 combined objective. It fails the unchanged 6 dB response screen. Its
+fitness-driven mutation failed the 32,000-triangle exterior workload limit before
+native evaluation; that failure remains part of the search history.
+
+![The quadratic seed fails the unchanged response screen](assets/nonlinear-commercial-quadratic-rounded-square.png)
+
+The retained seed selects gain 0.8, a 350 Hz high-pass, 5 kHz LR4 crossover,
+negative mid polarity and 0.75 ms HF delay. Its sampled acoustic handover passes
+the 3–5 kHz screen, minimum predicted bank impedance is 3.1295 Ω, and its planning
+cost is £256.17. Those individual checks do not make the horn acceptable.
+
+The [quadratic report and raw archives](../validation/evidence/nonlinear-commercial-quadratic-rounded-square/report.json)
+preserve the failed mutation, verified selection/export, 1 V RMS operating report
+and source identities. Native and post-processing revisions are the same as the
+exponential study. Neither starting family has produced an accepted design.

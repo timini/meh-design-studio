@@ -1,8 +1,9 @@
 # Commercial HF source audit
 
-Inspected 11 September 2026. The current target native studies still use a synthetic
-HF source. A separate provisional Peerless circuit is now available for future
-experiments; it does not relabel those historical sources or qualify a driver.
+Updated 11 September 2026. Reported T/S parameters are already imported. The
+[completed curved-flare searches](../nonlinear-commercial-search.md) use the
+provisional Peerless circuit; earlier synthetic-source experiments retain their
+original identities. This does not qualify a physical driver.
 
 ## Peerless DFM-2535R00-08
 
@@ -40,9 +41,10 @@ local research inputs; redistribution permission is unknown.
 The moving area and exit area differ. Feeding the reported physical circuit into
 an exit-sized piston would change the electromechanical/acoustic coupling. A
 proper replacement needs an explicit internal model or a calibrated source at
-the outlet, including its load dependence. An ideal area transformer could be an
-explicit provisional approximation, but would require separate validation of
-phase, losses and operating limits. The existing synthetic source remains labelled.
+the outlet, including its load dependence. The
+[implemented ideal area transformer](../ideal-compression-source.md) provides an
+explicit provisional approximation. Phase, losses and operating limits still
+need validation. Existing synthetic-source evidence remains labelled.
 
 The larger DFM-2544R00-08 is not a shortcut: its
 [current API](https://products.peerless-audio.com/api/driver/436) has `Mmd: 0`
@@ -95,3 +97,24 @@ The record enables exploratory sensitivity and design work while this source
 gap remains open. Its package dimensions and nominal outlet opening do not
 qualify bolt, gasket or other manufacturing interfaces. The inherited £60 HF
 allowance used in the candidate check is not a supplier quote.
+
+## Public data route
+
+Use manufacturer publications and public driver databases for continued catalogue
+and modelling work. The maintainer has withdrawn the manufacturer-contact requests;
+no reply is required to continue using the existing reported circuits.
+
+A public [Voice Coil test by Vance Dickason](https://audioxpress.com/article/peerless-by-tymphany-dfm-2535r00-08-compression-driver)
+provides additional measured evidence for the DFM-2535R00-08. Published online in
+February 2018 from the August 2017 issue, it includes impedance with and without
+an Eminence APT 150S horn, H/V response and polar plots, distortion and decay.
+The response measurements use 2.83 V at 1 m. This is a useful external reference
+with a named fixture; its horn response is not an intrinsic outlet transfer
+function for an arbitrary MEH. No graph has been added to the simulated response
+or relabelled as this project's measurement.
+
+Basic mid-driver T/S inputs already come from the
+[FaitalPRO 4FE32-16 publication](https://faitalpro.com/en/products/LF_Loudspeakers/product_details/index.php?id=401005102).
+Database entries can expand discovery and comparison; retain source, impedance
+variant and revision for each imported record, including the distinction between
+dry moving mass and mass including air load.
