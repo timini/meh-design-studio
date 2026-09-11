@@ -12,7 +12,7 @@ from .domain import Positive, Record
 from .geometry import HornGeometry
 
 Parameter = Literal['length_m','mouth_radius_m','port_radius_m','port_length_m',
-                    'front_depth_m','rear_depth_m','entry_fraction_0','entry_fraction_1','driver_axial_offset_m']
+                    'front_depth_m','rear_depth_m','entry_fraction_0','entry_fraction_1','driver_axial_offset_m','driver_tilt_deg']
 
 
 class EvolutionSettings(Record):
@@ -37,8 +37,10 @@ class EvolutionSettings(Record):
         if not .5 <= low < high <= 2:
             raise ValueError('profile mutation bounds must increase within [0.5,2]')
         for name,(low,high) in self.geometry_bounds.items():
-            if name!='driver_axial_offset_m' and low<=0:
+            if name not in ('driver_axial_offset_m', 'driver_tilt_deg') and low<=0:
                 raise ValueError('non-offset geometry bounds must be positive')
+            if name == 'driver_tilt_deg' and not 0 <= low < high <= 60:
+                raise ValueError('driver tilt bounds must increase within 0–60 degrees')
             if name=='driver_axial_offset_m' and not -.5<=low<high<=.5:
                 raise ValueError('driver axial offset bounds must increase within ±0.5 m')
             if low>=high or (name.startswith('entry_fraction') and high>=1):
