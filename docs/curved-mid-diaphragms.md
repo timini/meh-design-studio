@@ -81,3 +81,9 @@ indexes 147 SHA-verified archive members, including both native runs, controls,
 geometry exports, source-force checks, the failed rotation check, comparison
 scripts and the upstream licence. The source, tests and failed result remain
 distinct from later commercial-driver work.
+
+Subsequent export integration also found collapsed empty pole facets in the
+curved cups. The [material exporter](material-export-tolerance.md) now removes
+only those collapsed facets and validates closed, oriented STL geometry before
+preparing a solver input. The archived native experiment retains its original
+files; it is not a corrected build bundle.

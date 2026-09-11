@@ -75,6 +75,12 @@ and independently integrated source-force checks. Its curved 5 kHz polar basis
 misses the unchanged 2% rotation limit at 2.127%; both cases and that failure are
 archived. This is working curved-source coupling, not upper-band convergence.
 
+[Absolute material tessellation](material-export-tolerance.md) fixes the STL
+tolerance being interpreted relative to edge size. STL and 3MF now share one
+checked mesh, including removal of collapsed empty pole facets. Export topology
+and the unchanged 1% CAD-volume limit are checked before solver preparation.
+The concentric pilot's original failed export and all native inputs are retained.
+
 Merged increments now include the foundation, geometry generator, durable job ledger and initial complex metric library. These implement parts of B01/B02/B04/B05 and independent-reference infrastructure for A05. It does **not** pass G0 or any physical release gate. A01's example brief is provisional; its measurement protocol has not been ratified. The pinned Boundary Lab CPU solver has now executed the interior compression-driver fixture at one and three frequencies; see the [adapter and evidence](boundary-lab-adapter.md). This demonstrates integration and repeatability, not independent acoustic accuracy. The experimental search now also executes generated multiple-entry FEM/BEM evaluations; see [the end-to-end workflow](end-to-end-search.md).
 
 The generated interior experiment now connects synthetic three-source geometry to FEM and includes an 8-to-4 mm mesh sensitivity study, independent electrical consistency checks, and a uniform-tube analytic load comparison. See [generated-system evidence](generated-system.md). These remain experimental numerical results with no free-field, band or physical qualification.

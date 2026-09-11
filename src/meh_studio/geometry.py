@@ -303,14 +303,22 @@ def export_geometry(design: HornGeometry, output: Path) -> dict:
         regions, parts, sources = build_geometry(design)
         mouth_cap=mouth_face(design,regions['front'])
         files = []
+        tessellation = {}
         for group, shapes in (("air", regions), ("parts", parts)):
             directory = output / group
             directory.mkdir()
             for name, shape in shapes.items():
+                if group == 'parts':
+                    from .material_export import export_material_meshes
+                    # Write STEP before meshing, preserving the exact CAD model.
+                    cq.exporters.export(shape, str(directory / f'{name}.step'))
+                    tessellation[name] = export_material_meshes(shape,
+                        directory / f'{name}.stl', directory / f'{name}.3mf',
+                        design.tessellation_tolerance_m)
                 for extension in (("step",) if group == "air" else ("step", "stl", "3mf")):
                     path = directory / f"{name}.{extension}"
-                    cq.exporters.export(shape, str(path), tolerance=design.tessellation_tolerance_m * 1000,
-                                        angularTolerance=0.1)
+                    if group == 'air':
+                        cq.exporters.export(shape, str(path))
                     files.append({"path": path.relative_to(output).as_posix(),
                                   "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
                                   "size_bytes": path.stat().st_size})
@@ -340,6 +348,9 @@ def export_geometry(design: HornGeometry, output: Path) -> dict:
         if design.diaphragm_profile_m:
             state['limitations'][0] = 'Explicit axisymmetric rigid diaphragms, not qualified purchased-driver mounting geometry'
             state['limitations'].append('Rear air is an axial sweep of the source profile; basket and motor displacement are not represented')
+        state['material_tessellation'] = tessellation
+        from .export_validation import _validate_export_state
+        state['export_checks'] = _validate_export_state(output, state)
     except BaseException as exc:
         state.update(status="failed", error=f"{type(exc).__name__}: {exc}")
         raise
