@@ -19,6 +19,31 @@ OBSERVATIONS = {"acoustic:pressure:horizontal-polar": "observation:horizontal-po
                 "acoustic:pressure:sphere": "observation:sphere"}
 
 
+def physical_volume_tags(mesh, groups, mesh_id):
+    """Resolve declared volume names against the independently read source mesh."""
+    tags = set()
+    for group in groups:
+        if group["mesh_id"] != mesh_id:
+            continue
+        if group.get("dimension", 3) != 3:
+            raise ValueError("FEM volume group must have dimension 3")
+        tag, name = group.get("tag"), group.get("name")
+        if name is not None:
+            if not isinstance(name, str) or not name.strip():
+                raise ValueError("FEM physical volume name must not be empty")
+            field = np.asarray(mesh.field_data.get(name, []))
+            if field.shape != (2,) or field.dtype.kind not in "iu" or field[1] != 3:
+                raise ValueError("FEM physical volume name is missing or has the wrong dimension")
+            resolved = int(field[0])
+            if tag is not None and tag != resolved:
+                raise ValueError("FEM physical volume name and tag disagree")
+            tag = resolved
+        if type(tag) is not int or tag <= 0:
+            raise ValueError("FEM physical volume requires a positive tag or resolvable name")
+        tags.add(tag)
+    return tags
+
+
 def load_domains(root: Path, manifest: dict, system: dict, meshes: dict, *, project: dict | None = None) -> dict:
     from .boundary_lab import _contained, _read_json, sha256
     if project is None:
@@ -73,7 +98,7 @@ def load_domains(root: Path, manifest: dict, system: dict, meshes: dict, *, proj
                         regions = [r for r in system["regions"] if r["kind"] == "bounded_air" and mid in r["mesh_ids"]]
                         if len(regions) != 1 or regions[0]["mesh_ids"] != [mid]:
                             raise ValueError("pinned Boundary Lab requires one FEM mesh per bounded region and one owning region per mesh")
-                        tags = {g["tag"] for g in regions[0].get("volume_groups", []) if g["mesh_id"] == mid}
+                        tags = physical_volume_tags(raw, regions[0].get("volume_groups", []), mid)
                         physical = raw.cell_data.get("gmsh:physical", [])
                         if not tags or len(physical) != len(raw.cells):
                             raise ValueError("FEM source requires selected physical volume tags")
