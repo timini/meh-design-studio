@@ -19,6 +19,13 @@ experiments, with archived full fields, induced inactive-driver motion and polar
 See [ring evidence](coupled-ring-evidence.md) and [freeform evidence](freeform-waveguides.md).
 Those are three-frequency topology demonstrations, not target-band qualification.
 
+The [strongly curved seed preparations](curved-mouth-preparation.md) now also
+complete CAD, tagged air meshing and coupled-solver input generation for
+exponential-round and quadratic rounded-square flares. Their native mouth
+conforming preserves the curved walls exactly and passes the existing topology,
+interface, volume and mesh limits. These two new seeds have not yet undergone
+acoustic field evaluation; the original failed preparations remain archived.
+
 [Adaptive search](adaptive-search.md) mutates profile and geometry controls using
 preceding simulated fitness, with periodic random exploration, bound checks and
 verified ancestral evidence. [Wide-mid objectives](wide-mid-objectives.md) add

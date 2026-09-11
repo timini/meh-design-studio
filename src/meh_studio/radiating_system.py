@@ -19,6 +19,20 @@ def require_cad_dependencies():
         raise ImportError('Radiating compilation requires optional CAD dependencies; install meh-design-studio[cad]') from exc
 
 
+def conform_mouth_interface(runtime,front,exterior,output,report_path,mouth_z,timeout_s):
+    helper=Path(__file__).with_name('native_mouth_conform.py')
+    identity={'helper_sha256':sha256(helper),'input_sha256':{'front':sha256(front),'exterior':sha256(exterior)}}
+    _execute([str(Path(runtime.python).absolute()),'-I',str(helper),str(front),str(exterior),
+              str(output),str(report_path),'--mouth-z',str(mouth_z)],
+             Path(runtime.checkout),report_path.with_suffix('.log'),timeout_s)
+    report=_read_json(report_path)
+    if (report.get('status')!='complete' or any(report.get(k)!=v for k,v in identity.items())
+            or report.get('output_sha256')!=sha256(output) or sha256(helper)!=identity['helper_sha256']
+            or identity['input_sha256']!={'front':sha256(front),'exterior':sha256(exterior)}):
+        raise ValueError('native mouth conformer evidence changed or is incomplete')
+    return report
+
+
 def compile_radiating_system(geometry_directory: Path, sources: HornSources, output: Path,
                              runtime: BoundaryLabRuntime, *, exterior_mesh_size_m: float = .02,
                              timeout_s: float = 600, sphere_angle_deg: float | None = None,
@@ -67,10 +81,8 @@ def _compile_radiating_system(geometry_directory, sources, output, runtime, *, e
         exterior = export_exterior(design, output / "exterior", exterior_mesh_size_m)
         destination = output / "meshes/exterior.msh"
         raw_destination = output / 'meshes/exterior-conformed-raw.msh'
-        _execute([str(Path(runtime.python).absolute()), "-I", "-m", "blab.cli", "conform-interface",
-                  str(output / "meshes/front.msh"), str(output / "exterior/exterior.msh"), str(raw_destination),
-                  "--fem-interface", "mouth_interface", "--bem-interface", "mouth_interface"],
-                 Path(runtime.checkout), output / "conform-interface.log", timeout_s)
+        report['mouth_conforming']=conform_mouth_interface(runtime,output/'meshes/front.msh',
+            output/'exterior/exterior.msh',raw_destination,output/'conform-interface.json',design.length_m,timeout_s)
         report['interface_coordinate_restoration']=restore_fem_interface_coordinates(
             raw_destination,output/'meshes/front.msh',destination)
         integrity = surface_integrity(destination,maximum_triangles=design.maximum_exterior_triangles)
