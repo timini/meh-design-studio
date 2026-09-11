@@ -32,11 +32,13 @@ def _relative(error, reference):
 
 
 def recompute_circuits(frequencies, old_sources, new_sources, velocity, current,
-                       *, reference_voltage_v=2.83, limits=None):
+                       *, reference_voltage_v=2.83, limits=None, physical_driver_orbit_counts=None):
     """Return new voltage bases and weights on the original excitation columns.
 
     Source circuits are physical records; both old and new circuits are converted
     to their native outlet coordinates. All moving-boundary areas must match.
+    A symmetry group retains per-coil motion/current and a common voltage.
+    Multiplicities affect power/load diagnostics, not excitation mixing.
     The 1e-5 input screen permits exploratory complex64 input; it does not replace
     or pass the separate native electrical qualification gate at 1e-8.
     """
@@ -44,6 +46,9 @@ def recompute_circuits(frequencies, old_sources, new_sources, velocity, current,
     f = np.asarray(frequencies, dtype=float)
     v = np.asarray(velocity, dtype=complex); i = np.asarray(current, dtype=complex)
     d = len(old_sources)
+    from .driver_symmetry import physical_orbit_counts
+    counts = physical_orbit_counts(range(d), physical_driver_orbit_counts)
+    root_counts = np.sqrt(counts)
     if (not d or len(new_sources) != d or f.ndim != 1 or not len(f)
             or not np.isfinite(f).all() or np.any(f <= 0) or np.any(np.diff(f) <= 0)
             or v.shape != (len(f), d, d) or i.shape != v.shape
@@ -83,11 +88,13 @@ def recompute_circuits(frequencies, old_sources, new_sources, velocity, current,
                 if not all(np.isfinite(a).all() for a in (out_v, out_i, mixing, load)):
                     raise ValueError('nonfinite derived circuit basis')
                 new_v.append(out_v.T); new_i.append(out_i.T); weights.append(mixing); loads.append(load)
+                # Group coordinates are not power-normalised when orbit sizes differ.
+                power_load = root_counts[:,None]*load/root_counts[None,:]
                 diagnostics.append({'frequency_hz':float(frequency), 'velocity_condition':condition,
                     'replacement_circuit_condition':circuit_condition,
                     'input_voltage_relative_residual':input_error, 'algebra_relative_residual':residual,
-                    'acoustic_load_reciprocity_relative_residual':_relative(load-load.T, load),
-                    'minimum_acoustic_load_hermitian_eigenvalue':float(np.linalg.eigvalsh((load+load.conj().T)/2).min())})
+                    'acoustic_load_reciprocity_relative_residual':_relative(power_load-power_load.T, power_load),
+                    'minimum_acoustic_load_hermitian_eigenvalue':float(np.linalg.eigvalsh((power_load+power_load.conj().T)/2).min())})
     except (FloatingPointError, np.linalg.LinAlgError) as exc:
         raise ValueError('circuit reanalysis could not form a finite nonsingular basis') from exc
     return {'velocity':np.asarray(new_v), 'current':np.asarray(new_i), 'weights':np.asarray(weights),
@@ -101,6 +108,7 @@ def reanalyse_circuits(project: Path, evaluation: Path, new_sources, output: Pat
     from .optimisation import verified_assessment, SearchBrief
     from .acoustic_objectives import _acoustic_observations, _score_acoustic_basis, verify_observation_distance
     from .geometry_worker import geometry_runtime
+    from .driver_symmetry import driver_symmetry_from_meshes, verify_response_symmetry
     project=Path(project).resolve(); evaluation=Path(evaluation).resolve(); output=Path(output).resolve()
     limits=ReanalysisLimits() if limits is None else limits
     application_runtime=json.loads(json.dumps(geometry_runtime()))
@@ -114,7 +122,8 @@ def reanalyse_circuits(project: Path, evaluation: Path, new_sources, output: Pat
     if (old_sources.density_kg_m3!=new_sources.density_kg_m3
             or old_sources.sound_speed_m_s!=new_sources.sound_speed_m_s):
         raise ValueError('changing the acoustic medium requires a new native solve')
-    system=_read_json(project)['physical_system']; raw=evaluation/'upstream'; manifest=_read_json(raw/'manifest.json')
+    project_data=_read_json(project)
+    system=project_data['physical_system']; raw=evaluation/'upstream'; manifest=_read_json(raw/'manifest.json')
     if manifest.get('phasor_convention')!='exp(-i omega t)':
         raise ValueError('unsupported native phasor convention')
     if brief is not None:
@@ -131,6 +140,9 @@ def reanalyse_circuits(project: Path, evaluation: Path, new_sources, output: Pat
     components={c['id']:c for c in system['components']}
     if len(ids)!=len(set(ids)) or set(ids)!=set(components) or ids.count('component:throat')!=1:
         raise ValueError('one independent voltage excitation for every component is required')
+    symmetry=driver_symmetry_from_meshes(project_data,manifest)
+    counts=[symmetry[c]['physical_driver_orbit_count'] for c in ids]
+    reduced=project_data.get('symmetry','off')!='off'
     old=[old_sources.throat if c=='component:throat' else old_sources.side for c in ids]
     new=[new_sources.throat if c=='component:throat' else new_sources.side for c in ids]
     for id,source in zip(ids,old):
@@ -148,12 +160,13 @@ def reanalyse_circuits(project: Path, evaluation: Path, new_sources, output: Pat
             for name,destination,unit in (('mechanical:diaphragm-velocity',velocities,'m/s'),
                                            ('electrical:voice-coil-current',currents,'A')):
                 q=quantities[name]; order=q['metadata']['component_ids']
-                if (set(order)!=set(ids) or len(order)!=len(ids) or q['unit']!=unit
-                        or q['metadata'].get('physical_driver_orbit_counts')!=[1]*len(ids)):
-                    raise ValueError('individually represented components with matching units are required')
+                if set(order)!=set(ids) or len(order)!=len(ids) or q['unit']!=unit:
+                    raise ValueError('represented components with matching units are required')
+                verify_response_symmetry(q['metadata'],order,symmetry,reduced=reduced)
                 values=arrays[q['key']]; precisions.add(str(values.dtype))
                 destination.append(values[:,[order.index(c) for c in ids]].copy())
-    result=recompute_circuits(manifest['frequencies_hz'],old,new,velocities,currents,limits=limits)
+    result=recompute_circuits(manifest['frequencies_hz'],old,new,velocities,currents,limits=limits,
+        physical_driver_orbit_counts=counts)
     output.mkdir(parents=True,exist_ok=False)
     report={'status':'running','kind':'derived_fixed_geometry_circuit_reanalysis','qualified':False,'physical_validation':False,
         'application_runtime':application_runtime,
@@ -167,6 +180,12 @@ def reanalyse_circuits(project: Path, evaluation: Path, new_sources, output: Pat
             'Complex128 algebra does not recover precision lost in complex64 input',
             'The 1e-5 input screen does not replace or pass the separate 1e-8 native electrical gate',
             'Source qualifications and omitted phase-plug, breakup, nonlinear and physical behaviour remain unresolved']}
+    if reduced:
+        report['symmetry']={'mode':project_data['symmetry'],'components':symmetry,
+            'physical_driver_orbit_counts':counts,
+            'circuit_coordinates':'per-coil current and outlet velocity; common voltage within each group',
+            'load_diagnostic_coordinates':'sqrt(orbit_count) times per-coil outlet velocity',
+            'replacement_constraint':'Every physical partner in a symmetry group uses the same replacement circuit'}
     try:
         np.savez_compressed(output/'circuit-basis.npz',**{k:result[k] for k in ('velocity','current','weights','acoustic_load')})
         report['circuit_basis_sha256']=sha256(output/'circuit-basis.npz')
@@ -213,7 +232,8 @@ def reanalyse_circuits(project: Path, evaluation: Path, new_sources, output: Pat
                     'Catalogue eligibility, replacement-driver cost and mechanical fit are not evaluated',
                     'Original native electrical checks do not qualify the replacement circuit or source']}
             score=_score_acoustic_basis(manifest['frequencies_hz'],ids,angles,score_bases,result['current'],
-                brief.side_gains,brief.acoustic_objectives,score_sphere,sphere_points)
+                brief.side_gains,brief.acoustic_objectives,score_sphere,sphere_points,
+                physical_driver_orbit_counts=counts)
             report['acoustic_scoring'].update(status='complete',score=score)
         if (verified_assessment(project,evaluation)!=evidence or sha256(source_path)!=report['old_sources_sha256']
                 or json.loads(json.dumps(geometry_runtime()))!=application_runtime):

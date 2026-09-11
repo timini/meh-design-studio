@@ -19,6 +19,13 @@ the [quarter-mouth adapter](quarter-rim-classification.md). Three retained nativ
 conformer checks pass; the two previously valid meshes are byte-identical. These
 are preparation results, not a newly accepted commercial acoustic design.
 
+[Fixed-geometry circuit comparisons](circuit-reanalysis.md#symmetric-driver-groups)
+now support reduced driver groups while retaining per-coil motion and full bank
+current. A fresh four-frequency changed-circuit native comparison passes all 32
+field/current/velocity checks at the original `1e-8` limit, as well as the native
+electrical check. Compatible circuits can therefore be explored on the retained
+acoustic basis; changed geometry or moving-boundary area still needs a new solve.
+
 Merged increments now include the foundation, geometry generator, durable job ledger and initial complex metric library. These implement parts of B01/B02/B04/B05 and independent-reference infrastructure for A05. It does **not** pass G0 or any physical release gate. A01's example brief is provisional; its measurement protocol has not been ratified. The pinned Boundary Lab CPU solver has now executed the interior compression-driver fixture at one and three frequencies; see the [adapter and evidence](boundary-lab-adapter.md). This demonstrates integration and repeatability, not independent acoustic accuracy. The experimental search now also executes generated multiple-entry FEM/BEM evaluations; see [the end-to-end workflow](end-to-end-search.md).
 
 The generated interior experiment now connects synthetic three-source geometry to FEM and includes an 8-to-4 mm mesh sensitivity study, independent electrical consistency checks, and a uniform-tube analytic load comparison. See [generated-system evidence](generated-system.md). These remain experimental numerical results with no free-field, band or physical qualification.

@@ -158,3 +158,78 @@ def test_acoustic_scoring_uses_new_currents_and_preserves_failed_fields(derived_
             assert all(sha256(output/r['arrays_file'])==r['arrays_sha256'] for r in report['rows'])
         else:assert not output.exists()
     assert all(sha256(p)==value for p,value in original.items())
+
+
+def test_group_reanalysis_matches_independent_five_coil_solution(source):
+    # A reciprocal, passive full load with one HF and two pairs of mid drivers.
+    f = [350., 1000., 3000., 7500.]
+    matrix = np.array([[3., .2, .2, .2, .2], [.2, 4., .4, .3, .3],
+        [.2, .4, 4., .3, .3], [.2, .3, .3, 4., .4], [.2, .3, .3, .4, 4.]])
+    load = np.tile(matrix*(1-0.3j), (len(f), 1, 1))
+    changed = SourceModel.model_validate(source.model_dump() | {'re_ohm': 12., 'bl_n_a': 3.6,
+        'mmd_kg': .004, 'sd_m2': 2*source.sd_m2, 'ideal_outlet_area_m2': source.sd_m2})
+    old = (source,)*5; new = (changed, source, source, source, source)
+    old_v, old_i = reference_bases(old, f, load)
+    new_v, new_i = reference_bases(new, f, load)
+    groups = [[0], [1, 2], [3, 4]]; representatives = [0, 1, 3]
+    def grouped(values):
+        return np.stack([values[:, group].sum(axis=1) for group in groups], axis=1)
+    v = grouped(old_v)[:, :, representatives]; i = grouped(old_i)[:, :, representatives]
+    result = recompute_circuits(f, (source,)*3, (changed, source, source), v, i,
+        physical_driver_orbit_counts=[1, 2, 2])
+    np.testing.assert_allclose(result['velocity'], grouped(new_v)[:, :, representatives], rtol=1e-11, atol=1e-13)
+    np.testing.assert_allclose(result['current'], grouped(new_i)[:, :, representatives], rtol=1e-11, atol=1e-13)
+    expected_load = np.stack([load[:, representatives][:, :, group].sum(axis=2) for group in groups], axis=2)
+    np.testing.assert_allclose(result['acoustic_load'], expected_load, rtol=1e-11, atol=1e-12)
+    assert not np.allclose(expected_load, expected_load.transpose(0, 2, 1))
+    assert max(d['acoustic_load_reciprocity_relative_residual'] for d in result['diagnostics']) < 1e-12
+    assert min(d['minimum_acoustic_load_hermitian_eigenvalue'] for d in result['diagnostics']) > 0
+    # Arbitrary observations retain all physical radiators without extra drive weighting.
+    transfer = np.arange(15).reshape(3, 5)/10 + 1j*np.arange(15, 30).reshape(3, 5)/10
+    pressure = grouped(old_v@transfer.T)
+    recombined = np.einsum('feo,fen->fon', result['weights'], pressure)
+    np.testing.assert_allclose(recombined, grouped(new_v@transfer.T), rtol=1e-11, atol=1e-13)
+    bank = result['current'][:, 1:, 1:].sum(axis=1) @ np.array([2, 2])
+    np.testing.assert_allclose(bank, new_i[:, 1:, 1:].sum(axis=(1, 2)), rtol=1e-11, atol=1e-13)
+
+
+@pytest.mark.parametrize('fault', [None, 'orbit', 'completion', 'impedance'])
+def test_grouped_derived_scoring_checks_metadata_and_counts_every_coil(derived_case, tmp_path, monkeypatch, fault):
+    from meh_studio import driver_symmetry
+    from meh_studio.boundary_lab import sha256
+    from meh_studio.circuit_reanalysis import reanalyse_circuits
+    from meh_studio.optimisation import SearchBrief
+    from test_optimisation import inputs
+    project, raw, new, _, _, _, new_i, _ = derived_case
+    p = json.loads(project.read_text());p['symmetry']='x';project.write_text(json.dumps(p))
+    cp = project.parent/'compilation.json';c=json.loads(cp.read_text());c['project_sha256']=sha256(project);cp.write_text(json.dumps(c))
+    symmetry={'component:throat': {'physical_driver_orbit_count':1, 'surface_completion_factor':2},
+        'component:side-0': {'physical_driver_orbit_count':2, 'surface_completion_factor':1}}
+    monkeypatch.setattr(driver_symmetry, 'driver_symmetry_from_meshes', lambda *args: symmetry)
+    for index in range(3):
+        path=raw/f'{index}.json';meta=json.loads(path.read_text())
+        for q in meta['quantities'][:2]:
+            q['metadata']['physical_driver_orbit_counts']=[2,1]
+            q['metadata']['surface_completion_factors']=[1,2]
+        if index==2 and fault in ('orbit','completion'):
+            key='physical_driver_orbit_counts' if fault=='orbit' else 'surface_completion_factors'
+            meta['quantities'][0]['metadata'][key]=[1,1]
+        path.write_text(json.dumps(meta))
+    per_coil_min=float(np.min(np.abs(2.83/new_i[:,1,1])))
+    brief=SearchBrief.model_validate(inputs()[0].model_dump() | {'frequencies_hz':[350.,1000.,3000.],
+        'acoustic_objectives':{'upper_crossovers_hz':[2000.],
+            'minimum_bank_impedance_ohm':.75*per_coil_min if fault=='impedance' else None}})
+    output=tmp_path/'group-derived'
+    if fault:
+        with pytest.raises(ValueError, match='symmetry multiplicities|parallel mid bank'):
+            reanalyse_circuits(project, raw.parent, new, output, brief=brief)
+        if fault=='impedance':
+            saved=json.loads((output/'derived.json').read_text())
+            assert saved['status']=='failed' and len(saved['rows'])==3
+        else:assert not output.exists()
+    else:
+        report=reanalyse_circuits(project, raw.parent, new, output, brief=brief)
+        assert report['symmetry']['physical_driver_orbit_counts']==[1,2]
+        bank=report['acoustic_scoring']['score']['parallel_mid_bank']
+        assert bank['mid_count']==2
+        assert bank['minimum_impedance_magnitude_ohm']==pytest.approx(per_coil_min/2)
