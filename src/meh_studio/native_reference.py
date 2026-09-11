@@ -70,7 +70,7 @@ def execute_reference(writer, output, runtime, request_path, request_digest, mak
         for result in session.solve_stream():
             writer.write_result(canonicalize(result))
             print(json.dumps({'event':'frequency_completed',
-                'solved_count':len(writer.manifest['results'])}), flush=True)
+                'solved_count':sum(row is not None for row in writer.manifest['results'])}), flush=True)
         if hashlib.sha256(request_path.read_bytes()).hexdigest() != request_digest:
             raise ValueError('source request changed during reference solve')
         if runtime_path.read_bytes() != runtime_payload:

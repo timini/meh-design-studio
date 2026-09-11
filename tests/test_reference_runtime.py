@@ -8,6 +8,30 @@ spec.loader.exec_module(legacy_module)
 from meh_studio import native_reference
 
 
+def test_packaged_progress_counts_saved_results_in_preallocated_slots(tmp_path, capsys):
+    import json
+    request = tmp_path/'request.json'
+    request.write_text('{}')
+    output = tmp_path/'output'
+    output.mkdir()
+    class Writer:
+        manifest = {'results': [None, None, None]}
+        def write_result(self, index):
+            self.manifest['results'][index] = {'freq_hz': [350, 700, 1000][index]}
+        def finish(self, **kwargs):
+            self.result = kwargs
+    class Session:
+        def solve_stream(self):
+            return iter([2, 0, 1])
+    writer = Writer()
+    native_reference.execute_reference(writer, output, {}, request,
+        native_reference.hashlib.sha256(request.read_bytes()).hexdigest(),
+        Session, lambda result: result, lambda: {})
+    events = [json.loads(line) for line in capsys.readouterr().out.splitlines()]
+    assert events == [{'event': 'frequency_completed', 'solved_count': count} for count in (1, 2, 3)]
+    assert writer.result == {'status': 'complete'}
+
+
 @pytest.fixture(params=[legacy_module, native_reference], ids=['legacy-fixture','packaged-runner'])
 def module(request):
     return request.param
