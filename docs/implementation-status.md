@@ -26,6 +26,14 @@ field/current/velocity checks at the original `1e-8` limit, as well as the nativ
 electrical check. Compatible circuits can therefore be explored on the retained
 acoustic basis; changed geometry or moving-boundary area still needs a new solve.
 
+The [public-driver quarter-model baseline](commercial-quarter-baseline.md) now
+completes all 15 frequencies from 350 to 7,500 Hz. Its four-mid bank stays above
+3.126 Ω, but response residual is 14.42 dB against 6 dB and upper-band rotational
+error reaches 7.20% against 2%. Comparison with the older full FP32 mesh also
+fails acoustic-field agreement despite similar response scores. The source,
+failed limits and completed baseline are archived; a reliable commercial-band
+ranking and a buildable target design remain unfinished.
+
 Merged increments now include the foundation, geometry generator, durable job ledger and initial complex metric library. These implement parts of B01/B02/B04/B05 and independent-reference infrastructure for A05. It does **not** pass G0 or any physical release gate. A01's example brief is provisional; its measurement protocol has not been ratified. The pinned Boundary Lab CPU solver has now executed the interior compression-driver fixture at one and three frequencies; see the [adapter and evidence](boundary-lab-adapter.md). This demonstrates integration and repeatability, not independent acoustic accuracy. The experimental search now also executes generated multiple-entry FEM/BEM evaluations; see [the end-to-end workflow](end-to-end-search.md).
 
 The generated interior experiment now connects synthetic three-source geometry to FEM and includes an 8-to-4 mm mesh sensitivity study, independent electrical consistency checks, and a uniform-tube analytic load comparison. See [generated-system evidence](generated-system.md). These remain experimental numerical results with no free-field, band or physical qualification.
