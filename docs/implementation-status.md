@@ -106,7 +106,13 @@ The [measured CRAM reference](measured-cram-reference.md) now completes native
 FP64 evaluation and verification after correcting named FEM volume selection.
 Its fixed conditional comparison fails the 3 dB held-out response-shape limit
 at 5.193 dB maximum error. The unmatched ground/measurement conditions and
-preserved failure do not establish physical accuracy of the target horn.
+preserved failure do not establish physical accuracy of the target horn. A
+separate [rigid-ground calculation](measured-cram-reference.md#separate-rigid-ground-experiment)
+now completes all nine frequencies with the original circuits and meshes apart
+from removing the ground-contact BEM facets. Its maximum held-out error is
+4.848 dB, still failing 3 dB; ground loading alone does not resolve the mismatch.
+The electrical reciprocity check also remains failed, and exact floor, pose and
+microphone-height conditions are still not established by the measurement notes.
 
 Explicit [boundary integration controls](bem-quadrature.md) now pass through
 solve requests, search candidates, finalists and recovery with verified native
