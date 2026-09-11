@@ -21,6 +21,11 @@ bolt interfaces. This input set has passed catalogue/candidate/bounds validation
 **its commercial-source native search has not yet been executed**. Historical
 synthetic-HF results are not predictions of this new circuit.
 
+For substantially different axial and cross-section shapes, the
+[curved starting inputs](curved/README.md) provide separate exponential-round
+and quadratic rounded-square cases with two-proposal briefs. These are
+unqualified starting points whose generated solver geometry has been checked.
+
 From the repository root, after installing the package with its CAD dependencies
 and the [pinned native runtime](../../docs/boundary-lab-adapter.md):
 

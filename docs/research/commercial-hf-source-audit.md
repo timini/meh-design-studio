@@ -81,9 +81,15 @@ The [import and conditional-comparison evidence](../../validation/evidence/peerl
 records source hashes, conversions, failed limits and exact runners. Raw
 manufacturer graphs, PDFs and STEP files are not redistributed. Catalogue import
 and construction of a five-driver candidate passed, with the correct 25.4 mm
-throat and original physical source retained. **No native solve of this new
-commercial approximation is claimed here.** Any search using it requires a fresh
-coupled solve; existing synthetic-HF bases cannot be reused as this driver.
+throat and original physical source retained. The import itself did not execute
+a native solve of this commercial approximation.
+
+[Derived circuit reanalysis](../circuit-reanalysis.md) now permits a separately
+verified change of lumped source circuits using a complete independent native
+voltage basis, at fixed acoustic geometry, medium and source surfaces. This
+capability has been checked against a fresh native reference. It does not relabel
+the original driver or qualify its phase plug. New horn geometry still requires
+a fresh acoustic solve.
 
 The record enables exploratory sensitivity and design work while this source
 gap remains open. Its package dimensions and nominal outlet opening do not

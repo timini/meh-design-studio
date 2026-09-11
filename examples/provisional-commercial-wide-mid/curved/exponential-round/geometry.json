@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "length_m": 0.3,
+  "throat_radius_m": 0.0127,
+  "mouth_radius_m": 0.16,
+  "wall_m": 0.003,
+  "entry_positions_m": [
+    0.06
+  ],
+  "entry_layout": "four_driver_ring",
+  "profile_sections": [
+    {
+      "schema_version": 1,
+      "fraction": 0.2,
+      "radial_scales": [
+        0.5328769203281694,
+        0.5328769203281694,
+        0.5328769203281694,
+        0.5328769203281694,
+        0.5328769203281694,
+        0.5328769203281694,
+        0.5328769203281694,
+        0.5328769203281694
+      ]
+    },
+    {
+      "schema_version": 1,
+      "fraction": 0.4,
+      "radial_scales": [
+        0.5549028919796811,
+        0.5549028919796811,
+        0.5549028919796811,
+        0.5549028919796811,
+        0.5549028919796811,
+        0.5549028919796811,
+        0.5549028919796811,
+        0.5549028919796811
+      ]
+    },
+    {
+      "schema_version": 1,
+      "fraction": 0.7,
+      "radial_scales": [
+        0.8074040643431635,
+        0.8074040643431635,
+        0.8074040643431635,
+        0.8074040643431635,
+        0.8074040643431635,
+        0.8074040643431635,
+        0.8074040643431635,
+        0.8074040643431635
+      ]
+    },
+    {
+      "schema_version": 1,
+      "fraction": 1.0,
+      "radial_scales": [
+        1.375,
+        1.375,
+        1.375,
+        1.375,
+        1.375,
+        1.375,
+        1.375,
+        1.375
+      ]
+    }
+  ],
+  "profile_interpolation": "periodic_cubic",
+  "port_radius_m": 0.01902432258018241,
+  "port_length_m": 0.012,
+  "front_radius_m": 0.04064515111663227,
+  "front_depth_m": 0.002430680722313925,
+  "rear_depth_m": 0.07,
+  "mesh_size_m": 0.008,
+  "tessellation_tolerance_m": 0.0001,
+  "maximum_tetrahedra": 5000000,
+  "maximum_exterior_triangles": 32000
+}
