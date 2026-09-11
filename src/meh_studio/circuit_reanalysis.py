@@ -94,11 +94,12 @@ def recompute_circuits(frequencies, old_sources, new_sources, velocity, current,
             'acoustic_load':np.asarray(loads), 'diagnostics':diagnostics}
 
 
-def reanalyse_circuits(project: Path, evaluation: Path, new_sources, output: Path, *, limits=None):
+def reanalyse_circuits(project: Path, evaluation: Path, new_sources, output: Path, *, limits=None, brief=None):
     """Write a separate derived dataset from verified complete native evidence."""
     from .boundary_lab import _read_json, _write_json, _contained, sha256
     from .generated_system import HornSources
-    from .optimisation import verified_assessment
+    from .optimisation import verified_assessment, SearchBrief
+    from .acoustic_objectives import _acoustic_observations, _score_acoustic_basis, verify_observation_distance
     from .geometry_worker import geometry_runtime
     project=Path(project).resolve(); evaluation=Path(evaluation).resolve(); output=Path(output).resolve()
     limits=ReanalysisLimits() if limits is None else limits
@@ -116,6 +117,15 @@ def reanalyse_circuits(project: Path, evaluation: Path, new_sources, output: Pat
     system=_read_json(project)['physical_system']; raw=evaluation/'upstream'; manifest=_read_json(raw/'manifest.json')
     if manifest.get('phasor_convention')!='exp(-i omega t)':
         raise ValueError('unsupported native phasor convention')
+    if brief is not None:
+        brief=SearchBrief.model_validate(brief)
+        if brief.acoustic_objectives is None:
+            raise ValueError('circuit scoring requires acoustic objectives in the brief')
+        if list(brief.frequencies_hz)!=manifest['frequencies_hz']:
+            raise ValueError('circuit scoring requires the complete declared frequency grid')
+        verify_observation_distance(project,brief.acoustic_objectives)
+        angles,sphere_points=_acoustic_observations(raw,manifest,brief.acoustic_objectives)
+        score_bases={'horizontal':[],'vertical':[]};score_sphere=[]
     port_ids={p['id']:p['component_id'] for p in system['excitation_ports']}
     ids=[port_ids[p] for p in manifest['excitation_port_ids']]
     components={c['id']:c for c in system['components']}
@@ -182,12 +192,37 @@ def reanalyse_circuits(project: Path, evaluation: Path, new_sources, output: Pat
             report['rows'].append({'frequency_hz':row['freq_hz'],'arrays_file':path.name,'arrays_sha256':sha256(path),
                 'original_metadata_file':str(_contained(raw,row['metadata_file'])),
                 'original_metadata_sha256':sha256(_contained(raw,row['metadata_file']))})
+            if brief is not None:
+                quantities={q['id']:q for q in meta['quantities']}
+                for plane in score_bases:
+                    basis=values[quantities[f'acoustic:pressure:{plane}-polar']['key']]
+                    if basis.shape!=(len(ids),len(angles[plane])):
+                        raise ValueError('invalid derived polar basis shape')
+                    score_bases[plane].append(basis)
+                if brief.acoustic_objectives.sphere is not None:
+                    basis=values[quantities['acoustic:pressure:sphere']['key']]
+                    if basis.shape!=(len(ids),len(sphere_points)):
+                        raise ValueError('invalid derived sphere basis shape')
+                    score_sphere.append(basis)
+        if brief is not None:
+            report['acoustic_scoring']={'status':'running','brief_hash':brief.content_hash,
+                'controls':{'frequencies_hz':list(brief.frequencies_hz),'side_gains':list(brief.side_gains),
+                    'acoustic_objectives':brief.acoustic_objectives.model_dump(mode='json')},
+                'qualified':False,
+                'limitations':['Derived acoustic DSP selection; not a native search winner or build export',
+                    'Catalogue eligibility, replacement-driver cost and mechanical fit are not evaluated',
+                    'Original native electrical checks do not qualify the replacement circuit or source']}
+            score=_score_acoustic_basis(manifest['frequencies_hz'],ids,angles,score_bases,result['current'],
+                brief.side_gains,brief.acoustic_objectives,score_sphere,sphere_points)
+            report['acoustic_scoring'].update(status='complete',score=score)
         if (verified_assessment(project,evaluation)!=evidence or sha256(source_path)!=report['old_sources_sha256']
                 or json.loads(json.dumps(geometry_runtime()))!=application_runtime):
             raise ValueError('native evidence changed during circuit reanalysis')
         report['status']='complete'
     except BaseException as exc:
         report.update(status='failed',error=f'{type(exc).__name__}: {exc}')
+        if report.get('acoustic_scoring',{}).get('status')=='running':
+            report['acoustic_scoring'].update(status='failed',error=report['error'])
         raise
     finally:
         _write_json(output/'derived.json',report)
