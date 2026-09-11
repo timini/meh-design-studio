@@ -46,3 +46,7 @@ unchanged reciprocity tolerance. Mesh error, physical source accuracy and
 manufacturing suitability are separate checks. No physical qualification is
 granted by selecting this backend. FP64 also requires more memory and CPU time;
 use it deliberately for numerical validation and bounded searches.
+
+The [executed five-driver integration study](reference-backend-evidence.md)
+demonstrates a complete FP64 search and verified export, retaining its actual
+electrical results and acoustic limitations.
