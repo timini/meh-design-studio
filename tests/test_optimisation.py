@@ -143,12 +143,11 @@ def test_candidate_score_binds_pre_solve_geometry(tmp_path,monkeypatch,changed,d
         brief=SearchBrief.model_validate(brief.model_dump()|{'frequencies_hz':[350.,1000.,8000.],
             'acoustic_objectives':{'observation_distance_m':distance,'sphere':{}}})
     brief=SearchBrief.model_validate(brief.model_dump()|{'solver_options':quadrature})
-    def geometry(design,root):
-        root.mkdir();(root/'geometry.json').write_text('{"generated":"original"}')
-    monkeypatch.setattr(search,'export_geometry',geometry)
-    monkeypatch.setattr(search,'mesh_geometry',lambda *args:None)
     compiled=[]
-    monkeypatch.setattr(search,'compile_radiating_system',lambda *args,**kwargs:compiled.append(kwargs))
+    def prepare(candidate,root,runtime,selected_brief,**kwargs):
+        (root/'geometry').mkdir();(root/'geometry/geometry.json').write_text('{"generated":"original"}')
+        compiled.append(selected_brief)
+    monkeypatch.setattr(search,'prepare_candidate',prepare)
     monkeypatch.setattr(search,'response_score',lambda *args:{'ripple_db':1.})
     root=tmp_path/'candidate'
     class Runtime:
@@ -163,8 +162,7 @@ def test_candidate_score_binds_pre_solve_geometry(tmp_path,monkeypatch,changed,d
     else:
         score=search.evaluate_candidate(candidate,root,Runtime(),brief)
         assert score['geometry_manifest_sha256']==search.sha256(root/'geometry/geometry.json')
-    assert compiled[0].get('observation_distance_m',1.)==(distance or 1.)
-    if distance is not None:assert compiled[0]['sphere_angle_deg']==10.
+    assert compiled[0]==brief
 
 
 def test_freeform_profile_choices_reach_candidate_identity():

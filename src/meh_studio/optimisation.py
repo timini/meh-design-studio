@@ -20,12 +20,12 @@ from .boundary_lab import BEMQuadrature, BoundaryLabRuntime, SolveRequest, _read
 from .catalogue import Catalogue
 from .domain import Record, Positive
 from .generated_system import HornSources
-from .geometry import HornGeometry, export_geometry, mesh_geometry
+from .geometry import HornGeometry
 from .waveguide_profile import ProfileSection, validate_profile
 from .evolution import EvolutionSettings
 from .acoustic_objectives import AcousticObjectives
-from .build_cost import BuildBudget, estimate_build_cost, cost_adjusted_score
-from .radiating_system import compile_radiating_system
+from .build_cost import BuildBudget, cost_adjusted_score
+from .candidate_preparation import prepare_candidate
 from .validation import validate_electrical_basis
 
 
@@ -224,21 +224,8 @@ def evaluate_candidate(candidate, root, runtime, brief, *, mesh_size=None, frequ
         design=HornGeometry.model_validate(design.model_dump()|{'mesh_size_m':mesh_size})
     root.mkdir(parents=True,exist_ok=False)
     _write_json(root/'candidate.json',candidate_record(candidate|{'design':design}))
-    export_geometry(design,root/'geometry')
-    if brief.build_budget is not None:
-        estimate=estimate_build_cost(brief.build_budget,_read_json(root/'geometry/geometry.json'),candidate['cost'])
-        _write_json(root/'build-cost.json',estimate)
-        if not estimate['within_budget']:
-            raise ValueError('candidate exceeds declared total build budget')
-    mesh_geometry(root/'geometry')
+    prepare_candidate(candidate|{'design':design},root,runtime,brief,timeout_s=timeout_s)
     geometry_digest=sha256(root/'geometry/geometry.json')
-    sphere_options={}
-    if brief.acoustic_objectives is not None and brief.acoustic_objectives.observation_distance_m != 1.:
-        sphere_options['observation_distance_m']=brief.acoustic_objectives.observation_distance_m
-    if brief.acoustic_objectives is not None and brief.acoustic_objectives.sphere is not None:
-        sphere_options['sphere_angle_deg']=brief.acoustic_objectives.sphere.angle_precision_deg
-    compile_radiating_system(root/'geometry',candidate['sources'],root/'system',runtime,
-                             exterior_mesh_size_m=brief.exterior_mesh_size_m,**sphere_options)
     request=SolveRequest(frequencies_hz=frequencies or brief.frequencies_hz,
         include_project_observations=True,retain=('fem_nodal_pressure','bem_boundary_traces'),
         solver_options=brief.solver_options)

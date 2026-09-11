@@ -25,17 +25,18 @@ def test_actual_cad_material_and_allowances_change_selection_cost():
 
 
 def test_budget_rejection_preserves_estimate_and_never_meshes(tmp_path,monkeypatch):
-    from meh_studio import optimisation as module
+    from meh_studio import geometry as module
+    from meh_studio.candidate_preparation import prepare_in_process
     from meh_studio.geometry import HornGeometry
     from pathlib import Path
     base=HornGeometry.model_validate_json((Path(__file__).parents[1]/'examples/compact-ring-geometry.json').read_text())
-    monkeypatch.setattr(module,'candidate_record',lambda candidate:{'fixture':'candidate'})
     def export(design,output):
         output.mkdir();(output/'geometry.json').write_text(json.dumps({'status':'complete','material_volume_m3':{'horn':.01}}))
     monkeypatch.setattr(module,'export_geometry',export)
     monkeypatch.setattr(module,'mesh_geometry',lambda root:pytest.fail('over-budget candidate reached meshing'))
+    (tmp_path/'trial').mkdir()
     with pytest.raises(ValueError,match='total build budget'):
-        module.evaluate_candidate({'design':base,'cost':100.},tmp_path/'trial',None,SimpleNamespace(build_budget=budget()))
+        prepare_in_process({'design':base,'cost':100.},tmp_path/'trial',None,SimpleNamespace(build_budget=budget()))
     evidence=json.loads((tmp_path/'trial/build-cost.json').read_text())
     assert evidence['within_budget'] is False
     assert evidence['estimated_total_cost']==pytest.approx(430.)
