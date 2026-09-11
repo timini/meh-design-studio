@@ -54,7 +54,7 @@ def horn_solids(design):
             edge = (periodic_profile_edge(points) if design.profile_interpolation == 'periodic_cubic'
                     else cq.Edge.makeSpline(points,periodic=True))
             wires.append(cq.Wire.assembleEdges([edge]))
-        return cq.Solid.makeLoft(wires,ruled=False)
+        return cq.Solid.makeLoft(wires,ruled=design.profile_loft == 'ruled')
     air, outer = loft(0), loft(wall)
     for solid in (air,outer):
         if not solid.isValid() or len(solid.Solids()) != 1 or solid.Volume() <= 0:

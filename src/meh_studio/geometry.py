@@ -28,6 +28,7 @@ class HornGeometry(Record):
     entry_layout: Literal['opposed_pairs', 'four_driver_ring'] = 'opposed_pairs'
     profile_sections: tuple[ProfileSection, ...] = ()
     profile_interpolation: Literal['legacy', 'periodic_cubic'] = 'legacy'
+    profile_loft: Literal['smooth', 'ruled'] = 'smooth'
     port_radius_m: Positive
     port_length_m: Positive
     front_radius_m: Positive
@@ -53,6 +54,8 @@ class HornGeometry(Record):
             value.pop('profile_sections', None)
         if self.profile_interpolation == 'legacy':
             value.pop('profile_interpolation', None)
+        if self.profile_loft == 'smooth':
+            value.pop('profile_loft', None)
         if self.maximum_tetrahedra == 2_000_000:
             value.pop('maximum_tetrahedra', None)
         if self.maximum_exterior_triangles == 8000:
