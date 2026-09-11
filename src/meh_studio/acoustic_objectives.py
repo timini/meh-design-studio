@@ -120,10 +120,25 @@ def parallel_bank(current_basis,component_ids,reference_voltage_v=2.83):
             'maximum_current_per_volt_a':float(abs(current_per_volt).max())}
 
 
+def _acoustic_observations(root,manifest,objectives):
+    from .boundary_lab import _read_json,_contained
+    domains=_read_json(_contained(root,manifest['domains_metadata_file']))['domains']
+    angles={};sphere_points=None
+    with np.load(_contained(root,manifest['domains_file']),allow_pickle=False) as data:
+        for plane in ('horizontal','vertical'):
+            domain=next(d for d in domains if d['id']==f'observation:{plane}-polar')
+            angles[plane]=data[domain['coordinates']['angle_deg']].copy()
+        if objectives.sphere is not None:
+            domain=next((d for d in domains if d['id']=='observation:sphere'),None)
+            if domain is None:raise ValueError('spherical objective requires a complete native sphere observation')
+            sphere_points=data[domain['coordinates']['points_m']].copy()
+    return angles,sphere_points
+
+
 def score_acoustics(project,evaluation,gains,objectives):
     """Score preserved polar/current bases with common-bank crossover choices."""
     from .boundary_lab import _read_json,_contained
-    from .optimisation import verified_assessment,relative_response
+    from .optimisation import verified_assessment
     evidence=verified_assessment(project,evaluation)
     verify_observation_distance(project, objectives)
     root=evaluation/'upstream';manifest=_read_json(root/'manifest.json')
@@ -131,16 +146,8 @@ def score_acoustics(project,evaluation,gains,objectives):
         raise ValueError('crossover scoring requires explicit exp(-i omega t) convention')
     ports={p['id']:p['component_id'] for p in _read_json(project)['physical_system']['excitation_ports']}
     ids=[ports[p] for p in manifest['excitation_port_ids']]
-    domains=_read_json(_contained(root,manifest['domains_metadata_file']))['domains']
-    angles={};bases={'horizontal':[],'vertical':[]};currents=[];frequencies=[];sphere_basis=[];sphere_points=None
-    with np.load(_contained(root,manifest['domains_file']),allow_pickle=False) as data:
-        for plane in bases:
-            domain=next(d for d in domains if d['id']==f'observation:{plane}-polar')
-            angles[plane]=data[domain['coordinates']['angle_deg']].copy()
-        if objectives.sphere is not None:
-            domain=next((d for d in domains if d['id']=='observation:sphere'),None)
-            if domain is None:raise ValueError('spherical objective requires a complete native sphere observation')
-            sphere_points=data[domain['coordinates']['points_m']].copy()
+    angles,sphere_points=_acoustic_observations(root,manifest,objectives)
+    bases={'horizontal':[],'vertical':[]};currents=[];frequencies=[];sphere_basis=[]
     for row in manifest['results']:
         frequencies.append(row['freq_hz'])
         metadata=_read_json(_contained(root,row['metadata_file']))
@@ -159,6 +166,14 @@ def score_acoustics(project,evaluation,gains,objectives):
                 q=quantities['acoustic:pressure:sphere'];basis=data[q['key']]
                 if basis.shape!=(len(ids),len(sphere_points)):raise ValueError('invalid whole-sphere basis shape')
                 sphere_basis.append(basis.copy())
+    score=_score_acoustic_basis(frequencies,ids,angles,bases,currents,gains,objectives,sphere_basis,sphere_points)
+    if verified_assessment(project,evaluation)!=evidence:raise ValueError('acoustic evidence changed while scoring')
+    return score|{'electrical_validation':evidence['checks']}
+
+
+def _score_acoustic_basis(frequencies,ids,angles,bases,currents,gains,objectives,sphere_basis=None,sphere_points=None):
+    """Common DSP kernel; callers own provenance and qualification of their bases."""
+    from .optimisation import relative_response
     frequencies=np.asarray(frequencies)
     bank=parallel_bank(currents,ids)
     if objectives.minimum_bank_impedance_ohm is not None and bank['minimum_impedance_magnitude_ohm']<objectives.minimum_bank_impedance_ohm:
@@ -226,9 +241,7 @@ def score_acoustics(project,evaluation,gains,objectives):
     bank['selected_drive_currents']={'normalisation':'original native 2.83 V basis, no RMS calibration claim',
         'mid_bank_real_a':bank_current.real.tolist(),'mid_bank_imag_a':bank_current.imag.tolist(),
         'hf_real_a':hf_current.real.tolist(),'hf_imag_a':hf_current.imag.tolist()}
-    if verified_assessment(project,evaluation)!=evidence:raise ValueError('acoustic evidence changed while scoring')
-    return winner|{'electrical_validation':evidence['checks'],'parallel_mid_bank':bank,
-                   'absolute_spl_calibrated':False,'physical_validation':False}
+    return winner|{'parallel_mid_bank':bank,'absolute_spl_calibrated':False,'physical_validation':False}
 
 
 def freeze_brief(brief,gain,settings=None):

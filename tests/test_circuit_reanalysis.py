@@ -58,7 +58,8 @@ def test_incompatible_or_unreliable_basis_is_rejected(source,fault):
     with pytest.raises(ValueError):recompute_circuits(f,sources,new,v,i)
 
 
-def test_derived_dataset_preserves_native_evidence_and_receiving_order(source,tmp_path,monkeypatch):
+@pytest.fixture
+def derived_case(source,tmp_path,monkeypatch):
     from meh_studio.boundary_lab import sha256
     from meh_studio.generated_system import HornSources
     from meh_studio.circuit_reanalysis import reanalyse_circuits
@@ -76,7 +77,7 @@ def test_derived_dataset_preserves_native_evidence_and_receiving_order(source,tm
     (system/'sources.json').write_text(old.model_dump_json())
     (system/'compilation.json').write_text(json.dumps({'status':'complete',
         'sources_hash':old.content_hash,'project_sha256':sha256(project)}))
-    f=[350.];load=np.array([[[2.-3j,.5-1j],[.5-1j,3.-2j]]])
+    f=[350.,1000.,3000.];load=np.tile([[2.-3j,.5-1j],[.5-1j,3.-2j]],(3,1,1))
     v,i=reference_bases((source,source),f,load)
     new_v,new_i=reference_bases((changed,source),f,load)
     transfer=np.array([[1.+2j,3.-1j],[.5-2j,-1.+.5j],[2.+0j,0.-3j]])
@@ -85,14 +86,30 @@ def test_derived_dataset_preserves_native_evidence_and_receiving_order(source,tm
         for name,key,unit in [('mechanical:diaphragm-velocity','v','m/s'),
                               ('electrical:voice-coil-current','i','A')]]
     quantities.append({'id':'acoustic:pressure:observation','key':'p','unit':'Pa','axes':['excitation','observation']})
-    (raw/'frequency.json').write_text(json.dumps({'diagnostics':{'transducer_reference_voltage_v':2.83},'quantities':quantities}))
-    np.savez(raw/'frequency.npz',v=v[0,:,::-1],i=i[0,:,::-1],p=v[0]@transfer.T)
+    for plane in ('horizontal','vertical'):
+        quantities.append({'id':f'acoustic:pressure:{plane}-polar','key':plane,'unit':'Pa','axes':['excitation','observation']})
+    rows=[]
+    for n,freq in enumerate(f):
+        (raw/f'{n}.json').write_text(json.dumps({'diagnostics':{'transducer_reference_voltage_v':2.83},'quantities':quantities}))
+        pressure=v[n]@transfer.T
+        np.savez(raw/f'{n}.npz',v=v[n,:,::-1],i=i[n,:,::-1],p=pressure,horizontal=pressure,vertical=pressure)
+        rows.append({'freq_hz':freq,'metadata_file':f'{n}.json','arrays_file':f'{n}.npz'})
+    np.savez(raw/'domains.npz',angles=np.array([-45.,0.,45.]))
+    (raw/'domains.json').write_text(json.dumps({'domains':[{'id':f'observation:{p}-polar',
+        'coordinates':{'angle_deg':'angles'}} for p in ('horizontal','vertical')]}))
     (raw/'manifest.json').write_text(json.dumps({'phasor_convention':'exp(-i omega t)',
-        'excitation_port_ids':ports,'frequencies_hz':f,'results':[{'freq_hz':350.,
-        'metadata_file':'frequency.json','arrays_file':'frequency.npz'}]}))
+        'excitation_port_ids':ports,'frequencies_hz':f,'results':rows,
+        'domains_metadata_file':'domains.json','domains_file':'domains.npz'}))
     evidence={'checks':{'passed':False},'test_fixture':True}
     monkeypatch.setattr(optimisation,'verified_assessment',lambda *args:evidence)
     original={p:sha256(p) for directory in (system,raw) for p in directory.iterdir()}
+    return project,raw,new,evidence,original,new_v,new_i,transfer
+
+
+def test_derived_dataset_preserves_native_evidence_and_receiving_order(derived_case,tmp_path):
+    from meh_studio.boundary_lab import sha256
+    from meh_studio.circuit_reanalysis import reanalyse_circuits
+    project,raw,new,evidence,original,new_v,new_i,transfer=derived_case
     output=tmp_path/'derived'
     report=reanalyse_circuits(project,raw.parent,new,output)
     assert report['status']=='complete' and not report['qualified']
@@ -103,3 +120,41 @@ def test_derived_dataset_preserves_native_evidence_and_receiving_order(source,tm
         np.testing.assert_allclose(arrays['p'],new_v[0]@transfer.T,rtol=1e-11,atol=1e-13)
     assert all(sha256(p)==value for p,value in original.items())
     with pytest.raises(FileExistsError):reanalyse_circuits(project,raw.parent,new,output)
+
+
+@pytest.mark.parametrize('scenario',['score','impedance','handover','grid','distance'])
+def test_acoustic_scoring_uses_new_currents_and_preserves_failed_fields(derived_case,tmp_path,scenario):
+    from meh_studio.boundary_lab import sha256
+    from meh_studio.circuit_reanalysis import reanalyse_circuits
+    from meh_studio.acoustic_objectives import parallel_bank
+    from meh_studio.optimisation import SearchBrief
+    from test_optimisation import inputs
+    project,raw,new,evidence,original,new_v,new_i,transfer=derived_case
+    brief=SearchBrief.model_validate(inputs()[0].model_dump()|{'frequencies_hz':[350.,1000.,3000.],
+        'acoustic_objectives':{'upper_crossovers_hz':[2000.],
+            'minimum_bank_impedance_ohm':100. if scenario=='impedance' else 2.,
+            'observation_distance_m':20. if scenario=='distance' else 1.}})
+    if scenario=='grid':brief=SearchBrief.model_validate(brief.model_dump()|{'frequencies_hz':[350.,1500.,3000.]})
+    if scenario=='handover':
+        data=brief.model_dump();data['side_gains']=[1e-9]
+        data['acoustic_objectives']['acoustic_handover_hz']=[1000.,3000.]
+        brief=SearchBrief.model_validate(data)
+    output=tmp_path/'scored'
+    if scenario=='score':
+        report=reanalyse_circuits(project,raw.parent,new,output,brief=brief)
+        scoring=report['acoustic_scoring'];assert scoring['status']=='complete'
+        assert scoring['brief_hash']==brief.content_hash and not scoring['qualified']
+        score=scoring['score'];bank=parallel_bank(new_i,['component:throat','component:side-0'])
+        assert score['parallel_mid_bank']['minimum_impedance_magnitude_ohm']==pytest.approx(bank['minimum_impedance_magnitude_ohm'])
+        assert 'electrical_validation' not in score
+        assert report['native_evidence']==evidence
+    else:
+        with pytest.raises(ValueError):reanalyse_circuits(project,raw.parent,new,output,brief=brief)
+        if scenario in ('impedance','handover'):
+            report=json.loads((output/'derived.json').read_text())
+            assert report['status']=='failed' and report['acoustic_scoring']['status']=='failed'
+            assert 'score' not in report['acoustic_scoring']
+            assert len(report['rows'])==3
+            assert all(sha256(output/r['arrays_file'])==r['arrays_sha256'] for r in report['rows'])
+        else:assert not output.exists()
+    assert all(sha256(p)==value for p,value in original.items())

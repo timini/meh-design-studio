@@ -90,6 +90,7 @@ def main(argv=None) -> int:
     reanalysis.add_argument('--evaluation', type=Path, required=True)
     reanalysis.add_argument('--sources', type=Path, required=True)
     reanalysis.add_argument('--output', type=Path, required=True)
+    reanalysis.add_argument('--brief', type=Path, help='optionally score the derived fields using this brief\'s acoustic objectives and DSP choices')
     bundle = commands.add_parser('export-search', help='export experimental winning geometry, driver BOM and relative gains')
     bundle.add_argument('search', type=Path)
     bundle.add_argument('--output', type=Path, required=True, help='new ZIP file; existing files are never replaced')
@@ -117,8 +118,10 @@ def main(argv=None) -> int:
         elif args.command == 'reanalyse-circuits':
             from .circuit_reanalysis import reanalyse_circuits
             from .generated_system import HornSources
+            from .optimisation import SearchBrief
             result = reanalyse_circuits(args.project,args.evaluation,
-                HornSources.model_validate_json(args.sources.read_text()),args.output)
+                HornSources.model_validate_json(args.sources.read_text()),args.output,
+                brief=SearchBrief.model_validate_json(args.brief.read_text()) if args.brief else None)
         elif args.command == 'resume-optimise':
             from .search_resume import resume_optimise
             from .boundary_lab import BoundaryLabRuntime

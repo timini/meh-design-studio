@@ -99,5 +99,22 @@ meh reanalyse-circuits runs/SEARCH/trial-000/system/project.blab.json \
 The new directory contains `derived.json`, the circuit matrices and weights,
 and separate recombined field arrays. It records original native identities,
 replacement sources, limits and array hashes. The original project, evaluation,
-search status and scores are untouched. This command supplies no selected DSP,
-winning score, qualified physical prediction or manufacturing export.
+search status and scores are untouched.
+
+Add `--brief runs/SEARCH/brief.json` to select DSP for the replacement circuit
+using the same scoring calculation as native optimisation. The complete frequency
+grid and observation distance must match. The brief supplies acoustic objectives
+and gain/crossover/polarity/delay choices, including its parallel-bank impedance
+and acoustic handover constraints. The reported bank load uses the replacement
+coil currents, including mutually induced motion.
+
+`derived.json` then records `acoustic_scoring.controls`, the brief hash and a
+separate `acoustic_scoring.score`. This is an acoustic comparison: it does not
+check catalogue eligibility, replacement-driver prices or mechanical fit. No
+derived score becomes a native search winner or manufacturing export, and the
+original electrical assessment is not represented as a qualification of the
+replacement source. A completed score is not itself acoustic acceptance.
+
+If no DSP setting satisfies the constraints, the command fails and records the
+failed scoring status and reason while retaining all recombined fields. Failed
+experiments can therefore be inspected without weakening the declared constraints.
