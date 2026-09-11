@@ -178,6 +178,14 @@ def mesh_quarter_geometry(output: Path, geometry, design):
                     (selected[matches[0]] if matches else walls).append(tag)
                 if any(len(tags) != 1 for tags in selected.values()) or not walls:
                     raise ValueError('quarter source/interface face was not uniquely identified')
+                layered = None
+                if region != 'front' and design.rear_axial_mesh_size_m is not None:
+                    from .rear_meshing import layered_rear_volume
+                    source = next(s for s in geometry['sources'] if region == 'rear_' + s['id'])
+                    name = next(iter(selected))
+                    volumes, selected[name], walls, layered = layered_rear_volume(
+                        gmsh, volumes, selected[name][0], source['motion_axis'],
+                        design.rear_depth_m, design.rear_axial_mesh_size_m)
                 gmsh.model.addPhysicalGroup(3, [volumes[0][1]], 1, name='air_' + region)
                 groups = []
                 for tag, (name, surfaces) in enumerate(selected.items(), start=10):
@@ -191,6 +199,9 @@ def mesh_quarter_geometry(output: Path, geometry, design):
                 gmsh.option.setNumber('Mesh.ElementOrder', 1)
                 gmsh.option.setNumber('Mesh.MshFileVersion', 4.1)
                 gmsh.option.setNumber('Mesh.Binary', 0)
+                if layered is not None:
+                    from .rear_meshing import check_layered_workload
+                    check_layered_workload(gmsh, layered, design.maximum_tetrahedra)
                 gmsh.model.mesh.generate(3)
                 tets, _ = gmsh.model.mesh.getElementsByType(4)
                 if not len(tets) or len(tets) > design.maximum_tetrahedra:
@@ -206,6 +217,8 @@ def mesh_quarter_geometry(output: Path, geometry, design):
                     'source_area_checks': areas, 'path': path.relative_to(output).as_posix(),
                     'sha256': sha256(path), 'volume_m3': volume, 'tetrahedra': len(tets),
                     'minimum_quality': float(min(qualities)), 'boundaries': groups})
+                if layered is not None:
+                    report['regions'][-1]['layered_rear_mesh'] = layered
             finally:
                 gmsh.finalize()
         report['status'] = 'complete'

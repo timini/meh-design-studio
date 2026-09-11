@@ -74,3 +74,43 @@ between the failed and successful attempts. Exterior volume differs from CAD by
 pass. [Raw preparation evidence](../validation/evidence/raw-exterior-preparation/report.json)
 retains both attempts and verifies every archived file. This archive contains no
 new frequency solve and makes no acoustic convergence claim.
+
+## Axial refinement inside rear cavities
+
+`rear_axial_mesh_size_m` optionally refines the mesh along each cylindrical rear
+cavity's motion axis. For example, `0.0005` requests layers no more than 0.5 mm
+apart while `mesh_size_m` continues to control the cross-section and front horn.
+Omission preserves the original unstructured mesher and geometry identity.
+The setting must be at least 0.1 mm and no larger than `mesh_size_m`.
+
+The mesher extrudes the actual imported source face into linear tetrahedra. It
+checks the new volume and its intersection with the original CAD at the existing
+1 ppm tolerance, so a wrong direction or a different cavity shape is rejected.
+This supports full and quarter models, including tilted drivers. It changes
+neither the physical rear cup nor its exterior scattering surface. Tests verify
+that enabling it leaves the front FEM mesh byte-identical.
+
+The actual source triangulation determines the layer workload before the 3D mesh
+is generated. Both that count and the final tetrahedral count must fit
+`maximum_tetrahedra`. The region report retains the layer count, actual spacing,
+source triangle count, CAD overlap and mesher identity. Fine layers can increase
+memory requirements; a region count is not a whole-solver memory guarantee.
+
+This option addresses an observed longitudinal standing-wave discretisation
+error in the ideal 70 mm sealed rear cylinder. An independent P1 calculation on
+the original commercial 4 mm mesh reproduces its coupled-native rear impedance,
+but differs from the analytic cylinder impedance by over 400% at 7.5 kHz. The
+prepared isotropic 3 mm rear meshes still differ by about 94%. An exploratory
+0.5 mm axial mesh reduces that isolated error to 0.84%, retaining a 4 mm
+cross-section target. These comparisons are numerical diagnostics, not measured
+driver performance or whole-horn convergence.
+
+The regression solves the independent P1 Helmholtz equations on a generated
+layered cylinder at 350, 2,000, 5,000 and 7,500 Hz and compares its force/velocity
+impedance with `i rho c S cot(k L)` for the native `exp(-i omega t)` convention,
+at a 2% relative limit. This is the distributed sealed-cylinder solution, which
+retains its longitudinal resonances; a low-frequency compliance approximation
+would not suffice. See the [IIT Kanpur tube-acoustics lecture](https://archive.nptel.ac.in/content/storage2/courses/112104176/pdf/31.pdf).
+The test does not qualify arbitrary cavities, cone/basket geometry, damping,
+front/BEM meshes, response flatness or printing. The commercial coupled
+comparison remains a separate required experiment.
