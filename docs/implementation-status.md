@@ -12,6 +12,13 @@ XY reduction into meshing, compilation and evolution, retaining complete physica
 exports and coil counts. Commercial-band convergence remains unqualified. See
 [driver accounting, scoring and refinement evidence](mirror-bank-scoring.md).
 
+[Isolated candidate preparation](isolated-candidate-preparation.md) now contains
+an observed killed CAD child and continues to the next proposal. The resulting
+commercial seed exposed a separate thin-rim classification failure, corrected by
+the [quarter-mouth adapter](quarter-rim-classification.md). Three retained native
+conformer checks pass; the two previously valid meshes are byte-identical. These
+are preparation results, not a newly accepted commercial acoustic design.
+
 Merged increments now include the foundation, geometry generator, durable job ledger and initial complex metric library. These implement parts of B01/B02/B04/B05 and independent-reference infrastructure for A05. It does **not** pass G0 or any physical release gate. A01's example brief is provisional; its measurement protocol has not been ratified. The pinned Boundary Lab CPU solver has now executed the interior compression-driver fixture at one and three frequencies; see the [adapter and evidence](boundary-lab-adapter.md). This demonstrates integration and repeatability, not independent acoustic accuracy. The experimental search now also executes generated multiple-entry FEM/BEM evaluations; see [the end-to-end workflow](end-to-end-search.md).
 
 The generated interior experiment now connects synthetic three-source geometry to FEM and includes an 8-to-4 mm mesh sensitivity study, independent electrical consistency checks, and a uniform-tube analytic load comparison. See [generated-system evidence](generated-system.md). These remain experimental numerical results with no free-field, band or physical qualification.

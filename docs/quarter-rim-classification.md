@@ -23,3 +23,17 @@ is 0.75 mm. A retained-input diagnostic with that stricter value completes at
 mouth membership and passes the original 2% CAD-volume check at 0.19199% error.
 The original failed inputs and report remain unchanged. This is an interface
 preparation check, not an acoustic frequency solve or physical qualification.
+
+The production adapter at `188a933137c3d11f9df7bb7fa35c7f188827a6e1`
+passes three retained-input regressions: this thin-rim commercial quarter, the
+earlier valid quarter and the earlier full model. The latter two reproduce their
+previous conformed meshes byte for byte, at 2,612 and 2,690 triangles respectively.
+All three pass exact interface, protected-facet and original volume checks.
+The non-CAD suite passes 838 tests, with three platform/version skips.
+
+The [evidence report](../validation/evidence/quarter-rim-classification/report.json)
+indexes a [15,111,940-byte archive](../validation/evidence/quarter-rim-classification/evidence.zip)
+with SHA-256 `34397b7169e9f65449ebfe331b0e8745bc95a9cd51ded7991c26fafedcc67d0b`.
+Its 40 verified members preserve the failed commercial inputs and conformer
+report, standalone diagnosis, production checks, scripts and test log. The
+separate commercial evolutionary search is not included while it is running.
