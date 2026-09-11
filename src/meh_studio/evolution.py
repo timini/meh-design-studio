@@ -16,6 +16,7 @@ Parameter = Literal['length_m','mouth_radius_m','port_radius_m','port_length_m',
 
 
 class EvolutionSettings(Record):
+    mutate_profile: Annotated[bool, Field(strict=True)] = True
     profile_symmetry: Literal['none', 'mirror_xy', 'quarter_turn'] = 'none'
     elite_size: Annotated[int, Field(strict=True,ge=1,le=20)] = 3
     explore_every: Annotated[int, Field(strict=True,ge=2,le=20)] = 4
@@ -29,10 +30,14 @@ class EvolutionSettings(Record):
         value = handler(self)
         if self.profile_symmetry == 'none':
             value.pop('profile_symmetry', None)
+        if self.mutate_profile:
+            value.pop('mutate_profile', None)
         return value
 
     @model_validator(mode='after')
     def ordered_bounds(self):
+        if not self.mutate_profile and not self.geometry_bounds:
+            raise ValueError('fixed profile search requires at least one geometry bound')
         low,high=self.profile_scale_bounds
         if not .5 <= low < high <= 2:
             raise ValueError('profile mutation bounds must increase within [0.5,2]')
@@ -70,9 +75,13 @@ def _profile_groups(symmetry):
 
 
 def validate_bounds(settings,design):
-    if design.solver_symmetry == 'xy' and settings.profile_symmetry == 'none':
+    if not settings.mutate_profile and not any(
+            not name.startswith('entry_fraction') or int(name[-1]) < len(design.entry_positions_m)
+            for name in settings.geometry_bounds):
+        raise ValueError('fixed profile search requires a geometry bound applicable to this design')
+    if settings.mutate_profile and design.solver_symmetry == 'xy' and settings.profile_symmetry == 'none':
         raise ValueError('quarter model profile evolution requires mirror_xy or quarter_turn mutations')
-    if settings.profile_symmetry != 'none' and design.profile_interpolation != 'periodic_cubic':
+    if settings.mutate_profile and settings.profile_symmetry != 'none' and design.profile_interpolation != 'periodic_cubic':
         raise ValueError('symmetric profile search requires explicit periodic_cubic interpolation')
     for name,(low,high) in settings.geometry_bounds.items():
         if name.startswith('entry_fraction'):
@@ -99,6 +108,8 @@ def propose(brief, seed_pool, history, previous):
         for candidate in seed_pool:validate_bounds(settings,candidate['design'])
         return seed_pool[0],{'method':'declared_baseline','parent_index':None,'rejected':[]}
     version = 'evolution-v1' if settings.profile_symmetry == 'none' else f'evolution-v2:{settings.profile_symmetry}'
+    if not settings.mutate_profile:
+        version += ':fixed-profile'
     rng=random.Random(f'{brief.seed}:{index}:{version}')
     eligible=sorted((i for i,t in enumerate(history) if t['status']=='complete'),
                     key=lambda i:(history[i]['objective'],i))[:settings.elite_size]
@@ -119,7 +130,7 @@ def propose(brief, seed_pool, history, previous):
             {'fraction':fraction,'radial_scales':[1.]*8} for fraction in (.35,.7,1.)]
         columns = range(8) if settings.profile_symmetry == 'none' else _profile_groups(settings.profile_symmetry)
         genes=[('profile',i,j,*settings.profile_scale_bounds)
-               for i in range(len(profile)) for j in columns]
+               for i in range(len(profile)) for j in columns] if settings.mutate_profile else []
         genes += [('geometry',name,None,*bounds) for name,bounds in sorted(settings.geometry_bounds.items())
                   if not name.startswith('entry_fraction') or int(name[-1])<len(fractions)]
         chosen=genes if explore else rng.sample(genes,max(1,math.ceil(settings.mutation_fraction*len(genes))))
@@ -138,7 +149,8 @@ def propose(brief, seed_pool, history, previous):
             location = {'columns': list(column)} if isinstance(column, tuple) else {'column': column}
             mutations.append({'kind':kind,'key':key,**location,'before':old,'after':value})
         data['entry_positions_m']=[fraction*data['length_m'] for fraction in fractions]
-        data['profile_sections']=profile
+        if settings.mutate_profile:
+            data['profile_sections']=profile
         try:
             design=HornGeometry.model_validate(data)
             validate_bounds(settings,design)

@@ -135,6 +135,7 @@ def test_default_symmetry_preserves_existing_seeded_search_identity():
     import hashlib
     brief,base,drivers=inputs();seeds=candidates(brief,base,drivers)
     assert 'profile_symmetry' not in brief.model_dump()['evolution']
+    assert 'mutate_profile' not in brief.model_dump()['evolution']
     history=[];previous=[];records=[]
     for i in range(6):
         candidate,proposal=propose(brief,seeds,history,previous)
@@ -143,6 +144,79 @@ def test_default_symmetry_preserves_existing_seeded_search_identity():
     # Captured from the unchanged v1 implementation before adding symmetry controls.
     digest=hashlib.sha256(json.dumps(records,sort_keys=True,separators=(',',':')).encode()).hexdigest()
     assert digest=='85ed3a06601ec65269059ee8e15887371575392781b68196947216660f27da80'
+
+
+@pytest.mark.parametrize('profile', ['freeform', 'conical'])
+def test_fixed_profile_search_changes_geometry_and_replays_elite_and_random_trials(profile):
+    brief,base,drivers=inputs()
+    if profile=='conical':
+        base=HornGeometry.model_validate(base.model_dump()|{'profile_sections':[]})
+    brief=SearchBrief.model_validate(brief.model_dump()|{'lengths_m':[base.length_m],
+        'mouth_radii_m':[base.mouth_radius_m], 'evolution':{
+        'mutate_profile':False, 'elite_size':1, 'explore_every':3,
+        'geometry_bounds':{'port_length_m':[.003,.018]}}})
+    seeds=candidates(brief,base,drivers)
+    history=[];previous=[];proposals=[]
+    for index in range(6):
+        candidate,proposal=propose(brief,seeds,history,previous)
+        assert candidate['design'].profile_sections==base.profile_sections
+        assert candidate['design'].length_m==base.length_m
+        assert candidate['design'].mouth_radius_m==base.mouth_radius_m
+        assert all(m['kind']=='geometry' and m['key']=='port_length_m'
+                   for m in proposal.get('mutations',[]))
+        previous.append(candidate);proposals.append(proposal)
+        history.append({'status':'complete','objective':float(10-index)})
+    assert proposals[2]['parent_index']==1
+    assert proposals[3]['method']=='random_exploration'
+    assert len({c['design'].port_length_m for c in previous})==6
+    again,again_proposals=replay(brief,base,drivers,history)
+    assert proposals==again_proposals
+    assert [candidate_record(c) for c in previous]==[candidate_record(c) for c in again]
+
+
+def test_fixed_profile_controls_reject_empty_or_inapplicable_search():
+    from meh_studio.evolution import EvolutionSettings,validate_bounds
+    with pytest.raises(ValueError,match='geometry bound'):
+        EvolutionSettings(mutate_profile=False)
+    _,base,_=inputs()
+    settings=EvolutionSettings(mutate_profile=False,geometry_bounds={'entry_fraction_1':(.1,.2)})
+    with pytest.raises(ValueError,match='applicable'):
+        validate_bounds(settings,base)
+    with pytest.raises(ValueError):
+        EvolutionSettings(mutate_profile='false',geometry_bounds={'port_length_m':(.003,.018)})
+
+
+def test_fixed_circular_quarter_profile_does_not_require_profile_mutation_settings():
+    brief,base,drivers=inputs()
+    base=HornGeometry.model_validate(base.model_dump()|{'solver_symmetry':'xy','profile_sections':[]})
+    brief=SearchBrief.model_validate(brief.model_dump()|{'evolution':{
+        'mutate_profile':False,'geometry_bounds':{'port_length_m':[.003,.018]}}})
+    assert base.profile_interpolation=='legacy'
+    seeds=candidates(brief,base,drivers)
+    first,_=propose(brief,seeds,[],[])
+    second,_=propose(brief,seeds,[{'status':'complete','objective':10.}],[first])
+    assert second['design'].solver_symmetry=='xy'
+    assert second['design'].profile_sections==()
+
+
+@pytest.mark.cad
+def test_fixed_profile_offspring_changes_actual_front_air_with_unchanged_horn_profile():
+    pytest.importorskip('cadquery')
+    from meh_studio.geometry import build_geometry
+    from meh_studio.waveguide_profile import horn_solids
+    brief,base,drivers=inputs()
+    brief=SearchBrief.model_validate(brief.model_dump()|{'evolution':{
+        'mutate_profile':False,'geometry_bounds':{'port_length_m':[.003,.018]}}})
+    seeds=candidates(brief,base,drivers)
+    seed,_=propose(brief,seeds,[],[])
+    offspring,_=propose(brief,seeds,[{'status':'complete','objective':10.}],[seed])
+    first=seed['design'];second=offspring['design']
+    air_a=horn_solids(first)[0];air_b=horn_solids(second)[0]
+    assert air_a.cut(air_b).Volume()+air_b.cut(air_a).Volume()<1e-6
+    regions_a,_,locations_a=build_geometry(first)
+    regions_b,_,locations_b=build_geometry(second)
+    assert abs(regions_a['front'].Volume()-regions_b['front'].Volume())>1.
+    assert locations_a!=locations_b
 
 
 def symmetric_inputs(symmetry):
