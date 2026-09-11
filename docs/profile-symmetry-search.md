@@ -61,3 +61,7 @@ invalid boolean-cut volumes from the diagnostic are not geometric error estimate
 Changing interpolation creates a new physical model requiring a new mesh and
 solve. It does not repair or relabel an old simulation. The new method is also
 available for fully asymmetric profiles with `profile_symmetry: none`.
+
+The [native evidence](periodic-profile-evidence.md) includes a two-candidate FP64
+search, selected geometry export, and independent pressure/current/velocity
+rotation checks with predeclared limits.
