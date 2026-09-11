@@ -60,3 +60,25 @@ the mid source rather than silently transforming both sides. A real compression
 driver may require a substantially richer source model and independent complex
 load measurements. Adding a manufacturer name or an outlet area does not supply
 that evidence.
+
+## Completed native reference
+
+A fresh one-candidate search from source `b7255b0` compiled and solved an
+equivalent synthetic circuit, then replayed and exported it. The physical throat
+area was doubled and its physical circuit changed so that its outlet circuit
+exactly matched the earlier periodic-profile seed (`ab6714f`). All native mesh
+hashes matched. Every retained complex quantity at 350, 1000, 2000 and 3000 Hz
+matched the earlier run exactly: maximum relative complex L2 difference **0**,
+against the predeclared 1e-8 limit. The electrical checks also passed their
+unchanged 1e-8 limits (maximum reciprocity residual 4.92199e-9).
+
+The 1 V RMS operating report correctly gives physical HF velocity and excursion
+using half the outlet velocity. Search replay and the exported bundle verify.
+The [raw evidence, controls, runners and archive hashes](../validation/evidence/compression-outlet/report.json)
+retain these checks. Relevant unit verification: 730 non-CAD tests passed; one
+bounded review found no material issue.
+
+This is coordinate equivalence in a small synthetic five-source reference, not
+commercial-source accuracy. Its response variation remains 14.56982 dB, and its
+historical synthetic 2-ohm screen is explicitly disabled. It does not establish
+the target horn's performance, mesh convergence, physical or print qualification.

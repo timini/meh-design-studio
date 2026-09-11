@@ -1,0 +1,38 @@
+{
+  "status": "completed_native_outlet_coordinate_equivalence",
+  "application_source_commit": "b7255b0",
+  "reference_source_commit": "ab6714f",
+  "reference_archive_report": "../periodic-profile-symmetry/report.json",
+  "archives": [
+    {
+      "file": "native-search-00.zip",
+      "sha256": "232682043f3a44dd893a8efa4c60232ae12fffcbfcb0080cb5fb861b6bb7b181",
+      "size_bytes": 44255648
+    },
+    {
+      "file": "controls-and-runners.zip",
+      "sha256": "ac4d3493c8d7fd402ba693885f62f3fb11f4c82e9eaec707a3cce841c122d5ee",
+      "size_bytes": 1162837
+    }
+  ],
+  "maximum_relative_complex_l2": 0.0,
+  "strict_electrical_checks_passed": true,
+  "physical_hf_velocity_equals_outlet_divided_by_two": true,
+  "selected_response_variation_db": 14.569821675690322,
+  "export": {
+    "status": "complete",
+    "output": "/Users/timrichardson/Documents/projects/personal/speakers/meh-design-studio/runs/compression-outlet-winner.zip",
+    "sha256": "bb9357a1c845398179e29c8bd21629df321830af661ed038720c5e916aa5d9d8",
+    "driver_count": 5,
+    "driver_cost": 20.0,
+    "currency": "GBP",
+    "print_qualified": false,
+    "finalist_validation_included": false
+  },
+  "qualified": false,
+  "physical_validation": false,
+  "limitations": [
+    "Equivalent synthetic circuits with identical native meshes, four frequencies; not a commercial compression-driver validation",
+    "Small reference with disabled 2-ohm screen; not the full-size target horn, convergence, physical or print qualification"
+  ]
+}
