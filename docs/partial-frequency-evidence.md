@@ -44,3 +44,8 @@ native manifest, rewrite a failed search as successful, choose a new DSP setting
 or produce a print-qualified design. The original evaluation directories remain
 required. `verify_frequency_assembly` rechecks their hashes and row bindings
 before a caller consumes the report.
+
+The [15-frequency vocal-band experiment](wide-vocal-completion.md) demonstrates
+this path with an actual timeout and a separate three-frequency continuation.
+The repeated sample is identical, the full grid is verified, and the candidate's
+failed response screen remains explicit.
