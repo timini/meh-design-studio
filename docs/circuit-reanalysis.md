@@ -33,6 +33,29 @@ when declared. The resulting velocity basis is in that native coordinate;
 physical diaphragm velocity is obtained by dividing the relevant receiving
 column by its source's outlet velocity ratio.
 
+### Symmetric driver groups
+
+The same reconstruction now supports X/XY models with several physical coils
+represented by one voltage port. Every partner retains the same replacement
+circuit and common drive voltage. Native currents and velocities are per coil;
+the pressure basis already includes the complete excited group. Recombination
+therefore needs no additional excitation multiplier. Moving-surface meshes
+independently establish coil counts and surface completion, and every native
+current/velocity metadata record must agree with them.
+
+With unequal group sizes, the per-coil load matrix need not be symmetric.
+Diagnostics use `sqrt(N) Za / sqrt(N)` for diagonal physical orbit counts `N`,
+which expresses the load in coordinates normalised for total physical power.
+The inferred per-coil matrix remains unchanged. Parallel-bank impedance and DSP
+current reports sum all physical receiving coils.
+
+An independent five-coil circuit test agrees with a three-group reconstruction
+for changed circuits, induced motion, currents and arbitrary observation fields.
+Metadata disagreement and a bank load that passes only when coils are omitted
+are rejected. This extends the algebraic checks; the historical fresh-native
+comparison below used individually represented drivers and does not by itself
+validate this new grouped path.
+
 ## Numerical screens and limits
 
 Defaults reject a velocity basis or replacement circuit with condition number
