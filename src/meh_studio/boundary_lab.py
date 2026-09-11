@@ -15,14 +15,29 @@ import sys
 import threading
 import time
 import zipfile
-from typing import Literal
+from typing import Annotated, Literal
 
 import numpy as np
-from pydantic import model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_serializer, model_validator
 
 from .domain import Positive, Record
 
 BOUNDARY_LAB_REVISION = "8cb166226e412877d3f71f2845918e479b97aa85"
+
+
+class BEMQuadrature(BaseModel):
+    """Explicit fixed integration rules supported by the pinned CPU solvers."""
+    model_config = ConfigDict(extra='forbid', frozen=True)
+    quadrature_order: Annotated[int, Field(strict=True)] = 2
+    singular_order: Annotated[int, Field(strict=True, ge=1, le=8)] = 2
+    regular_quadrature_mode: Literal['fixed'] = 'fixed'
+
+    @model_validator(mode='after')
+    def supported_rule(self):
+        # Other positive orders silently fall back to order 2 upstream.
+        if self.quadrature_order not in (1, 2, 4):
+            raise ValueError('regular BEM quadrature order must be 1, 2 or 4')
+        return self
 
 
 class SolveRequest(Record):
@@ -30,6 +45,14 @@ class SolveRequest(Record):
     include_project_observations: bool = False
     retain: tuple[Literal["bem_boundary_pressure", "bem_boundary_neumann",
                           "bem_boundary_traces", "fem_nodal_pressure"], ...] = ()
+    solver_options: BEMQuadrature | None = None
+
+    @model_serializer(mode='wrap')
+    def preserve_legacy_request(self, handler):
+        value = handler(self)
+        if self.solver_options is None:
+            value.pop('solver_options', None)
+        return value
 
     @model_validator(mode="after")
     def ordered(self):
@@ -40,6 +63,25 @@ class SolveRequest(Record):
         if len(set(self.retain)) != len(self.retain):
             raise ValueError("retained quantities must be unique")
         return self
+
+
+def _requested_solver_options(request, backend, solve_kind):
+    if request.solver_options is None:
+        return None
+    if backend not in ('beat_cpu', 'coupled_reference') or solve_kind not in ('exterior_bem', 'coupled_bem_fem'):
+        raise ValueError('explicit BEM quadrature requires a supported CPU boundary solver')
+    return request.solver_options.model_dump(mode='json')
+
+
+def _verify_solver_options(request, backend, manifest):
+    expected = _requested_solver_options(request, backend, manifest.get('solve_kind'))
+    if expected is None:
+        return
+    observed = manifest.get('solver_options')
+    if not isinstance(observed, dict) or any(
+            type(observed.get(key)) is not type(value) or observed[key] != value
+            for key, value in expected.items()):
+        raise ValueError('result BEM quadrature differs from the requested integration rules')
 
 
 def sha256(path: Path) -> str:
@@ -365,6 +407,7 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
         raise ValueError("upstream result is not complete")
     if manifest.get("backend_id") != backend or manifest.get("phasor_convention") != "exp(-i omega t)":
         raise ValueError("backend or phasor convention mismatch")
+    _verify_solver_options(request, backend, manifest)
     artifact_paths = {"manifest": root / "manifest.json",
                       "domains_metadata": _contained(root, manifest["domains_metadata_file"]),
                       "domains_arrays": _contained(root, manifest["domains_file"])}
@@ -716,6 +759,7 @@ class BoundaryLabRuntime:
                 solve_kind = _project_solve_kind(project_data)
                 if preflight.get("solve_kind") != solve_kind:
                     raise ValueError("preflight solve kind differs from project topology")
+                _requested_solver_options(request, self.backend, solve_kind)
                 preflight_meshes = _mesh_inventory(preflight)
                 expected_outputs = _output_ids(preflight.get("output_ids"))
                 _verify_mesh_declarations(project_data["physical_system"], {m["id"]:m for m in preflight_meshes}, project)

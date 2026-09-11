@@ -122,6 +122,55 @@ def test_invalid_request(frequencies):
         SolveRequest(frequencies_hz=frequencies)
 
 
+def test_quadrature_is_explicit_and_legacy_request_identity_is_unchanged():
+    original = {'schema_version': 1, 'frequencies_hz': [1000.0],
+                'include_project_observations': False, 'retain': []}
+    request = SolveRequest(frequencies_hz=(1000,))
+    assert request.model_dump(mode='json') == original
+    explicit = SolveRequest(frequencies_hz=(1000,), solver_options={
+        'quadrature_order': 4, 'singular_order': 6})
+    assert explicit.model_dump(mode='json')['solver_options'] == {
+        'quadrature_order': 4, 'singular_order': 6, 'regular_quadrature_mode': 'fixed'}
+    assert explicit.content_hash != request.content_hash
+
+
+@pytest.mark.parametrize('options', [
+    {'quadrature_order': 3}, {'quadrature_order': 8}, {'quadrature_order': True},
+    {'quadrature_order': 4.0}, {'singular_order': 0}, {'singular_order': 9},
+    {'singular_order': False}, {'singular_order': '4'},
+    {'regular_quadrature_mode': 'wavelength'}, {'static_condensation': False},
+])
+def test_unsupported_or_ambiguous_quadrature_controls_fail(options):
+    with pytest.raises(ValueError):
+        SolveRequest(frequencies_hz=(1000,), solver_options=options)
+
+
+@pytest.mark.parametrize('backend,kind', [('beat_cpu','coupled_bem_fem'),
+    ('coupled_reference','coupled_bem_fem'), ('beat_cpu','exterior_bem')])
+@pytest.mark.parametrize('fault', [None, 'missing', 'ignored', 'wrong_type', 'wrong_mode'])
+def test_reported_quadrature_must_match_requested_rules(backend,kind,fault):
+    from meh_studio.boundary_lab import _verify_solver_options
+    request=SolveRequest(frequencies_hz=(1000,),solver_options={'quadrature_order':4,'singular_order':6})
+    options=request.solver_options.model_dump() | {'cache_frequency_invariant':True}
+    if fault=='ignored':options['quadrature_order']=2
+    if fault=='wrong_type':options['singular_order']=6.0
+    if fault=='wrong_mode':options['regular_quadrature_mode']='wavelength'
+    manifest={'solve_kind':kind,'solver_options':None if fault=='missing' else options}
+    if fault:
+        with pytest.raises(ValueError,match='quadrature differs'):
+            _verify_solver_options(request,backend,manifest)
+    else:
+        _verify_solver_options(request,backend,manifest)
+
+
+@pytest.mark.parametrize('backend,kind',[('beat_cuda','coupled_bem_fem'),
+    ('beat_rocm','exterior_bem'),('beat_cpu','interior_fem')])
+def test_quadrature_cannot_claim_unsupported_backend_or_interior_only_rule(backend,kind):
+    from meh_studio.boundary_lab import _requested_solver_options
+    with pytest.raises(ValueError,match='supported CPU boundary solver'):
+        _requested_solver_options(SolveRequest(frequencies_hz=(1000,),solver_options={}),backend,kind)
+
+
 def test_process_failures_and_timeouts_retain_logs(tmp_path):
     log = tmp_path / "process.log"
     with pytest.raises(ValueError, match="code 7"):
