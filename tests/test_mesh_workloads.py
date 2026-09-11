@@ -14,3 +14,20 @@ def test_explicit_mesh_workload_limits_preserve_legacy_defaults():
     assert enlarged.mesh_size_m==base.mesh_size_m
     for setting,value in [('maximum_tetrahedra',True),('maximum_tetrahedra',10_000_001),('maximum_exterior_triangles',0),('maximum_exterior_triangles',32001)]:
         with pytest.raises(ValueError):HornGeometry.model_validate(legacy|{setting:value})
+
+
+def test_circular_axial_taper_is_not_counted_as_azimuthal_mesh_aspect():
+    from meh_studio.geometry import estimated_curved_tetrahedra
+    base=HornGeometry.model_validate_json((Path(__file__).parents[1]/'examples/freeform-ring-geometry.json').read_text())
+    circular=[{'fraction':f,'radial_scales':[s]*8} for f,s in ((.2,.55),(.4,.6),(.7,.9),(1.,1.5))]
+    tapered=HornGeometry.model_validate(base.model_dump()|{'profile_sections':circular})
+    round_control=HornGeometry.model_validate(base.model_dump()|{'profile_sections':[dict(s,radial_scales=[1.]*8) for s in circular]})
+    volume=.001
+    # The radius/volume workload is still included; axial variation must not add
+    # an artificial (1.5/.55)^3 penalty to circular cross-sections.
+    expected=estimated_curved_tetrahedra(round_control,'front',volume)
+    assert estimated_curved_tetrahedra(tapered,'front',volume)==expected
+    oval=[dict(s,radial_scales=[s['radial_scales'][0]*(1.2 if i%2 else 1.) for i in range(8)]) for s in circular]
+    irregular=HornGeometry.model_validate(base.model_dump()|{'profile_sections':oval})
+    assert estimated_curved_tetrahedra(irregular,'front',volume)==pytest.approx(expected*1.2**3)
+    assert irregular.maximum_tetrahedra==base.maximum_tetrahedra

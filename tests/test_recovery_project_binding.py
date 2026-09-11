@@ -29,7 +29,7 @@ def compiled(generated, monkeypatch, request):
         return report
     monkeypatch.setattr(module,'require_cad_dependencies',lambda:None)
     monkeypatch.setattr(module,'export_exterior',exterior)
-    monkeypatch.setattr(module,'_execute',lambda command,*args:shutil.copyfile(command[6],command[7]))
+    monkeypatch.setattr(module,'conform_mouth_interface',lambda runtime,front,bem,out,*args:shutil.copyfile(bem,out) and {})
     monkeypatch.setattr(module,'restore_fem_interface_coordinates',lambda raw,front,out:shutil.copyfile(raw,out) and {})
     monkeypatch.setattr(module,'surface_integrity',lambda path,**kwargs:{'sha256':sha256(path),'enclosed_volume_m3':1.})
     monkeypatch.setattr(module,'verify_exterior_groups',lambda *args:None)

@@ -260,8 +260,10 @@ def estimated_curved_tetrahedra(design, region, volume):
     cells+=count*math.pi*design.port_radius_m**2*port_length/local(design.port_radius_m)**3
     shape_factor=1.
     if design.profile_sections:
-        scales=[v for section in design.profile_sections for v in section.radial_scales]
-        shape_factor=(max(scales)/min(scales))**3
+        # Axial taper is not azimuthal anisotropy. A circular section has aspect
+        # one even when its radius changes strongly between axial stations.
+        shape_factor=max((max(section.radial_scales)/min(section.radial_scales))**3
+                         for section in design.profile_sections)
     return max(6*cells*shape_factor,6*volume/h**3)
 
 
