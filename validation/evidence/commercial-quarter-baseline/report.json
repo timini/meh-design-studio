@@ -5,12 +5,12 @@
   "archives": [
     {
       "file": "evidence.zip",
-      "size_bytes": 46356005,
-      "sha256": "5548f41a05bda21b20633b018e4f4ae071fa2345fed96cd786f2b1e8df451801"
+      "size_bytes": 46356041,
+      "sha256": "7c3b347a040a9518c91f74c24608e5534af269458757e141cca44fdb68dffa49"
     }
   ],
   "archived_file_sha256": {
-    "archive-commercial-quarter-baseline.py": "fa3c988bacd43a84a366c034635eb5a1ef7e151736a8a8e9b1a14c6d07ffebeb",
+    "archive-commercial-quarter-baseline.py": "3865d017991073afceebf99f36ca9b3fe2ac6d5cbc07d9c339074f091bda1328",
     "check-quarter-commercial-rim-trial-initial.py": "04cd2e91d5d5d5e41e98659d15dfc251256711f29f0e62355e88086ffbf033a5",
     "check-quarter-commercial-rim-trial.py": "dc73a7e98af359e0c2d419cffc32332c2ad5a35fbae24fe98c4fc89b038a3a7c",
     "commercial-full-quarter-comparison-controls.json": "580872035ff45acb2938b4881f70eeea912ed96f36b4348e8d35963d309a18e9",
@@ -20,7 +20,7 @@
     "compare-commercial-full-quarter.py": "8fb4e7d3841b3cb5db64159128009256161914fb032da9983a483549272e46a5",
     "plot-commercial-quarter-baseline.py": "141f768f9b5dfcd461ecac40875936771cea19c49c907374bc74bda3ae44ceb6",
     "quarter-commercial-rim-controls.json": "a66b95dc1d814e38944c430199c15017d00e10d1e4cc595b85dd5578a991bad2",
-    "quarter-commercial-rim-electrical:voice-coil-current-validation.json": "c5425253b3ad241545b58accbb5571317017b3737d8e6e74bb0515a34cbf2532",
+    "quarter-commercial-rim-initial-filename-validation.json": "c5425253b3ad241545b58accbb5571317017b3737d8e6e74bb0515a34cbf2532",
     "quarter-commercial-rim-search/base-geometry.json": "fa1ab959c454d3665bee160602f33bfa0b1f37c486c973cc489faf95eece3fbc",
     "quarter-commercial-rim-search/brief.json": "89c21eac85422bb01c1d8649ab32d85d74e6ca6c310f8f422b8d31b00faeb698",
     "quarter-commercial-rim-search/catalogue-snapshot.json": "5d4db7adbc1c46f42c792d255411fda811b4eb2810abeec02d5b18704b71865b",
@@ -126,6 +126,9 @@
     "quarter-commercial-rim-trial-000-validation.log": "caf05fe9c2336c7b664df1f3c57d28415aac169f37050cecbc0e7ec26b9be990",
     "quarter-commercial-rim-validation-controls.json": "d536962a08dc326a82970ee4b00c5d0986e18a9734737d71d055371f9b9dd9f5",
     "run-quarter-commercial-rim.py": "63ab9de2bf107ad714638d772e12377df025908ef4976c7eaaa1807af8b2e622"
+  },
+  "renamed_archive_members": {
+    "quarter-commercial-rim-initial-filename-validation.json": "quarter-commercial-rim-electrical:voice-coil-current-validation.json"
   },
   "ripple_db": 14.420440630190264,
   "symmetry_reference_passed": false,
