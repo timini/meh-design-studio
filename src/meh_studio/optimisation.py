@@ -16,7 +16,7 @@ from typing import Annotated
 import numpy as np
 from pydantic import Field, model_validator, model_serializer
 
-from .boundary_lab import BoundaryLabRuntime, SolveRequest, _read_json, _write_json, _contained, sha256, inspect_result, _termination_guard
+from .boundary_lab import BEMQuadrature, BoundaryLabRuntime, SolveRequest, _read_json, _write_json, _contained, sha256, inspect_result, _termination_guard
 from .catalogue import Catalogue
 from .domain import Record, Positive
 from .generated_system import HornSources
@@ -44,6 +44,7 @@ class SearchBrief(Record):
     evolution: EvolutionSettings | None = None
     acoustic_objectives: AcousticObjectives | None = None
     build_budget: BuildBudget | None = None
+    solver_options: BEMQuadrature | None = None
     side_gains: tuple[Positive, ...] = (.5, 1., 2.)
     trial_budget: Annotated[int, Field(strict=True, ge=1, le=100)] = 4
     seed: Annotated[int, Field(strict=True, ge=0)] = 2026
@@ -57,11 +58,12 @@ class SearchBrief(Record):
         if self.evolution is None:value.pop('evolution',None)
         if self.acoustic_objectives is None:value.pop('acoustic_objectives',None)
         if self.build_budget is None:value.pop('build_budget',None)
+        if self.solver_options is None:value.pop('solver_options',None)
         return value
 
     @model_validator(mode='after')
     def bounded(self):
-        SolveRequest(frequencies_hz=self.frequencies_hz)
+        SolveRequest(frequencies_hz=self.frequencies_hz, solver_options=self.solver_options)
         if len(self.frequencies_hz) < 3 or len(self.frequencies_hz) > 100:
             raise ValueError('experimental search requires 3–100 frequency samples')
         groups = (self.throat_ids,self.side_ids,self.lengths_m,self.mouth_radii_m,self.entry_fractions,self.side_gains)
@@ -238,7 +240,8 @@ def evaluate_candidate(candidate, root, runtime, brief, *, mesh_size=None, frequ
     compile_radiating_system(root/'geometry',candidate['sources'],root/'system',runtime,
                              exterior_mesh_size_m=brief.exterior_mesh_size_m,**sphere_options)
     request=SolveRequest(frequencies_hz=frequencies or brief.frequencies_hz,
-        include_project_observations=True,retain=('fem_nodal_pressure','bem_boundary_traces'))
+        include_project_observations=True,retain=('fem_nodal_pressure','bem_boundary_traces'),
+        solver_options=brief.solver_options)
     runtime.solve(root/'system/project.blab.json',request,root/'evaluation',timeout_s=timeout_s)
     score=response_score(root/'system/project.blab.json',root/'evaluation',brief.side_gains,brief.acoustic_objectives)
     if sha256(root/'geometry/geometry.json')!=geometry_digest:

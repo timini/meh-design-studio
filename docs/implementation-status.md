@@ -44,6 +44,13 @@ Its fixed conditional comparison fails the 3 dB held-out response-shape limit
 at 5.193 dB maximum error. The unmatched ground/measurement conditions and
 preserved failure do not establish physical accuracy of the target horn.
 
+Explicit [boundary integration controls](bem-quadrature.md) now pass through
+solve requests, search candidates, finalists and recovery with verified native
+settings. A four-level FP64 CRAM study reproduces the default fields exactly and
+passes its 1% final-pair field-stability screen at 0.00553%, while every level
+still fails the unchanged 1e-8 electrical reciprocity limit. Finer integration
+alone has not resolved that failure; no mesh or physical convergence is claimed.
+
 The first [350–7,500 Hz four-proposal search](wide-mid-target-experiment.md)
 completed with reported FaitalPRO mid circuits and a synthetic HF placeholder.
 Selection reduced sampled target residual variation from 13.17 to 11.81 dB;

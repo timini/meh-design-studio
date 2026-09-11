@@ -76,7 +76,8 @@ def verify_scored_trial(root,candidate,index,trial,brief,runtime):
                              brief.acoustic_objectives.observation_distance_m if brief.acoustic_objectives else 1.)
     evaluation = root / 'evaluation'
     request = SolveRequest(frequencies_hz=brief.frequencies_hz,
-        include_project_observations=True, retain=('fem_nodal_pressure','bem_boundary_traces'))
+        include_project_observations=True, retain=('fem_nodal_pressure','bem_boundary_traces'),
+        solver_options=brief.solver_options)
     if SolveRequest.model_validate(_read_json(evaluation / 'request.json')) != request:
         raise ValueError('recovery solve request differs from search')
     if _read_json(evaluation / 'evaluation.json')['runtime'] != runtime:

@@ -135,12 +135,14 @@ def test_runtime_change_aborts_after_completed_trial(tmp_path, monkeypatch):
 
 @pytest.mark.parametrize('changed',[False,True])
 @pytest.mark.parametrize('distance',[None,20.])
-def test_candidate_score_binds_pre_solve_geometry(tmp_path,monkeypatch,changed,distance):
+@pytest.mark.parametrize('quadrature',[None,{'quadrature_order':4,'singular_order':4}])
+def test_candidate_score_binds_pre_solve_geometry(tmp_path,monkeypatch,changed,distance,quadrature):
     import meh_studio.optimisation as search
     brief,base,drivers=inputs();candidate=search.candidates(brief,base,drivers)[0]
     if distance is not None:
         brief=SearchBrief.model_validate(brief.model_dump()|{'frequencies_hz':[350.,1000.,8000.],
             'acoustic_objectives':{'observation_distance_m':distance,'sphere':{}}})
+    brief=SearchBrief.model_validate(brief.model_dump()|{'solver_options':quadrature})
     def geometry(design,root):
         root.mkdir();(root/'geometry.json').write_text('{"generated":"original"}')
     monkeypatch.setattr(search,'export_geometry',geometry)
@@ -151,6 +153,7 @@ def test_candidate_score_binds_pre_solve_geometry(tmp_path,monkeypatch,changed,d
     root=tmp_path/'candidate'
     class Runtime:
         def solve(self,project,request,output,**kwargs):
+            assert request.solver_options==brief.solver_options
             output.mkdir();(output/'evaluation.json').write_text('{}')
             if changed:(root/'geometry/geometry.json').write_text('{"generated":"changed"}')
     if changed:
