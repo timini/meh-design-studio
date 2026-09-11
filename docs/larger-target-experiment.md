@@ -78,9 +78,10 @@ and 37.50 mm vertically. Keeping driver centres fixed while moving the ports
 measurement script and values are archived with the controls. These are geometric
 distances, not effective acoustic lengths or a prediction of a resonance.
 
-A separate follow-up uses the merged independent-port placement and full-sphere
-observations to test that trade-off on a denser vocal-frequency grid. The moved
-ports must be resimulated; no benefit is assumed. The old failed mouth-interface
+A [completed follow-up](target-entry-experiment.md) uses independent-port placement
+and full-sphere observations on a denser vocal-frequency grid. Moving the ports
+20 mm toward the throat worsens the response and fails the acoustic vocal-band
+handover constraint for every tested DSP combination. The old failed mouth-interface
 trials retain their original status even though the subsequent
 [coordinate-restoration fix](mouth-coordinate-restoration.md) is now merged.
 
