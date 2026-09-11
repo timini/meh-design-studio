@@ -64,6 +64,13 @@ non-print reference STEP. Full and XY-reduced meshing retain all five drivers.
 This expands usable entry placement; it is not evidence of acoustic improvement
 or a complete purchased-driver mounting assembly.
 
+[Explicit curved mid diaphragms](curved-mid-diaphragms.md) now let the source
+surface and front cavity follow an axisymmetric Bezier profile. Full and quarter
+meshes distinguish actual surface area from the projected moving area. Rear air
+and its printed cup use the same declared swept profile. This supplies a way to
+represent cone depth; no manufacturer's cone geometry, basket displacement or
+acoustic qualification is inferred from T/S parameters.
+
 Merged increments now include the foundation, geometry generator, durable job ledger and initial complex metric library. These implement parts of B01/B02/B04/B05 and independent-reference infrastructure for A05. It does **not** pass G0 or any physical release gate. A01's example brief is provisional; its measurement protocol has not been ratified. The pinned Boundary Lab CPU solver has now executed the interior compression-driver fixture at one and three frequencies; see the [adapter and evidence](boundary-lab-adapter.md). This demonstrates integration and repeatability, not independent acoustic accuracy. The experimental search now also executes generated multiple-entry FEM/BEM evaluations; see [the end-to-end workflow](end-to-end-search.md).
 
 The generated interior experiment now connects synthetic three-source geometry to FEM and includes an 8-to-4 mm mesh sensitivity study, independent electrical consistency checks, and a uniform-tube analytic load comparison. See [generated-system evidence](generated-system.md). These remain experimental numerical results with no free-field, band or physical qualification.

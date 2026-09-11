@@ -1,7 +1,8 @@
 """Experimental straight MEH geometry: one source of CAD for air and material.
 
 Dimensions are SI in the design and converted to millimetres at the CAD boundary.
-The shapes use ideal circular diaphragm interfaces, not detailed purchased drivers.
+Moving interfaces are flat disks or explicitly supplied axisymmetric rigid
+profiles. Neither option infers the detailed geometry of a purchased driver.
 """
 from __future__ import annotations
 
@@ -40,6 +41,7 @@ class HornGeometry(Record):
     port_length_m: Positive
     front_radius_m: Positive
     front_depth_m: Positive
+    diaphragm_profile_m: tuple[Annotated[float, Field(strict=True, ge=0, le=.1)], ...] = ()
     rear_depth_m: Positive
     mesh_size_m: Positive
     rear_axial_mesh_size_m: Annotated[float, Field(strict=True, ge=0.0001)] | None = None
@@ -54,6 +56,8 @@ class HornGeometry(Record):
         value = handler(self)
         if self.throat_body is None:
             value.pop('throat_body', None)
+        if not self.diaphragm_profile_m:
+            value.pop('diaphragm_profile_m', None)
         if self.entry_layout == 'opposed_pairs':
             value.pop('entry_layout', None)
         if self.driver_axial_offset_m == 0:
@@ -81,6 +85,11 @@ class HornGeometry(Record):
     @model_validator(mode="after")
     def valid_family(self):
         validate_profile(self.profile_sections)
+        if self.diaphragm_profile_m:
+            heights = self.diaphragm_profile_m
+            if (not 4 <= len(heights) <= 9 or heights[0] <= 0 or heights[-1] != 0
+                    or heights[1] != heights[0]):
+                raise ValueError('diaphragm Bezier profile requires 4–9 heights, a positive flat centre and a zero rim')
         if self.rear_axial_mesh_size_m is not None and self.rear_axial_mesh_size_m > self.mesh_size_m:
             raise ValueError('rear axial mesh spacing must not exceed the general mesh size')
         if len(self.entry_positions_m) not in (1, 2):
@@ -195,27 +204,48 @@ def build_geometry(design: HornGeometry):
         rear_air = cylinder(design.front_radius_m * mm, rear_start, design.rear_depth_m * mm,driver_z)
         rear_cup = cylinder(design.front_radius_m * mm + wall, rear_start,
                             design.rear_depth_m * mm + wall,driver_z).cut(rear_air)
+        front_centre = [axis[0] * diaphragm / mm, axis[1] * diaphragm / mm,
+                        driver_entry + axis[2] * diaphragm / mm]
+        rear_centre = [axis[0] * rear_start / mm, axis[1] * rear_start / mm,
+                       driver_entry + axis[2] * rear_start / mm]
+        curved = {}
+        if design.diaphragm_profile_m:
+            from .diaphragm_geometry import profile_solid, swept_profile, orient, source_face, descriptor
+            profile = profile_solid(design.front_radius_m * mm, design.diaphragm_profile_m)
+            front_air = front_air.fuse(orient(profile, front_centre, axis))
+            rear_air = orient(swept_profile(profile, design.front_radius_m * mm,
+                                           design.rear_depth_m * mm), rear_centre, axis)
+            # The rear termination is a translated source profile. The printed
+            # cup has a flat exterior cap enclosing that exact air volume.
+            opened = cylinder(design.front_radius_m * mm, rear_start,
+                              design.rear_depth_m * mm, driver_z).fuse(
+                orient(profile.translate((0, 0, design.rear_depth_m * mm)), rear_centre, axis))
+            rear_cup = cylinder(design.front_radius_m * mm + wall, rear_start,
+                (design.rear_depth_m + max(design.diaphragm_profile_m)) * mm + wall,
+                driver_z).cut(opened)
+            face = source_face(profile)
+            curved = {side + '_surface': descriptor(orient(face, centre, axis))
+                      for side, centre in [('front', front_centre), ('rear', rear_centre)]}
         air_regions[f"rear_{label}"] = rear_air
         parts[f"rear_cup_{label}"] = rear_cup
-        sources.append({"id": label, "front_center_m": [axis[0] * diaphragm / mm, axis[1] * diaphragm / mm, driver_entry + axis[2] * diaphragm / mm],
-                        "rear_center_m": [axis[0] * rear_start / mm, axis[1] * rear_start / mm, driver_entry + axis[2] * rear_start / mm],
-                        "motion_axis": list(axis), "radius_m": design.front_radius_m})
+        sources.append({"id": label, "front_center_m": front_centre,
+                        "rear_center_m": rear_centre,
+                        "motion_axis": list(axis), "radius_m": design.front_radius_m, **curved})
     parts["horn"] = material.cut(front_air).clean()
     air_regions["front"] = front_air.clean()
     if design.throat_body is not None:
         body = throat_body_solid(design)
         occupied = list(air_regions.values()) + list(parts.values())
+        from .diaphragm_geometry import diaphragm_gap
         for source in sources:
-            occupied.append(cq.Solid.makeCylinder(source['radius_m'] * mm, wall,
-                cq.Vector(*[v * mm for v in source['front_center_m']]),
-                cq.Vector(*source['motion_axis'])))
+            occupied.append(diaphragm_gap(design, source))
         if any(body.intersect(shape).Volume() > 1e-3 for shape in occupied):
             raise ValueError('mid chamber, air or reserved diaphragm intersects the throat body')
     for name, solid in {**parts, **air_regions}.items():
         if not solid.isValid() or solid.Volume() <= 0 or len(solid.Solids()) != 1:
             raise ValueError(f"geometry kernel produced an invalid or disconnected solid: {name}")
     verify_front_chamber_back_walls(design, front_air, parts["horn"], unported_air=unported_air)
-    if design.profile_sections or design.driver_axial_offset_m or design.driver_tilt_deg:
+    if design.profile_sections or design.driver_axial_offset_m or design.driver_tilt_deg or design.diaphragm_profile_m:
         for air in air_regions.values():
             if any(air.intersect(part).Volume() > 1e-3 for part in parts.values()):
                 raise ValueError('freeform air intersects material')
@@ -307,6 +337,9 @@ def export_geometry(design: HornGeometry, output: Path) -> dict:
                      limitations=["Ideal circular source interfaces, not qualified purchased-driver mounting geometry",
                                   "No mounting hardware, seals, print-bed segmentation or structural validation",
                                   "No acoustic solve or mesh-convergence claim"])
+        if design.diaphragm_profile_m:
+            state['limitations'][0] = 'Explicit axisymmetric rigid diaphragms, not qualified purchased-driver mounting geometry'
+            state['limitations'].append('Rear air is an axial sweep of the source profile; basket and motor displacement are not represented')
     except BaseException as exc:
         state.update(status="failed", error=f"{type(exc).__name__}: {exc}")
         raise
@@ -349,7 +382,7 @@ def estimated_curved_tetrahedra(design, region, volume):
     return max(6*cells*shape_factor,6*volume/h**3)
 
 
-def source_area_checks(path, radii):
+def source_area_checks(path, radii, *, axes=None, surface_areas=None):
     """Independently measure saved linear facets against the circular CAD boundaries."""
     import math
     import meshio
@@ -357,16 +390,30 @@ def source_area_checks(path, radii):
     mesh=meshio.read(path)
     checks=[]
     for name,radius in radii.items():
-        tag=int(mesh.field_data[name][0]);area=0.
+        tag=int(mesh.field_data[name][0]);area=0.;surface_area=0.
         for cell,physical in zip(mesh.cells,mesh.cell_data['gmsh:physical']):
             if cell.type=='triangle':
                 vertices=mesh.points[cell.data[np.asarray(physical)==tag]]
-                area+=float(np.linalg.norm(np.cross(vertices[:,1]-vertices[:,0],vertices[:,2]-vertices[:,0]),axis=1).sum()/2)
+                vectors=np.cross(vertices[:,1]-vertices[:,0],vertices[:,2]-vertices[:,0])/2
+                surface_area+=float(np.linalg.norm(vectors,axis=1).sum())
+                if axes and name in axes:
+                    axis=np.asarray(axes[name],dtype=float);axis/=np.linalg.norm(axis)
+                    area+=float(np.abs(vectors@axis).sum())
+                else:
+                    area+=float(np.linalg.norm(vectors,axis=1).sum())
         exact=math.pi*radius**2
         error=abs(area/exact-1)
         if not math.isfinite(error) or error>SOURCE_AREA_RELATIVE_TOLERANCE:
             raise ValueError(f'{name} mesh area differs from CAD by more than one percent')
         checks.append({'name':name,'cad_area_m2':exact,'mesh_area_m2':area,'relative_area_error':error})
+        if axes and name in axes:
+            expected_surface=surface_areas[name]
+            surface_error=abs(surface_area/expected_surface-1)
+            if not math.isfinite(surface_error) or surface_error>SOURCE_AREA_RELATIVE_TOLERANCE:
+                raise ValueError(f'{name} curved mesh surface area differs from CAD by more than one percent')
+            checks[-1].update(area_convention='projected_on_motion_axis',
+                cad_surface_area_m2=expected_surface,mesh_surface_area_m2=surface_area,
+                relative_surface_area_error=surface_error)
     return checks
 
 
@@ -422,25 +469,34 @@ def mesh_geometry(output: Path) -> dict:
                 if not math.isclose(volume, expected_volume, rel_tol=1e-6, abs_tol=1e-12):
                     raise ValueError("CAD-to-analysis volume or unit mismatch")
                 expected = {}
+                curved_surfaces, moving_axes = {}, {}
                 if region == "front":
                     expected["throat_source"] = ([0, 0, 0], design.throat_radius_m, "source")
                     mouth=geometry.get('mouth_interface',{'center_m':[0,0,design.length_m],
                           'area_m2':math.pi*design.mouth_radius_m**2})
                     expected["mouth_interface"] = (mouth['center_m'], math.sqrt(mouth['area_m2']/math.pi), "radiation_interface")
                     for source in geometry["sources"]:
-                        expected[source["id"] + "_front_source"] = (source["front_center_m"], source["radius_m"], "source")
+                        name=source['id']+'_front_source'
+                        surface=source.get('front_surface')
+                        expected[name] = ((surface or {'center_m':source['front_center_m']})['center_m'], source['radius_m'], 'source')
+                        if surface:
+                            curved_surfaces[name]=surface['area_m2'];moving_axes[name]=source['motion_axis']
                 else:
                     source = next(s for s in geometry["sources"] if region == "rear_" + s["id"])
-                    expected[source["id"] + "_rear_source"] = (source["rear_center_m"], source["radius_m"], "source")
+                    name=source['id']+'_rear_source'
+                    surface=source.get('rear_surface')
+                    expected[name] = ((surface or {'center_m':source['rear_center_m']})['center_m'], source['radius_m'], 'source')
+                    if surface:
+                        curved_surfaces[name]=surface['area_m2'];moving_axes[name]=source['motion_axis']
                 tags = {name: [] for name in expected}
                 walls = []
                 for dimension, tag in gmsh.model.getBoundary(volumes, oriented=False):
                     centre = gmsh.model.occ.getCenterOfMass(dimension, tag)
                     area = gmsh.model.occ.getMass(dimension, tag)
                     matches = [name for name, (point, radius, role) in expected.items()
-                               if gmsh.model.getType(dimension, tag) == "Plane"
+                               if (name in curved_surfaces or gmsh.model.getType(dimension, tag) == "Plane")
                                and math.dist(centre, point) < 1e-7
-                               and math.isclose(area, math.pi * radius**2, rel_tol=1e-6)]
+                               and math.isclose(area, curved_surfaces.get(name, math.pi * radius**2), rel_tol=1e-6)]
                     if len(matches) > 1:
                         raise ValueError("ambiguous source boundary")
                     if matches:
@@ -483,7 +539,8 @@ def mesh_geometry(output: Path) -> dict:
                     raise ValueError("mesh contains inverted or degenerate tetrahedra")
                 path = directory / f"{region}.msh"
                 gmsh.write(str(path))
-                areas=source_area_checks(path,{name:values[1] for name,values in expected.items()})
+                areas=source_area_checks(path,{name:values[1] for name,values in expected.items()},
+                    axes=moving_axes,surface_areas=curved_surfaces)
                 report["regions"].append({"id": region, "estimated_tetrahedra":estimated, "source_area_checks":areas, "path": path.relative_to(output).as_posix(),
                     "sha256": hashlib.sha256(path.read_bytes()).hexdigest(), "volume_m3": volume,
                     "tetrahedra": len(tetrahedra), "minimum_quality": float(min(qualities)), "boundaries": groups})
