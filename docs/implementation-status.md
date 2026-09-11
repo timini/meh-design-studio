@@ -161,3 +161,9 @@ legacy spline seam defect, its CAD correction, and a two-candidate coupled FP64
 search whose selected offspring and exported geometry verify. This numerical
 reference does not resolve the full-size horn's remaining response or commercial
 source and manufacturing gaps.
+
+The [completed full-size quarter-turn search](quarter-turn-vocal-search.md)
+retains three native candidates and one exterior-mesh failure. Its selected
+mutation improves the combined coverage/response/cost objective, but all three
+candidates fail the 6 dB response screen. A separate bounded common-EQ diagnostic
+also remains above that limit; the work continues with different curved flares.
