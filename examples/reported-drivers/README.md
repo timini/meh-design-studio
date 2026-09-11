@@ -41,3 +41,18 @@ Its [manufacturer page](https://celestion.com/product/cdx1-1445/) provides nomin
 response/impedance plots, dimensions and a recommended crossover, but not the
 complete dry-mass circuit or complex loaded source required by this solver.
 Do not label a synthetic throat piston as a model of that compression driver.
+
+## Provisional compression-driver approximation
+
+`peerless-dfm2535-8-ideal-outlet.json` is a separate **derived, unqualified**
+Peerless DFM-2535R00-08 record. It uses inferred SI conversions from the current
+manufacturer API and an explicit ideal diaphragm-to-outlet area transformer.
+It is not part of the manufacturer-reported mid-piston table above. Its initial
+conditional tube-magnitude comparison fails the unchanged 3 dB screen, and no
+complex-phase or arbitrary-load validation is available. Read the
+[source audit and failed comparison](../../docs/research/commercial-hf-source-audit.md)
+before using it. It is suitable for explicitly provisional experiments, not
+qualified design claims or replacement of historical synthetic source identities.
+The [provisional commercial wide-mid example](../provisional-commercial-wide-mid/README.md)
+provides catalogue, search, operating-report and export commands using this record
+with four Faital mids. Its new native search has not yet been executed.

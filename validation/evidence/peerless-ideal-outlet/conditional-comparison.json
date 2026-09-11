@@ -1,0 +1,53 @@
+{
+  "status": "conditional_unfitted_magnitude_comparison",
+  "script_sha256": "2c90b72e36247fe4da63a92a5c0eb58a745b9654a76080e226ea833494e38544",
+  "inputs": {
+    "peerless-driver-438.json": "21085e3f9d8b12a3ade9f6ab4d670ecbcb975838b5c13a9343428f54845c5835",
+    "peerless-438-pwt-graph.json": "02e15810bbf569ff7727aafdd43d5b9277925be9e19a0a6e54d7ef017e12c7b4"
+  },
+  "source_urls": [
+    "https://products.peerless-audio.com/api/driver/438",
+    "https://products.peerless-audio.com/api/graphs/driver/438?chart=SPL_PWT"
+  ],
+  "assumptions": {
+    "rho_kg_m3": 1.21,
+    "sound_speed_m_s": 343.0,
+    "voltage_rms_v": 0.283,
+    "matched_tube_diameter_m": 0.0254,
+    "tube_diameter_confirmed": false,
+    "API_mass_unit_assumed": "g",
+    "API_compliance_unit_assumed": "micrometre/N",
+    "API_area_unit_assumed": "cm^2",
+    "ideal_lossless_zero_length_area_transformer": true
+  },
+  "circuit_si": {
+    "re_ohm": 6.3,
+    "le_h": 4.2999999999999995e-05,
+    "mmd_kg": 0.0005200000000000001,
+    "cms_m_n": 7.5e-05,
+    "rms_ns_m": 0.5158825831157976,
+    "bl_n_a": 3.99,
+    "sd_m2": 0.00109
+  },
+  "screen_band_hz": [
+    3000.0,
+    7500.0
+  ],
+  "screen_limit_absolute_error_db": 3.0,
+  "screen_sample_count": 33,
+  "maximum_absolute_error_db": 4.333292959929821,
+  "rms_error_db": 1.8361535199278944,
+  "mean_signed_error_db": 1.497558660875735,
+  "conditional_screen_passed": false,
+  "fitted_parameters": [],
+  "gain_normalisation_db": 0.0,
+  "physical_qualification": false,
+  "phase_validated": false,
+  "limitations": [
+    "Unknown exact tube geometry, termination, calibration and measurement uncertainty",
+    "Assumed API unit conversions; no independently measured dry-mass circuit",
+    "No phase-plug/cavity propagation, losses, diaphragm breakup or thermal/nonlinear behaviour",
+    "A magnitude-only screen cannot validate source phase or arbitrary-horn load dependence",
+    "No source import or replacement in existing native experiments"
+  ]
+}

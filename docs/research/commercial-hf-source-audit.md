@@ -1,8 +1,8 @@
 # Commercial HF source audit
 
-Inspected 11 September 2026. The current native studies still use a synthetic HF
-source. This audit identifies a possible replacement; it does not substitute a
-commercial name onto that source or qualify a driver.
+Inspected 11 September 2026. The current target native studies still use a synthetic
+HF source. A separate provisional Peerless circuit is now available for future
+experiments; it does not relabel those historical sources or qualify a driver.
 
 ## Peerless DFM-2535R00-08
 
@@ -17,8 +17,8 @@ reports revision 1 / MP2, database revision 5.000, updated 6 May 2026:
 | Sd / Fs / Qms | 10.9 cm² / 780 Hz / 5.32 |
 
 These are reported circuit data, not parameters measured by this project. The API
-does not attach units to individual numeric fields; mass/compliance conventions
-need confirmation before importing a solver record. Its graph labels identify an
+does not attach units to individual numeric fields. The provisional import below
+declares its inferred conversions explicitly. Its graph labels identify an
 LTH142 test horn, SPL at 2.83 V / 1 m and impedance at 1.414 V.
 
 The [current manufacturer PDF](https://products.peerless-audio.com/pdf/438), printed
@@ -52,3 +52,40 @@ the revisions or relabel its Mms as dry mass.
 
 No price, stock, maximum output, arbitrary-horn calibration or suitability for
 this project has been established by this audit.
+
+## Provisional import and retained failed comparison
+
+The separate [ideal-outlet record](../../examples/reported-drivers/peerless-dfm2535-8-ideal-outlet.json)
+uses `derived` provenance and null qualification. It retains the reported physical
+dry mass and diaphragm area, with an explicit 25.4 mm ideal outlet. Mechanical
+resistance is derived from `2π Fs Mms / Qms`; Mms is used only for that derivation
+and the resonance cross-check, not substituted for the dry moving mass.
+
+The same manufacturer's [public catalogue unit table](https://products.peerless-audio.com/transducer/28)
+labels mass in grams, compliance in micrometres/newton, area in cm² and inductance
+in mH. Applying these conventions to the compression-driver API gives
+Fs = 776.60 Hz versus the reported 780 Hz, and Qes = 1.08607 versus 1.09. These
+consistency checks support the SI interpretation; they are not direct unit
+confirmation or evidence of acoustic accuracy. The API's selected facts were
+fetched again and matched the earlier revision.
+
+An unfitted comparison against the manufacturer's plane-wave-tube magnitude
+data **fails** the predeclared 3 dB absolute-error screen on 33 samples from
+3 to 7.5 kHz: maximum error 4.33329 dB and RMS error 1.83615 dB. It assumes a
+25.4 mm matched tube, 0.283 V RMS, density 1.21 kg/m³ and sound speed 343 m/s.
+The graph labels the voltage but does not establish the exact tube geometry,
+termination, complex phase or calibration uncertainty. No gain fit, narrower
+screen or replacement acceptance limit has been used.
+
+The [import and conditional-comparison evidence](../../validation/evidence/peerless-ideal-outlet/report.json)
+records source hashes, conversions, failed limits and exact runners. Raw
+manufacturer graphs, PDFs and STEP files are not redistributed. Catalogue import
+and construction of a five-driver candidate passed, with the correct 25.4 mm
+throat and original physical source retained. **No native solve of this new
+commercial approximation is claimed here.** Any search using it requires a fresh
+coupled solve; existing synthetic-HF bases cannot be reused as this driver.
+
+The record enables exploratory sensitivity and design work while this source
+gap remains open. Its package dimensions and nominal outlet opening do not
+qualify bolt, gasket or other manufacturing interfaces. The inherited £60 HF
+allowance used in the candidate check is not a supplier quote.

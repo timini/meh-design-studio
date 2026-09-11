@@ -1,0 +1,39 @@
+{
+  "status": "provisional_record_imported_not_qualified",
+  "runner_sha256": "1637fd8f4561e9f4627958673834fb623683921804a24ae03a9fa972ca2ec4a1",
+  "record_sha256": "781486013958755ff53c37815a7ab53bbbf9dab4658476a70acb94e1b63b3117",
+  "api_recheck_sha256": "d9f479fa6a71fb208401fb2bbb00753536fb41401c6a98a5e25ae3617d1a5647",
+  "conditional_comparison_sha256": "acd32371602e1fbd8396290b0f1032189b66764fe34f0542b7710c851f593362",
+  "reported_fs_hz": 780,
+  "calculated_fs_using_reported_mms_hz": 776.5966028675015,
+  "reported_qes": 1.09,
+  "calculated_qes": 1.086068596033258,
+  "record_content_hash": "09ec4ab36505c42bd89c5ac4c1cfa64d138d58b1670e6604092e8a2d7e5419f0",
+  "outlet_velocity_ratio": 2.151142513115084,
+  "outlet_circuit": {
+    "re_ohm": 6.3,
+    "le_h": 4.2999999999999995e-05,
+    "bl_n_per_a": 1.8548282950449686,
+    "mmd_kg": 0.00011237377668052974,
+    "cms_m_per_n": 0.00034705605837983086,
+    "rms_n_s_per_m": 0.11148398882390279
+  },
+  "candidate_geometry_hash": "ebefc0bc05e77ef10a9ea44cb337b48c1416f11b3fc5242b0f1626bbd32af27d",
+  "candidate_driver_allowance_gbp": 180.0,
+  "price_basis": "Inherited exploratory \u00a360 HF allowance, not a supplier quote",
+  "native_solve_performed": false,
+  "qualified": false,
+  "physical_validation": false,
+  "artifacts": [
+    {
+      "file": "conditional-comparison.json",
+      "sha256": "acd32371602e1fbd8396290b0f1032189b66764fe34f0542b7710c851f593362"
+    },
+    {
+      "file": "runners.zip",
+      "sha256": "451c1d022faae04522f7b622312f18fadc7cbe7fbc708463779b279f0e7048f3"
+    }
+  ],
+  "source_code_commit": "b7255b0",
+  "manufacturer_raw_files_redistributed": false
+}

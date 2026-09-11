@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "frequencies_hz": [
+    350.0,
+    700.0,
+    1000.0,
+    1200.0,
+    1500.0,
+    1750.0,
+    2000.0,
+    2250.0,
+    2500.0,
+    2750.0,
+    3000.0,
+    3500.0,
+    4000.0,
+    5000.0,
+    7500.0
+  ],
+  "throat_ids": [
+    "peerless-dfm2535-8-ideal-outlet"
+  ],
+  "side_ids": [
+    "faitalpro-4fe32-16"
+  ],
+  "prices": {
+    "faitalpro-4fe32-16": 30.0,
+    "peerless-dfm2535-8-ideal-outlet": 60.0
+  },
+  "currency": "GBP",
+  "max_driver_cost": 220.0,
+  "max_drivers": 5,
+  "lengths_m": [
+    0.3
+  ],
+  "mouth_radii_m": [
+    0.22
+  ],
+  "entry_fractions": [
+    [
+      0.2
+    ]
+  ],
+  "evolution": {
+    "schema_version": 1,
+    "profile_symmetry": "quarter_turn",
+    "elite_size": 1,
+    "explore_every": 3,
+    "mutation_fraction": 0.25,
+    "sigma_fraction": 0.12,
+    "profile_scale_bounds": [
+      0.65,
+      1.5
+    ],
+    "geometry_bounds": {
+      "length_m": [
+        0.25,
+        0.35
+      ],
+      "mouth_radius_m": [
+        0.18,
+        0.25
+      ],
+      "entry_fraction_0": [
+        0.18,
+        0.3
+      ],
+      "port_radius_m": [
+        0.016,
+        0.032
+      ],
+      "port_length_m": [
+        0.003,
+        0.018
+      ],
+      "front_depth_m": [
+        0.0015,
+        0.006
+      ],
+      "driver_axial_offset_m": [
+        -0.012,
+        0.0
+      ]
+    }
+  },
+  "acoustic_objectives": {
+    "schema_version": 1,
+    "observation_distance_m": 20.0,
+    "mid_highpass_hz": 350.0,
+    "upper_crossovers_hz": [
+      3000.0,
+      4000.0,
+      5000.0
+    ],
+    "mid_polarities": [
+      1,
+      -1
+    ],
+    "hf_delays_s": [
+      0.0,
+      0.00015,
+      0.0003,
+      0.00045,
+      0.0006,
+      0.00075,
+      0.0009
+    ],
+    "horizontal_coverage_deg": 90.0,
+    "vertical_coverage_deg": 90.0,
+    "directivity_weight": 0.5,
+    "minimum_bank_impedance_ohm": 2.0,
+    "sphere": {
+      "schema_version": 1,
+      "angle_precision_deg": 10.0,
+      "control_from_hz": 1000.0,
+      "rear_attenuation_db": 30.0
+    },
+    "acoustic_handover_hz": [
+      3000.0,
+      5000.0
+    ]
+  },
+  "build_budget": {
+    "schema_version": 1,
+    "maximum_total_cost": 300.0,
+    "material_density_kg_m3": 1270.0,
+    "material_cost_per_kg": 16.0,
+    "process_allowance_factor": 1.2,
+    "other_cost_allowance": 55.0
+  },
+  "side_gains": [
+    0.1,
+    0.2,
+    0.4,
+    0.8,
+    1.6,
+    3.2
+  ],
+  "trial_budget": 4,
+  "seed": 20260914,
+  "exterior_mesh_size_m": 0.015,
+  "cost_weight_db": 0.5
+}
