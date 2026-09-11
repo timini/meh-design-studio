@@ -26,6 +26,13 @@ frozen commit `c217b86ba76a2c10c6032091bfded518180fa5d4` passes verification,
 with all 63 native result arrays exactly equal to those in the original attempt.
 The two attempts have identical physical inputs and sampling controls.
 
+Passing artifact verification does not mean passing the independent electrical
+qualification screen. That screen still fails its unchanged `1e-8` relative
+reciprocity limit: the maximum residual is `8.096e-5` at 125 Hz, despite FP64
+storage. Circuit-voltage residuals are below `4e-16`. These results are retained
+inside the comparison's source evidence; numerical convergence of the
+reciprocity discrepancy has not been established for this example.
+
 ## Fixed comparison protocol
 
 The [upstream example](https://github.com/JWSound/boundary-lab/tree/8cb166226e412877d3f71f2845918e479b97aa85/examples/2x12_CRAM)
