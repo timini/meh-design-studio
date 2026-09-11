@@ -47,8 +47,40 @@ the inferred load.
 
 Unit checks compare against independently solved physical driver equations on a
 known reciprocal load, including induced current, volume flow, pressure and
-changed outlet coordinates. An independent fresh native alternate-circuit
-comparison is still required before accepting this path for design decisions.
+changed outlet coordinates. The independent fresh native alternate-circuit
+comparison below has passed. This establishes numerical agreement for that
+discretised reference, not the accuracy of a commercial driver model.
+
+## Executed independent native comparison
+
+Runtime source `40e23d4` reconstructed the load from the original
+[`ab6714f` periodic-profile reference](periodic-profile-evidence.md), then replaced
+its synthetic HF with the [provisional Peerless ideal-outlet circuit](research/commercial-hf-source-audit.md).
+The four synthetic mids, acoustic medium, geometry and all six compiled mesh
+hashes were retained. A separate CAD compilation and fresh `coupled_reference`
+solve evaluated the replacement circuit at 350, 1000, 2000 and 3000 Hz.
+
+The relative complex L2 tolerance of `1e-8` was recorded before either the derived
+arrays or new native arrays were produced. All 32 quantity/frequency pairs passed,
+including exterior pressure, sphere and polar fields, FEM pressure, BEM traces,
+driver velocities and coil currents. The largest error was
+`5.832485738303627e-12`, in the 3000 Hz BEM normal derivative. The fresh native
+result independently passed the unchanged `1e-8` electrical consistency gate;
+its largest electrical reciprocity residual was `9.427044770619989e-9`.
+
+The [evidence report](../validation/evidence/circuit-reanalysis/report.json) binds
+archives containing the new native search, separate derived dataset, comparison
+rows, predeclared controls and runners. The original native basis remains in the
+[periodic-profile evidence archive](../validation/evidence/periodic-profile-symmetry/report.json).
+The reanalysis retains the original load's numerical reciprocity and passivity
+diagnostics without altering it to force agreement.
+
+This small reference has synthetic mids, a disabled 2-ohm screen and a £100
+fixture driver allowance. The HF record remains provisional, and its separate
+unfitted plane-wave-tube comparison still fails the declared 3 dB screen. The
+new reference's 12.46 dB selected response variation is not acceptance of the
+full-size design. This experiment establishes neither mesh convergence nor
+physical source, mechanical fit, print or output qualification.
 
 ## Run a comparison
 

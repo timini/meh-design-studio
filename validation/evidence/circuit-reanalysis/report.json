@@ -1,0 +1,35 @@
+{
+  "status": "completed_native_alternate_circuit_comparison",
+  "application_source_commit": "40e23d4",
+  "reference_source_commit": "ab6714f",
+  "reference_archive_report": "../periodic-profile-symmetry/report.json",
+  "archives": [
+    {
+      "file": "native-and-derived-00.zip",
+      "sha256": "cb5fa1a35a5ea9bd7cba8dc78c647c21865ab00306e91c4e851bb7b02330a549",
+      "size_bytes": 53838446
+    },
+    {
+      "file": "native-and-derived-01.zip",
+      "sha256": "d5971f355fd3bdfa756ab4ec5b8129eb17ee8db8a81efaa3bb9ce8837b15e11d",
+      "size_bytes": 9724733
+    },
+    {
+      "file": "controls-and-runners.zip",
+      "sha256": "927d492c1bad0a7fa04690696c951f43dc7eff1f0ba695186030517b69155f39",
+      "size_bytes": 13574
+    }
+  ],
+  "comparison_passed": true,
+  "all_quantity_relative_complex_l2_limit": 1e-08,
+  "maximum_relative_complex_l2": 5.832485738303627e-12,
+  "strict_native_electrical_checks_passed": true,
+  "search_error": null,
+  "qualified": false,
+  "physical_validation": false,
+  "limitations": [
+    "Same acoustic discretisation, four frequencies, synthetic mids and provisional Peerless ideal outlet model",
+    "No target-horn acceptance, mesh convergence, physical source validation, driver fit or print qualification",
+    "Conditional unfitted Peerless PWT comparison still fails its declared 3 dB screen"
+  ]
+}

@@ -33,6 +33,8 @@ Use `meh resume-optimise` to continue a cancelled or failed search in a new dire
 
 Use [`meh export-search`](docs/search-build-bundle.md) to package a completed search with its geometry, driver BOM and fixed gain settings.
 
+Use [`meh reanalyse-circuits`](docs/circuit-reanalysis.md) to compare replacement driver circuits on a verified, fixed acoustic geometry. The derived fields retain mutual loading and have been checked against a fresh native alternate-circuit solve; geometry mutations still require new field solves.
+
 ## Documents
 
 | Document | Purpose |
