@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "id": "peerless-dfm2535-8-ideal-outlet",
+  "revision": 1,
+  "manufacturer": "Peerless by Tymphany",
+  "model": "DFM-2535R00-08 (provisional ideal outlet approximation)",
+  "outer_diameter_m": 0.09,
+  "cutout_diameter_m": 0.0254,
+  "depth_m": 0.0508,
+  "provenance": {
+    "schema_version": 1,
+    "kind": "derived",
+    "source": "https://products.peerless-audio.com/pdf/438, June 2026 drawing: 90 mm body, 50.8 mm depth and 25.4 mm nominal outlet opening. Cutout field denotes the nominal horn opening, not a qualified mounting clearance, gasket or bolt interface. Source is an unqualified derived approximation; see its separate circuit provenance.",
+    "permission": "unknown",
+    "permission_evidence": null
+  },
+  "source_model": {
+    "schema_version": 1,
+    "re_ohm": 6.3,
+    "le_h": 4.2999999999999995e-05,
+    "bl_n_a": 3.99,
+    "mmd_kg": 0.0005200000000000001,
+    "cms_m_n": 7.5e-05,
+    "rms_ns_m": 0.5158825831157976,
+    "sd_m2": 0.00109,
+    "provenance": {
+      "schema_version": 1,
+      "kind": "derived",
+      "source": "https://products.peerless-audio.com/api/driver/438; retrieved 2026-09-11, DesignRev 1 / MP, DBRev 5.000 updated 2026-05-06. Provisional SI interpretation: Mmd/Mms in g, Le in mH, Cms in micrometre/N, Sd in cm^2; API fields lack individual unit labels. Same-catalogue units and Fs/Qes consistency support these conversions, not manufacturer confirmation for this circuit. Rms derived as 2*pi*Fs*Mms/Qms; dry mass uses Mmd, not Mms. 25.4 mm outlet from https://products.peerless-audio.com/pdf/438, June 2026. Ideal lossless zero-length area transformer; no internal cavity, rear-load or phase-plug model. Conditional unfitted 3-7.5 kHz PWT magnitude comparison fails 3 dB screen (maximum 4.33329 dB); no phase, load-dependent or physical qualification.",
+      "permission": "unknown",
+      "permission_evidence": null
+    },
+    "ideal_outlet_area_m2": 0.0005067074790974977
+  },
+  "qualification": null
+}
