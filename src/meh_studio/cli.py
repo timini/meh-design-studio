@@ -85,6 +85,11 @@ def main(argv=None) -> int:
     resume.add_argument('--julia', type=Path, required=True)
     resume.add_argument('--julia-threads', type=int, help='match the original explicit Julia thread count')
     resume.add_argument('--backend', choices=backends, default='beat_cpu', help='match the original backend')
+    reanalysis = commands.add_parser('reanalyse-circuits', help='derive new driver-circuit fields on verified fixed native geometry')
+    reanalysis.add_argument('project', type=Path)
+    reanalysis.add_argument('--evaluation', type=Path, required=True)
+    reanalysis.add_argument('--sources', type=Path, required=True)
+    reanalysis.add_argument('--output', type=Path, required=True)
     bundle = commands.add_parser('export-search', help='export experimental winning geometry, driver BOM and relative gains')
     bundle.add_argument('search', type=Path)
     bundle.add_argument('--output', type=Path, required=True, help='new ZIP file; existing files are never replaced')
@@ -109,6 +114,11 @@ def main(argv=None) -> int:
             encoded = json.dumps(result, indent=2, allow_nan=False)
             with args.output.open('x', encoding='utf-8') as stream:
                 stream.write(encoded+'\n')
+        elif args.command == 'reanalyse-circuits':
+            from .circuit_reanalysis import reanalyse_circuits
+            from .generated_system import HornSources
+            result = reanalyse_circuits(args.project,args.evaluation,
+                HornSources.model_validate_json(args.sources.read_text()),args.output)
         elif args.command == 'resume-optimise':
             from .search_resume import resume_optimise
             from .boundary_lab import BoundaryLabRuntime
