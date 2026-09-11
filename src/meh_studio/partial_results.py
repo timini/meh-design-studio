@@ -130,12 +130,12 @@ def assemble_frequency_evidence(project, evaluations, request):
         'identity':common,'sources':sources,'overlap_checks':overlaps,
         'rows':[selected[f] for f in request.frequencies_hz],
         'qualified':False,'physical_validation':False,'original_evaluations_modified':False}
-    verify_frequency_assembly(report)
+    _verify_source_files(report)
     return report
 
 
-def verify_frequency_assembly(report):
-    """Recheck immutable source hashes before consuming a derived assessment."""
+def _verify_source_files(report):
+    """Check immutable files and the selected rows, including during assembly."""
     from .boundary_lab import _contained
     if sha256(Path(report['project']))!=report['project_sha256']:
         raise ValueError('assembled project changed')
@@ -170,3 +170,19 @@ def verify_frequency_assembly(report):
     if (set(expected_rows)!=set(request.frequencies_hz)
             or report['rows']!=[expected_rows[f] for f in request.frequencies_hz]):
         raise ValueError('assembled rows differ from verified source samples')
+
+
+def verify_frequency_assembly(report):
+    """Rebuild the assessment from its sources before accepting derived claims.
+
+    Hashes alone establish file immutability, not that a report describes those
+    files. Re-derivation also binds project, request, runtime, overlap checks,
+    original statuses, and the required hash inventories to the source contracts.
+    """
+    _verify_source_files(report)
+    expected = assemble_frequency_evidence(
+        report['project'], [source['evaluation'] for source in report['sources']],
+        SolveRequest.model_validate(report['request']),
+    )
+    if expected != report:
+        raise ValueError('assembled report differs from verified source contracts')

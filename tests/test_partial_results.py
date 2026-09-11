@@ -170,3 +170,26 @@ def test_cli_frequency_assembly_uses_the_explicit_full_request(tmp_path,monkeypa
     assert main(['assemble-frequencies','project','partial','completion','--request',str(request)])==0
     assert seen[0][2]==(1000.,2000.) and len(seen[0][1])==2
     assert json.loads(capsys.readouterr().out)['original_evaluations_modified'] is False
+
+
+@pytest.mark.parametrize('fault', ['project', 'request', 'runtime', 'overlap', 'inventory', 'status'])
+def test_frequency_assembly_verifier_binds_report_claims_to_sources(frequency_parts, fault):
+    from meh_studio.partial_results import assemble_frequency_evidence, verify_frequency_assembly
+    project, parts, request = frequency_parts
+    report = assemble_frequency_evidence(project, parts, request)
+    if fault == 'project':
+        unrelated = project.parent / 'unrelated.json'
+        unrelated.write_text('{}')
+        report.update(project=str(unrelated), project_sha256=sha256(unrelated))
+    elif fault == 'request':
+        report['request']['include_project_observations'] = True
+    elif fault == 'runtime':
+        report['identity']['runtime']['backend'] = 'coupled_reference'
+    elif fault == 'overlap':
+        report['overlap_checks'] = []
+    elif fault == 'inventory':
+        report['sources'][0]['controls_sha256'] = {}
+    else:
+        report['sources'][0]['original_status'] = 'complete'
+    with pytest.raises(ValueError):
+        verify_frequency_assembly(report)
