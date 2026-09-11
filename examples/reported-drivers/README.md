@@ -53,3 +53,6 @@ complex-phase or arbitrary-load validation is available. Read the
 [source audit and failed comparison](../../docs/research/commercial-hf-source-audit.md)
 before using it. It is suitable for explicitly provisional experiments, not
 qualified design claims or replacement of historical synthetic source identities.
+The [provisional commercial wide-mid example](../provisional-commercial-wide-mid/README.md)
+provides catalogue, search, operating-report and export commands using this record
+with four Faital mids. Its new native search has not yet been executed.
