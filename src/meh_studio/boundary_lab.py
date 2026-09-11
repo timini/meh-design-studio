@@ -345,8 +345,9 @@ def _field_identity(quantity: dict, system: dict, meshes: dict):
 
 def _inspect_result(root: Path, request: SolveRequest, backend: str,
                     expected_output_ids: tuple[str, ...] | None = None,
-                    expected_solve_kind: str | None = None, project_path: Path | None = None) -> dict:
-    """Reject partial runs and retain raw complex quantities without DSP synthesis."""
+                    expected_solve_kind: str | None = None, project_path: Path | None = None,
+                    *, partial: bool = False) -> dict:
+    """Inspect complete results, or explicitly identified completed rows of a stopped run."""
     if expected_output_ids is not None:
         expected_output_ids = _output_ids(expected_output_ids)
     root = Path(root)
@@ -358,7 +359,9 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
     if manifest.get("solve_kind") not in SOLVE_KINDS or (
             expected_solve_kind is not None and manifest["solve_kind"] != expected_solve_kind):
         raise ValueError("result solve kind differs from the physical contract")
-    if manifest.get("status") != "complete":
+    if partial and manifest.get('status') not in ('running','complete','failed','cancelled'):
+        raise ValueError('unknown upstream partial result status')
+    if not partial and manifest.get("status") != "complete":
         raise ValueError("upstream result is not complete")
     if manifest.get("backend_id") != backend or manifest.get("phasor_convention") != "exp(-i omega t)":
         raise ValueError("backend or phasor convention mismatch")
@@ -388,7 +391,8 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
     if manifest.get("frequencies_hz") != frequencies:
         raise ValueError("result frequency grid differs from request")
     completion = manifest.get("completion_mask", [])
-    if len(completion) != len(frequencies) or any(x is not True for x in completion):
+    if (len(completion) != len(frequencies) or any(type(x) is not bool for x in completion)
+            or not partial and not all(completion)):
         raise ValueError("incomplete frequency mask")
     excitations = manifest.get("excitation_port_ids")
     if (not isinstance(excitations, list) or not excitations
@@ -401,6 +405,13 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
     rows = manifest.get("results", [])
     if len(rows) != len(frequencies):
         raise ValueError("missing frequency results")
+    requested_frequencies=frequencies
+    if partial:
+        if not any(completion):raise ValueError('partial result has no completed frequencies')
+        if any(row is not None for row,done in zip(rows,completion) if not done):
+            raise ValueError('incomplete frequency must not have a result row')
+        rows=[row for row,done in zip(rows,completion) if done]
+        frequencies=[frequency for frequency,done in zip(frequencies,completion) if done]
     inventory = []
     seen_arrays = set()
     frequency_hashes = {}
@@ -479,9 +490,14 @@ def _inspect_result(root: Path, request: SolveRequest, backend: str,
         raise ValueError("project snapshot changed during inspection")
     if any(sha256(path) != artifact_hashes[name] for name, path in artifact_paths.items()):
         raise ValueError("result domain artifacts changed during inspection")
-    return {"evidence": "predicted", "artifact_hashes": artifact_hashes, "solve_kind": manifest.get("solve_kind"),
+    result={"evidence": "predicted", "artifact_hashes": artifact_hashes, "solve_kind": manifest.get("solve_kind"),
             "phasor_convention": manifest["phasor_convention"], "frequencies_hz": frequencies,
             "excitation_port_ids": excitations, "inventory": inventory}
+    if partial:
+        result.update(evidence='predicted_partial',upstream_status=manifest['status'],
+            requested_frequencies_hz=requested_frequencies,
+            missing_frequencies_hz=[f for f,done in zip(requested_frequencies,completion) if not done])
+    return result
 
 
 def inspect_result(root: Path, request: SolveRequest, backend: str,
@@ -491,6 +507,21 @@ def inspect_result(root: Path, request: SolveRequest, backend: str,
         return _inspect_result(root, request, backend, expected_output_ids, expected_solve_kind, project_path)
     except (KeyError, TypeError, AttributeError, RecursionError, EOFError, OSError, IndexError, zipfile.BadZipFile) as exc:
         raise ValueError(f"invalid or missing result artifact: {exc}") from exc
+
+
+def inspect_partial_result(root: Path, request: SolveRequest, backend: str,
+                           expected_output_ids: tuple[str, ...] | None = None,
+                           expected_solve_kind: str | None = None, project_path: Path | None = None) -> dict:
+    """Read completed samples without promoting the original solve to complete.
+
+    Callers must establish that the managed evaluation has stopped before reuse.
+    All retained arrays, physical domains, sources and requested outputs receive
+    the same checks as a complete result. Missing rows remain explicit.
+    """
+    try:
+        return _inspect_result(root,request,backend,expected_output_ids,expected_solve_kind,project_path,partial=True)
+    except (KeyError, TypeError, AttributeError, RecursionError, EOFError, OSError, IndexError, zipfile.BadZipFile) as exc:
+        raise ValueError(f'invalid or missing partial result artifact: {exc}') from exc
 
 
 def _kill_process_group(pgid: int):
