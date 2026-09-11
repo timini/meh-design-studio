@@ -81,6 +81,7 @@ def test_irregular_mouth_polygons_agree_before_conforming(tmp_path):
 
 @pytest.mark.cad
 def test_periodic_cubic_interpolates_irregular_controls_without_a_privileged_seam():
+    pytest.importorskip('cadquery')
     import math
     import numpy as np
     from meh_studio.cad_runtime import load_cadquery

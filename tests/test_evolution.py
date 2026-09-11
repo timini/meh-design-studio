@@ -188,6 +188,7 @@ def test_symmetry_rejects_a_seed_with_unequal_linked_controls(symmetry):
 
 @pytest.mark.cad
 def test_quarter_turn_offspring_changes_real_cad_and_preserves_ring_rotation():
+    pytest.importorskip('cadquery')
     import numpy as np
     from meh_studio.geometry import build_geometry
     from meh_studio.waveguide_profile import cad_volume
