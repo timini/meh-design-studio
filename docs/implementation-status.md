@@ -23,8 +23,11 @@ The [strongly curved seed preparations](curved-mouth-preparation.md) now also
 complete CAD, tagged air meshing and coupled-solver input generation for
 exponential-round and quadratic rounded-square flares. Their native mouth
 conforming preserves the curved walls exactly and passes the existing topology,
-interface, volume and mesh limits. These two new seeds have not yet undergone
-acoustic field evaluation; the original failed preparations remain archived.
+interface, volume and mesh limits. The [exponential-round native search](nonlinear-commercial-search.md)
+now completes both candidates and the selected export. Its seed remains better
+than its mutation, but both fail the 6 dB response screen (14.26 and 15.09 dB).
+The quadratic rounded-square case is in progress; the original failed preparations
+remain archived.
 
 [Adaptive search](adaptive-search.md) mutates profile and geometry controls using
 preceding simulated fitness, with periodic random exploration, bound checks and
