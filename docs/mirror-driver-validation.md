@@ -125,3 +125,8 @@ and plotted data. The native and postprocessing identities are distinct and
 explicit. The next numerical work must establish stable fields and separate
 full-model discretisation error from symmetry-reduction behaviour before this
 shortcut is integrated into production optimisation.
+
+The subsequent [3 mm refinement and physical-bank scoring correction](mirror-bank-scoring.md)
+passes the 4/3 mm adjacent field comparison, while still failing against the
+older full reference. It also verifies that the scorer rejects a physical bank
+below the 2-ohm load constraint when mirrored coils are included.

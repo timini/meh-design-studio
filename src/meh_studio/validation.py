@@ -55,7 +55,7 @@ def _validate_electrical_basis(project_path: Path, evaluation_directory: Path) -
     bl = np.array([p["bl_n_per_a"] for p in parameters])
     rows = []
     manifest = _read_json(root / "upstream/manifest.json")
-    from .driver_symmetry import driver_symmetry_from_meshes
+    from .driver_symmetry import driver_symmetry_from_meshes, verify_response_symmetry
     symmetry = driver_symmetry_from_meshes(project, manifest)
     orbit_counts = np.array([symmetry[c]['physical_driver_orbit_count'] for c in component_ids])
     reduced = project.get('symmetry', 'off') != 'off'
@@ -74,16 +74,7 @@ def _validate_electrical_basis(project_path: Path, evaluation_directory: Path) -
                     raise ValueError("response component identities do not match the voltage basis")
                 if q["axes"] != ["excitation", "transducer"]:
                     raise ValueError("unsupported response axis order")
-                for key, field in (('physical_driver_orbit_counts', 'physical_driver_orbit_count'),
-                                   ('surface_completion_factors', 'surface_completion_factor')):
-                    declared = q['metadata'].get(key)
-                    expected = [symmetry[c][field] for c in ids]
-                    if declared is None and not reduced:
-                        continue  # Unreduced historical records predate these fields.
-                    if (not isinstance(declared, list) or len(declared) != len(ids)
-                            or any(type(v) not in (int, float) or v != n
-                                   for v, n in zip(declared, expected))):
-                        raise ValueError('response symmetry multiplicities differ from the source mesh')
+                verify_response_symmetry(q['metadata'], ids, symmetry, reduced=reduced)
                 values = archive[q["key"]]
                 if values.dtype.kind != "c" or values.dtype.itemsize < 16:
                     raise ValueError("electrical consistency at 1e-8 requires complex128 response storage")

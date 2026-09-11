@@ -14,6 +14,32 @@ import numpy as np
 from .boundary_lab import sha256
 
 
+def physical_orbit_counts(ids, counts=None):
+    """Validate explicit group multiplicities for algebraic basis operations."""
+    if counts is None:
+        return np.ones(len(ids), dtype=int)
+    raw = np.asarray(counts, dtype=object)
+    values = np.asarray(counts)
+    if (any(isinstance(v, (bool, np.bool_)) for v in raw.flat) or values.shape != (len(ids),) or values.dtype.kind not in 'iu'
+            or np.any(values <= 0) or np.any(values > 4)):
+        raise ValueError('one integer physical driver orbit count from 1 to 4 per component required')
+    return values
+
+
+def verify_response_symmetry(metadata, ids, symmetry, *, reduced):
+    """Check native response multiplicities against independently inferred counts."""
+    for key, field in (('physical_driver_orbit_counts', 'physical_driver_orbit_count'),
+                       ('surface_completion_factors', 'surface_completion_factor')):
+        declared = metadata.get(key)
+        expected = [symmetry[c][field] for c in ids]
+        if declared is None and not reduced:
+            continue  # Unreduced historical records predate these fields.
+        if (not isinstance(declared, list) or len(declared) != len(ids)
+                or any(type(v) not in (int, float) or v != n
+                       for v, n in zip(declared, expected))):
+            raise ValueError('response symmetry multiplicities differ from the source mesh')
+
+
 def _patch_cuts(points, triangles, axes):
     """Find symmetry cuts separately on every edge-connected surface patch."""
     if (not len(triangles) or triangles.ndim != 2 or triangles.shape[1] != 3

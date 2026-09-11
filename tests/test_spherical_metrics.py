@@ -71,7 +71,7 @@ def test_whole_sphere_score_reads_native_basis_and_preserves_failed_validation(t
     monkeypatch.setattr(optimisation,'verified_assessment',lambda *args:{'checks':{'passed':False}})
     project=tmp_path/'project.json'
     ids=['component:throat','component:mid']
-    project.write_text(json.dumps({'physical_system':{'excitation_ports':[
+    project.write_text(json.dumps({'physical_system':{'components':[{'id':c} for c in ids],'excitation_ports':[
         {'id':str(i),'component_id':c} for i,c in enumerate(ids)]}}))
     root=tmp_path/'evaluation/upstream';root.mkdir(parents=True)
     domains=[{'id':f'observation:{p}-polar','coordinates':{'angle_deg':'angles'}} for p in ('horizontal','vertical')]
