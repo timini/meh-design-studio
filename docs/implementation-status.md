@@ -52,6 +52,12 @@ worsened the response and was rejected. A new search enforces the
 [actual acoustic mid/HF handover](wide-mid-objectives.md), instead of relying on
 the electrical crossover setting alone.
 
+The [larger-port experiment](large-port-handover-evidence.md) completed all 15
+native frequencies but failed the declared acoustic handover for every DSP
+combination. A continuous-gain diagnostic also finds no feasible gain within the
+tested LR4 family. Its complete fields and original failed search are retained;
+it supplies no winner or selected build export.
+
 The [FP64 reference backend](reference-backend-evidence.md) now completes the
 same optimisation/replay/export workflow. Both trials in its synthetic diagnostic
 passed the unchanged electrical consistency limits. The older, different
