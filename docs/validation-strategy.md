@@ -41,6 +41,12 @@ Run three systematically refined meshes, document edge statistics and poor-quali
 
 Compare symmetry-reduced and full geometry for at least one finalist. Excitation parity and physical driver terminations must agree. Test deliberately reversed normals, missing tags, duplicate rear compliance, wrong mass type and wrong voltage basis; the compiler must reject invalid contracts or the physics checks must expose them.
 
+For reduced voltage ports, electrical power and reciprocity use the sum of the
+represented physical coil currents; the per-coil circuit equation uses one
+coil's current. Surface completion and physical coil multiplicity are distinct.
+The [implemented mesh-derived accounting and retained quarter-model comparison](mirror-driver-validation.md)
+document this convention and the remaining acoustic-field discrepancy.
+
 ## Physical measurement protocol
 
 1. Register the design, driver revisions, sample serials, build lot, intended test band/levels, protocol and data split before measurement. Freeze the predicted response and hashes before the holdout operator reveals observations.
