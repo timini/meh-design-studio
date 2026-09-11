@@ -21,6 +21,13 @@ count, runner hash and application/runtime identities. It cannot silently switch
 a partially completed FP32 campaign to FP64. Start a separate study for that
 comparison and preserve both sets of evidence.
 
+The finalist and partitioned-validation scripts inherit the saved search backend
+and thread setting by default. Both accept explicit `--backend` and
+`--julia-threads` options. The partitioned validator still requires the complete
+runtime identity to match the search. An explicit backend override in the
+standalone finalist validator creates a separate numerical comparison, with its
+own recorded runtime; no existing results are relabelled.
+
 The adapter runs the upstream CPU preflight, then the explicit reference runner.
 It holds static condensation enabled, matching the existing precision-reference
 study. Runtime records identify FP64, the runner SHA256 and effective thread

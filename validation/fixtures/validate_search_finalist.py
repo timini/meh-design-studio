@@ -159,9 +159,15 @@ def main():
     parser.add_argument('search',type=Path);parser.add_argument('output',type=Path)
     for name in ('checkout','python','julia'):parser.add_argument('--'+name,type=Path,required=True)
     parser.add_argument('--solve-timeout-s',type=float,default=7200)
-    parser.add_argument('--julia-threads',type=int,default=1)
+    parser.add_argument('--julia-threads',type=int,help='defaults to the search thread setting')
+    parser.add_argument('--backend',choices=['beat_cpu','beat_cuda','beat_rocm','coupled_reference'],
+        help='defaults to the search backend; an explicit override starts a separate numerical comparison')
     args=parser.parse_args()
-    report=validate(args.search,args.output,BoundaryLabRuntime(args.checkout,args.python,args.julia,julia_threads=args.julia_threads),timeout_s=args.solve_timeout_s)
+    original=_read_json(args.search/'search.json')['runtime']
+    threads=args.julia_threads if args.julia_threads is not None else original.get('julia_threads','upstream_default')
+    if threads=='upstream_default':threads=None
+    report=validate(args.search,args.output,BoundaryLabRuntime(args.checkout,args.python,args.julia,
+        args.backend or original['backend'],julia_threads=threads),timeout_s=args.solve_timeout_s)
     print(json.dumps(report,indent=2))
 
 

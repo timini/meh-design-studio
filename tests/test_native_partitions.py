@@ -13,6 +13,20 @@ try:
 finally:sys.path.remove(str(fixtures))
 
 
+@pytest.mark.parametrize('mode',['run','assemble'])
+def test_partition_cli_inherits_reference_runtime(tmp_path,monkeypatch,mode):
+    import json
+    search=tmp_path/'search';search.mkdir()
+    (search/'search.json').write_text(json.dumps({'runtime':{'backend':'coupled_reference','julia_threads':2}}))
+    seen=[]
+    monkeypatch.setattr(module,'run_partition',lambda search,root,runtime,*args:seen.append((runtime.backend,runtime.julia_threads)))
+    monkeypatch.setattr(module,'assemble',lambda search,parts,output,runtime:seen.append((runtime.backend,runtime.julia_threads)))
+    monkeypatch.setattr(sys,'argv',['partitions',mode,str(search),str(tmp_path/'out'),
+        '--checkout','checkout','--python','python','--julia','julia'])
+    module.main()
+    assert seen==[('coupled_reference',2)]
+
+
 def rows():
     frequencies=list(range(500,533));runtime={'native':'pinned'};records=[]
     for level in module.LEVELS:
