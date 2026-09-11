@@ -29,11 +29,16 @@ def test_quarter_mode_changes_identity_without_changing_physical_inventory():
 
 
 @pytest.mark.cad
-@pytest.mark.parametrize('layout', ['opposed_pairs', 'four_driver_ring'])
-def test_complete_physical_export_compiles_reduced_sources(tmp_path, layout):
+@pytest.mark.parametrize('layout,ruled_profile', [
+    ('opposed_pairs',False), ('four_driver_ring',False), ('four_driver_ring',True)])
+def test_complete_physical_export_compiles_reduced_sources(tmp_path, layout,ruled_profile):
     pytest.importorskip('cadquery')
     pytest.importorskip('gmsh')
-    design = HornGeometry.model_validate(design_data() | {'solver_symmetry': 'xy', 'entry_layout': layout})
+    data=design_data() | {'solver_symmetry': 'xy', 'entry_layout': layout}
+    if ruled_profile:
+        data.update(profile_loft='ruled',profile_interpolation='periodic_cubic',profile_sections=[
+            {'fraction':z,'radial_scales':[1.,.95,1.,.95,1.,.95,1.,.95]} for z in (.35,.7,1.)])
+    design = HornGeometry.model_validate(data)
     root = tmp_path / 'geometry'
     physical = export_geometry(design, root)
     mesh = mesh_geometry(root)

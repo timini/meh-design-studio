@@ -157,11 +157,15 @@ def symmetric_inputs(symmetry):
 
 
 @pytest.mark.parametrize('symmetry',['mirror_xy','quarter_turn'])
-def test_linked_profile_mutation_and_random_exploration_preserve_symmetry(symmetry):
-    brief,base,drivers=symmetric_inputs(symmetry);seeds=candidates(brief,base,drivers)
+@pytest.mark.parametrize('loft',['smooth','ruled'])
+def test_linked_profile_mutation_and_random_exploration_preserve_symmetry(symmetry,loft):
+    brief,base,drivers=symmetric_inputs(symmetry)
+    base=HornGeometry.model_validate(base.model_dump()|{'profile_loft':loft})
+    seeds=candidates(brief,base,drivers)
     history=[];previous=[];proposals=[]
     for index in range(6):
         candidate,proposal=propose(brief,seeds,history,previous)
+        assert candidate['design'].profile_loft==loft
         for section in candidate['design'].profile_sections:
             v=section.radial_scales
             assert v[0]==v[4] and v[2]==v[6] and v[1]==v[3]==v[5]==v[7]

@@ -7,6 +7,47 @@ from meh_studio.waveguide_profile import ProfileSection, mouth_face
 EXAMPLES=Path(__file__).resolve().parents[1]/'examples'
 
 
+def test_loft_choice_preserves_existing_geometry_identity():
+    data=json.loads((EXAMPLES/'freeform-ring-geometry.json').read_text())
+    original=HornGeometry.model_validate(data)
+    explicit=HornGeometry.model_validate(data|{'profile_loft':'smooth'})
+    assert explicit.content_hash==original.content_hash
+    assert 'profile_loft' not in explicit.model_dump()
+    ruled=HornGeometry.model_validate(data|{'profile_loft':'ruled'})
+    assert ruled.content_hash!=original.content_hash
+    assert HornGeometry.model_validate_json(ruled.model_dump_json())==ruled
+
+
+@pytest.mark.cad
+def test_ruled_sections_avoid_retained_axial_fold(tmp_path):
+    """The smooth search proposal folds near the throat; straight spans need not."""
+    pytest.importorskip('cadquery')
+    from meh_studio.waveguide_profile import horn_solids, cad_volume
+    from meh_studio.cad_runtime import load_cadquery
+    cq=load_cadquery()
+    data=json.loads((Path(__file__).parent/'fixtures/freeform-axial-fold.json').read_text())
+    original=HornGeometry.model_validate(data)
+    with pytest.raises(ValueError,match='material envelope'):
+        horn_solids(original)
+    # Its original tilted chambers independently cross an end plane. Retain that
+    # rejection, then test the complete assembly with explicitly untilted entries.
+    ruled=HornGeometry.model_validate(data|{'profile_loft':'ruled'})
+    air,outer=horn_solids(ruled)
+    assert air.cut(outer).Volume()<1e-6
+    assert mouth_face(ruled,air).Area()>0
+    with pytest.raises(ValueError,match='throat and mouth planes'):
+        build_geometry(ruled)
+    untilted=HornGeometry.model_validate(ruled.model_dump()|{'driver_tilt_deg':0.})
+    regions,parts,sources=build_geometry(untilted)
+    assert len(regions)==len(parts)==5 and len(sources)==4
+    # Verify the actual saved horn, including the joins between ruled spans.
+    path=tmp_path/'horn.step'
+    cq.exporters.export(parts['horn'],str(path))
+    imported=cq.importers.importStep(str(path)).val()
+    assert imported.isValid() and len(imported.Solids())==1
+    assert cad_volume(untilted,imported)==pytest.approx(cad_volume(untilted,parts['horn']),rel=1e-6)
+
+
 def test_profile_controls_require_full_ordered_sections():
     base=json.loads((EXAMPLES/'compact-ring-geometry.json').read_text())
     for controls in ([{'fraction':1.,'radial_scales':[1.]*8}],
@@ -17,11 +58,13 @@ def test_profile_controls_require_full_ordered_sections():
 
 
 @pytest.mark.cad
-def test_freeform_ring_uses_actual_non_circular_mouth(tmp_path):
+@pytest.mark.parametrize('loft',['smooth','ruled'])
+def test_freeform_ring_uses_actual_non_circular_mouth(tmp_path,loft):
     pytest.importorskip('cadquery');pytest.importorskip('gmsh')
     from meh_studio.radiation_geometry import export_exterior
     from meh_studio.generated_system import HornSources,compile_interior_system
     design=HornGeometry.model_validate_json((EXAMPLES/'freeform-ring-geometry.json').read_text())
+    design=HornGeometry.model_validate(design.model_dump()|{'profile_loft':loft})
     geometry=export_geometry(design,tmp_path/'geometry')
     mouth=geometry['mouth_interface']
     assert geometry['driver_count']==5

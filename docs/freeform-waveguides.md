@@ -13,7 +13,28 @@ also permit asymmetric profiles. These are actual 3D CAD surfaces: air, material
 entry chamber positions, tagged meshes and exterior radiation share the same
 parameter record. `SearchBrief.profiles` can include multiple profiles (including
 an empty conical baseline), so existing native searches evaluate distinct shapes.
-Adaptive mutation and off-axis scoring are the next integration increment.
+[Adaptive mutation](adaptive-search.md) and off-axis scoring use the same records.
+
+### Axial loft choice
+
+Set `"profile_loft": "ruled"` in the base geometry to connect adjacent sections
+with straight spans. The circumferential spline choice remains independent:
+`"profile_interpolation": "periodic_cubic"` retains the periodic cubic sections.
+Ruled spans can have changes of wall slope at the specified axial sections;
+they are a different acoustic geometry, requiring new CAD, meshes and solves.
+Mutation and replay preserve the selected loft choice. It is not automatically
+substituted when a smooth candidate fails.
+
+The default `"smooth"` retains the existing loft and canonical geometry hashes.
+Its higher-order interpolation can overshoot between otherwise usable sections.
+The retained [fold regression](../tests/fixtures/freeform-axial-fold.json), from
+commercial search trial 6 at source `188a933`, folds near the throat and fails
+material containment. Ruled spans pass containment for those sections. The
+original tilted chambers independently fail the throat/mouth clearance check;
+with entries explicitly untilted, the complete five-driver CAD assembly and its
+STEP round trip pass. This is a construction regression, not evidence of improved
+acoustics, minimum wall thickness or physical driver fit. The original failed
+search remains unchanged.
 
 The mouth need not be circular. Its interface is identified by the actual planar
 CAD cap and exported into the exterior envelope. Saved mesh facets are checked
