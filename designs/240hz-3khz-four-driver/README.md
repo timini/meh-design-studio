@@ -116,3 +116,11 @@ Further refinement of this simplified termination is deferred while the more mat
 
 
 To reproduce the diagnostic solver and figures in a clean environment, install the declared extras with `pip install -e '.[cad,diagnostics]'`. Then run `diagnostics/summarize_sweep.py`, `diagnostics/compare_refinement.py` and `diagnostics/compare_third_mesh.py` from this design directory. The two-level comparison resolves the original plan's textual selection (three retained samples nearest 1.6 kHz plus 3 kHz) to exact sweep frequencies, records them, and rejects omitted or duplicate samples. The original descriptive rounded frequency list and all raw numerical runs remain unchanged.
+
+### Historical exterior-radiation smoke
+
+The actual R1 meshes subsequently completed a four-source prescribed-velocity
+FEM/BEM solve at 240 Hz. [Raw fields and reproduction notes](radiation-evidence/README.md)
+are retained separately from the earlier locally terminated FEM curve. This
+single-frequency integration result has a rigid throat and no commercial driver
+or rear-load model; it does not qualify R1's target band.

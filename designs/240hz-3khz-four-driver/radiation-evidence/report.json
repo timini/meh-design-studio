@@ -1,0 +1,91 @@
+{
+  "status": "complete",
+  "qualified": false,
+  "experiment_commit": "11504fc",
+  "archive_sha256": "9a3705aa35aef3cf882d893fdb2494e493d5ba8e5e0aa92c86aca71ac14123b2",
+  "archive_members_verified": 33,
+  "frequency_hz": 240.0,
+  "solve_kind": "coupled_bem_fem",
+  "excitation_ports": [
+    "excitation:mid_1",
+    "excitation:mid_2",
+    "excitation:mid_3",
+    "excitation:mid_4"
+  ],
+  "phasor_convention": "exp(-i omega t)",
+  "diagnostics": {
+    "bem_backend": "cpu",
+    "bounded_region_count": 1,
+    "fem_bulk_loss_factors_by_region": {
+      "region:front": 0.0
+    },
+    "fem_condensation_backend": "cpu_umfpack",
+    "fem_interior_residual": 1.9643035e-14,
+    "fem_schur_block_size": 32,
+    "fem_schur_thread_count": 4,
+    "flux_conservation_error": 8.69266e-08,
+    "formulation": "fem_interface_condensed",
+    "full_system_order": 48307,
+    "interface_count": 1,
+    "interface_flux_conservation_errors": [
+      8.69266e-08
+    ],
+    "interface_ids": [
+      "interface:mouth"
+    ],
+    "interface_pressure_continuity_errors": [
+      0.0
+    ],
+    "linear_backend": "cpu",
+    "linear_solver": "cpu_umfpack_schur_plus_dense_lu",
+    "precision": "float32",
+    "pressure_continuity_error": 0.0,
+    "solved_system_order": 6747,
+    "static_condensation_active": true,
+    "static_condensation_requested": true,
+    "symmetry": "off",
+    "timings": {
+      "assembly_s": 947.35488675,
+      "bem_cpu_assembly_cache_s": 0.021055375,
+      "bem_device_image_cache_s": 0.0,
+      "bem_device_regular_cache_s": 0.0,
+      "bem_device_singular_cache_s": 0.0,
+      "bem_identity_cache_s": 0.098946833,
+      "bem_matrix_s": 1.67471975,
+      "bem_operator_s": 14.214249167,
+      "bem_singular_cache_s": 0.20050625,
+      "bem_space_cache_s": 1.4125e-05,
+      "block_assembly_s": 0.2464545,
+      "cache_setup_s": 2.362835334,
+      "coupled_factorization_s": 6.716586625,
+      "device_block_cache_s": 1.167e-06,
+      "fem_condensation_analysis_s": 0.0,
+      "fem_condensation_factorization_s": 5.169136167,
+      "fem_condensation_partition_s": 0.0,
+      "fem_condensation_s": 923.329400958,
+      "fem_matrix_cache_s": 0.352991083,
+      "fem_reconstruction_s": 0.0,
+      "fem_rhs_condensation_s": 0.0,
+      "fem_schur_extraction_s": 917.3733885,
+      "fem_schur_upload_s": 0.0,
+      "fem_system_s": 0.258476375,
+      "field_cache_s": 0.000263958,
+      "field_s": 0.0,
+      "interface_operator_cache_s": 0.001235125,
+      "mesh_setup_s": 3.970022166,
+      "replay_factorization_s": 0.0,
+      "solve_s": 3.758345375
+    },
+    "transducer_count": 0,
+    "transducer_reference_voltage_v": 2.83,
+    "wall_impedance_boundary_ids": []
+  },
+  "project_sha256": "3e934726e28d6b41f37dae8a97289e156a2d12da2c9fe06f40534ef5ad55151b",
+  "limitations": [
+    "Single-frequency integration smoke, not a band response or mesh/precision convergence study",
+    "Prescribed uniform velocity sources, not commercial driver circuits",
+    "Throat rigid, no HF output; rear packages sealed, no rear acoustic source loads",
+    "Timing counters span a host sleep; not a reliable runtime benchmark",
+    "Historical R1 experiment; newer freeform workflow remains the current design direction"
+  ]
+}
