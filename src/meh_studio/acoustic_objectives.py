@@ -13,6 +13,7 @@ from .spherical_metrics import SphericalObjectives, sphere_error
 
 
 class AcousticObjectives(Record):
+    observation_distance_m: Positive = 1.
     mid_highpass_hz: Positive = 350.
     upper_crossovers_hz: tuple[Positive,...] = (3000.,4000.,5000.)
     mid_polarities: tuple[Annotated[int,Field(strict=True)],...] = (1,-1)
@@ -27,6 +28,7 @@ class AcousticObjectives(Record):
     @model_serializer(mode='wrap')
     def preserve_legacy_objectives(self,handler):
         result=handler(self)
+        if self.observation_distance_m == 1.:result.pop('observation_distance_m',None)
         if self.sphere is None:result.pop('sphere',None)
         if self.acoustic_handover_hz is None:result.pop('acoustic_handover_hz',None)
         return result
@@ -123,6 +125,7 @@ def score_acoustics(project,evaluation,gains,objectives):
     from .boundary_lab import _read_json,_contained
     from .optimisation import verified_assessment,relative_response
     evidence=verified_assessment(project,evaluation)
+    verify_observation_distance(project, objectives)
     root=evaluation/'upstream';manifest=_read_json(root/'manifest.json')
     if manifest.get('phasor_convention')!='exp(-i omega t)':
         raise ValueError('crossover scoring requires explicit exp(-i omega t) convention')
@@ -244,6 +247,7 @@ def convergence_polars(project,evaluation,settings,objectives):
     from .boundary_lab import _read_json,_contained
     from .optimisation import verified_assessment
     evidence=verified_assessment(project,evaluation)
+    verify_observation_distance(project, objectives)
     root=evaluation/'upstream';manifest=_read_json(root/'manifest.json')
     ports={p['id']:p['component_id'] for p in _read_json(project)['physical_system']['excitation_ports']}
     ids=[ports[p] for p in manifest['excitation_port_ids']]
@@ -275,3 +279,11 @@ def convergence_polars(project,evaluation,settings,objectives):
             values.append(combined)
     if verified_assessment(project,evaluation)!=evidence:raise ValueError('polar evidence changed during convergence extraction')
     return np.asarray(values),coordinates
+
+
+def verify_observation_distance(project, objectives):
+    """Bind scoring controls to the project whose native coordinates were verified."""
+    from .boundary_lab import _read_json
+    distance=_read_json(project).get('project_preferences',{}).get('polar_observation_distance_m',1.)
+    if distance != objectives.observation_distance_m:
+        raise ValueError('project observation distance differs from acoustic objectives')

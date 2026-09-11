@@ -57,3 +57,39 @@ def test_frozen_brief_keeps_single_crossover_polarity_delay():
     assert frozen.acoustic_objectives.upper_crossovers_hz==(4000.,)
     assert frozen.acoustic_objectives.mid_polarities==(-1,)
     assert frozen.side_gains==(.5,)
+
+
+@pytest.mark.parametrize('value',[0.,-1.,float('nan'),float('inf'),True,'20'])
+def test_invalid_observation_distance_rejected(value):
+    with pytest.raises(ValueError):AcousticObjectives(observation_distance_m=value)
+
+
+def test_observation_distance_is_preserved_by_frozen_and_denser_finalist_controls():
+    from test_optimisation import inputs
+    from meh_studio.optimisation import SearchBrief
+    from meh_studio.spherical_metrics import denser_validation_brief
+    brief,_,_=inputs()
+    legacy=AcousticObjectives()
+    assert 'observation_distance_m' not in legacy.model_dump(mode='json')
+    targets=AcousticObjectives(observation_distance_m=20.,sphere={})
+    assert targets.content_hash!=legacy.content_hash
+    assert AcousticObjectives.model_validate_json(targets.canonical_json())==targets
+    brief=SearchBrief.model_validate(brief.model_dump()|{'frequencies_hz':[350.,1000.,8000.],
+        'acoustic_objectives':targets.model_dump(mode='json')})
+    settings={'side_gain':.5,'mid_highpass_hz':350.,'upper_crossover_hz':4000.,'mid_polarity':1,'hf_delay_s':0.}
+    frozen=denser_validation_brief(freeze_brief(brief,.5,settings))
+    assert frozen.acoustic_objectives.observation_distance_m==20.
+
+
+def test_scoring_and_convergence_reject_a_different_observation_distance(tmp_path,monkeypatch):
+    import json
+    import meh_studio.optimisation as search
+    from meh_studio.acoustic_objectives import score_acoustics,convergence_polars
+    monkeypatch.setattr(search,'verified_assessment',lambda *args:{})
+    project=tmp_path/'project.json'
+    project.write_text(json.dumps({'project_preferences':{'polar_observation_distance_m':1.}}))
+    objectives=AcousticObjectives(observation_distance_m=20.)
+    with pytest.raises(ValueError,match='observation distance differs'):
+        score_acoustics(project,tmp_path,(1.,),objectives)
+    with pytest.raises(ValueError,match='observation distance differs'):
+        convergence_polars(project,tmp_path,{},objectives)

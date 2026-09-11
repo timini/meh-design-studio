@@ -117,14 +117,19 @@ def test_runtime_change_aborts_after_completed_trial(tmp_path, monkeypatch):
 
 
 @pytest.mark.parametrize('changed',[False,True])
-def test_candidate_score_binds_pre_solve_geometry(tmp_path,monkeypatch,changed):
+@pytest.mark.parametrize('distance',[None,20.])
+def test_candidate_score_binds_pre_solve_geometry(tmp_path,monkeypatch,changed,distance):
     import meh_studio.optimisation as search
     brief,base,drivers=inputs();candidate=search.candidates(brief,base,drivers)[0]
+    if distance is not None:
+        brief=SearchBrief.model_validate(brief.model_dump()|{'frequencies_hz':[350.,1000.,8000.],
+            'acoustic_objectives':{'observation_distance_m':distance,'sphere':{}}})
     def geometry(design,root):
         root.mkdir();(root/'geometry.json').write_text('{"generated":"original"}')
     monkeypatch.setattr(search,'export_geometry',geometry)
     monkeypatch.setattr(search,'mesh_geometry',lambda *args:None)
-    monkeypatch.setattr(search,'compile_radiating_system',lambda *args,**kwargs:None)
+    compiled=[]
+    monkeypatch.setattr(search,'compile_radiating_system',lambda *args,**kwargs:compiled.append(kwargs))
     monkeypatch.setattr(search,'response_score',lambda *args:{'ripple_db':1.})
     root=tmp_path/'candidate'
     class Runtime:
@@ -138,6 +143,8 @@ def test_candidate_score_binds_pre_solve_geometry(tmp_path,monkeypatch,changed):
     else:
         score=search.evaluate_candidate(candidate,root,Runtime(),brief)
         assert score['geometry_manifest_sha256']==search.sha256(root/'geometry/geometry.json')
+    assert compiled[0].get('observation_distance_m',1.)==(distance or 1.)
+    if distance is not None:assert compiled[0]['sphere_angle_deg']==10.
 
 
 def test_freeform_profile_choices_reach_candidate_identity():

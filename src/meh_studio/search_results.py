@@ -68,6 +68,9 @@ def _load_completed_search(search):
     if trial.get('evaluation_sha256')!=sha256(evaluation/'evaluation.json'):
         raise ValueError('winning evaluation differs from its scored artifact')
     assessment=verified_assessment(search/f'trial-{index:03d}/system/project.blab.json',evaluation)
+    if brief.acoustic_objectives is not None:
+        from .acoustic_objectives import verify_observation_distance
+        verify_observation_distance(search/f'trial-{index:03d}/system/project.blab.json',brief.acoustic_objectives)
     if assessment['controls']['evaluation.json']!=trial['evaluation_sha256']:
         raise ValueError('winning evaluation changed during replay')
     control_hashes[evaluation_name]=trial['evaluation_sha256']
