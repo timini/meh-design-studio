@@ -49,6 +49,13 @@ def main(argv=None) -> int:
     validate_basis = commands.add_parser("validate-electrical", help="check full-basis circuit consistency")
     validate_basis.add_argument("project", type=Path)
     validate_basis.add_argument("evaluation", type=Path)
+    partial = commands.add_parser('inspect-stopped',help='verify completed samples of a timed-out or cancelled evaluation')
+    partial.add_argument('project',type=Path)
+    partial.add_argument('evaluation',type=Path)
+    assemble=commands.add_parser('assemble-frequencies',help='verify a complete grid across stopped and complete evaluations')
+    assemble.add_argument('project',type=Path)
+    assemble.add_argument('evaluations',type=Path,nargs='+')
+    assemble.add_argument('--request',type=Path,required=True)
     radiating = commands.add_parser("compile-radiating", help="compile experimental FEM/BEM horn domains")
     radiating.add_argument("geometry", type=Path)
     radiating.add_argument("--sources", type=Path, required=True)
@@ -121,6 +128,14 @@ def main(argv=None) -> int:
             result = compile_radiating_system(args.geometry, sources, args.output,
                 BoundaryLabRuntime(args.checkout, args.python, args.julia),
                 exterior_mesh_size_m=args.exterior_mesh_size_m,observation_distance_m=args.observation_distance_m)
+        elif args.command == 'inspect-stopped':
+            from .partial_results import inspect_stopped_evaluation
+            result=inspect_stopped_evaluation(args.project,args.evaluation)
+        elif args.command == 'assemble-frequencies':
+            from .boundary_lab import SolveRequest
+            from .partial_results import assemble_frequency_evidence
+            request=SolveRequest.model_validate_json(args.request.read_text())
+            result=assemble_frequency_evidence(args.project,args.evaluations,request)
         elif args.command == "validate-electrical":
             from .validation import validate_electrical_basis
             result = validate_electrical_basis(args.project, args.evaluation)

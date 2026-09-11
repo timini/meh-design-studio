@@ -121,3 +121,11 @@ checks pass. Routine fixes and evidence updates do not require another review or
 fresh approval on every commit. Defer non-blocking polish and speculative hardening.
 An unavailable automated reviewer does not create an indefinite merge block; inspect
 the change directly and record the limitation. See [repository working instructions](../AGENTS.md).
+
+Completed frequencies from a timed-out or cancelled managed solve can now be
+[verified and assembled with a supplementary run](partial-frequency-evidence.md).
+Source identity, overlapping complex arrays and complete requested coverage are
+checked without rewriting the original failure. The
+[actual 15-frequency vocal-band assessment](wide-vocal-completion.md) completes
+numerical coverage but fails the 6 dB response screen at 15.66 dB with the required
+mid/HF handover. This is further evidence that the current horn is not ready to build.
