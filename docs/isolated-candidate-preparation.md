@@ -45,3 +45,19 @@ group membership and that the nested process no longer runs after timeout.
 The [interrupted commercial evidence](../validation/evidence/quarter-commercial-interruption/report.json)
 contains the original unfinalised search, ten recorded candidate failures,
 proposal 10's partial preparation and the external termination observation.
+
+## Executed preparation checks
+
+Using frozen source `4dadcfdeb8ede70f3723db5ab60a72a61bbc8961`, the retained valid
+five-driver noncircular reference completes isolated CAD, meshes and coupled
+compilation in 30.55 seconds. The parent verifies 48 prepared artifact hashes,
+five physical drivers, three representatives and the XY mouth interface. No
+native frequency solve is claimed for this preparation-only check.
+
+The next twelve-proposal commercial attempt also uses that frozen source. Its
+proposal 10 CAD child exits with signal 9; the parent records the failure,
+continues to proposal 11 and finalises the search as failed because no candidate
+completed a native solve. The first seed instead fails in native mouth conforming:
+the reduced opening/rim perimeter selection needs a separate correction. These
+results establish successful preparation and containment of an actual hard CAD
+failure, without claiming a completed commercial acoustic search.

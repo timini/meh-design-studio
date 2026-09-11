@@ -55,7 +55,8 @@ def prepare_candidate(candidate, root, runtime, brief, *, timeout_s):
         result = _read_json(child_report)
         if (result.get('status') != 'complete' or result.get('request_sha256') != digest
                 or sha256(request_path) != digest or _identity() != request['application_runtime']
-                or runtime.verify() != request['native_runtime']):
+                or runtime.verify() != request['native_runtime']
+                or sha256(root / 'candidate.json') != request['candidate_sha256']):
             raise ValueError('candidate preparation identity changed or is incomplete')
         verify_prepared_files(root, result['files_sha256'])
         report.update(status='complete', child_report_sha256=sha256(child_report),
@@ -139,7 +140,8 @@ def run_child(request_path, root):
         with _preparation_process_group():
             prepare_in_process(candidate, root, runtime, SearchBrief.model_validate(request['brief']))
         if (sha256(request_path) != digest or _identity() != request['application_runtime']
-                or runtime.verify() != request['native_runtime']):
+                or runtime.verify() != request['native_runtime']
+                or sha256(root / 'candidate.json') != request['candidate_sha256']):
             raise ValueError('candidate child inputs or runtime changed during preparation')
         files = prepared_files(root)
         verify_prepared_files(root, files)

@@ -66,6 +66,7 @@ def test_abnormal_preparation_is_recorded_and_next_attempt_can_complete(tmp_path
 import hashlib,json
 from pathlib import Path
 root=Path.cwd()
+if root.name=='tampered':(root/'candidate.json').write_text('{}')
 for name in ('geometry/geometry.json','geometry/analysis/mesh.json','system/compilation.json','system/project.blab.json'):
  p=root/name;p.parent.mkdir(parents=True,exist_ok=True);p.write_text('{"status":"complete"}')
 files={str(p.relative_to(root)).replace('\\\\','/'):hashlib.sha256(p.read_bytes()).hexdigest() for folder in ('geometry','system') for p in (root/folder).rglob('*') if p.is_file()}
@@ -74,7 +75,7 @@ files['candidate.json']=hashlib.sha256((root/'candidate.json').read_bytes()).hex
 """
         return [sys.executable, '-I', '-c', code]
     monkeypatch.setattr(preparation, '_command', command)
-    for name in ('failed', 'next'):
+    for name in ('failed', 'next', 'tampered'):
         root = tmp_path / name
         root.mkdir()
         (root / 'candidate.json').write_text(json.dumps(candidate_record(candidate)))
@@ -88,6 +89,10 @@ files['candidate.json']=hashlib.sha256((root/'candidate.json').read_bytes()).hex
                 assert 'Candidate preparation exited with code 137' in report['error']
             assert not (root / 'preparation-child.json').exists()
             assert (root / 'preparation.log').exists()
+        elif name == 'tampered':
+            with pytest.raises(ValueError, match='identity changed'):
+                preparation.prepare_candidate(candidate, root, runtime, brief, timeout_s=10)
+            assert json.loads((root / 'preparation.json').read_text())['status'] == 'failed'
         else:
             report = preparation.prepare_candidate(candidate, root, runtime, brief, timeout_s=10)
             assert report['status'] == 'complete'
