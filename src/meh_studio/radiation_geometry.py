@@ -11,7 +11,7 @@ from pathlib import Path
 import numpy as np
 
 from .boundary_lab import _write_json, sha256
-from .geometry import HornGeometry, build_geometry
+from .geometry import HornGeometry, build_geometry, throat_body_solid
 from .waveguide_profile import mouth_face, cad_volume, imported_volume
 
 
@@ -213,6 +213,10 @@ def export_exterior(design: HornGeometry, output: Path, mesh_size_m: float = .02
         air, parts, sources = build_geometry(design)
         cap=mouth_face(design,air['front'])
         solids = list(air.values()) + list(parts.values())
+        if design.throat_body is not None:
+            solids.append(throat_body_solid(design))
+            report['throat_body'] = {'kind': 'ideal_rigid_driver_envelope',
+                'dimensions': design.throat_body.model_dump(mode='json'), 'print_part': False}
         for source in sources:
             centre = cq.Vector(*[x * 1000 for x in source["front_center_m"]])
             solids.append(cq.Solid.makeCylinder(source["radius_m"] * 1000, design.wall_m * 1000,
