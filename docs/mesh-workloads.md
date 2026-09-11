@@ -46,3 +46,21 @@ budget. **The three-level study failed; no convergence pass is claimed.**
 retain both completed levels and the failed third attempt. They use the historical
 source and mesh policy, before the configurable caps and curved-rim fix. New code
 or larger budgets do not retroactively turn those records into successful runs.
+
+## Separate raw exterior preparation limit
+
+A finer mouth can make the temporary exterior surface much larger than the final
+conformed BEM mesh. `maximum_raw_exterior_triangles` optionally permits up to
+64,000 triangles at this preparation stage. `maximum_exterior_triangles` continues
+to limit the final conformed mesh, with its existing 8,000 default and 32,000
+supported maximum. For example, a raw limit of 64,000 and final limit of 16,000
+allows preparation to proceed but still rejects a final 16,001-triangle surface.
+
+Omitting the raw limit uses the existing final limit at both stages and preserves
+legacy serialization and candidate hashes. Explicit raw limits are hashed with
+the candidate and recorded in the exterior report alongside the final limit.
+No triangulation, protected mouth facet, topology or volume check changes.
+The commercial 3 mm refinement exposed this need when its temporary surface
+contained 41,972 triangles and failed the original 32,000 preparation limit.
+That failed attempt remains preserved; an expanded preparation budget is a new
+experiment, not a retrospective pass.

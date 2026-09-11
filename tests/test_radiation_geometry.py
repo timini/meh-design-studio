@@ -19,6 +19,23 @@ def test_closed_exterior_has_one_mouth_and_positive_volume(tmp_path):
 
 
 @pytest.mark.cad
+def test_raw_exterior_can_exceed_final_limit_without_qualifying_for_solver(tmp_path):
+    pytest.importorskip('cadquery')
+    pytest.importorskip('gmsh')
+    base = HornGeometry.model_validate_json((Path(__file__).resolve().parents[1] /
+        'examples/three-driver-geometry.json').read_text())
+    design = HornGeometry.model_validate(base.model_dump() | {
+        'maximum_raw_exterior_triangles': 8000, 'maximum_exterior_triangles': 3})
+    report = export_exterior(design, tmp_path / 'exterior')
+    assert report['status'] == 'complete'
+    assert report['workload_limit_triangles'] == 8000
+    assert report['final_workload_limit_triangles'] == 3
+    assert report['surface']['triangles'] > 3
+    with pytest.raises(ValueError, match='1–3'):
+        surface_integrity(tmp_path / 'exterior/exterior.msh', maximum_triangles=design.maximum_exterior_triangles)
+
+
+@pytest.mark.cad
 @pytest.mark.parametrize("fault", [None, "open", "mixed_orientation", "inward", "disconnected", "pinched"])
 def test_bem_topology_checks_reject_invalid_surfaces(tmp_path, fault):
     pytest.importorskip("gmsh")

@@ -7,6 +7,8 @@ def test_explicit_mesh_workload_limits_preserve_legacy_defaults():
     base=HornGeometry.model_validate_json((Path(__file__).parents[1]/'examples/freeform-ring-geometry.json').read_text())
     legacy=base.model_dump(mode='json')
     assert 'maximum_tetrahedra' not in legacy and 'maximum_exterior_triangles' not in legacy
+    assert 'maximum_raw_exterior_triangles' not in legacy
+    assert HornGeometry.model_validate(legacy | {'maximum_raw_exterior_triangles': None}).content_hash == base.content_hash
     enlarged=HornGeometry.model_validate(legacy|{'maximum_tetrahedra':3_000_000,'maximum_exterior_triangles':16000})
     assert enlarged.model_dump()['maximum_tetrahedra']==3_000_000
     assert enlarged.model_dump()['maximum_exterior_triangles']==16000
@@ -14,6 +16,18 @@ def test_explicit_mesh_workload_limits_preserve_legacy_defaults():
     assert enlarged.mesh_size_m==base.mesh_size_m
     for setting,value in [('maximum_tetrahedra',True),('maximum_tetrahedra',10_000_001),('maximum_exterior_triangles',0),('maximum_exterior_triangles',32001)]:
         with pytest.raises(ValueError):HornGeometry.model_validate(legacy|{setting:value})
+
+
+def test_raw_preparation_budget_does_not_increase_final_solver_budget():
+    base = HornGeometry.model_validate_json((Path(__file__).parents[1]/'examples/freeform-ring-geometry.json').read_text())
+    enlarged = HornGeometry.model_validate(base.model_dump() | {'maximum_raw_exterior_triangles': 64000})
+    assert enlarged.maximum_exterior_triangles == base.maximum_exterior_triangles == 8000
+    assert enlarged.maximum_raw_exterior_triangles == 64000
+    assert enlarged.content_hash != base.content_hash
+    assert HornGeometry.model_validate_json(enlarged.model_dump_json()) == enlarged
+    for value in (True, 0, 64001, 64000., '64000'):
+        with pytest.raises(ValueError):
+            HornGeometry.model_validate(base.model_dump() | {'maximum_raw_exterior_triangles': value})
 
 
 def test_circular_axial_taper_is_not_counted_as_azimuthal_mesh_aspect():
