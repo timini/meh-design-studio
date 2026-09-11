@@ -69,6 +69,54 @@ def protect_curved_walls(fem,bem,mouth_z):
         'planar_rim_triangles':int(planar.sum()),'protected_curved_triangles':int(protected.sum())}
 
 
+def quarter_rim_tolerance(fem, bem, rigid_tag):
+    """Separate the opening from thin cut-edge connectors using shared topology.
+
+    The upstream default scales with mouth diameter. At a symmetry cut it can
+    include a short rim connector as part of the opening. Never increase that
+    tolerance: bound it by half the actual separation of non-opening rim edges.
+    """
+    faces, tags = triangles(bem)
+    mouth_tag = int(bem.field_data['mouth_interface'][0])
+    def boundary_edges(selected):
+        counts = Counter(tuple(sorted((int(a), int(b)))) for face in selected
+                         for a, b in zip(face, np.roll(face, -1)))
+        if any(count > 2 for count in counts.values()):
+            raise ValueError('quarter mouth/rim has nonmanifold edge incidence')
+        return {edge for edge, count in counts.items() if count == 1}
+    mouth_edges = boundary_edges(faces[tags == mouth_tag])
+    rim_edges = boundary_edges(faces[tags == rigid_tag])
+    opening = mouth_edges & rim_edges
+    other = rim_edges - opening
+    if not opening or not other:
+        raise ValueError('quarter rim requires shared opening edges and separate exterior edges')
+    segments = bem.points[np.array(sorted(opening))]
+    start, delta = segments[:, 0], segments[:, 1] - segments[:, 0]
+    squared_lengths = np.einsum('ij,ij->i', delta, delta)
+    if np.any(squared_lengths <= 0):
+        raise ValueError('quarter opening contains a degenerate edge')
+    separation = math.inf
+    for point in bem.points[np.array(sorted(other))].mean(axis=1):
+        fraction = np.clip(np.einsum('ij,ij->i', point-start, delta) / squared_lengths, 0., 1.)
+        distance = float(np.linalg.norm(point-(start+fraction[:, None]*delta), axis=1).min())
+        separation = min(separation, distance)
+    if not math.isfinite(separation) or separation <= 0:
+        raise ValueError('quarter rim has no positive separation from its opening')
+    fem_tag = int(fem.field_data['mouth_interface'][0])
+    interface = np.concatenate([cell.data[np.asarray(physical) == fem_tag]
+        for cell, physical in zip(fem.cells, fem.cell_data['gmsh:physical']) if cell.type == 'triangle'])
+    if not len(interface):
+        raise ValueError('quarter FEM mouth facets are required')
+    # This is the pinned public conformer's default diameter calculation.
+    diameter = float(np.linalg.norm(np.ptp(fem.points[np.unique(interface)], axis=0)))
+    default = max(diameter * 5e-3, 1e-9)
+    selected = min(default, separation / 2)
+    return {'geometry_tolerance_m': selected, 'upstream_default_geometry_tolerance_m': default,
+            'minimum_nonopening_midpoint_distance_m': separation,
+            'shared_opening_edges': len(opening), 'other_rim_boundary_edges': len(other),
+            'rule': 'min(upstream_default, half_nonopening_edge_midpoint_separation)'}
+
+
 def conform(front,exterior,output,report_path,mouth_z,symmetry='off'):
     import meshio
     from blab.interface_conform import conform_bem_interface_to_fem
@@ -82,9 +130,13 @@ def conform(front,exterior,output,report_path,mouth_z,symmetry='off'):
         if output.exists() or report_path.exists():raise FileExistsError('conformer outputs must be new')
         fem=meshio.read(front);bem=meshio.read(exterior)
         name,protected_tag,rigid,before,classification=protect_curved_walls(fem,bem,mouth_z)
+        options = {}
+        if symmetry == 'xy':
+            report['rim_classification'] = quarter_rim_tolerance(fem, bem, rigid)
+            options['geometry_tolerance'] = report['rim_classification']['geometry_tolerance_m']
         result,identity=conform_bem_interface_to_fem(fem,bem,
             fem_interface_name='mouth_interface',bem_interface_name='mouth_interface',
-            protected_bem_interface_names=(name,), symmetry_mode=symmetry)
+            protected_bem_interface_names=(name,), symmetry_mode=symmetry, **options)
         rows,tags=triangles(result)
         if oriented_facets(result.points[rows[tags==protected_tag]])!=before:
             raise ValueError('conforming changed protected curved-wall coordinates, facets or orientation')

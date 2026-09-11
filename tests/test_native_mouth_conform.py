@@ -40,3 +40,34 @@ def test_foreign_or_nonplanar_mouths_are_rejected(fault):
     if fault=='tags':bem.cell_data['gmsh:physical'][0][-1]=42
     if fault=='nonfinite':bem.points[0,0]=np.nan
     with pytest.raises(ValueError):protect_curved_walls(fem,bem,.3)
+
+
+@pytest.mark.parametrize('width', [.003, .00003, .03])
+def test_quarter_rim_tolerance_excludes_cut_connectors_without_relaxing_default(width):
+    import meshio
+    from meh_studio.native_mouth_conform import quarter_rim_tolerance
+    radius = .22
+    angles = np.array([0., np.pi/4, np.pi/2])
+    inner = np.column_stack([radius*np.cos(angles), radius*np.sin(angles), np.full(3,.3)])
+    outer = inner.copy(); outer[:,:2] *= (radius+width)/radius
+    points = np.vstack([[0.,0.,.3], inner, outer])
+    mouth = np.array([[0,1,2],[0,2,3]])
+    rim = np.array([[1,4,5],[1,5,2],[2,5,6],[2,6,3]])
+    bem = meshio.Mesh(points, [('triangle', np.vstack([mouth,rim]))],
+        cell_data={'gmsh:physical':[np.array([10,10,99,99,99,99])]},
+        field_data={'mouth_interface':np.array([10,2])})
+    fem = meshio.Mesh(points, [('triangle',mouth)],
+        cell_data={'gmsh:physical':[np.array([10,10])]},field_data={'mouth_interface':np.array([10,2])})
+    before = bem.points.copy()
+    report = quarter_rim_tolerance(fem,bem,99)
+    assert report['shared_opening_edges'] == 2
+    assert report['minimum_nonopening_midpoint_distance_m'] == pytest.approx(width/2)
+    assert report['geometry_tolerance_m'] == pytest.approx(min(radius*np.sqrt(2)*.005,width/4))
+    assert report['geometry_tolerance_m'] <= report['upstream_default_geometry_tolerance_m']
+    np.testing.assert_array_equal(bem.points,before)
+    # Unshared duplicate vertices describe an invalid disconnected opening.
+    broken = bem.copy()
+    broken.points = np.vstack([points,points[1:4]])
+    broken.cells[0].data[:2] = [[0,7,8],[0,8,9]]
+    with pytest.raises(ValueError,match='shared opening'):
+        quarter_rim_tolerance(fem,broken,99)
