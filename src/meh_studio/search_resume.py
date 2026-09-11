@@ -72,7 +72,8 @@ def verify_scored_trial(root,candidate,index,trial,brief,runtime):
     validate_export(geometry.parent)
     sphere=brief.acoustic_objectives.sphere if brief.acoustic_objectives is not None else None
     verify_candidate_project(root, candidate, brief.exterior_mesh_size_m,
-                             sphere.angle_precision_deg if sphere is not None else None)
+                             sphere.angle_precision_deg if sphere is not None else None,
+                             brief.acoustic_objectives.observation_distance_m if brief.acoustic_objectives else 1.)
     evaluation = root / 'evaluation'
     request = SolveRequest(frequencies_hz=brief.frequencies_hz,
         include_project_observations=True, retain=('fem_nodal_pressure','bem_boundary_traces'))
@@ -165,7 +166,7 @@ class Recovery:
         return score
 
 
-def verify_candidate_project(root, candidate, exterior_mesh_size, sphere_angle_deg=None):
+def verify_candidate_project(root, candidate, exterior_mesh_size, sphere_angle_deg=None, observation_distance_m=1.):
     """Reconstruct the cheap interior compiler output from the candidate's saved meshes.
 
     This performs mesh/group checks and JSON compilation, not CAD or a native solve.
@@ -227,6 +228,7 @@ def verify_candidate_project(root, candidate, exterior_mesh_size, sphere_angle_d
         expected_root=Path(temporary)/'expected'
         compile_interior_system(root/'geometry',candidate['sources'],expected_root)
         expected=_read_json(expected_root/'project.blab.json')
+        expected['project_preferences']['polar_observation_distance_m']=observation_distance_m
         if sphere_angle_deg is not None:
             expected['project_preferences'].update(spherical_sampling_enabled=True,
                                                    balloon_angle_precision_deg=sphere_angle_deg)

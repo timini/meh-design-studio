@@ -47,7 +47,20 @@ with identical selected DSP, but still missed the provisional 6 dB limit. The
 verified export and £261.30 planning estimate remain experimental. Independent
 [mid-port placement](eccentric-mid-ports.md) now also completes the native
 geometry/simulation/mutation/export loop, with spherical observations in a
-separate synthetic diagnostic. A target-size port-shift experiment is underway.
+separate synthetic diagnostic. The completed [target-size port-shift experiment](target-entry-experiment.md)
+worsened the response and was rejected. A new search enforces the
+[actual acoustic mid/HF handover](wide-mid-objectives.md), instead of relying on
+the electrical crossover setting alone.
+
+The [FP64 reference backend](reference-backend-evidence.md) now completes the
+same optimisation/replay/export workflow. Both trials in its synthetic diagnostic
+passed the unchanged electrical consistency limits. The older, different
+freeform geometry's reciprocity failure remains unresolved.
+[Observation distance](observation-distance.md) is now an explicit acoustic
+search control carried through native compilation and finalist validation.
+Historical one-metre results remain one-metre results. Commercial HF source
+qualification is still open; the [source audit](research/commercial-hf-source-audit.md)
+records the available manufacturer evidence and remaining gaps.
 
 An [independent pulsating-sphere comparison](pulsating-sphere-reference.md)
 passed its predeclared 2% complex-pressure limit at 350, 2,000, 5,000 and 7,500 Hz

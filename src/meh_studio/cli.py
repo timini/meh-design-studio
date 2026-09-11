@@ -57,6 +57,8 @@ def main(argv=None) -> int:
     radiating.add_argument("--python", type=Path, required=True)
     radiating.add_argument("--julia", type=Path, required=True)
     radiating.add_argument("--exterior-mesh-size-m", type=float, default=.02)
+    radiating.add_argument('--observation-distance-m',type=float,default=1.,
+        help='radius about the throat origin for H/V and sphere observations')
     search = commands.add_parser('optimise', help='run experimental bounded FEM/BEM search')
     search.add_argument('brief', type=Path)
     search.add_argument('--geometry', type=Path, required=True)
@@ -118,7 +120,7 @@ def main(argv=None) -> int:
             sources = HornSources.model_validate_json(args.sources.read_text(encoding="utf-8"))
             result = compile_radiating_system(args.geometry, sources, args.output,
                 BoundaryLabRuntime(args.checkout, args.python, args.julia),
-                exterior_mesh_size_m=args.exterior_mesh_size_m)
+                exterior_mesh_size_m=args.exterior_mesh_size_m,observation_distance_m=args.observation_distance_m)
         elif args.command == "validate-electrical":
             from .validation import validate_electrical_basis
             result = validate_electrical_basis(args.project, args.evaluation)

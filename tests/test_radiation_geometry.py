@@ -180,3 +180,21 @@ def test_missing_cad_dependency_is_a_structured_cli_error(tmp_path,monkeypatch,c
                '--checkout',str(tmp_path),'--python','python','--julia','julia'])
     assert code==2 and 'optional CAD dependencies missing' in capsys.readouterr().err
     assert not (tmp_path/'out').exists()
+
+
+@pytest.mark.parametrize('distance',[0.,-1.,float('nan'),float('inf'),True,'20'])
+def test_invalid_observation_distance_does_not_reserve_output(tmp_path,distance):
+    from meh_studio.radiating_system import compile_radiating_system
+    with pytest.raises(ValueError,match='observation distance'):
+        compile_radiating_system(tmp_path,None,tmp_path/'out',None,observation_distance_m=distance)
+    assert not (tmp_path/'out').exists()
+
+
+def test_observation_sphere_encloses_asymmetric_translated_mesh_vertices(tmp_path):
+    import meshio
+    import numpy as np
+    from meh_studio.radiating_system import observation_enclosing_radius
+    points=np.array([[0.,0.,.3],[.2,0.,.3],[0.,-.4,.3]])
+    path=tmp_path/'surface.msh'
+    meshio.write(path,meshio.Mesh(points,[('triangle',np.array([[0,1,2]]))]),file_format='gmsh22',binary=False)
+    assert observation_enclosing_radius(path)==pytest.approx(.5)

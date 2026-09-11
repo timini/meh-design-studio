@@ -231,6 +231,8 @@ def evaluate_candidate(candidate, root, runtime, brief, *, mesh_size=None, frequ
     mesh_geometry(root/'geometry')
     geometry_digest=sha256(root/'geometry/geometry.json')
     sphere_options={}
+    if brief.acoustic_objectives is not None and brief.acoustic_objectives.observation_distance_m != 1.:
+        sphere_options['observation_distance_m']=brief.acoustic_objectives.observation_distance_m
     if brief.acoustic_objectives is not None and brief.acoustic_objectives.sphere is not None:
         sphere_options['sphere_angle_deg']=brief.acoustic_objectives.sphere.angle_precision_deg
     compile_radiating_system(root/'geometry',candidate['sources'],root/'system',runtime,

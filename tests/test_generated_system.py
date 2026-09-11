@@ -249,7 +249,8 @@ def test_changed_source_axis_cannot_compile(generated):
 
 
 @pytest.mark.parametrize('angle',[None,10.])
-def test_sphere_observations_are_bound_into_compiled_project_identity(generated,monkeypatch,angle):
+@pytest.mark.parametrize('distance',[1.,20.,.1])
+def test_sphere_observations_are_bound_into_compiled_project_identity(generated,monkeypatch,angle,distance):
     import meh_studio.radiating_system as radiation
     root,sources,output=generated
     monkeypatch.setattr(radiation,'require_cad_dependencies',lambda:None)
@@ -262,13 +263,24 @@ def test_sphere_observations_are_bound_into_compiled_project_identity(generated,
     monkeypatch.setattr(radiation,'surface_integrity',lambda *args,**kwargs:{'sha256':'fixture','enclosed_volume_m3':1.})
     monkeypatch.setattr(radiation,'verify_exterior_groups',lambda *args:None)
     monkeypatch.setattr(radiation,'meshing_runtime_identity',lambda:{})
+    monkeypatch.setattr(radiation,'observation_enclosing_radius',lambda path:.3)
     class Runtime:
         python=Path('fixture-python');checkout=Path('.')
         def verify(self):return {}
-    report=radiation.compile_radiating_system(root,sources,output,Runtime(),sphere_angle_deg=angle)
+    if distance == .1:
+        with pytest.raises(ValueError,match='enclose the complete exterior'):
+            radiation.compile_radiating_system(root,sources,output,Runtime(),sphere_angle_deg=angle,
+                                              observation_distance_m=distance)
+        assert json.loads((output/'compilation.json').read_text())['status']=='failed'
+        return
+    report=radiation.compile_radiating_system(root,sources,output,Runtime(),sphere_angle_deg=angle,
+                                             observation_distance_m=distance)
     project=json.loads((output/'project.blab.json').read_text())
     assert report['project_sha256']==sha256(output/'project.blab.json')
     assert project['project_preferences']['spherical_sampling_enabled']==(angle is not None)
+    assert project['project_preferences']['polar_observation_distance_m']==distance
+    assert report['observations']['distance_m']==distance
+    assert report['observations']['far_field_qualified'] is False
     if angle is not None:
         assert project['project_preferences']['balloon_angle_precision_deg']==angle
         assert report['sphere_sampling']['point_count']==413

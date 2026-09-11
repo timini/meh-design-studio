@@ -34,6 +34,7 @@ def compiled(generated, monkeypatch, request):
     monkeypatch.setattr(module,'surface_integrity',lambda path,**kwargs:{'sha256':sha256(path),'enclosed_volume_m3':1.})
     monkeypatch.setattr(module,'verify_exterior_groups',lambda *args:None)
     monkeypatch.setattr(module,'meshing_runtime_identity',lambda:{})
+    monkeypatch.setattr(module,'observation_enclosing_radius',lambda path:.3)
     module.compile_radiating_system(geometry,sources,output,Runtime(),exterior_mesh_size_m=.01,
                                    sphere_angle_deg=getattr(request,'param',None))
     candidate={'design':HornGeometry.model_validate(_read_json(geometry/'geometry.json')['design']),
@@ -82,3 +83,17 @@ def test_sphere_compilation_replays_only_with_matching_declared_sampling(compile
     else:
         with pytest.raises(ValueError,match='sphere sampling|differs from declared candidate'):
             verify_candidate_project(root,candidate,.01,None if change=='undeclared' else 10.)
+
+
+def test_recovery_requires_the_declared_observation_distance(compiled):
+    root,candidate=compiled
+    path=root/'system/project.blab.json'
+    project=_read_json(path)
+    project['project_preferences']['polar_observation_distance_m']=20.
+    _write_json(path,project)
+    report=_read_json(root/'system/compilation.json')
+    report['project_sha256']=sha256(path)
+    _write_json(root/'system/compilation.json',report)
+    with pytest.raises(ValueError,match='differs from declared candidate'):
+        verify_candidate_project(root,candidate,.01)
+    verify_candidate_project(root,candidate,.01,observation_distance_m=20.)

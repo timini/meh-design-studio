@@ -21,7 +21,8 @@ def require_cad_dependencies():
 
 def compile_radiating_system(geometry_directory: Path, sources: HornSources, output: Path,
                              runtime: BoundaryLabRuntime, *, exterior_mesh_size_m: float = .02,
-                             timeout_s: float = 600, sphere_angle_deg: float | None = None) -> dict:
+                             timeout_s: float = 600, sphere_angle_deg: float | None = None,
+                             observation_distance_m: float = 1.) -> dict:
     if (not isinstance(exterior_mesh_size_m, (int,float)) or not math.isfinite(exterior_mesh_size_m)
             or not .01 <= exterior_mesh_size_m <= .05):
         raise ValueError('exterior mesh target must be between 10 and 50 mm')
@@ -29,6 +30,9 @@ def compile_radiating_system(geometry_directory: Path, sources: HornSources, out
         raise ValueError('timeout must be positive and finite')
     if sphere_angle_deg is not None and (not math.isfinite(sphere_angle_deg) or not 2.5<=sphere_angle_deg<=15):
         raise ValueError('sphere angular target must be between 2.5 and 15 degrees')
+    if (isinstance(observation_distance_m,bool) or not isinstance(observation_distance_m,(int,float))
+            or not math.isfinite(observation_distance_m) or observation_distance_m <= 0):
+        raise ValueError('observation distance must be positive and finite')
     if threading.current_thread() is not threading.main_thread():
         raise ValueError("run radiating compilation in a worker process, not a background thread")
     report = {'status': 'running'}
@@ -36,7 +40,8 @@ def compile_radiating_system(geometry_directory: Path, sources: HornSources, out
         try:
             return _compile_radiating_system(geometry_directory, sources, output, runtime,
                 exterior_mesh_size_m=exterior_mesh_size_m, timeout_s=timeout_s,
-                report=report, activate=activate, sphere_angle_deg=sphere_angle_deg)
+                report=report, activate=activate, sphere_angle_deg=sphere_angle_deg,
+                observation_distance_m=observation_distance_m)
         except BaseException as exc:
             if 'geometry_hash' in report:
                 if report['status'] != 'cancelled':
@@ -46,7 +51,7 @@ def compile_radiating_system(geometry_directory: Path, sources: HornSources, out
 
 
 def _compile_radiating_system(geometry_directory, sources, output, runtime, *, exterior_mesh_size_m,
-                              timeout_s, report, activate, sphere_angle_deg=None):
+                              timeout_s, report, activate, sphere_angle_deg=None, observation_distance_m=1.):
     runtime_identity = runtime.verify()
     require_cad_dependencies()
     output = Path(output).resolve()
@@ -94,6 +99,13 @@ def _compile_radiating_system(geometry_directory, sources, output, runtime, *, e
             raise ValueError("runtime changed during interface preparation")
         if meshing_runtime_identity()!=exterior["compiler_runtime"]:
             raise ValueError("host meshing runtime changed during compilation")
+        enclosing_radius=observation_enclosing_radius(destination)
+        if observation_distance_m <= enclosing_radius:
+            raise ValueError('observation distance must enclose the complete exterior mesh about the throat origin')
+        project['project_preferences']['polar_observation_distance_m']=observation_distance_m
+        report['observations']={'distance_m':observation_distance_m,'origin_m':[0.,0.,0.],
+            'exterior_enclosing_radius_m':enclosing_radius,'field':'finite_distance_exterior_pressure',
+            'far_field_qualified':False}
         if sphere_angle_deg is not None:
             project['project_preferences'].update(spherical_sampling_enabled=True,
                                                   balloon_angle_precision_deg=sphere_angle_deg)
@@ -115,3 +127,11 @@ def _compile_radiating_system(geometry_directory, sources, output, runtime, *, e
     finally:
         _write_json(output / "compilation.json", report)
     return report
+
+
+def observation_enclosing_radius(path):
+    """Conservative bound: planar mesh triangles lie inside their vertices' sphere."""
+    import meshio
+    import numpy as np
+    mesh=meshio.read(path,file_format='gmsh')
+    return float(np.linalg.norm(mesh.points,axis=1).max())
