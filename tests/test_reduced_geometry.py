@@ -102,11 +102,12 @@ def test_quarter_open_boundary_requires_closed_reflected_topology(tmp_path, faul
             surface_integrity(path, symmetry='off')
 
 
-def test_profile_evolution_cannot_break_required_solver_mirrors():
+@pytest.mark.parametrize('sections', [[], [{'fraction': z, 'radial_scales': [1.] * 8} for z in (.5, 1.)]])
+def test_profile_evolution_cannot_break_required_solver_mirrors(sections):
     from meh_studio.evolution import EvolutionSettings, validate_bounds
     design = HornGeometry.model_validate(design_data() | {'solver_symmetry': 'xy',
         'profile_interpolation': 'periodic_cubic',
-        'profile_sections': [{'fraction': z, 'radial_scales': [1.] * 8} for z in (.5, 1.)]})
+        'profile_sections': sections})
     with pytest.raises(ValueError, match='quarter model profile evolution'):
         validate_bounds(EvolutionSettings(), design)
     validate_bounds(EvolutionSettings(profile_symmetry='mirror_xy'), design)
