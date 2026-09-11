@@ -39,8 +39,8 @@ def step_geometry_sha256(path: Path) -> str:
 def surface_integrity(path: Path, *, maximum_triangles: int = 8000, symmetry: str = 'off') -> dict:
     """Check closed oriented triangular topology before exposing a BEM input."""
     import gmsh
-    if type(maximum_triangles) is not int or not 1 <= maximum_triangles <= 32_000:
-        raise ValueError('exterior workload limit must be an integer in [1, 32000]')
+    if type(maximum_triangles) is not int or not 1 <= maximum_triangles <= 64_000:
+        raise ValueError('exterior workload limit must be an integer in [1, 64000]')
     if symmetry not in ('off', 'xy'):
         raise ValueError('generated exterior supports off or xy symmetry')
     if gmsh.isInitialized():
@@ -204,7 +204,10 @@ def export_exterior(design: HornGeometry, output: Path, mesh_size_m: float = .02
     report = {"schema_version": 1, "status": "running", "design_hash": design.content_hash,
               "mesh_size_m": mesh_size_m, "accuracy": "not_converged", "print_part": False,
               "units": {"step": "mm", "mesh": "m"}, "compiler_runtime":compiler_runtime}
-    report['workload_limit_triangles']=design.maximum_exterior_triangles
+    raw_limit = design.maximum_raw_exterior_triangles or design.maximum_exterior_triangles
+    report['workload_limit_triangles'] = raw_limit
+    if design.maximum_raw_exterior_triangles is not None:
+        report['final_workload_limit_triangles'] = design.maximum_exterior_triangles
     _write_json(output / "exterior.json", report)
     try:
         air, parts, sources = build_geometry(design)
@@ -283,7 +286,7 @@ def export_exterior(design: HornGeometry, output: Path, mesh_size_m: float = .02
             gmsh.write(str(output / "exterior.msh"))
         finally:
             gmsh.finalize()
-        integrity = surface_integrity(output / "exterior.msh",maximum_triangles=design.maximum_exterior_triangles,
+        integrity = surface_integrity(output / "exterior.msh",maximum_triangles=raw_limit,
                                       symmetry=design.solver_symmetry)
         if not math.isclose(integrity["enclosed_volume_m3"], exact_volume, rel_tol=.02):
             raise ValueError("exterior surface volume differs from CAD by more than 2 percent")

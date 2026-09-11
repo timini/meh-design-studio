@@ -38,6 +38,7 @@ class HornGeometry(Record):
     tessellation_tolerance_m: Positive = 0.0001
     maximum_tetrahedra: Annotated[int, Field(strict=True, ge=1, le=10_000_000)] = 2_000_000
     maximum_exterior_triangles: Annotated[int, Field(strict=True, ge=1, le=32_000)] = 8000
+    maximum_raw_exterior_triangles: Annotated[int, Field(strict=True, ge=1, le=64_000)] | None = None
 
     @model_serializer(mode='wrap')
     def preserve_legacy_pair_identity(self, handler):
@@ -56,6 +57,8 @@ class HornGeometry(Record):
             value.pop('maximum_tetrahedra', None)
         if self.maximum_exterior_triangles == 8000:
             value.pop('maximum_exterior_triangles', None)
+        if self.maximum_raw_exterior_triangles is None:
+            value.pop('maximum_raw_exterior_triangles', None)
         if self.solver_symmetry == 'off':
             value.pop('solver_symmetry', None)
         return value
