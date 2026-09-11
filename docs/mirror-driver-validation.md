@@ -39,9 +39,10 @@ rejected or fail the numerical checks.
 
 ## Retained native quarter-model experiment
 
-This is a standalone prototype using the tilted synthetic-source baseline from
-[the tilted-entry study](tilted-mid-entries.md). It is not yet an option in the
-production geometry/search compiler. CAD volume partitions and source areas
+The original standalone prototype used the tilted synthetic-source baseline from
+[the tilted-entry study](tilted-mid-entries.md). The later
+[quarter-model workflow](quarter-model-workflow.md) integrates reduction into
+the geometry/search compiler after a matched-discretisation native check. CAD volume partitions and source areas
 were checked before meshing. Two earlier CAD preparation failures are retained:
 a coincident-face Boolean reconstruction and insufficient default integration
 accuracy for a trimmed spline mouth. Partition containment/volume checks and
@@ -130,3 +131,8 @@ The subsequent [3 mm refinement and physical-bank scoring correction](mirror-ban
 passes the 4/3 mm adjacent field comparison, while still failing against the
 older full reference. It also verifies that the scorer rejects a physical bank
 below the 2-ohm load constraint when mirrored coils are included.
+
+The subsequent [matched half/quarter comparison](quarter-model-workflow.md#matched-discretisation-native-check)
+passes at 0.00112979% maximum field difference using the same element shapes.
+This separates tested mirror behaviour from the independent-mesh discrepancy
+without changing any older result or establishing physical qualification.

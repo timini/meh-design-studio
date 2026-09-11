@@ -18,7 +18,7 @@ from .waveguide_profile import mouth_face, cad_volume, imported_volume
 def meshing_runtime_identity():
     return {'python':sys.version,
         'packages':{name:importlib.metadata.version(name) for name in ('cadquery','cadquery-ocp','gmsh','numpy')},
-        'source_sha256':{name:sha256(Path(__file__).with_name(name)) for name in ('geometry.py','radiation_geometry.py','waveguide_profile.py','interface_coordinates.py','native_mouth_conform.py')}}
+        'source_sha256':{name:sha256(Path(__file__).with_name(name)) for name in ('geometry.py','reduced_geometry.py','radiation_geometry.py','waveguide_profile.py','interface_coordinates.py','native_mouth_conform.py')}}
 
 
 def step_geometry_sha256(path: Path) -> str:
@@ -36,11 +36,13 @@ def step_geometry_sha256(path: Path) -> str:
     return hashlib.sha256(data.encode()).hexdigest()
 
 
-def surface_integrity(path: Path, *, maximum_triangles: int = 8000) -> dict:
+def surface_integrity(path: Path, *, maximum_triangles: int = 8000, symmetry: str = 'off') -> dict:
     """Check closed oriented triangular topology before exposing a BEM input."""
     import gmsh
     if type(maximum_triangles) is not int or not 1 <= maximum_triangles <= 32_000:
         raise ValueError('exterior workload limit must be an integer in [1, 32000]')
+    if symmetry not in ('off', 'xy'):
+        raise ValueError('generated exterior supports off or xy symmetry')
     if gmsh.isInitialized():
         raise ValueError("surface inspection requires an isolated Gmsh process")
     gmsh.initialize()
@@ -59,6 +61,16 @@ def surface_integrity(path: Path, *, maximum_triangles: int = 8000) -> dict:
         points = np.asarray(coordinates).reshape(-1, 3)
         if not np.all(np.isfinite(points)):
             raise ValueError("surface coordinates must be finite")
+        native_triangles, native_nodes = len(faces), len(tags)
+        reduction = {}
+        if symmetry == 'xy':
+            native_edges = np.vstack((faces[:, [0, 1]], faces[:, [1, 2]], faces[:, [2, 0]]))
+            _, counts = np.unique(np.sort(native_edges, axis=1), axis=0, return_counts=True)
+            reduction = {'symmetry': 'xy', 'native_open_edges': int(np.sum(counts == 1)),
+                         'validation': 'closed_oriented_fourfold_reflection',
+                         'native_mesh_unchanged': True}
+            points, faces, snap = _reflect_quarter_surface(points, faces)
+            reduction['maximum_plane_roundoff_snap_m'] = snap
         edges = np.vstack((faces[:, [0, 1]], faces[:, [1, 2]], faces[:, [2, 0]]))
         _, inverse, counts = np.unique(np.sort(edges, axis=1), axis=0, return_inverse=True, return_counts=True)
         signs = np.where(edges[:, 0] < edges[:, 1], 1, -1)
@@ -99,10 +111,33 @@ def surface_integrity(path: Path, *, maximum_triangles: int = 8000) -> dict:
         volume = float(np.einsum("ij,ij->i", a, np.cross(b, c)).sum() / 6)
         if volume <= 0 or not math.isfinite(volume):
             raise ValueError("exterior orientation or enclosed volume is invalid")
-        return {"triangles": len(faces), "nodes": len(tags), "open_edges": 0,
-                "orientation_errors": 0, "enclosed_volume_m3": volume, "sha256": sha256(path)}
+        return {"triangles": native_triangles, "nodes": native_nodes, "open_edges": 0,
+                "orientation_errors": 0, "enclosed_volume_m3": volume / (4 if symmetry == 'xy' else 1),
+                "sha256": sha256(path), **reduction}
     finally:
         gmsh.finalize()
+
+
+def _reflect_quarter_surface(points, faces):
+    """Diagnostic only: share the same native vertex across its mirror cuts."""
+    points = points.copy()
+    near = np.abs(points[:, :2]) < 1e-12
+    snap = float(np.max(np.abs(points[:, :2][near]))) if near.any() else 0.
+    points[:, :2][near] = 0.
+    if points[:, :2].min() < 0:
+        raise ValueError('quarter exterior extends outside the positive XY domain')
+    lookup, vertices, reflected = {}, [], []
+    for sx, sy in ((1, 1), (-1, 1), (1, -1), (-1, -1)):
+        indices = []
+        for index, point in enumerate(points):
+            key = (index, 0 if point[0] == 0 else sx, 0 if point[1] == 0 else sy)
+            if key not in lookup:
+                lookup[key] = len(vertices)
+                vertices.append(point * [sx, sy, 1])
+            indices.append(lookup[key])
+        mirrored = np.asarray(indices)[faces]
+        reflected.append(mirrored[:, [0, 2, 1]] if sx * sy < 0 else mirrored)
+    return np.asarray(vertices), np.concatenate(reflected), snap
 
 
 def verify_exterior_groups(path: Path, front_mesh: Path | None = None):
@@ -174,8 +209,6 @@ def export_exterior(design: HornGeometry, output: Path, mesh_size_m: float = .02
     try:
         air, parts, sources = build_geometry(design)
         cap=mouth_face(design,air['front'])
-        cap_center=[x/1000 for x in cap.Center().toTuple()]
-        cap_area=cap.Area()/1e6
         solids = list(air.values()) + list(parts.values())
         for source in sources:
             centre = cq.Vector(*[x * 1000 for x in source["front_center_m"]])
@@ -184,6 +217,14 @@ def export_exterior(design: HornGeometry, output: Path, mesh_size_m: float = .02
         body = solids[0].fuse(*solids[1:]).clean()
         if not body.isValid() or len(body.Solids()) != 1:
             raise ValueError("exterior envelope is not one valid solid")
+        if design.solver_symmetry == 'xy':
+            from .reduced_geometry import quarter_envelope, adaptive_area
+            body, cap, checks = quarter_envelope(design, body, air['front'])
+            report['symmetry_partition'] = {'mode': 'xy', 'mirror_relative_volume_errors': checks}
+            cap_area = adaptive_area(cap)
+        else:
+            cap_area = cap.Area() / 1e6
+        cap_center = [x / 1000 for x in cap.Center().toTuple()]
         cq.exporters.export(body, str(output / "envelope.step"))
         cq.exporters.export(cap, str(output / 'mouth.step'))
         gmsh.initialize()
@@ -201,20 +242,26 @@ def export_exterior(design: HornGeometry, output: Path, mesh_size_m: float = .02
             imported=imported_volume(design,gmsh.model.occ.getMass(3, volumes[0][1]),output/'fragmented.step')
             if not math.isclose(imported, exact_volume, rel_tol=1e-6):
                 raise ValueError("exterior CAD unit or volume mismatch")
-            interface, walls = [], []
+            interface, walls, cuts = [], [], []
             for dim, tag in gmsh.model.getBoundary(volumes, oriented=False):
                 centre = gmsh.model.occ.getCenterOfMass(dim, tag)
                 area = gmsh.model.occ.getMass(dim, tag)
                 if (gmsh.model.getType(dim, tag) == "Plane" and math.dist(centre, cap_center) < 1e-7
-                        and math.isclose(area, cap_area, rel_tol=1e-6)):
+                        and (design.solver_symmetry == 'xy' or math.isclose(area, cap_area, rel_tol=1e-6))):
                     interface.append(tag)
+                elif design.solver_symmetry == 'xy' and gmsh.model.getType(dim, tag) == 'Plane' and any(
+                        max(abs(gmsh.model.getBoundingBox(dim, tag)[axis]),
+                            abs(gmsh.model.getBoundingBox(dim, tag)[axis + 3])) < 1e-6 for axis in (0, 1)):
+                    cuts.append(tag)
                 else:
                     walls.append(tag)
             if len(interface) != 1 or not walls:
                 raise ValueError("exterior mouth interface is not unique")
+            if design.solver_symmetry == 'xy' and len(cuts) != 2:
+                raise ValueError('quarter exterior must have two omitted mirror cut faces')
             gmsh.model.addPhysicalGroup(2, interface, 10, name="mouth_interface")
             gmsh.model.addPhysicalGroup(2, walls, 99, name="rigid_exterior")
-            if design.profile_sections:
+            if design.profile_sections or design.solver_symmetry == 'xy':
                 # Independent coarse polygons of a curved rim can disagree even
                 # when both originate from the same STEP face. Resolve the rim
                 # before conform-interface replaces the mouth with FEM facets.
@@ -236,7 +283,8 @@ def export_exterior(design: HornGeometry, output: Path, mesh_size_m: float = .02
             gmsh.write(str(output / "exterior.msh"))
         finally:
             gmsh.finalize()
-        integrity = surface_integrity(output / "exterior.msh",maximum_triangles=design.maximum_exterior_triangles)
+        integrity = surface_integrity(output / "exterior.msh",maximum_triangles=design.maximum_exterior_triangles,
+                                      symmetry=design.solver_symmetry)
         if not math.isclose(integrity["enclosed_volume_m3"], exact_volume, rel_tol=.02):
             raise ValueError("exterior surface volume differs from CAD by more than 2 percent")
         if meshing_runtime_identity()!=compiler_runtime:

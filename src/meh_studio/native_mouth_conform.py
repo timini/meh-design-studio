@@ -69,18 +69,22 @@ def protect_curved_walls(fem,bem,mouth_z):
         'planar_rim_triangles':int(planar.sum()),'protected_curved_triangles':int(protected.sum())}
 
 
-def conform(front,exterior,output,report_path,mouth_z):
+def conform(front,exterior,output,report_path,mouth_z,symmetry='off'):
     import meshio
     from blab.interface_conform import conform_bem_interface_to_fem
     inputs={'front':digest(front),'exterior':digest(exterior)}
     report={'status':'running','helper_sha256':digest(__file__),'input_sha256':inputs}
     try:
+        if symmetry not in ('off', 'xy'):
+            raise ValueError('generated conformer supports off or xy symmetry')
+        if symmetry != 'off':
+            report['symmetry_mode'] = symmetry
         if output.exists() or report_path.exists():raise FileExistsError('conformer outputs must be new')
         fem=meshio.read(front);bem=meshio.read(exterior)
         name,protected_tag,rigid,before,classification=protect_curved_walls(fem,bem,mouth_z)
         result,identity=conform_bem_interface_to_fem(fem,bem,
             fem_interface_name='mouth_interface',bem_interface_name='mouth_interface',
-            protected_bem_interface_names=(name,))
+            protected_bem_interface_names=(name,), symmetry_mode=symmetry)
         rows,tags=triangles(result)
         if oriented_facets(result.points[rows[tags==protected_tag]])!=before:
             raise ValueError('conforming changed protected curved-wall coordinates, facets or orientation')
@@ -107,8 +111,9 @@ def main():
     parser=argparse.ArgumentParser()
     for name in ('front','exterior','output','report'):parser.add_argument(name,type=Path)
     parser.add_argument('--mouth-z',type=float,required=True)
+    parser.add_argument('--symmetry',choices=('off','xy'),default='off')
     args=parser.parse_args()
-    conform(args.front,args.exterior,args.output,args.report,args.mouth_z)
+    conform(args.front,args.exterior,args.output,args.report,args.mouth_z,args.symmetry)
 
 
 if __name__=='__main__':main()

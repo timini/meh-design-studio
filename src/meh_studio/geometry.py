@@ -34,6 +34,7 @@ class HornGeometry(Record):
     front_depth_m: Positive
     rear_depth_m: Positive
     mesh_size_m: Positive
+    solver_symmetry: Literal['off', 'xy'] = 'off'
     tessellation_tolerance_m: Positive = 0.0001
     maximum_tetrahedra: Annotated[int, Field(strict=True, ge=1, le=10_000_000)] = 2_000_000
     maximum_exterior_triangles: Annotated[int, Field(strict=True, ge=1, le=32_000)] = 8000
@@ -55,6 +56,8 @@ class HornGeometry(Record):
             value.pop('maximum_tetrahedra', None)
         if self.maximum_exterior_triangles == 8000:
             value.pop('maximum_exterior_triangles', None)
+        if self.solver_symmetry == 'off':
+            value.pop('solver_symmetry', None)
         return value
 
     @model_validator(mode="after")
@@ -107,6 +110,13 @@ class HornGeometry(Record):
     @property
     def driver_count(self) -> int:
         return 1 + len(self.entry_sites)
+
+    @property
+    def solver_entry_sites(self):
+        """Physical representatives; the complete CAD retains every driver."""
+        if self.solver_symmetry == 'off':
+            return self.entry_sites
+        return [site for site in self.entry_sites if site[2][0] >= 0 and site[2][1] >= 0]
 
     @property
     def entry_sites(self):
@@ -325,6 +335,9 @@ def mesh_geometry(output: Path) -> dict:
             raise ValueError("air solid changed after geometry export")
     if gmsh.isInitialized():
         raise ValueError("meshing requires an isolated Gmsh process with no active model")
+    if design.solver_symmetry == 'xy':
+        from .reduced_geometry import mesh_quarter_geometry
+        return mesh_quarter_geometry(output, geometry, design)
     directory = output / "analysis"
     directory.mkdir(exist_ok=False)
     report = {"schema_version": 1, "status": "running", "units": "m",

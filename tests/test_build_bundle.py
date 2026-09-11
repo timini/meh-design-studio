@@ -17,13 +17,15 @@ from meh_studio.optimisation import SearchBrief, candidates, candidate_record
 from meh_studio.boundary_lab import sha256
 
 
-def saved_search(tmp_path, monkeypatch, count):
+def saved_search(tmp_path, monkeypatch, count, *, reduced=False):
     examples=Path(__file__).resolve().parents[1]/'examples'
     data=json.loads((examples/'synthetic-search-brief.json').read_text())
     data.update(max_drivers=count,entry_fractions=[[.36]] if count==3 else [[.25,.65]],
                 side_ids=['synthetic-side'],lengths_m=[.25],trial_budget=1)
     brief=SearchBrief.model_validate(data)
     base=HornGeometry.model_validate_json((examples/'three-driver-geometry.json').read_text())
+    if reduced:
+        base=HornGeometry.model_validate(base.model_dump(mode='json') | {'solver_symmetry':'xy'})
     drivers=[DriverRevision.model_validate(d) for d in json.loads((examples/'synthetic-search-drivers.json').read_text())]
     winner=candidates(brief,base,drivers)[0]
     search=tmp_path/'search';trial=search/'trial-000';geometry=trial/'geometry'
@@ -40,8 +42,8 @@ def saved_search(tmp_path, monkeypatch, count):
         'winner_candidate_sha256':sha256(trial/'candidate.json'),'winner_score_sha256':sha256(trial/'score.json')})
     monkeypatch.setattr(search_results,'verified_assessment',lambda *args:{'controls':{'evaluation.json':sha256(trial/'evaluation/evaluation.json')}})
     names=['throat']+[f'entry_{i}_{side}' for i in range((count-1)//2) for side in ('positive','negative')]
-    write(trial/'system/project.blab.json',{'physical_system':{'excitation_ports':[
-        {'id':'excitation:'+n,'component_id':'component:'+n} for n in names]}})
+    write(trial/'system/project.blab.json',{'symmetry':'xy' if reduced else 'off','physical_system':{'excitation_ports':[
+        {'id':'excitation:'+n,'component_id':'component:'+n} for n in names if not reduced or 'negative' not in n]}})
     meshio.write(geometry/'parts/tetra.stl',meshio.Mesh(np.array([[0.,0,0],[1.,0,0],[0,1.,0],[0,0,1.]]),
         [('triangle',np.array([[0,2,1],[0,1,3],[0,3,2],[1,2,3]]))]),binary=True)
     write(geometry/'geometry.json',{'status':'complete','units':{'cad_and_stl':'mm'},'design':winner['design'].model_dump(mode='json'),
@@ -53,6 +55,24 @@ def saved_search(tmp_path, monkeypatch, count):
     result.update(winner=row,trials=[row],winner_score_sha256=sha256(trial/'score.json'))
     write(search/'search.json',result)
     return search
+
+
+@pytest.mark.parametrize('count', [3, 5])
+def test_reduced_bundle_keeps_every_physical_driver_and_explains_group_voltage(tmp_path, monkeypatch, count):
+    search = saved_search(tmp_path, monkeypatch, count, reduced=True)
+    output = tmp_path / 'quarter.zip'
+    report = export_search(search, output)
+    assert report['driver_count'] == count
+    with zipfile.ZipFile(output) as archive:
+        bom = json.loads(archive.read('bom.json'))
+        assembly = json.loads(archive.read('assembly.json'))
+        gains = json.loads(archive.read('gain-settings.json'))
+        assert [row['quantity'] for row in bom['items']] == [1, count - 1]
+        assert len(assembly['source_locations_m']) == count
+        groups = gains['simulation_source_groups']
+        assert len(groups) == len(gains['channels']) == 1 + (count - 1) // 2
+        assert sorted(c for group in groups for c in group['physical_component_ids']) == sorted(
+            'component:' + source['id'] for source in assembly['source_locations_m'])
 
 
 @pytest.mark.parametrize('count',[3,5])

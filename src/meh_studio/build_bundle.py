@@ -55,7 +55,10 @@ def export_search(search: Path, output: Path) -> dict:
     ports = project['physical_system']['excitation_ports']
     expected = {'component:throat'} | {
         f'component:{name}' for name, _, _ in design.entry_sites}
-    if len(ports) != design.driver_count or {p['component_id'] for p in ports} != expected:
+    representatives = {'component:throat'} | {
+        f'component:{name}' for name, _, _ in design.solver_entry_sites}
+    if (project.get('symmetry', 'off') != design.solver_symmetry
+            or len(ports) != len(representatives) or {p['component_id'] for p in ports} != representatives):
         raise ValueError('winning source layout differs from generated geometry')
     gains = {'kind': 'relative_voltage_basis_gains', 'hardware_preset': False,
              'absolute_voltage_calibrated': False,
@@ -76,6 +79,12 @@ def export_search(search: Path, output: Path) -> dict:
                             'highpass_hz':settings['mid_highpass_hz'],'lowpass_hz':settings['upper_crossover_hz'],'delay_s':0.},
                            {'id':'hf','component_ids':['component:throat'],'gain':1.,'polarity':1,
                             'highpass_hz':settings['upper_crossover_hz'],'delay_s':settings['hf_delay_s']}]}
+    if design.solver_symmetry == 'xy':
+        gains['simulation_source_groups'] = [
+            {'excitation_port_id': port['id'], 'representative_component_id': port['component_id'],
+             'physical_component_ids': ([port['component_id']] if port['component_id'] == 'component:throat'
+                 else [port['component_id'], port['component_id'].replace('positive', 'negative')]),
+             'excitation': 'equal_voltage_on_all_group_members'} for port in ports]
     side_locations = manifest['sources']
     if len(side_locations)!=design.driver_count-1 or {f"component:{s['id']}" for s in side_locations} != expected-{'component:throat'}:
         raise ValueError('geometry source placements are incomplete or inconsistent')
