@@ -1,0 +1,267 @@
+{
+  "status": "complete",
+  "source_commit": "188a933137c3d11f9df7bb7fa35c7f188827a6e1",
+  "production_regressions": {
+    "status": "complete",
+    "controls_sha256": "f275ebe627088a2053fac3f271e1d614794fa12902fdc162b3fcfb56fee453bc",
+    "rows": [
+      {
+        "case": "thin-quarter",
+        "conforming": {
+          "status": "complete",
+          "helper_sha256": "99cb9fe5528caac878b703bcf50982911001917382d5bdbac0cd40e6dc8acc1e",
+          "input_sha256": {
+            "front": "0004e41b7625f5f95bd748c1bc4f036329ac1848d65c6bc61eec3793dd09f3ae",
+            "exterior": "80fdc3304dba1834c35a9198fe80ff974894e209fbbc7c304c7af76b5540dac8"
+          },
+          "symmetry_mode": "xy",
+          "rim_classification": {
+            "geometry_tolerance_m": 0.0007500000000000007,
+            "upstream_default_geometry_tolerance_m": 0.0015556349186103694,
+            "minimum_nonopening_midpoint_distance_m": 0.0015000000000000013,
+            "shared_opening_edges": 173,
+            "other_rim_boundary_edges": 37,
+            "rule": "min(upstream_default, half_nonopening_edge_midpoint_separation)"
+          },
+          "classification": {
+            "mouth_plane_z_m": 0.3,
+            "plane_classification_tolerance_m": 1e-08,
+            "planar_rim_triangles": 208,
+            "protected_curved_triangles": 2349
+          },
+          "conforming_result": {
+            "fem_interface_triangles": 5593,
+            "original_bem_interface_triangles": 22101,
+            "original_adjacent_triangles": 208,
+            "remeshed_adjacent_triangles": 122,
+            "output_vertices": 4164,
+            "output_triangles": 8064,
+            "max_original_boundary_deviation": 9.43373557035791e-06,
+            "interface_orientation_flipped": false,
+            "identity": {
+              "interface_triangles": 5593,
+              "interface_vertices": 2896,
+              "max_coordinate_error": 9.992037332205765e-15,
+              "fem_facets_on_tetra_boundary": 5593,
+              "bem_boundary_edges": 262
+            },
+            "seam_simplification_used": false,
+            "simplified_bem_seam_edges": 0
+          },
+          "protected_facets_unchanged": true,
+          "output_sha256": "71d7d236fc3ba8a8e89e346b9d0e63d687e5fa58c2a0a582e836c466c0adc2d7"
+        },
+        "restoration": {
+          "raw_sha256": "71d7d236fc3ba8a8e89e346b9d0e63d687e5fa58c2a0a582e836c466c0adc2d7",
+          "front_sha256": "0004e41b7625f5f95bd748c1bc4f036329ac1848d65c6bc61eec3793dd09f3ae",
+          "output_sha256": "05d5268c6a6e11c79f8e90ae26302de49d7613b8168305ab3b0dedbf4ac47d9f",
+          "mouth_vertices": 2896,
+          "corrected_vertices": 88,
+          "maximum_correction_m": 9.992037332205765e-15,
+          "maximum_allowed_correction_m": 1e-08,
+          "method": "restore_unique_authoritative_fem_coordinates"
+        },
+        "surface": {
+          "triangles": 8064,
+          "nodes": 4164,
+          "open_edges": 0,
+          "orientation_errors": 0,
+          "enclosed_volume_m3": 0.0025857776529994328,
+          "sha256": "05d5268c6a6e11c79f8e90ae26302de49d7613b8168305ab3b0dedbf4ac47d9f",
+          "symmetry": "xy",
+          "native_open_edges": 262,
+          "validation": "closed_oriented_fourfold_reflection",
+          "native_mesh_unchanged": true,
+          "maximum_plane_roundoff_snap_m": 1.120753282267e-17
+        },
+        "relative_volume_error": 0.001919887676982368,
+        "previous_raw_output_byte_identical": null
+      },
+      {
+        "case": "original-quarter",
+        "conforming": {
+          "status": "complete",
+          "helper_sha256": "99cb9fe5528caac878b703bcf50982911001917382d5bdbac0cd40e6dc8acc1e",
+          "input_sha256": {
+            "front": "82e7290d571a3b25ed1eb11229a54fbc38cf5fb11a4e33a381cbc7439039c1be",
+            "exterior": "771a43f6f4de7889cc773dfca2921b0d953bc2cc57e182cebe057d3179893fc8"
+          },
+          "symmetry_mode": "xy",
+          "rim_classification": {
+            "geometry_tolerance_m": 0.000707106781186537,
+            "upstream_default_geometry_tolerance_m": 0.000707106781186537,
+            "minimum_nonopening_midpoint_distance_m": 0.0015000000000000013,
+            "shared_opening_edges": 83,
+            "other_rim_boundary_edges": 20,
+            "rule": "min(upstream_default, half_nonopening_edge_midpoint_separation)"
+          },
+          "classification": {
+            "mouth_plane_z_m": 0.25,
+            "plane_classification_tolerance_m": 1e-08,
+            "planar_rim_triangles": 101,
+            "protected_curved_triangles": 1264
+          },
+          "conforming_result": {
+            "fem_interface_triangles": 1288,
+            "original_bem_interface_triangles": 5029,
+            "original_adjacent_triangles": 101,
+            "remeshed_adjacent_triangles": 60,
+            "output_vertices": 1390,
+            "output_triangles": 2612,
+            "max_original_boundary_deviation": 2.8350129362405622e-05,
+            "interface_orientation_flipped": false,
+            "identity": {
+              "interface_triangles": 1288,
+              "interface_vertices": 691,
+              "max_coordinate_error": 2.9976104094050996e-15,
+              "fem_facets_on_tetra_boundary": 1288,
+              "bem_boundary_edges": 166
+            },
+            "seam_simplification_used": false,
+            "simplified_bem_seam_edges": 0
+          },
+          "protected_facets_unchanged": true,
+          "output_sha256": "9ced43a7995a46c04f7f29dfb54ecf24618df0c9dcf6f0ed8d92074be0c5bc09"
+        },
+        "restoration": {
+          "raw_sha256": "9ced43a7995a46c04f7f29dfb54ecf24618df0c9dcf6f0ed8d92074be0c5bc09",
+          "front_sha256": "82e7290d571a3b25ed1eb11229a54fbc38cf5fb11a4e33a381cbc7439039c1be",
+          "output_sha256": "3b5e08a713096a909e034170c3a483f0908d4e595e78c362bfab1ad727b9d09e",
+          "mouth_vertices": 691,
+          "corrected_vertices": 48,
+          "maximum_correction_m": 2.9976104094050996e-15,
+          "maximum_allowed_correction_m": 1e-08,
+          "method": "restore_unique_authoritative_fem_coordinates"
+        },
+        "surface": {
+          "triangles": 2612,
+          "nodes": 1390,
+          "open_edges": 0,
+          "orientation_errors": 0,
+          "enclosed_volume_m3": 0.0011158993301174707,
+          "sha256": "3b5e08a713096a909e034170c3a483f0908d4e595e78c362bfab1ad727b9d09e",
+          "symmetry": "xy",
+          "native_open_edges": 166,
+          "validation": "closed_oriented_fourfold_reflection",
+          "native_mesh_unchanged": true,
+          "maximum_plane_roundoff_snap_m": 1.724384846103e-17
+        },
+        "relative_volume_error": 0.004206463584355502,
+        "previous_raw_output_byte_identical": true
+      },
+      {
+        "case": "original-full",
+        "conforming": {
+          "status": "complete",
+          "helper_sha256": "99cb9fe5528caac878b703bcf50982911001917382d5bdbac0cd40e6dc8acc1e",
+          "input_sha256": {
+            "front": "a6e4deada8c947053be40b52c268d06a4fd945c0611fbdaeba3239818a2e9ae5",
+            "exterior": "854ff3bd885cba6960be31d115a7df9a9c901cc1a79cfd342616f58d42768e3a"
+          },
+          "classification": {
+            "mouth_plane_z_m": 0.25,
+            "plane_classification_tolerance_m": 1e-08,
+            "planar_rim_triangles": 168,
+            "protected_curved_triangles": 1703
+          },
+          "conforming_result": {
+            "fem_interface_triangles": 881,
+            "original_bem_interface_triangles": 3251,
+            "original_adjacent_triangles": 168,
+            "remeshed_adjacent_triangles": 106,
+            "output_vertices": 1347,
+            "output_triangles": 2690,
+            "max_original_boundary_deviation": 0.00015005840643252832,
+            "interface_orientation_flipped": false,
+            "identity": {
+              "interface_triangles": 881,
+              "interface_vertices": 477,
+              "max_coordinate_error": 0.0,
+              "fem_facets_on_tetra_boundary": 881,
+              "bem_boundary_edges": 0
+            },
+            "seam_simplification_used": false,
+            "simplified_bem_seam_edges": 0
+          },
+          "protected_facets_unchanged": true,
+          "output_sha256": "ba92f7c1097cb4ca50444885aa720bb0f9974f33a2f8cb4e3d1304a0b704000a"
+        },
+        "restoration": {
+          "raw_sha256": "ba92f7c1097cb4ca50444885aa720bb0f9974f33a2f8cb4e3d1304a0b704000a",
+          "front_sha256": "a6e4deada8c947053be40b52c268d06a4fd945c0611fbdaeba3239818a2e9ae5",
+          "output_sha256": "ba92f7c1097cb4ca50444885aa720bb0f9974f33a2f8cb4e3d1304a0b704000a",
+          "mouth_vertices": 477,
+          "corrected_vertices": 0,
+          "maximum_correction_m": 0.0,
+          "maximum_allowed_correction_m": 1e-08,
+          "method": "restore_unique_authoritative_fem_coordinates"
+        },
+        "surface": {
+          "triangles": 2690,
+          "nodes": 1347,
+          "open_edges": 0,
+          "orientation_errors": 0,
+          "enclosed_volume_m3": 0.004419466577540544,
+          "sha256": "ba92f7c1097cb4ca50444885aa720bb0f9974f33a2f8cb4e3d1304a0b704000a"
+        },
+        "relative_volume_error": 0.014051685623743149,
+        "previous_raw_output_byte_identical": true
+      }
+    ]
+  },
+  "archives": [
+    {
+      "file": "evidence.zip",
+      "size_bytes": 15111940,
+      "sha256": "34397b7169e9f65449ebfe331b0e8745bc95a9cd51ded7991c26fafedcc67d0b"
+    }
+  ],
+  "archived_file_sha256": {
+    "archive-quarter-rim.py": "5e65adeef6c53ac4fd92c97600611733c69127fc98dc2f2b613c6602eda3486c",
+    "check-quarter-rim-production.py": "db283f6541a96d0409a0e34c2e5a1c12d37fae6d4f43e4586018e37a3f39bf7a",
+    "check-quarter-rim-result.py": "00c54743bd25b3f7c121507d61041bf6814bbb005466664bc2903f354d85c7dd",
+    "diagnose-quarter-rim.py": "c10c5b221a86e27dbe32df8afe357ee8288c19b65905ea990d4318ad6cd56102",
+    "isolated-preparation-reference/system/exterior/exterior.json": "9ebcb96bc6f7385c8414834ebe9907bd00b171f18f11311320c7b1de777a7137",
+    "isolated-preparation-reference/system/exterior/exterior.msh": "771a43f6f4de7889cc773dfca2921b0d953bc2cc57e182cebe057d3179893fc8",
+    "isolated-preparation-reference/system/meshes/exterior-conformed-raw.msh": "9ced43a7995a46c04f7f29dfb54ecf24618df0c9dcf6f0ed8d92074be0c5bc09",
+    "isolated-preparation-reference/system/meshes/front.msh": "82e7290d571a3b25ed1eb11229a54fbc38cf5fb11a4e33a381cbc7439039c1be",
+    "quarter-commercial-isolated-search/trial-000/system/conform-interface.json": "5c062f7977c6efeeadbc4c6225a08f609e484a0b7f40840c0030813786f1c119",
+    "quarter-commercial-isolated-search/trial-000/system/conform-interface.log": "39b59d3df4264189a1e0a9173632a20fbb84d4c55d8f2f80050d214f493d8edd",
+    "quarter-commercial-isolated-search/trial-000/system/exterior/exterior.json": "1f548ba14ab1ca424459decd749ccf595480c163feb4acebe759bfc4ef6089d2",
+    "quarter-commercial-isolated-search/trial-000/system/exterior/exterior.msh": "80fdc3304dba1834c35a9198fe80ff974894e209fbbc7c304c7af76b5540dac8",
+    "quarter-commercial-isolated-search/trial-000/system/meshes/front.msh": "0004e41b7625f5f95bd748c1bc4f036329ac1848d65c6bc61eec3793dd09f3ae",
+    "quarter-rim-classification/controls.json": "a1d622acf5b886d4149330c37956ccba4dc29fcf1754b5631659dc5b5eb8c979",
+    "quarter-rim-classification/exterior-conformed-raw.msh": "71d7d236fc3ba8a8e89e346b9d0e63d687e5fa58c2a0a582e836c466c0adc2d7",
+    "quarter-rim-classification/exterior.msh": "05d5268c6a6e11c79f8e90ae26302de49d7613b8168305ab3b0dedbf4ac47d9f",
+    "quarter-rim-classification/final-check.json": "24bdfe4a361db3a7adcc5670159b500d0b791ae58c08caee3d1adbf5507e2dbb",
+    "quarter-rim-classification/report.json": "34bc37bc44863cf65ca6bf399a294841457281f08e537b919e3b7ad791f4f63a",
+    "quarter-rim-classification.log": "de92ac9232ceef18a58099340b53757dd5f10d0b72cae572a09168c8fa4012f3",
+    "quarter-rim-final-check.log": "a63fc0cf45b96573ed0027a1188b7b73a9e9b66fec6539cd9abd261590229f38",
+    "quarter-rim-noncad.log": "358d533d74770aeef398ac50702ceff4345451fa506eaa02fbdc2201fac0b8f7",
+    "quarter-rim-production/controls.json": "f275ebe627088a2053fac3f271e1d614794fa12902fdc162b3fcfb56fee453bc",
+    "quarter-rim-production/original-full/conform.json": "c9337b07f2683423d63eb7f9c1859d0da040061400ac9155584c487cecfb5e68",
+    "quarter-rim-production/original-full/conform.log": "75a11da44c802486bc6f65640aa48a730f0f684c5c07a42ba3cd1735eb3fb070",
+    "quarter-rim-production/original-full/exterior-raw.msh": "ba92f7c1097cb4ca50444885aa720bb0f9974f33a2f8cb4e3d1304a0b704000a",
+    "quarter-rim-production/original-full/exterior.msh": "ba92f7c1097cb4ca50444885aa720bb0f9974f33a2f8cb4e3d1304a0b704000a",
+    "quarter-rim-production/original-quarter/conform.json": "f9f5633975c490709e3f6d92881f284cc5876f5032f6e7e71b91c806f128fe34",
+    "quarter-rim-production/original-quarter/conform.log": "75a11da44c802486bc6f65640aa48a730f0f684c5c07a42ba3cd1735eb3fb070",
+    "quarter-rim-production/original-quarter/exterior-raw.msh": "9ced43a7995a46c04f7f29dfb54ecf24618df0c9dcf6f0ed8d92074be0c5bc09",
+    "quarter-rim-production/original-quarter/exterior.msh": "3b5e08a713096a909e034170c3a483f0908d4e595e78c362bfab1ad727b9d09e",
+    "quarter-rim-production/report.json": "568e2d1fb4f678dd053f9c065c206467a02d070c8f7e09243c2ac7937552cbfd",
+    "quarter-rim-production/thin-quarter/conform.json": "9b5bd3bc3238622d265d20c6257d8f423be63e940b4324dd6fa9384a6aad08ad",
+    "quarter-rim-production/thin-quarter/conform.log": "75a11da44c802486bc6f65640aa48a730f0f684c5c07a42ba3cd1735eb3fb070",
+    "quarter-rim-production/thin-quarter/exterior-raw.msh": "71d7d236fc3ba8a8e89e346b9d0e63d687e5fa58c2a0a582e836c466c0adc2d7",
+    "quarter-rim-production/thin-quarter/exterior.msh": "05d5268c6a6e11c79f8e90ae26302de49d7613b8168305ab3b0dedbf4ac47d9f",
+    "quarter-rim-production.log": "2ef968a46f2b69632a16c208069802b56503a1802dc0a6aae6f0e1b1f5f7297d",
+    "tilted-entry-10mm/trial-000/system/exterior/exterior.json": "5e28a703121ce5a800cb152656f50480062716cbe12676cb940b5c8f9bc680ec",
+    "tilted-entry-10mm/trial-000/system/exterior/exterior.msh": "854ff3bd885cba6960be31d115a7df9a9c901cc1a79cfd342616f58d42768e3a",
+    "tilted-entry-10mm/trial-000/system/meshes/exterior-conformed-raw.msh": "ba92f7c1097cb4ca50444885aa720bb0f9974f33a2f8cb4e3d1304a0b704000a",
+    "tilted-entry-10mm/trial-000/system/meshes/front.msh": "a6e4deada8c947053be40b52c268d06a4fd945c0611fbdaeba3239818a2e9ae5"
+  },
+  "qualified": false,
+  "native_frequency_solve_executed": false,
+  "limitations": [
+    "Native interface preparation checks only; no acoustic frequency solve or physical qualification.",
+    "The new commercial search is separate and is not included while running."
+  ]
+}
