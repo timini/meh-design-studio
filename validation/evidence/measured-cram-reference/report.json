@@ -1,0 +1,2038 @@
+{
+  "status": "completed_verification_fix_and_failed_conditional_shape_screen",
+  "application_source_commit": "c217b86ba76a2c10c6032091bfded518180fa5d4",
+  "original_failure_source_commit": "5c5fab109c7ae169582d7330b157bf068c46ef0a",
+  "upstream_source": "https://github.com/JWSound/boundary-lab/tree/8cb166226e412877d3f71f2845918e479b97aa85/examples/2x12_CRAM",
+  "upstream_license": "GPL-3.0, included in evidence.zip/upstream/LICENSE",
+  "original_adapter_status": "failed",
+  "original_adapter_error": "ValueError: FEM source requires supported same-order tetrahedra",
+  "fresh_adapter_status": "complete",
+  "unchanged_native_arrays": 63,
+  "native_arrays_exactly_equal": true,
+  "comparison": {
+    "status": "complete_conditional_comparison",
+    "application_source_commit": "c217b86ba76a2c10c6032091bfded518180fa5d4",
+    "controls_sha256": "e51b44f27261dd8e94a928f290fde2344618947fbbf5c334ad54fa4fbdbd3f36",
+    "runner_sha256": "2efd7ded0d1c2ceb812d9a1d17030386aaa908fe655648ba87486e70e933c703",
+    "source_evidence": {
+      "controls": {
+        "evaluation.json": "707b3fdbb10b0bb50c2a12631a5a6413888fb2cd248de7d9a3476051e3bb084a",
+        "request.json": "77496dbe6922407bb6db964986b6d65fbcd603c818e40c7bb3c645fbb31e36ac",
+        "preflight.json": "84768fc4777a03044af3afad6d0b77a45c7c7c0728b122d9e3ee5a890a799b42"
+      },
+      "result": {
+        "evidence": "predicted",
+        "artifact_hashes": {
+          "manifest": "416e23d7448d9f52d83c84dfc2dcb6725b245f87c4224ad47ccfcb08788acd04",
+          "domains_metadata": "088295ac49e54c5a8db3759cb2e396b8b39da35a6ca73be34f4d37f145bd970c",
+          "domains_arrays": "15a10fc3a166d59e4bd4fd2d5ef1f4d287f480aed1cdf1e03983766af13e807d",
+          "reference_runtime": "09628cd9bb59362e4927ec2e47becddf9fe94841bba1446c1acc576a21a69bca"
+        },
+        "solve_kind": "coupled_bem_fem",
+        "phasor_convention": "exp(-i omega t)",
+        "frequencies_hz": [
+          63.0,
+          80.0,
+          100.0,
+          125.0,
+          160.0,
+          200.0,
+          250.0,
+          315.0,
+          400.0
+        ],
+        "excitation_port_ids": [
+          "excitation:component-12nw100-a",
+          "excitation:component-12nw100-b"
+        ],
+        "inventory": [
+          {
+            "frequency_hz": 63.0,
+            "metadata_sha256": "12661834c71c5c23229ff8832b4ea3d0bb86ac572ac844f1afec3589257be865",
+            "arrays_sha256": "52e4e33afc9b53cb3fe5d413f3bcb4d8195e47e2e075813ff85f64d9b30dfaa5",
+            "quantities": [
+              {
+                "axes": [
+                  "excitation",
+                  "transducer"
+                ],
+                "dtype": "complex128",
+                "id": "mechanical:diaphragm-velocity",
+                "key": "q0000",
+                "metadata": {
+                  "component_ids": [
+                    "component:12nw100-a",
+                    "component:12nw100-b"
+                  ],
+                  "physical_driver_orbit_counts": [
+                    1,
+                    1
+                  ],
+                  "surface_completion_factors": [
+                    2.0,
+                    2.0
+                  ]
+                },
+                "quantity": "diaphragm_velocity",
+                "shape": [
+                  2,
+                  2
+                ],
+                "target_id": "components:electrodynamic-transducers",
+                "unit": "m/s"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "transducer"
+                ],
+                "dtype": "complex128",
+                "id": "electrical:voice-coil-current",
+                "key": "q0001",
+                "metadata": {
+                  "component_ids": [
+                    "component:12nw100-a",
+                    "component:12nw100-b"
+                  ],
+                  "physical_driver_orbit_counts": [
+                    1,
+                    1
+                  ],
+                  "surface_completion_factors": [
+                    2.0,
+                    2.0
+                  ]
+                },
+                "quantity": "voice_coil_current",
+                "shape": [
+                  2,
+                  2
+                ],
+                "target_id": "components:electrodynamic-transducers",
+                "unit": "A"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "bem_node"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:bem-boundary",
+                "key": "q0002",
+                "metadata": {
+                  "mesh_ids": [
+                    "mesh:2x12cramexterior"
+                  ],
+                  "vertex_counts": [
+                    1064
+                  ],
+                  "vertex_offsets": [
+                    0
+                  ]
+                },
+                "quantity": "bem_boundary_pressure",
+                "shape": [
+                  2,
+                  1064
+                ],
+                "target_id": "domain:bem-boundary",
+                "unit": "Pa"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "bem_face"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:normal-derivative:bem-boundary",
+                "key": "q0003",
+                "metadata": {
+                  "face_counts": [
+                    2038
+                  ],
+                  "face_offsets": [
+                    0
+                  ],
+                  "mesh_ids": [
+                    "mesh:2x12cramexterior"
+                  ]
+                },
+                "quantity": "bem_boundary_neumann",
+                "shape": [
+                  2,
+                  2038
+                ],
+                "target_id": "domain:bem-boundary",
+                "unit": "Pa/m"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "fem_node"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:fem-nodes",
+                "key": "q0004",
+                "metadata": {
+                  "mesh_ids": [
+                    "mesh:2x12craminterior"
+                  ],
+                  "node_counts": [
+                    18000
+                  ],
+                  "node_offsets": [
+                    0
+                  ],
+                  "region_ids": [
+                    "region:interior-air-1"
+                  ]
+                },
+                "quantity": "fem_nodal_pressure",
+                "shape": [
+                  2,
+                  18000
+                ],
+                "target_id": "domain:fem-volume",
+                "unit": "Pa"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "observation"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:horizontal-polar",
+                "key": "q0005",
+                "metadata": {
+                  "source_output_id": "ui:exterior-pressure"
+                },
+                "quantity": "exterior_pressure",
+                "shape": [
+                  2,
+                  25
+                ],
+                "target_id": "observation:horizontal-polar",
+                "unit": "Pa"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "observation"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:vertical-polar",
+                "key": "q0006",
+                "metadata": {
+                  "source_output_id": "ui:exterior-pressure"
+                },
+                "quantity": "exterior_pressure",
+                "shape": [
+                  2,
+                  25
+                ],
+                "target_id": "observation:vertical-polar",
+                "unit": "Pa"
+              }
+            ]
+          },
+          {
+            "frequency_hz": 80.0,
+            "metadata_sha256": "aa12c58a1399849d12c5a4f2a6d8da844e559dfa22d2886f071f1ead67a08d11",
+            "arrays_sha256": "d256bffefef7d88f481b77d371624f8c0db42d3bec7419e89e44b19dc83acd1b",
+            "quantities": [
+              {
+                "axes": [
+                  "excitation",
+                  "transducer"
+                ],
+                "dtype": "complex128",
+                "id": "mechanical:diaphragm-velocity",
+                "key": "q0000",
+                "metadata": {
+                  "component_ids": [
+                    "component:12nw100-a",
+                    "component:12nw100-b"
+                  ],
+                  "physical_driver_orbit_counts": [
+                    1,
+                    1
+                  ],
+                  "surface_completion_factors": [
+                    2.0,
+                    2.0
+                  ]
+                },
+                "quantity": "diaphragm_velocity",
+                "shape": [
+                  2,
+                  2
+                ],
+                "target_id": "components:electrodynamic-transducers",
+                "unit": "m/s"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "transducer"
+                ],
+                "dtype": "complex128",
+                "id": "electrical:voice-coil-current",
+                "key": "q0001",
+                "metadata": {
+                  "component_ids": [
+                    "component:12nw100-a",
+                    "component:12nw100-b"
+                  ],
+                  "physical_driver_orbit_counts": [
+                    1,
+                    1
+                  ],
+                  "surface_completion_factors": [
+                    2.0,
+                    2.0
+                  ]
+                },
+                "quantity": "voice_coil_current",
+                "shape": [
+                  2,
+                  2
+                ],
+                "target_id": "components:electrodynamic-transducers",
+                "unit": "A"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "bem_node"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:bem-boundary",
+                "key": "q0002",
+                "metadata": {
+                  "mesh_ids": [
+                    "mesh:2x12cramexterior"
+                  ],
+                  "vertex_counts": [
+                    1064
+                  ],
+                  "vertex_offsets": [
+                    0
+                  ]
+                },
+                "quantity": "bem_boundary_pressure",
+                "shape": [
+                  2,
+                  1064
+                ],
+                "target_id": "domain:bem-boundary",
+                "unit": "Pa"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "bem_face"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:normal-derivative:bem-boundary",
+                "key": "q0003",
+                "metadata": {
+                  "face_counts": [
+                    2038
+                  ],
+                  "face_offsets": [
+                    0
+                  ],
+                  "mesh_ids": [
+                    "mesh:2x12cramexterior"
+                  ]
+                },
+                "quantity": "bem_boundary_neumann",
+                "shape": [
+                  2,
+                  2038
+                ],
+                "target_id": "domain:bem-boundary",
+                "unit": "Pa/m"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "fem_node"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:fem-nodes",
+                "key": "q0004",
+                "metadata": {
+                  "mesh_ids": [
+                    "mesh:2x12craminterior"
+                  ],
+                  "node_counts": [
+                    18000
+                  ],
+                  "node_offsets": [
+                    0
+                  ],
+                  "region_ids": [
+                    "region:interior-air-1"
+                  ]
+                },
+                "quantity": "fem_nodal_pressure",
+                "shape": [
+                  2,
+                  18000
+                ],
+                "target_id": "domain:fem-volume",
+                "unit": "Pa"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "observation"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:horizontal-polar",
+                "key": "q0005",
+                "metadata": {
+                  "source_output_id": "ui:exterior-pressure"
+                },
+                "quantity": "exterior_pressure",
+                "shape": [
+                  2,
+                  25
+                ],
+                "target_id": "observation:horizontal-polar",
+                "unit": "Pa"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "observation"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:vertical-polar",
+                "key": "q0006",
+                "metadata": {
+                  "source_output_id": "ui:exterior-pressure"
+                },
+                "quantity": "exterior_pressure",
+                "shape": [
+                  2,
+                  25
+                ],
+                "target_id": "observation:vertical-polar",
+                "unit": "Pa"
+              }
+            ]
+          },
+          {
+            "frequency_hz": 100.0,
+            "metadata_sha256": "8fa6c635293e55e8f391e0a03c41f417ef7cea261276a9e3dc99f1221397d29e",
+            "arrays_sha256": "42b69cbc44b5b5527f170dcb7a7453a82f74888b1c4e17c1410a867c95dd6c02",
+            "quantities": [
+              {
+                "axes": [
+                  "excitation",
+                  "transducer"
+                ],
+                "dtype": "complex128",
+                "id": "mechanical:diaphragm-velocity",
+                "key": "q0000",
+                "metadata": {
+                  "component_ids": [
+                    "component:12nw100-a",
+                    "component:12nw100-b"
+                  ],
+                  "physical_driver_orbit_counts": [
+                    1,
+                    1
+                  ],
+                  "surface_completion_factors": [
+                    2.0,
+                    2.0
+                  ]
+                },
+                "quantity": "diaphragm_velocity",
+                "shape": [
+                  2,
+                  2
+                ],
+                "target_id": "components:electrodynamic-transducers",
+                "unit": "m/s"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "transducer"
+                ],
+                "dtype": "complex128",
+                "id": "electrical:voice-coil-current",
+                "key": "q0001",
+                "metadata": {
+                  "component_ids": [
+                    "component:12nw100-a",
+                    "component:12nw100-b"
+                  ],
+                  "physical_driver_orbit_counts": [
+                    1,
+                    1
+                  ],
+                  "surface_completion_factors": [
+                    2.0,
+                    2.0
+                  ]
+                },
+                "quantity": "voice_coil_current",
+                "shape": [
+                  2,
+                  2
+                ],
+                "target_id": "components:electrodynamic-transducers",
+                "unit": "A"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "bem_node"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:bem-boundary",
+                "key": "q0002",
+                "metadata": {
+                  "mesh_ids": [
+                    "mesh:2x12cramexterior"
+                  ],
+                  "vertex_counts": [
+                    1064
+                  ],
+                  "vertex_offsets": [
+                    0
+                  ]
+                },
+                "quantity": "bem_boundary_pressure",
+                "shape": [
+                  2,
+                  1064
+                ],
+                "target_id": "domain:bem-boundary",
+                "unit": "Pa"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "bem_face"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:normal-derivative:bem-boundary",
+                "key": "q0003",
+                "metadata": {
+                  "face_counts": [
+                    2038
+                  ],
+                  "face_offsets": [
+                    0
+                  ],
+                  "mesh_ids": [
+                    "mesh:2x12cramexterior"
+                  ]
+                },
+                "quantity": "bem_boundary_neumann",
+                "shape": [
+                  2,
+                  2038
+                ],
+                "target_id": "domain:bem-boundary",
+                "unit": "Pa/m"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "fem_node"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:fem-nodes",
+                "key": "q0004",
+                "metadata": {
+                  "mesh_ids": [
+                    "mesh:2x12craminterior"
+                  ],
+                  "node_counts": [
+                    18000
+                  ],
+                  "node_offsets": [
+                    0
+                  ],
+                  "region_ids": [
+                    "region:interior-air-1"
+                  ]
+                },
+                "quantity": "fem_nodal_pressure",
+                "shape": [
+                  2,
+                  18000
+                ],
+                "target_id": "domain:fem-volume",
+                "unit": "Pa"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "observation"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:horizontal-polar",
+                "key": "q0005",
+                "metadata": {
+                  "source_output_id": "ui:exterior-pressure"
+                },
+                "quantity": "exterior_pressure",
+                "shape": [
+                  2,
+                  25
+                ],
+                "target_id": "observation:horizontal-polar",
+                "unit": "Pa"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "observation"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:vertical-polar",
+                "key": "q0006",
+                "metadata": {
+                  "source_output_id": "ui:exterior-pressure"
+                },
+                "quantity": "exterior_pressure",
+                "shape": [
+                  2,
+                  25
+                ],
+                "target_id": "observation:vertical-polar",
+                "unit": "Pa"
+              }
+            ]
+          },
+          {
+            "frequency_hz": 125.0,
+            "metadata_sha256": "eff33bef5219a169b9af959765b6f21cdc11be231a30f0049bb81ff3aca0c7a2",
+            "arrays_sha256": "8bc49b6944d3d0fcd6bf722b2694f9240f29a854a91c7a4010523feb6a98dc47",
+            "quantities": [
+              {
+                "axes": [
+                  "excitation",
+                  "transducer"
+                ],
+                "dtype": "complex128",
+                "id": "mechanical:diaphragm-velocity",
+                "key": "q0000",
+                "metadata": {
+                  "component_ids": [
+                    "component:12nw100-a",
+                    "component:12nw100-b"
+                  ],
+                  "physical_driver_orbit_counts": [
+                    1,
+                    1
+                  ],
+                  "surface_completion_factors": [
+                    2.0,
+                    2.0
+                  ]
+                },
+                "quantity": "diaphragm_velocity",
+                "shape": [
+                  2,
+                  2
+                ],
+                "target_id": "components:electrodynamic-transducers",
+                "unit": "m/s"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "transducer"
+                ],
+                "dtype": "complex128",
+                "id": "electrical:voice-coil-current",
+                "key": "q0001",
+                "metadata": {
+                  "component_ids": [
+                    "component:12nw100-a",
+                    "component:12nw100-b"
+                  ],
+                  "physical_driver_orbit_counts": [
+                    1,
+                    1
+                  ],
+                  "surface_completion_factors": [
+                    2.0,
+                    2.0
+                  ]
+                },
+                "quantity": "voice_coil_current",
+                "shape": [
+                  2,
+                  2
+                ],
+                "target_id": "components:electrodynamic-transducers",
+                "unit": "A"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "bem_node"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:bem-boundary",
+                "key": "q0002",
+                "metadata": {
+                  "mesh_ids": [
+                    "mesh:2x12cramexterior"
+                  ],
+                  "vertex_counts": [
+                    1064
+                  ],
+                  "vertex_offsets": [
+                    0
+                  ]
+                },
+                "quantity": "bem_boundary_pressure",
+                "shape": [
+                  2,
+                  1064
+                ],
+                "target_id": "domain:bem-boundary",
+                "unit": "Pa"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "bem_face"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:normal-derivative:bem-boundary",
+                "key": "q0003",
+                "metadata": {
+                  "face_counts": [
+                    2038
+                  ],
+                  "face_offsets": [
+                    0
+                  ],
+                  "mesh_ids": [
+                    "mesh:2x12cramexterior"
+                  ]
+                },
+                "quantity": "bem_boundary_neumann",
+                "shape": [
+                  2,
+                  2038
+                ],
+                "target_id": "domain:bem-boundary",
+                "unit": "Pa/m"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "fem_node"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:fem-nodes",
+                "key": "q0004",
+                "metadata": {
+                  "mesh_ids": [
+                    "mesh:2x12craminterior"
+                  ],
+                  "node_counts": [
+                    18000
+                  ],
+                  "node_offsets": [
+                    0
+                  ],
+                  "region_ids": [
+                    "region:interior-air-1"
+                  ]
+                },
+                "quantity": "fem_nodal_pressure",
+                "shape": [
+                  2,
+                  18000
+                ],
+                "target_id": "domain:fem-volume",
+                "unit": "Pa"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "observation"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:horizontal-polar",
+                "key": "q0005",
+                "metadata": {
+                  "source_output_id": "ui:exterior-pressure"
+                },
+                "quantity": "exterior_pressure",
+                "shape": [
+                  2,
+                  25
+                ],
+                "target_id": "observation:horizontal-polar",
+                "unit": "Pa"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "observation"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:vertical-polar",
+                "key": "q0006",
+                "metadata": {
+                  "source_output_id": "ui:exterior-pressure"
+                },
+                "quantity": "exterior_pressure",
+                "shape": [
+                  2,
+                  25
+                ],
+                "target_id": "observation:vertical-polar",
+                "unit": "Pa"
+              }
+            ]
+          },
+          {
+            "frequency_hz": 160.0,
+            "metadata_sha256": "1d071f222eedd127ef1a807068378d2c5d851b98447c7bca9971bf4600231f48",
+            "arrays_sha256": "9689843134760e7eca9c82ec6ad652a0551c9a91ffc2e65c09860dad48ecf4be",
+            "quantities": [
+              {
+                "axes": [
+                  "excitation",
+                  "transducer"
+                ],
+                "dtype": "complex128",
+                "id": "mechanical:diaphragm-velocity",
+                "key": "q0000",
+                "metadata": {
+                  "component_ids": [
+                    "component:12nw100-a",
+                    "component:12nw100-b"
+                  ],
+                  "physical_driver_orbit_counts": [
+                    1,
+                    1
+                  ],
+                  "surface_completion_factors": [
+                    2.0,
+                    2.0
+                  ]
+                },
+                "quantity": "diaphragm_velocity",
+                "shape": [
+                  2,
+                  2
+                ],
+                "target_id": "components:electrodynamic-transducers",
+                "unit": "m/s"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "transducer"
+                ],
+                "dtype": "complex128",
+                "id": "electrical:voice-coil-current",
+                "key": "q0001",
+                "metadata": {
+                  "component_ids": [
+                    "component:12nw100-a",
+                    "component:12nw100-b"
+                  ],
+                  "physical_driver_orbit_counts": [
+                    1,
+                    1
+                  ],
+                  "surface_completion_factors": [
+                    2.0,
+                    2.0
+                  ]
+                },
+                "quantity": "voice_coil_current",
+                "shape": [
+                  2,
+                  2
+                ],
+                "target_id": "components:electrodynamic-transducers",
+                "unit": "A"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "bem_node"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:bem-boundary",
+                "key": "q0002",
+                "metadata": {
+                  "mesh_ids": [
+                    "mesh:2x12cramexterior"
+                  ],
+                  "vertex_counts": [
+                    1064
+                  ],
+                  "vertex_offsets": [
+                    0
+                  ]
+                },
+                "quantity": "bem_boundary_pressure",
+                "shape": [
+                  2,
+                  1064
+                ],
+                "target_id": "domain:bem-boundary",
+                "unit": "Pa"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "bem_face"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:normal-derivative:bem-boundary",
+                "key": "q0003",
+                "metadata": {
+                  "face_counts": [
+                    2038
+                  ],
+                  "face_offsets": [
+                    0
+                  ],
+                  "mesh_ids": [
+                    "mesh:2x12cramexterior"
+                  ]
+                },
+                "quantity": "bem_boundary_neumann",
+                "shape": [
+                  2,
+                  2038
+                ],
+                "target_id": "domain:bem-boundary",
+                "unit": "Pa/m"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "fem_node"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:fem-nodes",
+                "key": "q0004",
+                "metadata": {
+                  "mesh_ids": [
+                    "mesh:2x12craminterior"
+                  ],
+                  "node_counts": [
+                    18000
+                  ],
+                  "node_offsets": [
+                    0
+                  ],
+                  "region_ids": [
+                    "region:interior-air-1"
+                  ]
+                },
+                "quantity": "fem_nodal_pressure",
+                "shape": [
+                  2,
+                  18000
+                ],
+                "target_id": "domain:fem-volume",
+                "unit": "Pa"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "observation"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:horizontal-polar",
+                "key": "q0005",
+                "metadata": {
+                  "source_output_id": "ui:exterior-pressure"
+                },
+                "quantity": "exterior_pressure",
+                "shape": [
+                  2,
+                  25
+                ],
+                "target_id": "observation:horizontal-polar",
+                "unit": "Pa"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "observation"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:vertical-polar",
+                "key": "q0006",
+                "metadata": {
+                  "source_output_id": "ui:exterior-pressure"
+                },
+                "quantity": "exterior_pressure",
+                "shape": [
+                  2,
+                  25
+                ],
+                "target_id": "observation:vertical-polar",
+                "unit": "Pa"
+              }
+            ]
+          },
+          {
+            "frequency_hz": 200.0,
+            "metadata_sha256": "8319d651c9b444ae944ccc0f1f0a2f9f8d1ec17f1a358d178b3dd687ffb396ad",
+            "arrays_sha256": "515c70eb1bb0999972cfb4963e812a744fe1c2092bcb7598e4fef195e2d7afbe",
+            "quantities": [
+              {
+                "axes": [
+                  "excitation",
+                  "transducer"
+                ],
+                "dtype": "complex128",
+                "id": "mechanical:diaphragm-velocity",
+                "key": "q0000",
+                "metadata": {
+                  "component_ids": [
+                    "component:12nw100-a",
+                    "component:12nw100-b"
+                  ],
+                  "physical_driver_orbit_counts": [
+                    1,
+                    1
+                  ],
+                  "surface_completion_factors": [
+                    2.0,
+                    2.0
+                  ]
+                },
+                "quantity": "diaphragm_velocity",
+                "shape": [
+                  2,
+                  2
+                ],
+                "target_id": "components:electrodynamic-transducers",
+                "unit": "m/s"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "transducer"
+                ],
+                "dtype": "complex128",
+                "id": "electrical:voice-coil-current",
+                "key": "q0001",
+                "metadata": {
+                  "component_ids": [
+                    "component:12nw100-a",
+                    "component:12nw100-b"
+                  ],
+                  "physical_driver_orbit_counts": [
+                    1,
+                    1
+                  ],
+                  "surface_completion_factors": [
+                    2.0,
+                    2.0
+                  ]
+                },
+                "quantity": "voice_coil_current",
+                "shape": [
+                  2,
+                  2
+                ],
+                "target_id": "components:electrodynamic-transducers",
+                "unit": "A"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "bem_node"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:bem-boundary",
+                "key": "q0002",
+                "metadata": {
+                  "mesh_ids": [
+                    "mesh:2x12cramexterior"
+                  ],
+                  "vertex_counts": [
+                    1064
+                  ],
+                  "vertex_offsets": [
+                    0
+                  ]
+                },
+                "quantity": "bem_boundary_pressure",
+                "shape": [
+                  2,
+                  1064
+                ],
+                "target_id": "domain:bem-boundary",
+                "unit": "Pa"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "bem_face"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:normal-derivative:bem-boundary",
+                "key": "q0003",
+                "metadata": {
+                  "face_counts": [
+                    2038
+                  ],
+                  "face_offsets": [
+                    0
+                  ],
+                  "mesh_ids": [
+                    "mesh:2x12cramexterior"
+                  ]
+                },
+                "quantity": "bem_boundary_neumann",
+                "shape": [
+                  2,
+                  2038
+                ],
+                "target_id": "domain:bem-boundary",
+                "unit": "Pa/m"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "fem_node"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:fem-nodes",
+                "key": "q0004",
+                "metadata": {
+                  "mesh_ids": [
+                    "mesh:2x12craminterior"
+                  ],
+                  "node_counts": [
+                    18000
+                  ],
+                  "node_offsets": [
+                    0
+                  ],
+                  "region_ids": [
+                    "region:interior-air-1"
+                  ]
+                },
+                "quantity": "fem_nodal_pressure",
+                "shape": [
+                  2,
+                  18000
+                ],
+                "target_id": "domain:fem-volume",
+                "unit": "Pa"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "observation"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:horizontal-polar",
+                "key": "q0005",
+                "metadata": {
+                  "source_output_id": "ui:exterior-pressure"
+                },
+                "quantity": "exterior_pressure",
+                "shape": [
+                  2,
+                  25
+                ],
+                "target_id": "observation:horizontal-polar",
+                "unit": "Pa"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "observation"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:vertical-polar",
+                "key": "q0006",
+                "metadata": {
+                  "source_output_id": "ui:exterior-pressure"
+                },
+                "quantity": "exterior_pressure",
+                "shape": [
+                  2,
+                  25
+                ],
+                "target_id": "observation:vertical-polar",
+                "unit": "Pa"
+              }
+            ]
+          },
+          {
+            "frequency_hz": 250.0,
+            "metadata_sha256": "2b2259d8c530576d1f27dc04f3ee654539f8af6d37fd22f7b2f427722b6ffbbc",
+            "arrays_sha256": "f36697a0b67b98ced8f5242e6ad296c8b2be8441160fb97c2a4121c4edd12c3c",
+            "quantities": [
+              {
+                "axes": [
+                  "excitation",
+                  "transducer"
+                ],
+                "dtype": "complex128",
+                "id": "mechanical:diaphragm-velocity",
+                "key": "q0000",
+                "metadata": {
+                  "component_ids": [
+                    "component:12nw100-a",
+                    "component:12nw100-b"
+                  ],
+                  "physical_driver_orbit_counts": [
+                    1,
+                    1
+                  ],
+                  "surface_completion_factors": [
+                    2.0,
+                    2.0
+                  ]
+                },
+                "quantity": "diaphragm_velocity",
+                "shape": [
+                  2,
+                  2
+                ],
+                "target_id": "components:electrodynamic-transducers",
+                "unit": "m/s"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "transducer"
+                ],
+                "dtype": "complex128",
+                "id": "electrical:voice-coil-current",
+                "key": "q0001",
+                "metadata": {
+                  "component_ids": [
+                    "component:12nw100-a",
+                    "component:12nw100-b"
+                  ],
+                  "physical_driver_orbit_counts": [
+                    1,
+                    1
+                  ],
+                  "surface_completion_factors": [
+                    2.0,
+                    2.0
+                  ]
+                },
+                "quantity": "voice_coil_current",
+                "shape": [
+                  2,
+                  2
+                ],
+                "target_id": "components:electrodynamic-transducers",
+                "unit": "A"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "bem_node"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:bem-boundary",
+                "key": "q0002",
+                "metadata": {
+                  "mesh_ids": [
+                    "mesh:2x12cramexterior"
+                  ],
+                  "vertex_counts": [
+                    1064
+                  ],
+                  "vertex_offsets": [
+                    0
+                  ]
+                },
+                "quantity": "bem_boundary_pressure",
+                "shape": [
+                  2,
+                  1064
+                ],
+                "target_id": "domain:bem-boundary",
+                "unit": "Pa"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "bem_face"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:normal-derivative:bem-boundary",
+                "key": "q0003",
+                "metadata": {
+                  "face_counts": [
+                    2038
+                  ],
+                  "face_offsets": [
+                    0
+                  ],
+                  "mesh_ids": [
+                    "mesh:2x12cramexterior"
+                  ]
+                },
+                "quantity": "bem_boundary_neumann",
+                "shape": [
+                  2,
+                  2038
+                ],
+                "target_id": "domain:bem-boundary",
+                "unit": "Pa/m"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "fem_node"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:fem-nodes",
+                "key": "q0004",
+                "metadata": {
+                  "mesh_ids": [
+                    "mesh:2x12craminterior"
+                  ],
+                  "node_counts": [
+                    18000
+                  ],
+                  "node_offsets": [
+                    0
+                  ],
+                  "region_ids": [
+                    "region:interior-air-1"
+                  ]
+                },
+                "quantity": "fem_nodal_pressure",
+                "shape": [
+                  2,
+                  18000
+                ],
+                "target_id": "domain:fem-volume",
+                "unit": "Pa"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "observation"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:horizontal-polar",
+                "key": "q0005",
+                "metadata": {
+                  "source_output_id": "ui:exterior-pressure"
+                },
+                "quantity": "exterior_pressure",
+                "shape": [
+                  2,
+                  25
+                ],
+                "target_id": "observation:horizontal-polar",
+                "unit": "Pa"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "observation"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:vertical-polar",
+                "key": "q0006",
+                "metadata": {
+                  "source_output_id": "ui:exterior-pressure"
+                },
+                "quantity": "exterior_pressure",
+                "shape": [
+                  2,
+                  25
+                ],
+                "target_id": "observation:vertical-polar",
+                "unit": "Pa"
+              }
+            ]
+          },
+          {
+            "frequency_hz": 315.0,
+            "metadata_sha256": "a71c0346acbe772d84341e11294effa364f68bc3ca53a63836178cc89cbb531d",
+            "arrays_sha256": "ea18386b3361f5ce441eb851dcfd7064f174d46ab1f104ad143d22e6c10c39fd",
+            "quantities": [
+              {
+                "axes": [
+                  "excitation",
+                  "transducer"
+                ],
+                "dtype": "complex128",
+                "id": "mechanical:diaphragm-velocity",
+                "key": "q0000",
+                "metadata": {
+                  "component_ids": [
+                    "component:12nw100-a",
+                    "component:12nw100-b"
+                  ],
+                  "physical_driver_orbit_counts": [
+                    1,
+                    1
+                  ],
+                  "surface_completion_factors": [
+                    2.0,
+                    2.0
+                  ]
+                },
+                "quantity": "diaphragm_velocity",
+                "shape": [
+                  2,
+                  2
+                ],
+                "target_id": "components:electrodynamic-transducers",
+                "unit": "m/s"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "transducer"
+                ],
+                "dtype": "complex128",
+                "id": "electrical:voice-coil-current",
+                "key": "q0001",
+                "metadata": {
+                  "component_ids": [
+                    "component:12nw100-a",
+                    "component:12nw100-b"
+                  ],
+                  "physical_driver_orbit_counts": [
+                    1,
+                    1
+                  ],
+                  "surface_completion_factors": [
+                    2.0,
+                    2.0
+                  ]
+                },
+                "quantity": "voice_coil_current",
+                "shape": [
+                  2,
+                  2
+                ],
+                "target_id": "components:electrodynamic-transducers",
+                "unit": "A"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "bem_node"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:bem-boundary",
+                "key": "q0002",
+                "metadata": {
+                  "mesh_ids": [
+                    "mesh:2x12cramexterior"
+                  ],
+                  "vertex_counts": [
+                    1064
+                  ],
+                  "vertex_offsets": [
+                    0
+                  ]
+                },
+                "quantity": "bem_boundary_pressure",
+                "shape": [
+                  2,
+                  1064
+                ],
+                "target_id": "domain:bem-boundary",
+                "unit": "Pa"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "bem_face"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:normal-derivative:bem-boundary",
+                "key": "q0003",
+                "metadata": {
+                  "face_counts": [
+                    2038
+                  ],
+                  "face_offsets": [
+                    0
+                  ],
+                  "mesh_ids": [
+                    "mesh:2x12cramexterior"
+                  ]
+                },
+                "quantity": "bem_boundary_neumann",
+                "shape": [
+                  2,
+                  2038
+                ],
+                "target_id": "domain:bem-boundary",
+                "unit": "Pa/m"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "fem_node"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:fem-nodes",
+                "key": "q0004",
+                "metadata": {
+                  "mesh_ids": [
+                    "mesh:2x12craminterior"
+                  ],
+                  "node_counts": [
+                    18000
+                  ],
+                  "node_offsets": [
+                    0
+                  ],
+                  "region_ids": [
+                    "region:interior-air-1"
+                  ]
+                },
+                "quantity": "fem_nodal_pressure",
+                "shape": [
+                  2,
+                  18000
+                ],
+                "target_id": "domain:fem-volume",
+                "unit": "Pa"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "observation"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:horizontal-polar",
+                "key": "q0005",
+                "metadata": {
+                  "source_output_id": "ui:exterior-pressure"
+                },
+                "quantity": "exterior_pressure",
+                "shape": [
+                  2,
+                  25
+                ],
+                "target_id": "observation:horizontal-polar",
+                "unit": "Pa"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "observation"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:vertical-polar",
+                "key": "q0006",
+                "metadata": {
+                  "source_output_id": "ui:exterior-pressure"
+                },
+                "quantity": "exterior_pressure",
+                "shape": [
+                  2,
+                  25
+                ],
+                "target_id": "observation:vertical-polar",
+                "unit": "Pa"
+              }
+            ]
+          },
+          {
+            "frequency_hz": 400.0,
+            "metadata_sha256": "70770b98c48d7ad91ece5be3eadaa6257d77a8e22c79aa4a795a22411a5d6d62",
+            "arrays_sha256": "9154274b2c3f278818491f7d4cb5ab8b43c82e30929e3e44651d73d13b035991",
+            "quantities": [
+              {
+                "axes": [
+                  "excitation",
+                  "transducer"
+                ],
+                "dtype": "complex128",
+                "id": "mechanical:diaphragm-velocity",
+                "key": "q0000",
+                "metadata": {
+                  "component_ids": [
+                    "component:12nw100-a",
+                    "component:12nw100-b"
+                  ],
+                  "physical_driver_orbit_counts": [
+                    1,
+                    1
+                  ],
+                  "surface_completion_factors": [
+                    2.0,
+                    2.0
+                  ]
+                },
+                "quantity": "diaphragm_velocity",
+                "shape": [
+                  2,
+                  2
+                ],
+                "target_id": "components:electrodynamic-transducers",
+                "unit": "m/s"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "transducer"
+                ],
+                "dtype": "complex128",
+                "id": "electrical:voice-coil-current",
+                "key": "q0001",
+                "metadata": {
+                  "component_ids": [
+                    "component:12nw100-a",
+                    "component:12nw100-b"
+                  ],
+                  "physical_driver_orbit_counts": [
+                    1,
+                    1
+                  ],
+                  "surface_completion_factors": [
+                    2.0,
+                    2.0
+                  ]
+                },
+                "quantity": "voice_coil_current",
+                "shape": [
+                  2,
+                  2
+                ],
+                "target_id": "components:electrodynamic-transducers",
+                "unit": "A"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "bem_node"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:bem-boundary",
+                "key": "q0002",
+                "metadata": {
+                  "mesh_ids": [
+                    "mesh:2x12cramexterior"
+                  ],
+                  "vertex_counts": [
+                    1064
+                  ],
+                  "vertex_offsets": [
+                    0
+                  ]
+                },
+                "quantity": "bem_boundary_pressure",
+                "shape": [
+                  2,
+                  1064
+                ],
+                "target_id": "domain:bem-boundary",
+                "unit": "Pa"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "bem_face"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:normal-derivative:bem-boundary",
+                "key": "q0003",
+                "metadata": {
+                  "face_counts": [
+                    2038
+                  ],
+                  "face_offsets": [
+                    0
+                  ],
+                  "mesh_ids": [
+                    "mesh:2x12cramexterior"
+                  ]
+                },
+                "quantity": "bem_boundary_neumann",
+                "shape": [
+                  2,
+                  2038
+                ],
+                "target_id": "domain:bem-boundary",
+                "unit": "Pa/m"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "fem_node"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:fem-nodes",
+                "key": "q0004",
+                "metadata": {
+                  "mesh_ids": [
+                    "mesh:2x12craminterior"
+                  ],
+                  "node_counts": [
+                    18000
+                  ],
+                  "node_offsets": [
+                    0
+                  ],
+                  "region_ids": [
+                    "region:interior-air-1"
+                  ]
+                },
+                "quantity": "fem_nodal_pressure",
+                "shape": [
+                  2,
+                  18000
+                ],
+                "target_id": "domain:fem-volume",
+                "unit": "Pa"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "observation"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:horizontal-polar",
+                "key": "q0005",
+                "metadata": {
+                  "source_output_id": "ui:exterior-pressure"
+                },
+                "quantity": "exterior_pressure",
+                "shape": [
+                  2,
+                  25
+                ],
+                "target_id": "observation:horizontal-polar",
+                "unit": "Pa"
+              },
+              {
+                "axes": [
+                  "excitation",
+                  "observation"
+                ],
+                "dtype": "complex128",
+                "id": "acoustic:pressure:vertical-polar",
+                "key": "q0006",
+                "metadata": {
+                  "source_output_id": "ui:exterior-pressure"
+                },
+                "quantity": "exterior_pressure",
+                "shape": [
+                  2,
+                  25
+                ],
+                "target_id": "observation:vertical-polar",
+                "unit": "Pa"
+              }
+            ]
+          }
+        ]
+      },
+      "checks": {
+        "schema_version": 1,
+        "evidence": "independent_equation_consistency",
+        "passed": false,
+        "project_sha256": "2d82ede63210cb2863132a7c8ae0f91f548cd2b6076420bcf1d23ded5a8366b6",
+        "evaluation_sha256": "707b3fdbb10b0bb50c2a12631a5a6413888fb2cd248de7d9a3476051e3bb084a",
+        "rows": [
+          {
+            "frequency_hz": 63.0,
+            "passed": false,
+            "circuit_voltage_relative_residual": 3.636805600290885e-16,
+            "electrical_reciprocity_relative_residual": 2.7410777919081813e-05,
+            "minimum_hermitian_admittance_eigenvalue_s": 0.018261455300829003
+          },
+          {
+            "frequency_hz": 80.0,
+            "passed": false,
+            "circuit_voltage_relative_residual": 3.2888459598236276e-16,
+            "electrical_reciprocity_relative_residual": 2.172699914223929e-05,
+            "minimum_hermitian_admittance_eigenvalue_s": 0.030953756572948993
+          },
+          {
+            "frequency_hz": 100.0,
+            "passed": false,
+            "circuit_voltage_relative_residual": 1.6175147697958436e-16,
+            "electrical_reciprocity_relative_residual": 3.406325450534101e-05,
+            "minimum_hermitian_admittance_eigenvalue_s": 0.05231489182313014
+          },
+          {
+            "frequency_hz": 125.0,
+            "passed": false,
+            "circuit_voltage_relative_residual": 1.0563134205444906e-16,
+            "electrical_reciprocity_relative_residual": 8.096040256584884e-05,
+            "minimum_hermitian_admittance_eigenvalue_s": 0.021909192870406366
+          },
+          {
+            "frequency_hz": 160.0,
+            "passed": false,
+            "circuit_voltage_relative_residual": 2.2148733162873987e-16,
+            "electrical_reciprocity_relative_residual": 1.7058727970168892e-05,
+            "minimum_hermitian_admittance_eigenvalue_s": 0.050656180435977124
+          },
+          {
+            "frequency_hz": 200.0,
+            "passed": false,
+            "circuit_voltage_relative_residual": 1.6619690793924336e-16,
+            "electrical_reciprocity_relative_residual": 1.1333361545145344e-05,
+            "minimum_hermitian_admittance_eigenvalue_s": 0.10649621294602797
+          },
+          {
+            "frequency_hz": 250.0,
+            "passed": false,
+            "circuit_voltage_relative_residual": 1.1563018036734906e-16,
+            "electrical_reciprocity_relative_residual": 1.2598874252487196e-06,
+            "minimum_hermitian_admittance_eigenvalue_s": 0.16543823439000485
+          },
+          {
+            "frequency_hz": 315.0,
+            "passed": false,
+            "circuit_voltage_relative_residual": 2.261409773508771e-16,
+            "electrical_reciprocity_relative_residual": 2.2488696642279005e-05,
+            "minimum_hermitian_admittance_eigenvalue_s": 0.16525248878589865
+          },
+          {
+            "frequency_hz": 400.0,
+            "passed": false,
+            "circuit_voltage_relative_residual": 2.122350888416272e-16,
+            "electrical_reciprocity_relative_residual": 1.6326526742785378e-06,
+            "minimum_hermitian_admittance_eigenvalue_s": 0.15536935604467617
+          }
+        ],
+        "relative_tolerance": 1e-08,
+        "acoustic_accuracy_validated": false,
+        "limitations": [
+          "Circuit consistency cannot establish acoustic field accuracy",
+          "No measured driver or speaker comparison",
+          "No RMS or absolute SPL qualification"
+        ]
+      }
+    },
+    "component_ids": [
+      "component:12nw100-a",
+      "component:12nw100-b"
+    ],
+    "observation_coordinates": {
+      "angle_deg": 0.0,
+      "points_m": [
+        0.0,
+        0.0,
+        10.0
+      ]
+    },
+    "level_offset_db": 9.906659286157558,
+    "offset_definition": "One additive dB offset: mean(measured minus predicted) at the three calibration frequencies only; no source, loss, geometry or frequency-dependent fitting",
+    "heldout_maximum_absolute_error_db": 5.193181856297414,
+    "heldout_rms_error_db": 3.210921841836014,
+    "heldout_limit_db": 3.0,
+    "conditional_shape_screen_passed": false,
+    "rows": [
+      {
+        "frequency_hz": 63.0,
+        "subset": "heldout",
+        "raw_predicted_level_db_at_1_v_rms": 67.51607547474545,
+        "measured_interpolated_level_db": 77.42637470642912,
+        "offset_adjusted_predicted_level_db": 77.42273476090301,
+        "error_db": -0.003639945526103361
+      },
+      {
+        "frequency_hz": 80.0,
+        "subset": "heldout",
+        "raw_predicted_level_db_at_1_v_rms": 71.54412442847035,
+        "measured_interpolated_level_db": 80.1354965109923,
+        "offset_adjusted_predicted_level_db": 81.45078371462792,
+        "error_db": 1.31528720363562
+      },
+      {
+        "frequency_hz": 100.0,
+        "subset": "calibration",
+        "raw_predicted_level_db_at_1_v_rms": 71.89844710984065,
+        "measured_interpolated_level_db": 81.07439215540226,
+        "offset_adjusted_predicted_level_db": 81.80510639599821,
+        "error_db": 0.7307142405959439
+      },
+      {
+        "frequency_hz": 125.0,
+        "subset": "calibration",
+        "raw_predicted_level_db_at_1_v_rms": 67.37514218470255,
+        "measured_interpolated_level_db": 77.76364881601134,
+        "offset_adjusted_predicted_level_db": 77.28180147086012,
+        "error_db": -0.4818473451512233
+      },
+      {
+        "frequency_hz": 160.0,
+        "subset": "calibration",
+        "raw_predicted_level_db_at_1_v_rms": 65.28555785190642,
+        "measured_interpolated_level_db": 75.44108403350869,
+        "offset_adjusted_predicted_level_db": 75.19221713806398,
+        "error_db": -0.24886689544470642
+      },
+      {
+        "frequency_hz": 200.0,
+        "subset": "heldout",
+        "raw_predicted_level_db_at_1_v_rms": 60.075828974982386,
+        "measured_interpolated_level_db": 64.78930640484253,
+        "offset_adjusted_predicted_level_db": 69.98248826113995,
+        "error_db": 5.193181856297414
+      },
+      {
+        "frequency_hz": 250.0,
+        "subset": "heldout",
+        "raw_predicted_level_db_at_1_v_rms": 65.03667989925236,
+        "measured_interpolated_level_db": 70.40566535719702,
+        "offset_adjusted_predicted_level_db": 74.94333918540993,
+        "error_db": 4.5376738282129025
+      },
+      {
+        "frequency_hz": 315.0,
+        "subset": "heldout",
+        "raw_predicted_level_db_at_1_v_rms": 68.59231790237473,
+        "measured_interpolated_level_db": 81.79821747168135,
+        "offset_adjusted_predicted_level_db": 78.4989771885323,
+        "error_db": -3.299240283149061
+      },
+      {
+        "frequency_hz": 400.0,
+        "subset": "heldout",
+        "raw_predicted_level_db_at_1_v_rms": 66.75460789247454,
+        "measured_interpolated_level_db": 77.95954016966594,
+        "offset_adjusted_predicted_level_db": 76.6612671786321,
+        "error_db": -1.2982729910338406
+      }
+    ],
+    "qualified": false,
+    "physical_validation": false,
+    "limitations": [
+      "Source and measurement are co-located in the upstream example; exact measured build revision is not independently established",
+      "Measurement is ground-plane at 10 m from DUT front, without voltage calibration or timing reference",
+      "Supplied physical model is free exterior air with x symmetry; ground loading and microphone height are not matched",
+      "Supplied air and bulk-loss parameters are held fixed; they are not independently calibrated here",
+      "This is a conditional low-frequency response-shape comparison, not target-horn, HF, absolute-SPL or phase qualification"
+    ],
+    "figure_sha256": "7022f7a7279825a1f38ac8d5f8fb205b4cdc0f0e8969c8407c49cf1a84053254"
+  },
+  "archives": [
+    {
+      "file": "evidence.zip",
+      "sha256": "d1f187882801561408967ba14263ad46e0aa60767e381c0f4fa1169a82dde80e",
+      "size_bytes": 16573828
+    }
+  ],
+  "archived_file_sha256": {
+    "cram-measured-reference/evaluation/evaluation.json": "bd63e5dd7132f31b81b65587edc4bcc59c8f00ed7d533913ceaf3fca645c13a7",
+    "cram-measured-reference/evaluation/preflight.json": "49c070674866249002106a7e5907d50561b5363b2d4448b18882b85cafa73f7d",
+    "cram-measured-reference/evaluation/preflight.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "cram-measured-reference/evaluation/request.json": "77496dbe6922407bb6db964986b6d65fbcd603c818e40c7bb3c645fbb31e36ac",
+    "cram-measured-reference/evaluation/solve.ndjson": "7376ca479ce8b8df2ed8b792c465cf4a1abc474cee31e165f666c1374714f3b4",
+    "cram-measured-reference/evaluation/solve.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "cram-measured-reference/evaluation/upstream/compiled-system.json": "1762be84332281b870ee08c1823b9bfd80f2b424523c5cbe5ca9017bacf7fc7a",
+    "cram-measured-reference/evaluation/upstream/domains.json": "088295ac49e54c5a8db3759cb2e396b8b39da35a6ca73be34f4d37f145bd970c",
+    "cram-measured-reference/evaluation/upstream/domains.npz": "15a10fc3a166d59e4bd4fd2d5ef1f4d287f480aed1cdf1e03983766af13e807d",
+    "cram-measured-reference/evaluation/upstream/frequencies/000000.json": "d9b9e718e1453270ff4b78e842857e21da6e15494ec261438b364e0e153e2f51",
+    "cram-measured-reference/evaluation/upstream/frequencies/000000.npz": "52e4e33afc9b53cb3fe5d413f3bcb4d8195e47e2e075813ff85f64d9b30dfaa5",
+    "cram-measured-reference/evaluation/upstream/frequencies/000001.json": "09afd484ae8e9c98c13e13b39c15d1ee20abde7016693632414dfce4a85b7109",
+    "cram-measured-reference/evaluation/upstream/frequencies/000001.npz": "d256bffefef7d88f481b77d371624f8c0db42d3bec7419e89e44b19dc83acd1b",
+    "cram-measured-reference/evaluation/upstream/frequencies/000002.json": "1f7275aeb37145931a27709d612656384ccd43828a03ec2b621005a33ae864d2",
+    "cram-measured-reference/evaluation/upstream/frequencies/000002.npz": "42b69cbc44b5b5527f170dcb7a7453a82f74888b1c4e17c1410a867c95dd6c02",
+    "cram-measured-reference/evaluation/upstream/frequencies/000003.json": "0f626e5c009a503e9297ac7528ce5c3e924d3fda283a0cb8e9152397e02412b9",
+    "cram-measured-reference/evaluation/upstream/frequencies/000003.npz": "8bc49b6944d3d0fcd6bf722b2694f9240f29a854a91c7a4010523feb6a98dc47",
+    "cram-measured-reference/evaluation/upstream/frequencies/000004.json": "8726732edcd0108a9bcc4e1eda78a72e700abbc203dc5b169ddbd58650058d6c",
+    "cram-measured-reference/evaluation/upstream/frequencies/000004.npz": "9689843134760e7eca9c82ec6ad652a0551c9a91ffc2e65c09860dad48ecf4be",
+    "cram-measured-reference/evaluation/upstream/frequencies/000005.json": "59e237becaa38d51262b1a502a2c510b2e5c971246b5f3f195c6a85228d24349",
+    "cram-measured-reference/evaluation/upstream/frequencies/000005.npz": "515c70eb1bb0999972cfb4963e812a744fe1c2092bcb7598e4fef195e2d7afbe",
+    "cram-measured-reference/evaluation/upstream/frequencies/000006.json": "941b419eab00af0da69010e4b4b2437fb7ed21b3f39d102af102e422407b9d3b",
+    "cram-measured-reference/evaluation/upstream/frequencies/000006.npz": "f36697a0b67b98ced8f5242e6ad296c8b2be8441160fb97c2a4121c4edd12c3c",
+    "cram-measured-reference/evaluation/upstream/frequencies/000007.json": "3cd8a4f379689dfc5969524867f0f56ee4da1f4a46e9e1126c6b154a311afdf2",
+    "cram-measured-reference/evaluation/upstream/frequencies/000007.npz": "ea18386b3361f5ce441eb851dcfd7064f174d46ab1f104ad143d22e6c10c39fd",
+    "cram-measured-reference/evaluation/upstream/frequencies/000008.json": "50ea4e5d3ef977abc389dddf276e3d65b7a8a1d8ab1d3bb87737f35f8de82b35",
+    "cram-measured-reference/evaluation/upstream/frequencies/000008.npz": "9154274b2c3f278818491f7d4cb5ab8b43c82e30929e3e44651d73d13b035991",
+    "cram-measured-reference/evaluation/upstream/manifest.json": "dd06a63dd6a5a16c30c1dd85ea8f1fa868192d01dceea6041d126a47370aa174",
+    "cram-measured-reference/evaluation/upstream/project.snapshot.blab.json": "2d82ede63210cb2863132a7c8ae0f91f548cd2b6076420bcf1d23ded5a8366b6",
+    "cram-measured-reference/evaluation/upstream/request.json": "1c3a5ad60e57e72cb6d37ee7a85439fafefae9c9e2b5cc95c0d9fd584a34d7aa",
+    "cram-measured-reference/evaluation/upstream/runtime.json": "09628cd9bb59362e4927ec2e47becddf9fe94841bba1446c1acc576a21a69bca",
+    "cram-measured-reference/project/2x12CRAMExterior.msh": "12fe3c4fadbb2fc0f1865483adbe6729aded523ee6867b0c884aa9c846e907ed",
+    "cram-measured-reference/project/2x12CRAMExterior_interface_conformed.msh": "bc1ecbeb9400840e057ec84e100459904644a13a1e2e388edb744b16a22584fd",
+    "cram-measured-reference/project/2x12CRAMInterior.msh": "ff386fa053d6ec2345bb352e929abf7b9bfd8bb380b30f9df3fd57ddf349a2e0",
+    "cram-measured-reference/project/2x12_CRAM.blab.json": "ab5312a5508675ba4aa5f3f3e31a073dfd4061588cdf3194c5662dfc33d69b1d",
+    "cram-measured-reference/project/Measured/Onaxis.txt": "4b1b6e7fe5f234c54ab74f869fb837f01bad53add33cf9d212c8d3005d1e282c",
+    "cram-measured-reference/project/Measured/info.txt": "0ccd544ee1d0dd434d7efd412ae626d574f0fb7ccae4f59a4cfa05ee7557498c",
+    "cram-measured-reference/project/reference.blab.json": "2d82ede63210cb2863132a7c8ae0f91f548cd2b6076420bcf1d23ded5a8366b6",
+    "cram-measured-reference-verified/comparison.json": "b4fb34ba45ecedf25e6c3149a20f325fcf17dec8ac7f69f226bf4e39814a7e6e",
+    "cram-measured-reference-verified/comparison.png": "7022f7a7279825a1f38ac8d5f8fb205b4cdc0f0e8969c8407c49cf1a84053254",
+    "cram-measured-reference-verified/evaluation/evaluation.json": "707b3fdbb10b0bb50c2a12631a5a6413888fb2cd248de7d9a3476051e3bb084a",
+    "cram-measured-reference-verified/evaluation/preflight.json": "84768fc4777a03044af3afad6d0b77a45c7c7c0728b122d9e3ee5a890a799b42",
+    "cram-measured-reference-verified/evaluation/preflight.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "cram-measured-reference-verified/evaluation/request.json": "77496dbe6922407bb6db964986b6d65fbcd603c818e40c7bb3c645fbb31e36ac",
+    "cram-measured-reference-verified/evaluation/solve.ndjson": "43e3985c8c9b6aac72a8e6146feddadc00f22444b85da880883fa9d002fb3537",
+    "cram-measured-reference-verified/evaluation/solve.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "cram-measured-reference-verified/evaluation/upstream/compiled-system.json": "e91261e326fa2920633d00102e621cb64d21f1fc1ccd3378ce7b1608d8e5d71e",
+    "cram-measured-reference-verified/evaluation/upstream/domains.json": "088295ac49e54c5a8db3759cb2e396b8b39da35a6ca73be34f4d37f145bd970c",
+    "cram-measured-reference-verified/evaluation/upstream/domains.npz": "15a10fc3a166d59e4bd4fd2d5ef1f4d287f480aed1cdf1e03983766af13e807d",
+    "cram-measured-reference-verified/evaluation/upstream/frequencies/000000.json": "12661834c71c5c23229ff8832b4ea3d0bb86ac572ac844f1afec3589257be865",
+    "cram-measured-reference-verified/evaluation/upstream/frequencies/000000.npz": "52e4e33afc9b53cb3fe5d413f3bcb4d8195e47e2e075813ff85f64d9b30dfaa5",
+    "cram-measured-reference-verified/evaluation/upstream/frequencies/000001.json": "aa12c58a1399849d12c5a4f2a6d8da844e559dfa22d2886f071f1ead67a08d11",
+    "cram-measured-reference-verified/evaluation/upstream/frequencies/000001.npz": "d256bffefef7d88f481b77d371624f8c0db42d3bec7419e89e44b19dc83acd1b",
+    "cram-measured-reference-verified/evaluation/upstream/frequencies/000002.json": "8fa6c635293e55e8f391e0a03c41f417ef7cea261276a9e3dc99f1221397d29e",
+    "cram-measured-reference-verified/evaluation/upstream/frequencies/000002.npz": "42b69cbc44b5b5527f170dcb7a7453a82f74888b1c4e17c1410a867c95dd6c02",
+    "cram-measured-reference-verified/evaluation/upstream/frequencies/000003.json": "eff33bef5219a169b9af959765b6f21cdc11be231a30f0049bb81ff3aca0c7a2",
+    "cram-measured-reference-verified/evaluation/upstream/frequencies/000003.npz": "8bc49b6944d3d0fcd6bf722b2694f9240f29a854a91c7a4010523feb6a98dc47",
+    "cram-measured-reference-verified/evaluation/upstream/frequencies/000004.json": "1d071f222eedd127ef1a807068378d2c5d851b98447c7bca9971bf4600231f48",
+    "cram-measured-reference-verified/evaluation/upstream/frequencies/000004.npz": "9689843134760e7eca9c82ec6ad652a0551c9a91ffc2e65c09860dad48ecf4be",
+    "cram-measured-reference-verified/evaluation/upstream/frequencies/000005.json": "8319d651c9b444ae944ccc0f1f0a2f9f8d1ec17f1a358d178b3dd687ffb396ad",
+    "cram-measured-reference-verified/evaluation/upstream/frequencies/000005.npz": "515c70eb1bb0999972cfb4963e812a744fe1c2092bcb7598e4fef195e2d7afbe",
+    "cram-measured-reference-verified/evaluation/upstream/frequencies/000006.json": "2b2259d8c530576d1f27dc04f3ee654539f8af6d37fd22f7b2f427722b6ffbbc",
+    "cram-measured-reference-verified/evaluation/upstream/frequencies/000006.npz": "f36697a0b67b98ced8f5242e6ad296c8b2be8441160fb97c2a4121c4edd12c3c",
+    "cram-measured-reference-verified/evaluation/upstream/frequencies/000007.json": "a71c0346acbe772d84341e11294effa364f68bc3ca53a63836178cc89cbb531d",
+    "cram-measured-reference-verified/evaluation/upstream/frequencies/000007.npz": "ea18386b3361f5ce441eb851dcfd7064f174d46ab1f104ad143d22e6c10c39fd",
+    "cram-measured-reference-verified/evaluation/upstream/frequencies/000008.json": "70770b98c48d7ad91ece5be3eadaa6257d77a8e22c79aa4a795a22411a5d6d62",
+    "cram-measured-reference-verified/evaluation/upstream/frequencies/000008.npz": "9154274b2c3f278818491f7d4cb5ab8b43c82e30929e3e44651d73d13b035991",
+    "cram-measured-reference-verified/evaluation/upstream/manifest.json": "416e23d7448d9f52d83c84dfc2dcb6725b245f87c4224ad47ccfcb08788acd04",
+    "cram-measured-reference-verified/evaluation/upstream/project.snapshot.blab.json": "2d82ede63210cb2863132a7c8ae0f91f548cd2b6076420bcf1d23ded5a8366b6",
+    "cram-measured-reference-verified/evaluation/upstream/request.json": "1c3a5ad60e57e72cb6d37ee7a85439fafefae9c9e2b5cc95c0d9fd584a34d7aa",
+    "cram-measured-reference-verified/evaluation/upstream/runtime.json": "09628cd9bb59362e4927ec2e47becddf9fe94841bba1446c1acc576a21a69bca",
+    "cram-measured-reference-verified/project/2x12CRAMExterior.msh": "12fe3c4fadbb2fc0f1865483adbe6729aded523ee6867b0c884aa9c846e907ed",
+    "cram-measured-reference-verified/project/2x12CRAMExterior_interface_conformed.msh": "bc1ecbeb9400840e057ec84e100459904644a13a1e2e388edb744b16a22584fd",
+    "cram-measured-reference-verified/project/2x12CRAMInterior.msh": "ff386fa053d6ec2345bb352e929abf7b9bfd8bb380b30f9df3fd57ddf349a2e0",
+    "cram-measured-reference-verified/project/2x12_CRAM.blab.json": "ab5312a5508675ba4aa5f3f3e31a073dfd4061588cdf3194c5662dfc33d69b1d",
+    "cram-measured-reference-verified/project/Measured/Onaxis.txt": "4b1b6e7fe5f234c54ab74f869fb837f01bad53add33cf9d212c8d3005d1e282c",
+    "cram-measured-reference-verified/project/Measured/info.txt": "0ccd544ee1d0dd434d7efd412ae626d574f0fb7ccae4f59a4cfa05ee7557498c",
+    "cram-measured-reference-verified/project/reference.blab.json": "2d82ede63210cb2863132a7c8ae0f91f548cd2b6076420bcf1d23ded5a8366b6",
+    "run-cram-measured-reference.py": "9f503a51917d83c677a3bae2eb6cb6d2c8fcefd8f58e01c72ab7948a5564df89",
+    "cram-measured-reference-controls.json": "a86f0645f1cd86ee058f25a9f7c5d7e047561e1190b0c00085de3cfd6e4e9e01",
+    "cram-measured-reference.log": "7049215a1ce6f2c597b5dc48d82ed4c01fd607a30f5776f2ca93818e04531986",
+    "run-cram-measured-reference-verified.py": "4d29b10ec0db5a95f152188f78a2b9448895dd6150e83efe0464f7cf90a2fe2c",
+    "cram-measured-reference-verified-controls.json": "e51b44f27261dd8e94a928f290fde2344618947fbbf5c334ad54fa4fbdbd3f36",
+    "cram-measured-reference-verified-prepare.log": "e51b44f27261dd8e94a928f290fde2344618947fbbf5c334ad54fa4fbdbd3f36",
+    "cram-measured-reference-verified.log": "4465194d07d787678cfd85a0f17dfec39decbc8fa88160912387b4c9a5bb3d0f",
+    "finish-cram-measured-reference-verified.py": "2efd7ded0d1c2ceb812d9a1d17030386aaa908fe655648ba87486e70e933c703",
+    "cram-measured-reference-verified-comparison.log": "b30d93806da3abcda5dc8f2e743b7fb7bb065853c76f92876f03dd7aad4c00e2",
+    "named-volume-native-reinspection.json": "905fbc2955754b850c35c5049afd82c831920829e0c9c8372c287c4c31ab7b7e",
+    "named-volume-tests.log": "79c8b02ed7b0285249c228c0f7ddc5a6e642cab10b3b02be56978532faa3cdd8",
+    "named-volume-unit-tests.log": "6887ffba21443d9c6341ff88a2c4c613d7eb5ec3fc4efe606135f0bbb6b5d599",
+    "archive-measured-reference.py": "a2f032a2a3679cf83e6fb1d6f08cbdc71117b022bcf33e7eeb9a162b38dfd463",
+    "upstream/LICENSE": "3538795e1ee5bf6187d71595d4d412c93c82dd284044360600ebf63b3878b44b"
+  },
+  "qualified": false,
+  "physical_validation": false
+}

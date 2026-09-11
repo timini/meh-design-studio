@@ -38,6 +38,12 @@ Commercial source calibration,
 full-band numerical convergence, comparable measured performance, manufacturing
 qualification and an actual finished affordable design remain open.
 
+The [measured CRAM reference](measured-cram-reference.md) now completes native
+FP64 evaluation and verification after correcting named FEM volume selection.
+Its fixed conditional comparison fails the 3 dB held-out response-shape limit
+at 5.193 dB maximum error. The unmatched ground/measurement conditions and
+preserved failure do not establish physical accuracy of the target horn.
+
 The first [350–7,500 Hz four-proposal search](wide-mid-target-experiment.md)
 completed with reported FaitalPRO mid circuits and a synthetic HF placeholder.
 Selection reduced sampled target residual variation from 13.17 to 11.81 dB;
