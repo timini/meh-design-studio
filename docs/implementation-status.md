@@ -129,3 +129,11 @@ checked without rewriting the original failure. The
 [actual 15-frequency vocal-band assessment](wide-vocal-completion.md) completes
 numerical coverage but fails the 6 dB response screen at 15.66 dB with the required
 mid/HF handover. This is further evidence that the current horn is not ready to build.
+
+[Linked profile symmetry and versioned periodic cubic interpolation](profile-symmetry-search.md)
+now let the optimiser preserve reflection or quarter-turn geometry while searching
+nonconical surfaces. The [native evidence](periodic-profile-evidence.md) retains a
+legacy spline seam defect, its CAD correction, and a two-candidate coupled FP64
+search whose selected offspring and exported geometry verify. This numerical
+reference does not resolve the full-size horn's remaining response or commercial
+source and manufacturing gaps.

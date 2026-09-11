@@ -51,7 +51,8 @@ def horn_solids(design):
                                 (radius*scale+offset)*math.sin(i*math.pi/4),
                                 length*section.fraction)
                       for i,scale in enumerate(section.radial_scales)]
-            edge = cq.Edge.makeSpline(points,periodic=True)
+            edge = (periodic_profile_edge(points) if design.profile_interpolation == 'periodic_cubic'
+                    else cq.Edge.makeSpline(points,periodic=True))
             wires.append(cq.Wire.assembleEdges([edge]))
         return cq.Solid.makeLoft(wires,ruled=False)
     air, outer = loft(0), loft(wall)
@@ -104,3 +105,36 @@ def imported_volume(design, default_volume, path):
     gmsh.write(str(path))
     shape=cq.importers.importStep(str(path)).val()  # STEP units are converted to mm by OCCT.
     return cad_volume(design,shape)/1e9
+
+
+def periodic_profile_edge(points):
+    """Interpolate cyclic controls with a uniform periodic C2 cubic B-spline.
+
+    At each uniform knot, (B[i-1] + 4 B[i] + B[i+1]) / 6 = P[i].
+    Solving that cyclic system treats every azimuth identically, including the
+    seam. The legacy GeomAPI interpolator gives its periodic junction only C1 continuity.
+    """
+    import numpy as np
+    from .cad_runtime import load_cadquery
+    cq = load_cadquery()
+    from OCP.Geom import Geom_BSplineCurve
+    from OCP.gp import gp_Pnt
+    from OCP.TColgp import TColgp_Array1OfPnt
+    from OCP.TColStd import TColStd_Array1OfReal, TColStd_Array1OfInteger
+    from OCP.BRepBuilderAPI import BRepBuilderAPI_MakeEdge
+    values = np.asarray([point.toTuple() for point in points])
+    n = len(values)
+    system = 4 * np.eye(n) + np.roll(np.eye(n), 1, axis=1) + np.roll(np.eye(n), -1, axis=1)
+    controls = np.linalg.solve(system, 6 * values)
+    # OCCT's first periodic span evaluates poles 0/1/2: align t=0 with P[0].
+    controls = np.roll(controls, 1, axis=0)
+    poles = TColgp_Array1OfPnt(1, n)
+    for i, point in enumerate(controls):
+        poles.SetValue(i + 1, gp_Pnt(*point))
+    knots = TColStd_Array1OfReal(1, n + 1)
+    multiplicities = TColStd_Array1OfInteger(1, n + 1)
+    for i in range(n + 1):
+        knots.SetValue(i + 1, float(i))
+        multiplicities.SetValue(i + 1, 1)
+    curve = Geom_BSplineCurve(poles, knots, multiplicities, 3, True)
+    return cq.Edge(BRepBuilderAPI_MakeEdge(curve).Edge())

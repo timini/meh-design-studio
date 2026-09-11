@@ -77,3 +77,24 @@ def test_irregular_mouth_polygons_agree_before_conforming(tmp_path):
     # The actual failed native perimeter tolerance was 0.802 mm. Use a
     # stricter independent geometric screen; do not relax native acceptance.
     assert max(deviation(a,edges_b),deviation(b,edges_a))<.0005
+
+
+@pytest.mark.cad
+def test_periodic_cubic_interpolates_irregular_controls_without_a_privileged_seam():
+    pytest.importorskip('cadquery')
+    import math
+    import numpy as np
+    from meh_studio.cad_runtime import load_cadquery
+    from meh_studio.waveguide_profile import periodic_profile_edge
+    cq=load_cadquery()
+    scales=np.array([.7,1.1,.9,1.4,1.2,.8,1.5,1.])
+    def points(values):
+        return [cq.Vector(v*math.cos(i*math.pi/4),v*math.sin(i*math.pi/4),0.) for i,v in enumerate(values)]
+    original=periodic_profile_edge(points(scales))
+    shifted=periodic_profile_edge(points(np.roll(scales,2)))
+    for i,point in enumerate(points(scales)):
+        np.testing.assert_allclose(original.positionAt(float(i),mode='parameter').toTuple(),point.toTuple(),rtol=0,atol=1e-12)
+    for parameter in np.linspace(0.,8.,129,endpoint=False):
+        p=original.positionAt(float((parameter-2)%8),mode='parameter')
+        rotated=(-p.y,p.x,p.z)
+        np.testing.assert_allclose(shifted.positionAt(float(parameter),mode='parameter').toTuple(),rotated,rtol=0,atol=1e-12)

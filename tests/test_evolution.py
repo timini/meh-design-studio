@@ -129,3 +129,89 @@ def test_export_rejects_corrupt_nonwinning_fitness_evidence(tmp_path,monkeypatch
         path.write_text(json.dumps(value))
     else:(output/f'trial-{other:03d}/evaluation/evaluation.json').unlink()
     with pytest.raises((ValueError,OSError)):results.load_completed_search(output)
+
+
+def test_default_symmetry_preserves_existing_seeded_search_identity():
+    import hashlib
+    brief,base,drivers=inputs();seeds=candidates(brief,base,drivers)
+    assert 'profile_symmetry' not in brief.model_dump()['evolution']
+    history=[];previous=[];records=[]
+    for i in range(6):
+        candidate,proposal=propose(brief,seeds,history,previous)
+        previous.append(candidate);records.append({'candidate':candidate_record(candidate),'proposal':proposal})
+        history.append({'status':'complete','objective':float(10-i)})
+    # Captured from the unchanged v1 implementation before adding symmetry controls.
+    digest=hashlib.sha256(json.dumps(records,sort_keys=True,separators=(',',':')).encode()).hexdigest()
+    assert digest=='85ed3a06601ec65269059ee8e15887371575392781b68196947216660f27da80'
+
+
+def symmetric_inputs(symmetry):
+    brief,base,drivers=inputs()
+    data=base.model_dump(mode='json')
+    data['profile_interpolation']='periodic_cubic'
+    for section in data['profile_sections']:
+        section['radial_scales']=[1.,1.1,1.,1.1,1.,1.1,1.,1.1]
+    base=HornGeometry.model_validate(data)
+    brief=SearchBrief.model_validate(brief.model_dump()|{'evolution':brief.evolution.model_dump()|{'profile_symmetry':symmetry}})
+    return brief,base,drivers
+
+
+@pytest.mark.parametrize('symmetry',['mirror_xy','quarter_turn'])
+def test_linked_profile_mutation_and_random_exploration_preserve_symmetry(symmetry):
+    brief,base,drivers=symmetric_inputs(symmetry);seeds=candidates(brief,base,drivers)
+    history=[];previous=[];proposals=[]
+    for index in range(6):
+        candidate,proposal=propose(brief,seeds,history,previous)
+        for section in candidate['design'].profile_sections:
+            v=section.radial_scales
+            assert v[0]==v[4] and v[2]==v[6] and v[1]==v[3]==v[5]==v[7]
+            if symmetry=='quarter_turn':assert v[0]==v[2]
+        previous.append(candidate);proposals.append(proposal)
+        history.append({'status':'complete','objective':float(10-index)})
+    assert proposals[4]['method']=='random_exploration'
+    assert any(m.get('columns') for p in proposals for m in p.get('mutations',[]))
+    again,again_proposals=replay(brief,base,drivers,history)
+    assert proposals==again_proposals
+    assert [candidate_record(c) for c in previous]==[candidate_record(c) for c in again]
+    assert json.loads(json.dumps(proposals))==proposals
+    assert len({c['design'].content_hash for c in previous})==6
+
+
+@pytest.mark.parametrize('symmetry',['mirror_xy','quarter_turn'])
+def test_symmetry_rejects_a_seed_with_unequal_linked_controls(symmetry):
+    brief,base,drivers=symmetric_inputs(symmetry)
+    data=base.model_dump(mode='json');data['profile_sections'][0]['radial_scales'][0]=1.01
+    base=HornGeometry.model_validate(data)
+    with pytest.raises(ValueError,match='symmetry'):
+        propose(brief,candidates(brief,base,drivers),[],[])
+
+
+@pytest.mark.cad
+def test_quarter_turn_offspring_changes_real_cad_and_preserves_ring_rotation():
+    pytest.importorskip('cadquery')
+    import numpy as np
+    from meh_studio.geometry import build_geometry
+    from meh_studio.waveguide_profile import cad_volume
+    brief,base,drivers=symmetric_inputs('quarter_turn');seeds=candidates(brief,base,drivers)
+    first,_=propose(brief,seeds,[],[])
+    offspring,_=propose(brief,seeds,[{'status':'complete','objective':10.}],[first])
+    design=offspring['design'];assert design!=base
+    regions,parts,sources=build_geometry(design)
+    # The solved front air and exported horn shell share the quarter-turn shape.
+    for shape in (regions['front'],parts['horn']):
+        rotated=shape.rotate((0,0,0),(0,0,1),90)
+        difference=cad_volume(design,shape.cut(rotated))+cad_volume(design,rotated.cut(shape))
+        assert difference<=max(1e-3,1e-7*cad_volume(design,shape))
+    centers=np.array([s['front_center_m'] for s in sources])
+    rotated=centers[:,[1,0,2]].copy();rotated[:,0]*=-1
+    for center in rotated:
+        assert np.linalg.norm(centers-center,axis=1).min()<1e-9
+    # Offspring are nonconical: their declared sections have nonuniform radial/axial controls.
+    assert any(len(set(section.radial_scales))>1 for section in design.profile_sections)
+
+
+def test_symmetry_search_requires_geometry_to_declare_periodic_interpolation():
+    brief,base,drivers=symmetric_inputs('quarter_turn')
+    base=HornGeometry.model_validate(base.model_dump()|{'profile_interpolation':'legacy'})
+    with pytest.raises(ValueError,match='periodic_cubic'):
+        propose(brief,candidates(brief,base,drivers),[],[])

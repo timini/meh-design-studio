@@ -1,0 +1,5306 @@
+{
+  "status": "completed_periodic_profile_workflow_diagnostic",
+  "source_commits": {
+    "legacy_CAD_failure": "d0e3821",
+    "periodic_CAD_and_native_search": "ab6714f",
+    "dense_distance_baseline_and_midbank_decomposition": "c36e357",
+    "original_dense_raw_evidence_main": "6ca27a2"
+  },
+  "archives": [
+    {
+      "file": "native-search-00.zip",
+      "sha256": "02dd9f5d5fb56ab197842c558236ca347b801c655a600870e9f865d64fbc08e4",
+      "size_bytes": 62270530
+    },
+    {
+      "file": "native-search-01.zip",
+      "sha256": "574ba82f9a19ad43461bda5df8c1794919855552ac904eefe17992f70cab7c00",
+      "size_bytes": 20900563
+    },
+    {
+      "file": "dense-distance-baseline-00.zip",
+      "sha256": "3c701dd738da99a6755a4c5d2015f4509b89d0c6894e49c9eb912ede49baa038",
+      "size_bytes": 8060451
+    },
+    {
+      "file": "controls-and-runners.zip",
+      "sha256": "0f14fba1ba5df110fe74fd439d14c63bc62ed4fb0f59617395d0ac2ce4c1532f",
+      "size_bytes": 1239440
+    }
+  ],
+  "native_validation": {
+    "status": "complete",
+    "application_source_commit": "ab6714f",
+    "runner_sha256": "62a353799af4548f73e8c486f4d9ed62f1af30fc76118d8aa58cf71327904833",
+    "controls_sha256": "5e5881a8c6b7e601b6e8163b0866874652af3fec8ed91ef9f8b4b807a811a7f1",
+    "search_sha256": "a75de1fad5fcbbfaec9b198398e1716e5e5ff391be1a55eeee5b034ddc8be1e7",
+    "trials": [
+      {
+        "trial": "trial-000",
+        "component_ids": [
+          "component:throat",
+          "component:entry_0_negative",
+          "component:entry_0_negative_y",
+          "component:entry_0_positive",
+          "component:entry_0_positive_y"
+        ],
+        "rotated_component_ids": [
+          "component:throat",
+          "component:entry_0_negative_y",
+          "component:entry_0_positive",
+          "component:entry_0_positive_y",
+          "component:entry_0_negative"
+        ],
+        "maximum_observation_mapping_error_m": 0.0,
+        "frequencies": [
+          {
+            "frequency_hz": 350.0,
+            "polar_rotation": {
+              "component:throat": {
+                "reference_norm": 0.013814599941098689,
+                "difference_norm": 1.874007814946078e-07,
+                "relative_complex_norm_error": 1.3565415016984098e-05,
+                "passed": true
+              },
+              "component:entry_0_negative": {
+                "reference_norm": 0.0642910960368146,
+                "difference_norm": 9.286862201130692e-06,
+                "relative_complex_norm_error": 0.00014445020809433418,
+                "passed": true
+              },
+              "component:entry_0_negative_y": {
+                "reference_norm": 0.06428236030137127,
+                "difference_norm": 8.069552339403335e-05,
+                "relative_complex_norm_error": 0.0012553291916431381,
+                "passed": true
+              },
+              "component:entry_0_positive": {
+                "reference_norm": 0.06435691503089826,
+                "difference_norm": 5.6105180445766564e-05,
+                "relative_complex_norm_error": 0.0008717816946140135,
+                "passed": true
+              },
+              "component:entry_0_positive_y": {
+                "reference_norm": 0.06430535726123907,
+                "difference_norm": 1.5403934962591277e-05,
+                "relative_complex_norm_error": 0.00023954357177448122,
+                "passed": true
+              }
+            },
+            "mid_axis_equality": {
+              "component:entry_0_negative": {
+                "reference_norm": 0.005667954768778791,
+                "difference_norm": 1.7095254084798744e-06,
+                "relative_complex_norm_error": 0.0003016123942796047,
+                "passed": true
+              },
+              "component:entry_0_negative_y": {
+                "reference_norm": 0.005667954768778791,
+                "difference_norm": 2.5237040919230505e-06,
+                "relative_complex_norm_error": 0.00044525833301009283,
+                "passed": true
+              },
+              "component:entry_0_positive": {
+                "reference_norm": 0.005667954768778791,
+                "difference_norm": 4.587938278669619e-06,
+                "relative_complex_norm_error": 0.0008094521685214735,
+                "passed": true
+              },
+              "component:entry_0_positive_y": {
+                "reference_norm": 0.005667954768778791,
+                "difference_norm": 3.565551901915004e-07,
+                "relative_complex_norm_error": 6.290720458030812e-05,
+                "passed": true
+              }
+            },
+            "matrix_rotation": {
+              "mechanical:diaphragm-velocity": {
+                "reference_norm": 0.25459078569767,
+                "difference_norm": 0.00026772495445907785,
+                "relative_complex_norm_error": 0.0010515893327616532,
+                "passed": true
+              },
+              "electrical:voice-coil-current": {
+                "reference_norm": 0.9992442869421992,
+                "difference_norm": 0.00017836663367719745,
+                "relative_complex_norm_error": 0.00017850152961396414,
+                "passed": true
+              }
+            },
+            "passed": true
+          },
+          {
+            "frequency_hz": 1000.0,
+            "polar_rotation": {
+              "component:throat": {
+                "reference_norm": 0.46610442982912204,
+                "difference_norm": 5.213644153393555e-05,
+                "relative_complex_norm_error": 0.00011185570914451345,
+                "passed": true
+              },
+              "component:entry_0_negative": {
+                "reference_norm": 0.31463476198436924,
+                "difference_norm": 6.153655390358594e-05,
+                "relative_complex_norm_error": 0.00019558091266038498,
+                "passed": true
+              },
+              "component:entry_0_negative_y": {
+                "reference_norm": 0.3145842888382427,
+                "difference_norm": 0.0008221184976930831,
+                "relative_complex_norm_error": 0.0026133488761602183,
+                "passed": true
+              },
+              "component:entry_0_positive": {
+                "reference_norm": 0.3154054518090411,
+                "difference_norm": 0.0006062124048439927,
+                "relative_complex_norm_error": 0.0019220099125332102,
+                "passed": true
+              },
+              "component:entry_0_positive_y": {
+                "reference_norm": 0.3148004551510016,
+                "difference_norm": 0.00016942617922015318,
+                "relative_complex_norm_error": 0.0005382018241964861,
+                "passed": true
+              }
+            },
+            "mid_axis_equality": {
+              "component:entry_0_negative": {
+                "reference_norm": 0.03310608620731148,
+                "difference_norm": 2.3295970941127686e-05,
+                "relative_complex_norm_error": 0.0007036763812927778,
+                "passed": true
+              },
+              "component:entry_0_negative_y": {
+                "reference_norm": 0.03310608620731148,
+                "difference_norm": 2.859926231030532e-05,
+                "relative_complex_norm_error": 0.0008638672095280527,
+                "passed": true
+              },
+              "component:entry_0_positive": {
+                "reference_norm": 0.03310608620731148,
+                "difference_norm": 5.776572347528392e-05,
+                "relative_complex_norm_error": 0.0017448671858567915,
+                "passed": true
+              },
+              "component:entry_0_positive_y": {
+                "reference_norm": 0.03310608620731148,
+                "difference_norm": 5.871644288903464e-06,
+                "relative_complex_norm_error": 0.00017735845463988164,
+                "passed": true
+              }
+            },
+            "matrix_rotation": {
+              "mechanical:diaphragm-velocity": {
+                "reference_norm": 0.36871968075162664,
+                "difference_norm": 5.369692126068873e-05,
+                "relative_complex_norm_error": 0.00014563074352643392,
+                "passed": true
+              },
+              "electrical:voice-coil-current": {
+                "reference_norm": 0.9337844693233806,
+                "difference_norm": 3.7561072266857e-05,
+                "relative_complex_norm_error": 4.02245630558342e-05,
+                "passed": true
+              }
+            },
+            "passed": true
+          },
+          {
+            "frequency_hz": 2000.0,
+            "polar_rotation": {
+              "component:throat": {
+                "reference_norm": 0.5215524089012393,
+                "difference_norm": 0.00020939230359546962,
+                "relative_complex_norm_error": 0.00040147893101787963,
+                "passed": true
+              },
+              "component:entry_0_negative": {
+                "reference_norm": 0.02945373538022039,
+                "difference_norm": 1.214168588093858e-05,
+                "relative_complex_norm_error": 0.00041222906786527017,
+                "passed": true
+              },
+              "component:entry_0_negative_y": {
+                "reference_norm": 0.0294563831960864,
+                "difference_norm": 1.1904657268841461e-05,
+                "relative_complex_norm_error": 0.000404145247214978,
+                "passed": true
+              },
+              "component:entry_0_positive": {
+                "reference_norm": 0.029457961733567125,
+                "difference_norm": 1.1847604436184706e-05,
+                "relative_complex_norm_error": 0.00040218683639216117,
+                "passed": true
+              },
+              "component:entry_0_positive_y": {
+                "reference_norm": 0.02945838936543643,
+                "difference_norm": 1.2759931884596459e-05,
+                "relative_complex_norm_error": 0.00043315103640960444,
+                "passed": true
+              }
+            },
+            "mid_axis_equality": {
+              "component:entry_0_negative": {
+                "reference_norm": 0.004737717174747383,
+                "difference_norm": 4.6137755792082296e-07,
+                "relative_complex_norm_error": 9.738393848835517e-05,
+                "passed": true
+              },
+              "component:entry_0_negative_y": {
+                "reference_norm": 0.004737717174747383,
+                "difference_norm": 4.16346655383883e-08,
+                "relative_complex_norm_error": 8.787917050073441e-06,
+                "passed": true
+              },
+              "component:entry_0_positive": {
+                "reference_norm": 0.004737717174747383,
+                "difference_norm": 2.183665576131972e-07,
+                "relative_complex_norm_error": 4.609109188220814e-05,
+                "passed": true
+              },
+              "component:entry_0_positive_y": {
+                "reference_norm": 0.004737717174747383,
+                "difference_norm": 2.853967162873246e-07,
+                "relative_complex_norm_error": 6.023928946382116e-05,
+                "passed": true
+              }
+            },
+            "matrix_rotation": {
+              "mechanical:diaphragm-velocity": {
+                "reference_norm": 0.2741440634205374,
+                "difference_norm": 9.13417477097638e-07,
+                "relative_complex_norm_error": 3.3318885906219836e-06,
+                "passed": true
+              },
+              "electrical:voice-coil-current": {
+                "reference_norm": 0.9881808426673148,
+                "difference_norm": 6.894800204779634e-07,
+                "relative_complex_norm_error": 6.977265604713678e-07,
+                "passed": true
+              }
+            },
+            "passed": true
+          },
+          {
+            "frequency_hz": 3000.0,
+            "polar_rotation": {
+              "component:throat": {
+                "reference_norm": 0.3132173063967824,
+                "difference_norm": 0.000376719637584542,
+                "relative_complex_norm_error": 0.0012027420895680493,
+                "passed": true
+              },
+              "component:entry_0_negative": {
+                "reference_norm": 0.009620062548665539,
+                "difference_norm": 1.9598532684154495e-05,
+                "relative_complex_norm_error": 0.0020372562636687985,
+                "passed": true
+              },
+              "component:entry_0_negative_y": {
+                "reference_norm": 0.009617957637304586,
+                "difference_norm": 0.00015634088794991266,
+                "relative_complex_norm_error": 0.016255102574326465,
+                "passed": true
+              },
+              "component:entry_0_positive": {
+                "reference_norm": 0.00946239335925135,
+                "difference_norm": 0.00011324632421664701,
+                "relative_complex_norm_error": 0.01196804232471761,
+                "passed": true
+              },
+              "component:entry_0_positive_y": {
+                "reference_norm": 0.009574643617024961,
+                "difference_norm": 5.028454464117547e-05,
+                "relative_complex_norm_error": 0.005251845045361585,
+                "passed": true
+              }
+            },
+            "mid_axis_equality": {
+              "component:entry_0_negative": {
+                "reference_norm": 0.0017954617354009684,
+                "difference_norm": 1.0106683378832854e-05,
+                "relative_complex_norm_error": 0.005629016302358456,
+                "passed": true
+              },
+              "component:entry_0_negative_y": {
+                "reference_norm": 0.0017954617354009684,
+                "difference_norm": 9.250023173798263e-06,
+                "relative_complex_norm_error": 0.005151891010215552,
+                "passed": true
+              },
+              "component:entry_0_positive": {
+                "reference_norm": 0.0017954617354009684,
+                "difference_norm": 2.033681386362142e-05,
+                "relative_complex_norm_error": 0.011326787679537898,
+                "passed": true
+              },
+              "component:entry_0_positive_y": {
+                "reference_norm": 0.0017954617354009684,
+                "difference_norm": 9.883420414975987e-07,
+                "relative_complex_norm_error": 0.0005504667807787499,
+                "passed": true
+              }
+            },
+            "matrix_rotation": {
+              "mechanical:diaphragm-velocity": {
+                "reference_norm": 0.206034757509365,
+                "difference_norm": 2.3788178724917056e-06,
+                "relative_complex_norm_error": 1.1545711516094947e-05,
+                "passed": true
+              },
+              "electrical:voice-coil-current": {
+                "reference_norm": 1.0058932067752446,
+                "difference_norm": 1.881691900093749e-06,
+                "relative_complex_norm_error": 1.870667668714251e-06,
+                "passed": true
+              }
+            },
+            "passed": true
+          }
+        ],
+        "symmetry_reference_passed": true,
+        "electrical_validation": {
+          "schema_version": 1,
+          "evidence": "independent_equation_consistency",
+          "passed": true,
+          "project_sha256": "40d44583184ba7d4a8cf1bc9abea47004d913cfb177e0f3ae0d62e56acdb600b",
+          "evaluation_sha256": "14fbb5b75eb64716716b95073daeabf00229b99dd4d79bcd75dc1b4074feaa6e",
+          "rows": [
+            {
+              "frequency_hz": 350.0,
+              "passed": true,
+              "circuit_voltage_relative_residual": 1.9638895380871784e-16,
+              "electrical_reciprocity_relative_residual": 3.3877610923521356e-09,
+              "minimum_hermitian_admittance_eigenvalue_s": 0.0949466300297301
+            },
+            {
+              "frequency_hz": 1000.0,
+              "passed": true,
+              "circuit_voltage_relative_residual": 1.8368733266220967e-16,
+              "electrical_reciprocity_relative_residual": 4.03601774660482e-09,
+              "minimum_hermitian_admittance_eigenvalue_s": 0.01799703302025678
+            },
+            {
+              "frequency_hz": 2000.0,
+              "passed": true,
+              "circuit_voltage_relative_residual": 1.4448502818985395e-16,
+              "electrical_reciprocity_relative_residual": 5.740921412282653e-10,
+              "minimum_hermitian_admittance_eigenvalue_s": 0.09430194427911687
+            },
+            {
+              "frequency_hz": 3000.0,
+              "passed": true,
+              "circuit_voltage_relative_residual": 2.0781188443947496e-16,
+              "electrical_reciprocity_relative_residual": 4.921986188822367e-09,
+              "minimum_hermitian_admittance_eigenvalue_s": 0.14762644970816896
+            }
+          ],
+          "relative_tolerance": 1e-08,
+          "acoustic_accuracy_validated": false,
+          "limitations": [
+            "Circuit consistency cannot establish acoustic field accuracy",
+            "No measured driver or speaker comparison",
+            "No RMS or absolute SPL qualification"
+          ]
+        },
+        "evidence_identity": {
+          "controls": {
+            "evaluation.json": "14fbb5b75eb64716716b95073daeabf00229b99dd4d79bcd75dc1b4074feaa6e",
+            "request.json": "26412404b5d897026dc9adf040664b98410eb537fa9a969139a34eff073543c0",
+            "preflight.json": "8f9038278e70301927b98b20cacd48239370f544c12ed4cd1dbe6fa8d4078205"
+          },
+          "result": {
+            "evidence": "predicted",
+            "artifact_hashes": {
+              "manifest": "288331d67d06e1c72ab7889f50222fbe9a51142bfa7125fb34bfdf66bd12f374",
+              "domains_metadata": "3b2c48c592ca6d8c107a5b0a5fd0f5bfead8c4948a275fcc9595d390932d1a19",
+              "domains_arrays": "005785d34d875699b66bb83212b0185a560c64b2da4e00df3ca7cc76c363281a",
+              "reference_runtime": "09628cd9bb59362e4927ec2e47becddf9fe94841bba1446c1acc576a21a69bca"
+            },
+            "solve_kind": "coupled_bem_fem",
+            "phasor_convention": "exp(-i omega t)",
+            "frequencies_hz": [
+              350.0,
+              1000.0,
+              2000.0,
+              3000.0
+            ],
+            "excitation_port_ids": [
+              "excitation:throat",
+              "excitation:entry_0_negative",
+              "excitation:entry_0_negative_y",
+              "excitation:entry_0_positive",
+              "excitation:entry_0_positive_y"
+            ],
+            "inventory": [
+              {
+                "frequency_hz": 350.0,
+                "metadata_sha256": "575943ba605482efb79ef1e98631440e4dd7537cfc90d536a24c2c4710556813",
+                "arrays_sha256": "4da09a629c048455eb37ae9e2ec55ebcc87ea576b325ee87a5ce1a4c420948fb",
+                "quantities": [
+                  {
+                    "axes": [
+                      "excitation",
+                      "transducer"
+                    ],
+                    "dtype": "complex128",
+                    "id": "mechanical:diaphragm-velocity",
+                    "key": "q0000",
+                    "metadata": {
+                      "component_ids": [
+                        "component:throat",
+                        "component:entry_0_negative",
+                        "component:entry_0_negative_y",
+                        "component:entry_0_positive",
+                        "component:entry_0_positive_y"
+                      ],
+                      "physical_driver_orbit_counts": [
+                        1,
+                        1,
+                        1,
+                        1,
+                        1
+                      ],
+                      "surface_completion_factors": [
+                        1.0,
+                        1.0,
+                        1.0,
+                        1.0,
+                        1.0
+                      ]
+                    },
+                    "quantity": "diaphragm_velocity",
+                    "shape": [
+                      5,
+                      5
+                    ],
+                    "target_id": "components:electrodynamic-transducers",
+                    "unit": "m/s"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "transducer"
+                    ],
+                    "dtype": "complex128",
+                    "id": "electrical:voice-coil-current",
+                    "key": "q0001",
+                    "metadata": {
+                      "component_ids": [
+                        "component:throat",
+                        "component:entry_0_negative",
+                        "component:entry_0_negative_y",
+                        "component:entry_0_positive",
+                        "component:entry_0_positive_y"
+                      ],
+                      "physical_driver_orbit_counts": [
+                        1,
+                        1,
+                        1,
+                        1,
+                        1
+                      ],
+                      "surface_completion_factors": [
+                        1.0,
+                        1.0,
+                        1.0,
+                        1.0,
+                        1.0
+                      ]
+                    },
+                    "quantity": "voice_coil_current",
+                    "shape": [
+                      5,
+                      5
+                    ],
+                    "target_id": "components:electrodynamic-transducers",
+                    "unit": "A"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "bem_node"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:bem-boundary",
+                    "key": "q0002",
+                    "metadata": {
+                      "mesh_ids": [
+                        "mesh:exterior"
+                      ],
+                      "vertex_counts": [
+                        1849
+                      ],
+                      "vertex_offsets": [
+                        0
+                      ]
+                    },
+                    "quantity": "bem_boundary_pressure",
+                    "shape": [
+                      5,
+                      1849
+                    ],
+                    "target_id": "domain:bem-boundary",
+                    "unit": "Pa"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "bem_face"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:normal-derivative:bem-boundary",
+                    "key": "q0003",
+                    "metadata": {
+                      "face_counts": [
+                        3694
+                      ],
+                      "face_offsets": [
+                        0
+                      ],
+                      "mesh_ids": [
+                        "mesh:exterior"
+                      ]
+                    },
+                    "quantity": "bem_boundary_neumann",
+                    "shape": [
+                      5,
+                      3694
+                    ],
+                    "target_id": "domain:bem-boundary",
+                    "unit": "Pa/m"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "fem_node"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:fem-nodes",
+                    "key": "q0004",
+                    "metadata": {
+                      "mesh_ids": [
+                        "mesh:rear_entry_0_positive",
+                        "mesh:rear_entry_0_negative",
+                        "mesh:rear_entry_0_positive_y",
+                        "mesh:rear_entry_0_negative_y",
+                        "mesh:front"
+                      ],
+                      "node_counts": [
+                        1822,
+                        1847,
+                        1867,
+                        1828,
+                        53113
+                      ],
+                      "node_offsets": [
+                        0,
+                        1822,
+                        3669,
+                        5536,
+                        7364
+                      ],
+                      "region_ids": [
+                        "region:rear_entry_0_positive",
+                        "region:rear_entry_0_negative",
+                        "region:rear_entry_0_positive_y",
+                        "region:rear_entry_0_negative_y",
+                        "region:front"
+                      ]
+                    },
+                    "quantity": "fem_nodal_pressure",
+                    "shape": [
+                      5,
+                      60477
+                    ],
+                    "target_id": "domain:fem-volume",
+                    "unit": "Pa"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "observation"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:horizontal-polar",
+                    "key": "q0005",
+                    "metadata": {
+                      "source_output_id": "ui:exterior-pressure"
+                    },
+                    "quantity": "exterior_pressure",
+                    "shape": [
+                      5,
+                      73
+                    ],
+                    "target_id": "observation:horizontal-polar",
+                    "unit": "Pa"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "observation"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:vertical-polar",
+                    "key": "q0006",
+                    "metadata": {
+                      "source_output_id": "ui:exterior-pressure"
+                    },
+                    "quantity": "exterior_pressure",
+                    "shape": [
+                      5,
+                      73
+                    ],
+                    "target_id": "observation:vertical-polar",
+                    "unit": "Pa"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "observation"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:sphere",
+                    "key": "q0007",
+                    "metadata": {
+                      "source_output_id": "ui:exterior-pressure"
+                    },
+                    "quantity": "exterior_pressure",
+                    "shape": [
+                      5,
+                      413
+                    ],
+                    "target_id": "observation:sphere",
+                    "unit": "Pa"
+                  }
+                ]
+              },
+              {
+                "frequency_hz": 1000.0,
+                "metadata_sha256": "02f217b312062356dd8e0ea6f12da4ec18ef28ce5ef9a76bf6b86dd0eb8799dc",
+                "arrays_sha256": "338f0c286139392044229f8ff447fd84daa974c8a5aeae157452341a19b9ce71",
+                "quantities": [
+                  {
+                    "axes": [
+                      "excitation",
+                      "transducer"
+                    ],
+                    "dtype": "complex128",
+                    "id": "mechanical:diaphragm-velocity",
+                    "key": "q0000",
+                    "metadata": {
+                      "component_ids": [
+                        "component:throat",
+                        "component:entry_0_negative",
+                        "component:entry_0_negative_y",
+                        "component:entry_0_positive",
+                        "component:entry_0_positive_y"
+                      ],
+                      "physical_driver_orbit_counts": [
+                        1,
+                        1,
+                        1,
+                        1,
+                        1
+                      ],
+                      "surface_completion_factors": [
+                        1.0,
+                        1.0,
+                        1.0,
+                        1.0,
+                        1.0
+                      ]
+                    },
+                    "quantity": "diaphragm_velocity",
+                    "shape": [
+                      5,
+                      5
+                    ],
+                    "target_id": "components:electrodynamic-transducers",
+                    "unit": "m/s"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "transducer"
+                    ],
+                    "dtype": "complex128",
+                    "id": "electrical:voice-coil-current",
+                    "key": "q0001",
+                    "metadata": {
+                      "component_ids": [
+                        "component:throat",
+                        "component:entry_0_negative",
+                        "component:entry_0_negative_y",
+                        "component:entry_0_positive",
+                        "component:entry_0_positive_y"
+                      ],
+                      "physical_driver_orbit_counts": [
+                        1,
+                        1,
+                        1,
+                        1,
+                        1
+                      ],
+                      "surface_completion_factors": [
+                        1.0,
+                        1.0,
+                        1.0,
+                        1.0,
+                        1.0
+                      ]
+                    },
+                    "quantity": "voice_coil_current",
+                    "shape": [
+                      5,
+                      5
+                    ],
+                    "target_id": "components:electrodynamic-transducers",
+                    "unit": "A"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "bem_node"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:bem-boundary",
+                    "key": "q0002",
+                    "metadata": {
+                      "mesh_ids": [
+                        "mesh:exterior"
+                      ],
+                      "vertex_counts": [
+                        1849
+                      ],
+                      "vertex_offsets": [
+                        0
+                      ]
+                    },
+                    "quantity": "bem_boundary_pressure",
+                    "shape": [
+                      5,
+                      1849
+                    ],
+                    "target_id": "domain:bem-boundary",
+                    "unit": "Pa"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "bem_face"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:normal-derivative:bem-boundary",
+                    "key": "q0003",
+                    "metadata": {
+                      "face_counts": [
+                        3694
+                      ],
+                      "face_offsets": [
+                        0
+                      ],
+                      "mesh_ids": [
+                        "mesh:exterior"
+                      ]
+                    },
+                    "quantity": "bem_boundary_neumann",
+                    "shape": [
+                      5,
+                      3694
+                    ],
+                    "target_id": "domain:bem-boundary",
+                    "unit": "Pa/m"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "fem_node"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:fem-nodes",
+                    "key": "q0004",
+                    "metadata": {
+                      "mesh_ids": [
+                        "mesh:rear_entry_0_positive",
+                        "mesh:rear_entry_0_negative",
+                        "mesh:rear_entry_0_positive_y",
+                        "mesh:rear_entry_0_negative_y",
+                        "mesh:front"
+                      ],
+                      "node_counts": [
+                        1822,
+                        1847,
+                        1867,
+                        1828,
+                        53113
+                      ],
+                      "node_offsets": [
+                        0,
+                        1822,
+                        3669,
+                        5536,
+                        7364
+                      ],
+                      "region_ids": [
+                        "region:rear_entry_0_positive",
+                        "region:rear_entry_0_negative",
+                        "region:rear_entry_0_positive_y",
+                        "region:rear_entry_0_negative_y",
+                        "region:front"
+                      ]
+                    },
+                    "quantity": "fem_nodal_pressure",
+                    "shape": [
+                      5,
+                      60477
+                    ],
+                    "target_id": "domain:fem-volume",
+                    "unit": "Pa"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "observation"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:horizontal-polar",
+                    "key": "q0005",
+                    "metadata": {
+                      "source_output_id": "ui:exterior-pressure"
+                    },
+                    "quantity": "exterior_pressure",
+                    "shape": [
+                      5,
+                      73
+                    ],
+                    "target_id": "observation:horizontal-polar",
+                    "unit": "Pa"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "observation"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:vertical-polar",
+                    "key": "q0006",
+                    "metadata": {
+                      "source_output_id": "ui:exterior-pressure"
+                    },
+                    "quantity": "exterior_pressure",
+                    "shape": [
+                      5,
+                      73
+                    ],
+                    "target_id": "observation:vertical-polar",
+                    "unit": "Pa"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "observation"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:sphere",
+                    "key": "q0007",
+                    "metadata": {
+                      "source_output_id": "ui:exterior-pressure"
+                    },
+                    "quantity": "exterior_pressure",
+                    "shape": [
+                      5,
+                      413
+                    ],
+                    "target_id": "observation:sphere",
+                    "unit": "Pa"
+                  }
+                ]
+              },
+              {
+                "frequency_hz": 2000.0,
+                "metadata_sha256": "03d6d15bacc84fd2ba2f1b34538fc0a67dbece1c613766a607030e2cd3563820",
+                "arrays_sha256": "c5522cfa7846fa907c9791d3786edf27d618b3dc80cc1de080d057486460864c",
+                "quantities": [
+                  {
+                    "axes": [
+                      "excitation",
+                      "transducer"
+                    ],
+                    "dtype": "complex128",
+                    "id": "mechanical:diaphragm-velocity",
+                    "key": "q0000",
+                    "metadata": {
+                      "component_ids": [
+                        "component:throat",
+                        "component:entry_0_negative",
+                        "component:entry_0_negative_y",
+                        "component:entry_0_positive",
+                        "component:entry_0_positive_y"
+                      ],
+                      "physical_driver_orbit_counts": [
+                        1,
+                        1,
+                        1,
+                        1,
+                        1
+                      ],
+                      "surface_completion_factors": [
+                        1.0,
+                        1.0,
+                        1.0,
+                        1.0,
+                        1.0
+                      ]
+                    },
+                    "quantity": "diaphragm_velocity",
+                    "shape": [
+                      5,
+                      5
+                    ],
+                    "target_id": "components:electrodynamic-transducers",
+                    "unit": "m/s"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "transducer"
+                    ],
+                    "dtype": "complex128",
+                    "id": "electrical:voice-coil-current",
+                    "key": "q0001",
+                    "metadata": {
+                      "component_ids": [
+                        "component:throat",
+                        "component:entry_0_negative",
+                        "component:entry_0_negative_y",
+                        "component:entry_0_positive",
+                        "component:entry_0_positive_y"
+                      ],
+                      "physical_driver_orbit_counts": [
+                        1,
+                        1,
+                        1,
+                        1,
+                        1
+                      ],
+                      "surface_completion_factors": [
+                        1.0,
+                        1.0,
+                        1.0,
+                        1.0,
+                        1.0
+                      ]
+                    },
+                    "quantity": "voice_coil_current",
+                    "shape": [
+                      5,
+                      5
+                    ],
+                    "target_id": "components:electrodynamic-transducers",
+                    "unit": "A"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "bem_node"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:bem-boundary",
+                    "key": "q0002",
+                    "metadata": {
+                      "mesh_ids": [
+                        "mesh:exterior"
+                      ],
+                      "vertex_counts": [
+                        1849
+                      ],
+                      "vertex_offsets": [
+                        0
+                      ]
+                    },
+                    "quantity": "bem_boundary_pressure",
+                    "shape": [
+                      5,
+                      1849
+                    ],
+                    "target_id": "domain:bem-boundary",
+                    "unit": "Pa"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "bem_face"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:normal-derivative:bem-boundary",
+                    "key": "q0003",
+                    "metadata": {
+                      "face_counts": [
+                        3694
+                      ],
+                      "face_offsets": [
+                        0
+                      ],
+                      "mesh_ids": [
+                        "mesh:exterior"
+                      ]
+                    },
+                    "quantity": "bem_boundary_neumann",
+                    "shape": [
+                      5,
+                      3694
+                    ],
+                    "target_id": "domain:bem-boundary",
+                    "unit": "Pa/m"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "fem_node"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:fem-nodes",
+                    "key": "q0004",
+                    "metadata": {
+                      "mesh_ids": [
+                        "mesh:rear_entry_0_positive",
+                        "mesh:rear_entry_0_negative",
+                        "mesh:rear_entry_0_positive_y",
+                        "mesh:rear_entry_0_negative_y",
+                        "mesh:front"
+                      ],
+                      "node_counts": [
+                        1822,
+                        1847,
+                        1867,
+                        1828,
+                        53113
+                      ],
+                      "node_offsets": [
+                        0,
+                        1822,
+                        3669,
+                        5536,
+                        7364
+                      ],
+                      "region_ids": [
+                        "region:rear_entry_0_positive",
+                        "region:rear_entry_0_negative",
+                        "region:rear_entry_0_positive_y",
+                        "region:rear_entry_0_negative_y",
+                        "region:front"
+                      ]
+                    },
+                    "quantity": "fem_nodal_pressure",
+                    "shape": [
+                      5,
+                      60477
+                    ],
+                    "target_id": "domain:fem-volume",
+                    "unit": "Pa"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "observation"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:horizontal-polar",
+                    "key": "q0005",
+                    "metadata": {
+                      "source_output_id": "ui:exterior-pressure"
+                    },
+                    "quantity": "exterior_pressure",
+                    "shape": [
+                      5,
+                      73
+                    ],
+                    "target_id": "observation:horizontal-polar",
+                    "unit": "Pa"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "observation"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:vertical-polar",
+                    "key": "q0006",
+                    "metadata": {
+                      "source_output_id": "ui:exterior-pressure"
+                    },
+                    "quantity": "exterior_pressure",
+                    "shape": [
+                      5,
+                      73
+                    ],
+                    "target_id": "observation:vertical-polar",
+                    "unit": "Pa"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "observation"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:sphere",
+                    "key": "q0007",
+                    "metadata": {
+                      "source_output_id": "ui:exterior-pressure"
+                    },
+                    "quantity": "exterior_pressure",
+                    "shape": [
+                      5,
+                      413
+                    ],
+                    "target_id": "observation:sphere",
+                    "unit": "Pa"
+                  }
+                ]
+              },
+              {
+                "frequency_hz": 3000.0,
+                "metadata_sha256": "c7ab0a089704de35437b0b4610df18ce3e088e42f5626e065cd862e4655d7843",
+                "arrays_sha256": "a0eb1dc1786b1193dc26440ff99d6287c34453d3ea4c573d8a5762f2a9b8af2c",
+                "quantities": [
+                  {
+                    "axes": [
+                      "excitation",
+                      "transducer"
+                    ],
+                    "dtype": "complex128",
+                    "id": "mechanical:diaphragm-velocity",
+                    "key": "q0000",
+                    "metadata": {
+                      "component_ids": [
+                        "component:throat",
+                        "component:entry_0_negative",
+                        "component:entry_0_negative_y",
+                        "component:entry_0_positive",
+                        "component:entry_0_positive_y"
+                      ],
+                      "physical_driver_orbit_counts": [
+                        1,
+                        1,
+                        1,
+                        1,
+                        1
+                      ],
+                      "surface_completion_factors": [
+                        1.0,
+                        1.0,
+                        1.0,
+                        1.0,
+                        1.0
+                      ]
+                    },
+                    "quantity": "diaphragm_velocity",
+                    "shape": [
+                      5,
+                      5
+                    ],
+                    "target_id": "components:electrodynamic-transducers",
+                    "unit": "m/s"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "transducer"
+                    ],
+                    "dtype": "complex128",
+                    "id": "electrical:voice-coil-current",
+                    "key": "q0001",
+                    "metadata": {
+                      "component_ids": [
+                        "component:throat",
+                        "component:entry_0_negative",
+                        "component:entry_0_negative_y",
+                        "component:entry_0_positive",
+                        "component:entry_0_positive_y"
+                      ],
+                      "physical_driver_orbit_counts": [
+                        1,
+                        1,
+                        1,
+                        1,
+                        1
+                      ],
+                      "surface_completion_factors": [
+                        1.0,
+                        1.0,
+                        1.0,
+                        1.0,
+                        1.0
+                      ]
+                    },
+                    "quantity": "voice_coil_current",
+                    "shape": [
+                      5,
+                      5
+                    ],
+                    "target_id": "components:electrodynamic-transducers",
+                    "unit": "A"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "bem_node"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:bem-boundary",
+                    "key": "q0002",
+                    "metadata": {
+                      "mesh_ids": [
+                        "mesh:exterior"
+                      ],
+                      "vertex_counts": [
+                        1849
+                      ],
+                      "vertex_offsets": [
+                        0
+                      ]
+                    },
+                    "quantity": "bem_boundary_pressure",
+                    "shape": [
+                      5,
+                      1849
+                    ],
+                    "target_id": "domain:bem-boundary",
+                    "unit": "Pa"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "bem_face"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:normal-derivative:bem-boundary",
+                    "key": "q0003",
+                    "metadata": {
+                      "face_counts": [
+                        3694
+                      ],
+                      "face_offsets": [
+                        0
+                      ],
+                      "mesh_ids": [
+                        "mesh:exterior"
+                      ]
+                    },
+                    "quantity": "bem_boundary_neumann",
+                    "shape": [
+                      5,
+                      3694
+                    ],
+                    "target_id": "domain:bem-boundary",
+                    "unit": "Pa/m"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "fem_node"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:fem-nodes",
+                    "key": "q0004",
+                    "metadata": {
+                      "mesh_ids": [
+                        "mesh:rear_entry_0_positive",
+                        "mesh:rear_entry_0_negative",
+                        "mesh:rear_entry_0_positive_y",
+                        "mesh:rear_entry_0_negative_y",
+                        "mesh:front"
+                      ],
+                      "node_counts": [
+                        1822,
+                        1847,
+                        1867,
+                        1828,
+                        53113
+                      ],
+                      "node_offsets": [
+                        0,
+                        1822,
+                        3669,
+                        5536,
+                        7364
+                      ],
+                      "region_ids": [
+                        "region:rear_entry_0_positive",
+                        "region:rear_entry_0_negative",
+                        "region:rear_entry_0_positive_y",
+                        "region:rear_entry_0_negative_y",
+                        "region:front"
+                      ]
+                    },
+                    "quantity": "fem_nodal_pressure",
+                    "shape": [
+                      5,
+                      60477
+                    ],
+                    "target_id": "domain:fem-volume",
+                    "unit": "Pa"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "observation"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:horizontal-polar",
+                    "key": "q0005",
+                    "metadata": {
+                      "source_output_id": "ui:exterior-pressure"
+                    },
+                    "quantity": "exterior_pressure",
+                    "shape": [
+                      5,
+                      73
+                    ],
+                    "target_id": "observation:horizontal-polar",
+                    "unit": "Pa"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "observation"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:vertical-polar",
+                    "key": "q0006",
+                    "metadata": {
+                      "source_output_id": "ui:exterior-pressure"
+                    },
+                    "quantity": "exterior_pressure",
+                    "shape": [
+                      5,
+                      73
+                    ],
+                    "target_id": "observation:vertical-polar",
+                    "unit": "Pa"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "observation"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:sphere",
+                    "key": "q0007",
+                    "metadata": {
+                      "source_output_id": "ui:exterior-pressure"
+                    },
+                    "quantity": "exterior_pressure",
+                    "shape": [
+                      5,
+                      413
+                    ],
+                    "target_id": "observation:sphere",
+                    "unit": "Pa"
+                  }
+                ]
+              }
+            ]
+          },
+          "checks": {
+            "schema_version": 1,
+            "evidence": "independent_equation_consistency",
+            "passed": true,
+            "project_sha256": "40d44583184ba7d4a8cf1bc9abea47004d913cfb177e0f3ae0d62e56acdb600b",
+            "evaluation_sha256": "14fbb5b75eb64716716b95073daeabf00229b99dd4d79bcd75dc1b4074feaa6e",
+            "rows": [
+              {
+                "frequency_hz": 350.0,
+                "passed": true,
+                "circuit_voltage_relative_residual": 1.9638895380871784e-16,
+                "electrical_reciprocity_relative_residual": 3.3877610923521356e-09,
+                "minimum_hermitian_admittance_eigenvalue_s": 0.0949466300297301
+              },
+              {
+                "frequency_hz": 1000.0,
+                "passed": true,
+                "circuit_voltage_relative_residual": 1.8368733266220967e-16,
+                "electrical_reciprocity_relative_residual": 4.03601774660482e-09,
+                "minimum_hermitian_admittance_eigenvalue_s": 0.01799703302025678
+              },
+              {
+                "frequency_hz": 2000.0,
+                "passed": true,
+                "circuit_voltage_relative_residual": 1.4448502818985395e-16,
+                "electrical_reciprocity_relative_residual": 5.740921412282653e-10,
+                "minimum_hermitian_admittance_eigenvalue_s": 0.09430194427911687
+              },
+              {
+                "frequency_hz": 3000.0,
+                "passed": true,
+                "circuit_voltage_relative_residual": 2.0781188443947496e-16,
+                "electrical_reciprocity_relative_residual": 4.921986188822367e-09,
+                "minimum_hermitian_admittance_eigenvalue_s": 0.14762644970816896
+              }
+            ],
+            "relative_tolerance": 1e-08,
+            "acoustic_accuracy_validated": false,
+            "limitations": [
+              "Circuit consistency cannot establish acoustic field accuracy",
+              "No measured driver or speaker comparison",
+              "No RMS or absolute SPL qualification"
+            ]
+          }
+        }
+      },
+      {
+        "trial": "trial-001",
+        "component_ids": [
+          "component:throat",
+          "component:entry_0_negative",
+          "component:entry_0_negative_y",
+          "component:entry_0_positive",
+          "component:entry_0_positive_y"
+        ],
+        "rotated_component_ids": [
+          "component:throat",
+          "component:entry_0_negative_y",
+          "component:entry_0_positive",
+          "component:entry_0_positive_y",
+          "component:entry_0_negative"
+        ],
+        "maximum_observation_mapping_error_m": 0.0,
+        "frequencies": [
+          {
+            "frequency_hz": 350.0,
+            "polar_rotation": {
+              "component:throat": {
+                "reference_norm": 0.01346820271851366,
+                "difference_norm": 6.958310936824272e-07,
+                "relative_complex_norm_error": 5.1664732720864375e-05,
+                "passed": true
+              },
+              "component:entry_0_negative": {
+                "reference_norm": 0.06394262956069524,
+                "difference_norm": 9.254826625090158e-06,
+                "relative_complex_norm_error": 0.0001447364096327216,
+                "passed": true
+              },
+              "component:entry_0_negative_y": {
+                "reference_norm": 0.06393450363866116,
+                "difference_norm": 3.114570477204417e-05,
+                "relative_complex_norm_error": 0.00048715017712611726,
+                "passed": true
+              },
+              "component:entry_0_positive": {
+                "reference_norm": 0.0639628557900061,
+                "difference_norm": 2.0840760749026464e-05,
+                "relative_complex_norm_error": 0.0003258259890310078,
+                "passed": true
+              },
+              "component:entry_0_positive_y": {
+                "reference_norm": 0.06394419410211626,
+                "difference_norm": 3.6444424667851782e-06,
+                "relative_complex_norm_error": 5.699411053590187e-05,
+                "passed": true
+              }
+            },
+            "mid_axis_equality": {
+              "component:entry_0_negative": {
+                "reference_norm": 0.0056315946915084574,
+                "difference_norm": 3.4068338213021537e-07,
+                "relative_complex_norm_error": 6.049501087922953e-05,
+                "passed": true
+              },
+              "component:entry_0_negative_y": {
+                "reference_norm": 0.0056315946915084574,
+                "difference_norm": 1.1010397759752431e-06,
+                "relative_complex_norm_error": 0.00019551118933247002,
+                "passed": true
+              },
+              "component:entry_0_positive": {
+                "reference_norm": 0.0056315946915084574,
+                "difference_norm": 1.6263105662454185e-06,
+                "relative_complex_norm_error": 0.00028878331189168037,
+                "passed": true
+              },
+              "component:entry_0_positive_y": {
+                "reference_norm": 0.0056315946915084574,
+                "difference_norm": 1.8631173709988054e-07,
+                "relative_complex_norm_error": 3.308330007853882e-05,
+                "passed": true
+              }
+            },
+            "matrix_rotation": {
+              "mechanical:diaphragm-velocity": {
+                "reference_norm": 0.2580486338587858,
+                "difference_norm": 0.00011005282427787027,
+                "relative_complex_norm_error": 0.00042648094133331254,
+                "passed": true
+              },
+              "electrical:voice-coil-current": {
+                "reference_norm": 0.9986792596741922,
+                "difference_norm": 7.332288286759481e-05,
+                "relative_complex_norm_error": 7.341985142608806e-05,
+                "passed": true
+              }
+            },
+            "passed": true
+          },
+          {
+            "frequency_hz": 1000.0,
+            "polar_rotation": {
+              "component:throat": {
+                "reference_norm": 0.4232439947260439,
+                "difference_norm": 4.718530687373813e-05,
+                "relative_complex_norm_error": 0.0001114848821523861,
+                "passed": true
+              },
+              "component:entry_0_negative": {
+                "reference_norm": 0.3021606524514068,
+                "difference_norm": 8.628414871128973e-05,
+                "relative_complex_norm_error": 0.00028555719618445646,
+                "passed": true
+              },
+              "component:entry_0_negative_y": {
+                "reference_norm": 0.3020811869426548,
+                "difference_norm": 0.0003631707070145632,
+                "relative_complex_norm_error": 0.001202228813684797,
+                "passed": true
+              },
+              "component:entry_0_positive": {
+                "reference_norm": 0.30244266713099033,
+                "difference_norm": 0.0002783391520964428,
+                "relative_complex_norm_error": 0.0009203038537412842,
+                "passed": true
+              },
+              "component:entry_0_positive_y": {
+                "reference_norm": 0.302166492244089,
+                "difference_norm": 3.406222349777789e-05,
+                "relative_complex_norm_error": 0.00011272667344684449,
+                "passed": true
+              }
+            },
+            "mid_axis_equality": {
+              "component:entry_0_negative": {
+                "reference_norm": 0.0316562593425094,
+                "difference_norm": 5.460228656431838e-06,
+                "relative_complex_norm_error": 0.00017248496094734748,
+                "passed": true
+              },
+              "component:entry_0_negative_y": {
+                "reference_norm": 0.0316562593425094,
+                "difference_norm": 1.3783699685510473e-05,
+                "relative_complex_norm_error": 0.00043541782799969426,
+                "passed": true
+              },
+              "component:entry_0_positive": {
+                "reference_norm": 0.0316562593425094,
+                "difference_norm": 2.409189587974436e-05,
+                "relative_complex_norm_error": 0.0007610468318154291,
+                "passed": true
+              },
+              "component:entry_0_positive_y": {
+                "reference_norm": 0.0316562593425094,
+                "difference_norm": 4.848447153225987e-06,
+                "relative_complex_norm_error": 0.00015315919359793978,
+                "passed": true
+              }
+            },
+            "matrix_rotation": {
+              "mechanical:diaphragm-velocity": {
+                "reference_norm": 0.3685381971059783,
+                "difference_norm": 2.4511212332165034e-05,
+                "relative_complex_norm_error": 6.650928594279875e-05,
+                "passed": true
+              },
+              "electrical:voice-coil-current": {
+                "reference_norm": 0.9344084897215478,
+                "difference_norm": 1.72264076405366e-05,
+                "relative_complex_norm_error": 1.8435628346730924e-05,
+                "passed": true
+              }
+            },
+            "passed": true
+          },
+          {
+            "frequency_hz": 2000.0,
+            "polar_rotation": {
+              "component:throat": {
+                "reference_norm": 0.5700199823663238,
+                "difference_norm": 0.00014414870145441482,
+                "relative_complex_norm_error": 0.0002528835934066914,
+                "passed": true
+              },
+              "component:entry_0_negative": {
+                "reference_norm": 0.032392478237468166,
+                "difference_norm": 9.990841534287466e-06,
+                "relative_complex_norm_error": 0.00030843090982557566,
+                "passed": true
+              },
+              "component:entry_0_negative_y": {
+                "reference_norm": 0.032386856956092794,
+                "difference_norm": 1.1324389577329867e-05,
+                "relative_complex_norm_error": 0.000349660036251201,
+                "passed": true
+              },
+              "component:entry_0_positive": {
+                "reference_norm": 0.03239471403791746,
+                "difference_norm": 1.3724922361220412e-05,
+                "relative_complex_norm_error": 0.0004236778366111096,
+                "passed": true
+              },
+              "component:entry_0_positive_y": {
+                "reference_norm": 0.03238366148796267,
+                "difference_norm": 1.2073156196068413e-05,
+                "relative_complex_norm_error": 0.00037281627960927534,
+                "passed": true
+              }
+            },
+            "mid_axis_equality": {
+              "component:entry_0_negative": {
+                "reference_norm": 0.0051820903588136805,
+                "difference_norm": 4.880984845349728e-07,
+                "relative_complex_norm_error": 9.418949704433785e-05,
+                "passed": true
+              },
+              "component:entry_0_negative_y": {
+                "reference_norm": 0.0051820903588136805,
+                "difference_norm": 4.1181183517928963e-07,
+                "relative_complex_norm_error": 7.946828531827539e-05,
+                "passed": true
+              },
+              "component:entry_0_positive": {
+                "reference_norm": 0.0051820903588136805,
+                "difference_norm": 8.459857775482062e-07,
+                "relative_complex_norm_error": 0.00016325183834538058,
+                "passed": true
+              },
+              "component:entry_0_positive_y": {
+                "reference_norm": 0.0051820903588136805,
+                "difference_norm": 9.221050381481345e-07,
+                "relative_complex_norm_error": 0.0001779407486748705,
+                "passed": true
+              }
+            },
+            "matrix_rotation": {
+              "mechanical:diaphragm-velocity": {
+                "reference_norm": 0.27353980813013395,
+                "difference_norm": 6.216786700782881e-07,
+                "relative_complex_norm_error": 2.272717358135056e-06,
+                "passed": true
+              },
+              "electrical:voice-coil-current": {
+                "reference_norm": 0.987864628902335,
+                "difference_norm": 4.660031901685664e-07,
+                "relative_complex_norm_error": 4.7172778185849764e-07,
+                "passed": true
+              }
+            },
+            "passed": true
+          },
+          {
+            "frequency_hz": 3000.0,
+            "polar_rotation": {
+              "component:throat": {
+                "reference_norm": 0.34210860263898085,
+                "difference_norm": 0.0003482507852756477,
+                "relative_complex_norm_error": 0.0010179538970645195,
+                "passed": true
+              },
+              "component:entry_0_negative": {
+                "reference_norm": 0.008688303709643231,
+                "difference_norm": 5.889927650129287e-06,
+                "relative_complex_norm_error": 0.0006779145673271067,
+                "passed": true
+              },
+              "component:entry_0_negative_y": {
+                "reference_norm": 0.00869115869196601,
+                "difference_norm": 4.8805104995860514e-05,
+                "relative_complex_norm_error": 0.00561548888078356,
+                "passed": true
+              },
+              "component:entry_0_positive": {
+                "reference_norm": 0.008643932241102452,
+                "difference_norm": 2.9707253500549825e-05,
+                "relative_complex_norm_error": 0.003436775378604882,
+                "passed": true
+              },
+              "component:entry_0_positive_y": {
+                "reference_norm": 0.008669902672954621,
+                "difference_norm": 2.0684749449706705e-05,
+                "relative_complex_norm_error": 0.0023858110327157267,
+                "passed": true
+              }
+            },
+            "mid_axis_equality": {
+              "component:entry_0_negative": {
+                "reference_norm": 0.0016292155210062434,
+                "difference_norm": 2.8472983335392885e-06,
+                "relative_complex_norm_error": 0.0017476498945828403,
+                "passed": true
+              },
+              "component:entry_0_negative_y": {
+                "reference_norm": 0.0016292155210062434,
+                "difference_norm": 3.338951386636157e-06,
+                "relative_complex_norm_error": 0.0020494227703980743,
+                "passed": true
+              },
+              "component:entry_0_positive": {
+                "reference_norm": 0.0016292155210062434,
+                "difference_norm": 5.446754785307533e-06,
+                "relative_complex_norm_error": 0.003343176341668709,
+                "passed": true
+              },
+              "component:entry_0_positive_y": {
+                "reference_norm": 0.0016292155210062434,
+                "difference_norm": 7.311455362516077e-07,
+                "relative_complex_norm_error": 0.00044877152643379824,
+                "passed": true
+              }
+            },
+            "matrix_rotation": {
+              "mechanical:diaphragm-velocity": {
+                "reference_norm": 0.2059296282515889,
+                "difference_norm": 8.280932428059322e-07,
+                "relative_complex_norm_error": 4.021243809532021e-06,
+                "passed": true
+              },
+              "electrical:voice-coil-current": {
+                "reference_norm": 1.0057517186552396,
+                "difference_norm": 6.585674614512046e-07,
+                "relative_complex_norm_error": 6.54801229006852e-07,
+                "passed": true
+              }
+            },
+            "passed": true
+          }
+        ],
+        "symmetry_reference_passed": true,
+        "electrical_validation": {
+          "schema_version": 1,
+          "evidence": "independent_equation_consistency",
+          "passed": true,
+          "project_sha256": "3b6d3b815543ec629790b015f3cecdb688404180b6342bb64a92f0ae422ddc89",
+          "evaluation_sha256": "5f1ce4032047f310670458e14046e06353995938592da4415f4be25fc682a2c8",
+          "rows": [
+            {
+              "frequency_hz": 350.0,
+              "passed": true,
+              "circuit_voltage_relative_residual": 1.7989230969317578e-16,
+              "electrical_reciprocity_relative_residual": 1.183401719973521e-09,
+              "minimum_hermitian_admittance_eigenvalue_s": 0.09493312507249563
+            },
+            {
+              "frequency_hz": 1000.0,
+              "passed": true,
+              "circuit_voltage_relative_residual": 2.253210207916294e-16,
+              "electrical_reciprocity_relative_residual": 6.531693085672362e-10,
+              "minimum_hermitian_admittance_eigenvalue_s": 0.01776596126838999
+            },
+            {
+              "frequency_hz": 2000.0,
+              "passed": true,
+              "circuit_voltage_relative_residual": 1.5413735615398358e-16,
+              "electrical_reciprocity_relative_residual": 2.5465809848057204e-10,
+              "minimum_hermitian_admittance_eigenvalue_s": 0.09419901290543167
+            },
+            {
+              "frequency_hz": 3000.0,
+              "passed": true,
+              "circuit_voltage_relative_residual": 8.279496717042449e-17,
+              "electrical_reciprocity_relative_residual": 2.2265698395613215e-09,
+              "minimum_hermitian_admittance_eigenvalue_s": 0.14751971908700498
+            }
+          ],
+          "relative_tolerance": 1e-08,
+          "acoustic_accuracy_validated": false,
+          "limitations": [
+            "Circuit consistency cannot establish acoustic field accuracy",
+            "No measured driver or speaker comparison",
+            "No RMS or absolute SPL qualification"
+          ]
+        },
+        "evidence_identity": {
+          "controls": {
+            "evaluation.json": "5f1ce4032047f310670458e14046e06353995938592da4415f4be25fc682a2c8",
+            "request.json": "26412404b5d897026dc9adf040664b98410eb537fa9a969139a34eff073543c0",
+            "preflight.json": "5ddf644e0c84ed5402b2aece3bd20a7d7079b3069cfe5be8002b64a1d5e436ab"
+          },
+          "result": {
+            "evidence": "predicted",
+            "artifact_hashes": {
+              "manifest": "61216a62a7a838dacb777f7e04f823ac3d1975459b96b41c2dfd28d9a65ba52a",
+              "domains_metadata": "24dfd430a87a600d6325be7f9cab2f12b059b70346c729bcb1657c3a58a2c880",
+              "domains_arrays": "661ae91c72680e7212b5988f89b5203a0c6ff176dc01c8b3ba237e00f28554d0",
+              "reference_runtime": "09628cd9bb59362e4927ec2e47becddf9fe94841bba1446c1acc576a21a69bca"
+            },
+            "solve_kind": "coupled_bem_fem",
+            "phasor_convention": "exp(-i omega t)",
+            "frequencies_hz": [
+              350.0,
+              1000.0,
+              2000.0,
+              3000.0
+            ],
+            "excitation_port_ids": [
+              "excitation:throat",
+              "excitation:entry_0_negative",
+              "excitation:entry_0_negative_y",
+              "excitation:entry_0_positive",
+              "excitation:entry_0_positive_y"
+            ],
+            "inventory": [
+              {
+                "frequency_hz": 350.0,
+                "metadata_sha256": "af9c340c8d95192db20c1802c339718830ed01df31068e89fa742dcb8c5ffe74",
+                "arrays_sha256": "91d35b242be933ba5f1f4e5a06882e45b76186e5d7384288b6fc33bbf57fb0c5",
+                "quantities": [
+                  {
+                    "axes": [
+                      "excitation",
+                      "transducer"
+                    ],
+                    "dtype": "complex128",
+                    "id": "mechanical:diaphragm-velocity",
+                    "key": "q0000",
+                    "metadata": {
+                      "component_ids": [
+                        "component:throat",
+                        "component:entry_0_negative",
+                        "component:entry_0_negative_y",
+                        "component:entry_0_positive",
+                        "component:entry_0_positive_y"
+                      ],
+                      "physical_driver_orbit_counts": [
+                        1,
+                        1,
+                        1,
+                        1,
+                        1
+                      ],
+                      "surface_completion_factors": [
+                        1.0,
+                        1.0,
+                        1.0,
+                        1.0,
+                        1.0
+                      ]
+                    },
+                    "quantity": "diaphragm_velocity",
+                    "shape": [
+                      5,
+                      5
+                    ],
+                    "target_id": "components:electrodynamic-transducers",
+                    "unit": "m/s"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "transducer"
+                    ],
+                    "dtype": "complex128",
+                    "id": "electrical:voice-coil-current",
+                    "key": "q0001",
+                    "metadata": {
+                      "component_ids": [
+                        "component:throat",
+                        "component:entry_0_negative",
+                        "component:entry_0_negative_y",
+                        "component:entry_0_positive",
+                        "component:entry_0_positive_y"
+                      ],
+                      "physical_driver_orbit_counts": [
+                        1,
+                        1,
+                        1,
+                        1,
+                        1
+                      ],
+                      "surface_completion_factors": [
+                        1.0,
+                        1.0,
+                        1.0,
+                        1.0,
+                        1.0
+                      ]
+                    },
+                    "quantity": "voice_coil_current",
+                    "shape": [
+                      5,
+                      5
+                    ],
+                    "target_id": "components:electrodynamic-transducers",
+                    "unit": "A"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "bem_node"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:bem-boundary",
+                    "key": "q0002",
+                    "metadata": {
+                      "mesh_ids": [
+                        "mesh:exterior"
+                      ],
+                      "vertex_counts": [
+                        1878
+                      ],
+                      "vertex_offsets": [
+                        0
+                      ]
+                    },
+                    "quantity": "bem_boundary_pressure",
+                    "shape": [
+                      5,
+                      1878
+                    ],
+                    "target_id": "domain:bem-boundary",
+                    "unit": "Pa"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "bem_face"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:normal-derivative:bem-boundary",
+                    "key": "q0003",
+                    "metadata": {
+                      "face_counts": [
+                        3752
+                      ],
+                      "face_offsets": [
+                        0
+                      ],
+                      "mesh_ids": [
+                        "mesh:exterior"
+                      ]
+                    },
+                    "quantity": "bem_boundary_neumann",
+                    "shape": [
+                      5,
+                      3752
+                    ],
+                    "target_id": "domain:bem-boundary",
+                    "unit": "Pa/m"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "fem_node"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:fem-nodes",
+                    "key": "q0004",
+                    "metadata": {
+                      "mesh_ids": [
+                        "mesh:rear_entry_0_positive",
+                        "mesh:rear_entry_0_negative",
+                        "mesh:rear_entry_0_positive_y",
+                        "mesh:rear_entry_0_negative_y",
+                        "mesh:front"
+                      ],
+                      "node_counts": [
+                        1833,
+                        1850,
+                        1825,
+                        1843,
+                        55896
+                      ],
+                      "node_offsets": [
+                        0,
+                        1833,
+                        3683,
+                        5508,
+                        7351
+                      ],
+                      "region_ids": [
+                        "region:rear_entry_0_positive",
+                        "region:rear_entry_0_negative",
+                        "region:rear_entry_0_positive_y",
+                        "region:rear_entry_0_negative_y",
+                        "region:front"
+                      ]
+                    },
+                    "quantity": "fem_nodal_pressure",
+                    "shape": [
+                      5,
+                      63247
+                    ],
+                    "target_id": "domain:fem-volume",
+                    "unit": "Pa"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "observation"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:horizontal-polar",
+                    "key": "q0005",
+                    "metadata": {
+                      "source_output_id": "ui:exterior-pressure"
+                    },
+                    "quantity": "exterior_pressure",
+                    "shape": [
+                      5,
+                      73
+                    ],
+                    "target_id": "observation:horizontal-polar",
+                    "unit": "Pa"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "observation"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:vertical-polar",
+                    "key": "q0006",
+                    "metadata": {
+                      "source_output_id": "ui:exterior-pressure"
+                    },
+                    "quantity": "exterior_pressure",
+                    "shape": [
+                      5,
+                      73
+                    ],
+                    "target_id": "observation:vertical-polar",
+                    "unit": "Pa"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "observation"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:sphere",
+                    "key": "q0007",
+                    "metadata": {
+                      "source_output_id": "ui:exterior-pressure"
+                    },
+                    "quantity": "exterior_pressure",
+                    "shape": [
+                      5,
+                      413
+                    ],
+                    "target_id": "observation:sphere",
+                    "unit": "Pa"
+                  }
+                ]
+              },
+              {
+                "frequency_hz": 1000.0,
+                "metadata_sha256": "b73e85631c0938922e2d1eb2a4ccb8a754387f3d47d99a3c3542d70c169a43f6",
+                "arrays_sha256": "94082bde57502d4cc70e082ea89f45ded7242bd1334c43243df2d38909ecf30d",
+                "quantities": [
+                  {
+                    "axes": [
+                      "excitation",
+                      "transducer"
+                    ],
+                    "dtype": "complex128",
+                    "id": "mechanical:diaphragm-velocity",
+                    "key": "q0000",
+                    "metadata": {
+                      "component_ids": [
+                        "component:throat",
+                        "component:entry_0_negative",
+                        "component:entry_0_negative_y",
+                        "component:entry_0_positive",
+                        "component:entry_0_positive_y"
+                      ],
+                      "physical_driver_orbit_counts": [
+                        1,
+                        1,
+                        1,
+                        1,
+                        1
+                      ],
+                      "surface_completion_factors": [
+                        1.0,
+                        1.0,
+                        1.0,
+                        1.0,
+                        1.0
+                      ]
+                    },
+                    "quantity": "diaphragm_velocity",
+                    "shape": [
+                      5,
+                      5
+                    ],
+                    "target_id": "components:electrodynamic-transducers",
+                    "unit": "m/s"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "transducer"
+                    ],
+                    "dtype": "complex128",
+                    "id": "electrical:voice-coil-current",
+                    "key": "q0001",
+                    "metadata": {
+                      "component_ids": [
+                        "component:throat",
+                        "component:entry_0_negative",
+                        "component:entry_0_negative_y",
+                        "component:entry_0_positive",
+                        "component:entry_0_positive_y"
+                      ],
+                      "physical_driver_orbit_counts": [
+                        1,
+                        1,
+                        1,
+                        1,
+                        1
+                      ],
+                      "surface_completion_factors": [
+                        1.0,
+                        1.0,
+                        1.0,
+                        1.0,
+                        1.0
+                      ]
+                    },
+                    "quantity": "voice_coil_current",
+                    "shape": [
+                      5,
+                      5
+                    ],
+                    "target_id": "components:electrodynamic-transducers",
+                    "unit": "A"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "bem_node"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:bem-boundary",
+                    "key": "q0002",
+                    "metadata": {
+                      "mesh_ids": [
+                        "mesh:exterior"
+                      ],
+                      "vertex_counts": [
+                        1878
+                      ],
+                      "vertex_offsets": [
+                        0
+                      ]
+                    },
+                    "quantity": "bem_boundary_pressure",
+                    "shape": [
+                      5,
+                      1878
+                    ],
+                    "target_id": "domain:bem-boundary",
+                    "unit": "Pa"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "bem_face"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:normal-derivative:bem-boundary",
+                    "key": "q0003",
+                    "metadata": {
+                      "face_counts": [
+                        3752
+                      ],
+                      "face_offsets": [
+                        0
+                      ],
+                      "mesh_ids": [
+                        "mesh:exterior"
+                      ]
+                    },
+                    "quantity": "bem_boundary_neumann",
+                    "shape": [
+                      5,
+                      3752
+                    ],
+                    "target_id": "domain:bem-boundary",
+                    "unit": "Pa/m"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "fem_node"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:fem-nodes",
+                    "key": "q0004",
+                    "metadata": {
+                      "mesh_ids": [
+                        "mesh:rear_entry_0_positive",
+                        "mesh:rear_entry_0_negative",
+                        "mesh:rear_entry_0_positive_y",
+                        "mesh:rear_entry_0_negative_y",
+                        "mesh:front"
+                      ],
+                      "node_counts": [
+                        1833,
+                        1850,
+                        1825,
+                        1843,
+                        55896
+                      ],
+                      "node_offsets": [
+                        0,
+                        1833,
+                        3683,
+                        5508,
+                        7351
+                      ],
+                      "region_ids": [
+                        "region:rear_entry_0_positive",
+                        "region:rear_entry_0_negative",
+                        "region:rear_entry_0_positive_y",
+                        "region:rear_entry_0_negative_y",
+                        "region:front"
+                      ]
+                    },
+                    "quantity": "fem_nodal_pressure",
+                    "shape": [
+                      5,
+                      63247
+                    ],
+                    "target_id": "domain:fem-volume",
+                    "unit": "Pa"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "observation"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:horizontal-polar",
+                    "key": "q0005",
+                    "metadata": {
+                      "source_output_id": "ui:exterior-pressure"
+                    },
+                    "quantity": "exterior_pressure",
+                    "shape": [
+                      5,
+                      73
+                    ],
+                    "target_id": "observation:horizontal-polar",
+                    "unit": "Pa"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "observation"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:vertical-polar",
+                    "key": "q0006",
+                    "metadata": {
+                      "source_output_id": "ui:exterior-pressure"
+                    },
+                    "quantity": "exterior_pressure",
+                    "shape": [
+                      5,
+                      73
+                    ],
+                    "target_id": "observation:vertical-polar",
+                    "unit": "Pa"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "observation"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:sphere",
+                    "key": "q0007",
+                    "metadata": {
+                      "source_output_id": "ui:exterior-pressure"
+                    },
+                    "quantity": "exterior_pressure",
+                    "shape": [
+                      5,
+                      413
+                    ],
+                    "target_id": "observation:sphere",
+                    "unit": "Pa"
+                  }
+                ]
+              },
+              {
+                "frequency_hz": 2000.0,
+                "metadata_sha256": "97a413023eb4f3bf372fb528950d025ee44b2604e160fe008f0e29ceab25c0c4",
+                "arrays_sha256": "a88793d39236fad6185ede82da2939eabddc273153b8ae5d08838c90c74e331e",
+                "quantities": [
+                  {
+                    "axes": [
+                      "excitation",
+                      "transducer"
+                    ],
+                    "dtype": "complex128",
+                    "id": "mechanical:diaphragm-velocity",
+                    "key": "q0000",
+                    "metadata": {
+                      "component_ids": [
+                        "component:throat",
+                        "component:entry_0_negative",
+                        "component:entry_0_negative_y",
+                        "component:entry_0_positive",
+                        "component:entry_0_positive_y"
+                      ],
+                      "physical_driver_orbit_counts": [
+                        1,
+                        1,
+                        1,
+                        1,
+                        1
+                      ],
+                      "surface_completion_factors": [
+                        1.0,
+                        1.0,
+                        1.0,
+                        1.0,
+                        1.0
+                      ]
+                    },
+                    "quantity": "diaphragm_velocity",
+                    "shape": [
+                      5,
+                      5
+                    ],
+                    "target_id": "components:electrodynamic-transducers",
+                    "unit": "m/s"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "transducer"
+                    ],
+                    "dtype": "complex128",
+                    "id": "electrical:voice-coil-current",
+                    "key": "q0001",
+                    "metadata": {
+                      "component_ids": [
+                        "component:throat",
+                        "component:entry_0_negative",
+                        "component:entry_0_negative_y",
+                        "component:entry_0_positive",
+                        "component:entry_0_positive_y"
+                      ],
+                      "physical_driver_orbit_counts": [
+                        1,
+                        1,
+                        1,
+                        1,
+                        1
+                      ],
+                      "surface_completion_factors": [
+                        1.0,
+                        1.0,
+                        1.0,
+                        1.0,
+                        1.0
+                      ]
+                    },
+                    "quantity": "voice_coil_current",
+                    "shape": [
+                      5,
+                      5
+                    ],
+                    "target_id": "components:electrodynamic-transducers",
+                    "unit": "A"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "bem_node"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:bem-boundary",
+                    "key": "q0002",
+                    "metadata": {
+                      "mesh_ids": [
+                        "mesh:exterior"
+                      ],
+                      "vertex_counts": [
+                        1878
+                      ],
+                      "vertex_offsets": [
+                        0
+                      ]
+                    },
+                    "quantity": "bem_boundary_pressure",
+                    "shape": [
+                      5,
+                      1878
+                    ],
+                    "target_id": "domain:bem-boundary",
+                    "unit": "Pa"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "bem_face"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:normal-derivative:bem-boundary",
+                    "key": "q0003",
+                    "metadata": {
+                      "face_counts": [
+                        3752
+                      ],
+                      "face_offsets": [
+                        0
+                      ],
+                      "mesh_ids": [
+                        "mesh:exterior"
+                      ]
+                    },
+                    "quantity": "bem_boundary_neumann",
+                    "shape": [
+                      5,
+                      3752
+                    ],
+                    "target_id": "domain:bem-boundary",
+                    "unit": "Pa/m"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "fem_node"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:fem-nodes",
+                    "key": "q0004",
+                    "metadata": {
+                      "mesh_ids": [
+                        "mesh:rear_entry_0_positive",
+                        "mesh:rear_entry_0_negative",
+                        "mesh:rear_entry_0_positive_y",
+                        "mesh:rear_entry_0_negative_y",
+                        "mesh:front"
+                      ],
+                      "node_counts": [
+                        1833,
+                        1850,
+                        1825,
+                        1843,
+                        55896
+                      ],
+                      "node_offsets": [
+                        0,
+                        1833,
+                        3683,
+                        5508,
+                        7351
+                      ],
+                      "region_ids": [
+                        "region:rear_entry_0_positive",
+                        "region:rear_entry_0_negative",
+                        "region:rear_entry_0_positive_y",
+                        "region:rear_entry_0_negative_y",
+                        "region:front"
+                      ]
+                    },
+                    "quantity": "fem_nodal_pressure",
+                    "shape": [
+                      5,
+                      63247
+                    ],
+                    "target_id": "domain:fem-volume",
+                    "unit": "Pa"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "observation"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:horizontal-polar",
+                    "key": "q0005",
+                    "metadata": {
+                      "source_output_id": "ui:exterior-pressure"
+                    },
+                    "quantity": "exterior_pressure",
+                    "shape": [
+                      5,
+                      73
+                    ],
+                    "target_id": "observation:horizontal-polar",
+                    "unit": "Pa"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "observation"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:vertical-polar",
+                    "key": "q0006",
+                    "metadata": {
+                      "source_output_id": "ui:exterior-pressure"
+                    },
+                    "quantity": "exterior_pressure",
+                    "shape": [
+                      5,
+                      73
+                    ],
+                    "target_id": "observation:vertical-polar",
+                    "unit": "Pa"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "observation"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:sphere",
+                    "key": "q0007",
+                    "metadata": {
+                      "source_output_id": "ui:exterior-pressure"
+                    },
+                    "quantity": "exterior_pressure",
+                    "shape": [
+                      5,
+                      413
+                    ],
+                    "target_id": "observation:sphere",
+                    "unit": "Pa"
+                  }
+                ]
+              },
+              {
+                "frequency_hz": 3000.0,
+                "metadata_sha256": "112e6e99550eadb07ded09e84fed3d9b40b300848fca00dbb9638cc8b8a95414",
+                "arrays_sha256": "a1fa9b7ad1a1f413629560351bc075e94adb824ff70b1e0f08601242dac1ddd5",
+                "quantities": [
+                  {
+                    "axes": [
+                      "excitation",
+                      "transducer"
+                    ],
+                    "dtype": "complex128",
+                    "id": "mechanical:diaphragm-velocity",
+                    "key": "q0000",
+                    "metadata": {
+                      "component_ids": [
+                        "component:throat",
+                        "component:entry_0_negative",
+                        "component:entry_0_negative_y",
+                        "component:entry_0_positive",
+                        "component:entry_0_positive_y"
+                      ],
+                      "physical_driver_orbit_counts": [
+                        1,
+                        1,
+                        1,
+                        1,
+                        1
+                      ],
+                      "surface_completion_factors": [
+                        1.0,
+                        1.0,
+                        1.0,
+                        1.0,
+                        1.0
+                      ]
+                    },
+                    "quantity": "diaphragm_velocity",
+                    "shape": [
+                      5,
+                      5
+                    ],
+                    "target_id": "components:electrodynamic-transducers",
+                    "unit": "m/s"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "transducer"
+                    ],
+                    "dtype": "complex128",
+                    "id": "electrical:voice-coil-current",
+                    "key": "q0001",
+                    "metadata": {
+                      "component_ids": [
+                        "component:throat",
+                        "component:entry_0_negative",
+                        "component:entry_0_negative_y",
+                        "component:entry_0_positive",
+                        "component:entry_0_positive_y"
+                      ],
+                      "physical_driver_orbit_counts": [
+                        1,
+                        1,
+                        1,
+                        1,
+                        1
+                      ],
+                      "surface_completion_factors": [
+                        1.0,
+                        1.0,
+                        1.0,
+                        1.0,
+                        1.0
+                      ]
+                    },
+                    "quantity": "voice_coil_current",
+                    "shape": [
+                      5,
+                      5
+                    ],
+                    "target_id": "components:electrodynamic-transducers",
+                    "unit": "A"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "bem_node"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:bem-boundary",
+                    "key": "q0002",
+                    "metadata": {
+                      "mesh_ids": [
+                        "mesh:exterior"
+                      ],
+                      "vertex_counts": [
+                        1878
+                      ],
+                      "vertex_offsets": [
+                        0
+                      ]
+                    },
+                    "quantity": "bem_boundary_pressure",
+                    "shape": [
+                      5,
+                      1878
+                    ],
+                    "target_id": "domain:bem-boundary",
+                    "unit": "Pa"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "bem_face"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:normal-derivative:bem-boundary",
+                    "key": "q0003",
+                    "metadata": {
+                      "face_counts": [
+                        3752
+                      ],
+                      "face_offsets": [
+                        0
+                      ],
+                      "mesh_ids": [
+                        "mesh:exterior"
+                      ]
+                    },
+                    "quantity": "bem_boundary_neumann",
+                    "shape": [
+                      5,
+                      3752
+                    ],
+                    "target_id": "domain:bem-boundary",
+                    "unit": "Pa/m"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "fem_node"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:fem-nodes",
+                    "key": "q0004",
+                    "metadata": {
+                      "mesh_ids": [
+                        "mesh:rear_entry_0_positive",
+                        "mesh:rear_entry_0_negative",
+                        "mesh:rear_entry_0_positive_y",
+                        "mesh:rear_entry_0_negative_y",
+                        "mesh:front"
+                      ],
+                      "node_counts": [
+                        1833,
+                        1850,
+                        1825,
+                        1843,
+                        55896
+                      ],
+                      "node_offsets": [
+                        0,
+                        1833,
+                        3683,
+                        5508,
+                        7351
+                      ],
+                      "region_ids": [
+                        "region:rear_entry_0_positive",
+                        "region:rear_entry_0_negative",
+                        "region:rear_entry_0_positive_y",
+                        "region:rear_entry_0_negative_y",
+                        "region:front"
+                      ]
+                    },
+                    "quantity": "fem_nodal_pressure",
+                    "shape": [
+                      5,
+                      63247
+                    ],
+                    "target_id": "domain:fem-volume",
+                    "unit": "Pa"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "observation"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:horizontal-polar",
+                    "key": "q0005",
+                    "metadata": {
+                      "source_output_id": "ui:exterior-pressure"
+                    },
+                    "quantity": "exterior_pressure",
+                    "shape": [
+                      5,
+                      73
+                    ],
+                    "target_id": "observation:horizontal-polar",
+                    "unit": "Pa"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "observation"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:vertical-polar",
+                    "key": "q0006",
+                    "metadata": {
+                      "source_output_id": "ui:exterior-pressure"
+                    },
+                    "quantity": "exterior_pressure",
+                    "shape": [
+                      5,
+                      73
+                    ],
+                    "target_id": "observation:vertical-polar",
+                    "unit": "Pa"
+                  },
+                  {
+                    "axes": [
+                      "excitation",
+                      "observation"
+                    ],
+                    "dtype": "complex128",
+                    "id": "acoustic:pressure:sphere",
+                    "key": "q0007",
+                    "metadata": {
+                      "source_output_id": "ui:exterior-pressure"
+                    },
+                    "quantity": "exterior_pressure",
+                    "shape": [
+                      5,
+                      413
+                    ],
+                    "target_id": "observation:sphere",
+                    "unit": "Pa"
+                  }
+                ]
+              }
+            ]
+          },
+          "checks": {
+            "schema_version": 1,
+            "evidence": "independent_equation_consistency",
+            "passed": true,
+            "project_sha256": "3b6d3b815543ec629790b015f3cecdb688404180b6342bb64a92f0ae422ddc89",
+            "evaluation_sha256": "5f1ce4032047f310670458e14046e06353995938592da4415f4be25fc682a2c8",
+            "rows": [
+              {
+                "frequency_hz": 350.0,
+                "passed": true,
+                "circuit_voltage_relative_residual": 1.7989230969317578e-16,
+                "electrical_reciprocity_relative_residual": 1.183401719973521e-09,
+                "minimum_hermitian_admittance_eigenvalue_s": 0.09493312507249563
+              },
+              {
+                "frequency_hz": 1000.0,
+                "passed": true,
+                "circuit_voltage_relative_residual": 2.253210207916294e-16,
+                "electrical_reciprocity_relative_residual": 6.531693085672362e-10,
+                "minimum_hermitian_admittance_eigenvalue_s": 0.01776596126838999
+              },
+              {
+                "frequency_hz": 2000.0,
+                "passed": true,
+                "circuit_voltage_relative_residual": 1.5413735615398358e-16,
+                "electrical_reciprocity_relative_residual": 2.5465809848057204e-10,
+                "minimum_hermitian_admittance_eigenvalue_s": 0.09419901290543167
+              },
+              {
+                "frequency_hz": 3000.0,
+                "passed": true,
+                "circuit_voltage_relative_residual": 8.279496717042449e-17,
+                "electrical_reciprocity_relative_residual": 2.2265698395613215e-09,
+                "minimum_hermitian_admittance_eigenvalue_s": 0.14751971908700498
+              }
+            ],
+            "relative_tolerance": 1e-08,
+            "acoustic_accuracy_validated": false,
+            "limitations": [
+              "Circuit consistency cannot establish acoustic field accuracy",
+              "No measured driver or speaker comparison",
+              "No RMS or absolute SPL qualification"
+            ]
+          }
+        }
+      }
+    ],
+    "symmetry_reference_passed": true,
+    "electrical_validation_passed": true,
+    "qualified": false,
+    "physical_validation": false,
+    "limitations": [
+      "Symmetry is a numerical reference, not mesh convergence or a measured physical accuracy bound",
+      "Synthetic small four-mid-ring case only; no target-horn or commercial-source qualification"
+    ]
+  },
+  "search": {
+    "status": "complete",
+    "schema_version": 1,
+    "kind": "experimental_fem_bem_search",
+    "qualified": false,
+    "physical_validation": false,
+    "runtime": {
+      "revision": "8cb166226e412877d3f71f2845918e479b97aa85",
+      "backend": "coupled_reference",
+      "python": "3.11.16 (main, Aug 12 2026, 23:03:19) [Clang 21.0.0 (clang-2100.1.1.101)]",
+      "julia": "julia version 1.12.6",
+      "packages": {
+        "kiwisolver": "1.5.1",
+        "packaging": "26.3",
+        "fonttools": "4.65.0",
+        "platformdirs": "4.11.8",
+        "Pygments": "2.21.0",
+        "rich": "15.0.0",
+        "contourpy": "1.3.3",
+        "numpy": "2.4.6",
+        "pytools": "2026.1.1",
+        "matplotlib": "3.11.1",
+        "bempp-cl": "0.4.2",
+        "llvmlite": "0.49.0",
+        "mdurl": "0.1.2",
+        "python-dateutil": "2.9.0.post0",
+        "numba": "0.67.0",
+        "scipy": "1.17.1",
+        "pyopencl": "2026.1.4",
+        "cycler": "0.12.1",
+        "gmsh": "4.15.2",
+        "pyparsing": "3.3.2",
+        "markdown-it-py": "4.2.0",
+        "meshio": "5.3.5",
+        "typing_extensions": "4.16.0",
+        "pillow": "12.3.0",
+        "six": "1.17.0",
+        "boundary-lab": "0.4.2",
+        "siphash24": "1.9"
+      },
+      "julia_threads": 2,
+      "reference_runner_sha256": "f765b252cab3e2ad33e14b9a54438613480b04e1701a23d149b66d0d479fa50c",
+      "precision": "float64",
+      "static_condensation": true
+    },
+    "application_runtime": {
+      "python": "3.11.16 (main, Aug 12 2026, 23:03:19) [Clang 21.0.0 (clang-2100.1.1.101)]",
+      "implementation": "CPython",
+      "system": "Darwin",
+      "release": "25.6.0",
+      "machine": "arm64",
+      "packages": [
+        [
+          "PyYAML",
+          "6.0.3"
+        ],
+        [
+          "Pygments",
+          "2.21.0"
+        ],
+        [
+          "aiohappyeyeballs",
+          "2.7.1"
+        ],
+        [
+          "aiohttp",
+          "3.14.3"
+        ],
+        [
+          "aiosignal",
+          "1.4.0"
+        ],
+        [
+          "annotated-types",
+          "0.8.0"
+        ],
+        [
+          "attrs",
+          "26.1.0"
+        ],
+        [
+          "cadquery",
+          "2.8.0"
+        ],
+        [
+          "cadquery-ocp",
+          "7.9.3.1.1"
+        ],
+        [
+          "cadquery-ocp-proxy",
+          "7.9.3.1.1"
+        ],
+        [
+          "casadi",
+          "3.8.0"
+        ],
+        [
+          "contourpy",
+          "1.3.3"
+        ],
+        [
+          "cycler",
+          "0.12.1"
+        ],
+        [
+          "ezdxf",
+          "1.4.4"
+        ],
+        [
+          "fonttools",
+          "4.65.0"
+        ],
+        [
+          "frozenlist",
+          "1.8.0"
+        ],
+        [
+          "gmsh",
+          "4.15.2"
+        ],
+        [
+          "idna",
+          "3.19"
+        ],
+        [
+          "iniconfig",
+          "2.3.0"
+        ],
+        [
+          "kiwisolver",
+          "1.5.1"
+        ],
+        [
+          "llvmlite",
+          "0.49.0"
+        ],
+        [
+          "markdown-it-py",
+          "4.2.0"
+        ],
+        [
+          "matplotlib",
+          "3.11.1"
+        ],
+        [
+          "mdurl",
+          "0.1.2"
+        ],
+        [
+          "meh-design-studio",
+          "0.1.0.dev0"
+        ],
+        [
+          "meh-design-studio",
+          "0.1.0.dev0"
+        ],
+        [
+          "meshio",
+          "5.3.5"
+        ],
+        [
+          "more-itertools",
+          "11.1.0"
+        ],
+        [
+          "msgpack",
+          "1.2.2"
+        ],
+        [
+          "multidict",
+          "6.8.0"
+        ],
+        [
+          "multimethod",
+          "1.12"
+        ],
+        [
+          "nlopt",
+          "2.11.0"
+        ],
+        [
+          "numba",
+          "0.67.0"
+        ],
+        [
+          "numpy",
+          "2.4.6"
+        ],
+        [
+          "packaging",
+          "26.3"
+        ],
+        [
+          "pillow",
+          "12.3.0"
+        ],
+        [
+          "pluggy",
+          "1.6.0"
+        ],
+        [
+          "propcache",
+          "0.5.2"
+        ],
+        [
+          "pydantic",
+          "2.13.5"
+        ],
+        [
+          "pydantic_core",
+          "2.46.5"
+        ],
+        [
+          "pyparsing",
+          "3.3.2"
+        ],
+        [
+          "pytest",
+          "9.1.1"
+        ],
+        [
+          "python-dateutil",
+          "2.9.0.post0"
+        ],
+        [
+          "rich",
+          "15.0.0"
+        ],
+        [
+          "runtype",
+          "0.5.3"
+        ],
+        [
+          "scipy",
+          "1.17.1"
+        ],
+        [
+          "six",
+          "1.17.0"
+        ],
+        [
+          "trame",
+          "4.0.0"
+        ],
+        [
+          "trame-client",
+          "4.0.1"
+        ],
+        [
+          "trame-common",
+          "1.2.7"
+        ],
+        [
+          "trame-components",
+          "2.5.0"
+        ],
+        [
+          "trame-server",
+          "4.0.0"
+        ],
+        [
+          "trame-vtk",
+          "2.8.13"
+        ],
+        [
+          "trame-vuetify",
+          "3.2.6"
+        ],
+        [
+          "typing-inspection",
+          "0.4.4"
+        ],
+        [
+          "typing_extensions",
+          "4.16.0"
+        ],
+        [
+          "vtk",
+          "9.6.2"
+        ],
+        [
+          "wslink",
+          "2.5.7"
+        ],
+        [
+          "yarl",
+          "1.24.5"
+        ]
+      ],
+      "code": {
+        "__init__.py": "a23171cf505892cc316566fa1783c771de609b8cda270d2740018015a785d7a2",
+        "acoustic_handover.py": "897380429182eec9549e46fb76d38798ca343d9db5b1eb9bfed2a2904924fe27",
+        "acoustic_objectives.py": "bceb57a2cb18a5899c235a3769a49cc773845c7bfa7077b7a49497a2d099db43",
+        "boundary_lab.py": "e74b64b95e954a9bac75d87200d423491b017306d164603f32cc023d521bced8",
+        "build_bundle.py": "90454b16f29c89ae15a742f7da596cecf75afc8ba77ac4da016921df72b7bd96",
+        "build_cost.py": "8b3d7de8a7921f18aa39f4241284e664c2e344f265df7ee7824e8dace21edd71",
+        "cad_runtime.py": "e96de4e3575841d3bbdf446f8ef7c49591e5c0e02248b671b1a601c47c1424f7",
+        "catalogue.py": "f4f6f5f8d88151c9c9ff10370bb7cf630f5311789f55eb96d380ef3a43e82652",
+        "cli.py": "ac3f9c298be17022eab4b04cb90786f566010c893500722d0f6a904a1a2f1481",
+        "domain.py": "f05d914da1573e8ced58283e1b2a485e863a74a8ebe25cb833c8286fc33450f9",
+        "evolution.py": "7189b8b062ddc0c42a738d43067aa5b87e0d785936defe22564a848a7a79f1e2",
+        "export_validation.py": "fffc51cfa37c8415503ec0a02cfb5c7dfd8f9c6ed8df5766a7977639e2de6a4d",
+        "generated_system.py": "e208e7d3a4ec2132284039500361f3426e0952630054cf7476d4b900eee06dbb",
+        "geometry.py": "9ae522f3f8f49031cc3ed18cdc0fcbcd90447b9cac2c9f292414ddf7b8b1e78f",
+        "geometry_cli.py": "c0b634ce535536ac2510f41cfc0218e70097d7005a5c0b77df4743300c5f31f4",
+        "geometry_worker.py": "286fad74c865b233c6ff768ec118425b641edc93b6ab8b6e8d5cc672a645627a",
+        "interface_coordinates.py": "8136946a855e874f2f1d0b33fb3409372c06ca49cc9b868d0460711495b11fa3",
+        "job_cli.py": "dece779e13937667800f5a4a3213bc8569acae843eb56da0e2f74d7f4641df3c",
+        "jobs.py": "4a35f9e8eb86c8f2550dd7afc30390a109cdffe84d10c47bcc4c278f099d3ca4",
+        "measurement_cli.py": "e385a8098ecbb353be3da8310c325c810e129f438cb2f2b86b5d1f71aff518d6",
+        "measurements.py": "20feb062e8b282e818ae162a88965ea5b2428a6cd0d75f3c10bfbf11be9967f3",
+        "metrics.py": "04d16093cff5ff1459d229ada4b762b85e1de290619517564e34965ab403fc76",
+        "native_reference.py": "f765b252cab3e2ad33e14b9a54438613480b04e1701a23d149b66d0d479fa50c",
+        "operating.py": "5c1dba5f4528c83f4c5e0a8c1c385eaebc4b9a54e1a7b32d7b5c93ddbaa795a7",
+        "optimisation.py": "33798c1768b0c85e8b6d10c414619ad45c2d8bf406be34aac521fafa8c3a2ef2",
+        "partial_results.py": "408d0f5662362b302241b9cf8acbfec0b98698c2492250d4c98e4c69746c493a",
+        "radiating_system.py": "a3f62e86f92dd5bf63bf21a4933c9050d478d0b7a81e5a709df626099bdeea34",
+        "radiation_geometry.py": "07c4b29e7968c076ff897c57b9c22189585dfaa61f40f95f1a9903bf32c72692",
+        "references.py": "53957154a5e0d3cf5df3992818dfc5df7b94059be7ac66394c8e1c1a3ee28d71",
+        "result_domains.py": "501c2209b160ae842556f1fb88a7289148f9d12d884e1b4d62d0ee379f25c667",
+        "search_results.py": "5ecd21b437313a6c6f1478d53baa49a9a32588886c12bffd2ed9609acf087df2",
+        "search_resume.py": "b5664ce4407672f059d6c6332b5cfd95cf8912aee4c1c2e7e25709cf96c64810",
+        "snapshots.py": "604c69f4ea993d384dfbe893c09fb579b730627547564a3843387bfb5feb19bd",
+        "spherical_metrics.py": "99d56eca708cfbe692659e3e0abd02bdd2ca6e521c5bcbef3d4bdf4eeddc47b9",
+        "validation.py": "29845d09b170e7bae78700445310467a82abede95367c98fcecbb058c68d3622",
+        "waveguide_profile.py": "e1ab6d2f154606b86549fd2bb27f37127f970cd71f67cec097ad37777986ff5c",
+        "windows_job.py": "73f3eb6a671cef7b67bacdcd030931da76eccddc583f15ffcfc9057541866626"
+      }
+    },
+    "trials": [
+      {
+        "index": 0,
+        "status": "complete",
+        "ripple_db": 14.569821675690322,
+        "side_gain": 0.8,
+        "relative_response_db": [
+          -20.461047259607877,
+          0.0,
+          -8.70369309792149,
+          -5.792755392073641
+        ],
+        "acoustic_objective": 19.868788683380288,
+        "directivity_error_db": 10.597934015379932,
+        "polars": {
+          "horizontal": {
+            "rms_target_error_db": 7.85670543877785,
+            "angles_deg": [
+              -90.0,
+              -85.0,
+              -80.0,
+              -75.0,
+              -70.0,
+              -65.0,
+              -60.0,
+              -55.0,
+              -50.0,
+              -45.0,
+              -40.0,
+              -35.0,
+              -30.0,
+              -25.0,
+              -20.0,
+              -15.0,
+              -10.0,
+              -5.0,
+              0.0,
+              5.0,
+              10.0,
+              15.0,
+              20.0,
+              25.0,
+              30.0,
+              35.0,
+              40.0,
+              45.0,
+              50.0,
+              55.0,
+              60.0,
+              65.0,
+              70.0,
+              75.0,
+              80.0,
+              85.0,
+              90.0
+            ],
+            "relative_db": [
+              [
+                -0.8598931612430418,
+                -0.829547189305687,
+                -0.7901281833651124,
+                -0.7424567170019393,
+                -0.6876297599178128,
+                -0.6269725229976941,
+                -0.5619833171533228,
+                -0.49427543230782717,
+                -0.42551966155005294,
+                -0.35739039001106815,
+                -0.2915173014801029,
+                -0.22944387788269935,
+                -0.17259308916662133,
+                -0.12224005911937796,
+                -0.07949106933590053,
+                -0.045268021361625714,
+                -0.02029739045136622,
+                -0.005102740869914387,
+                0.0,
+                -0.005094878670712841,
+                -0.02028205532673692,
+                -0.04524599384643582,
+                -0.07946352398387159,
+                -0.12220856563110963,
+                -0.17255960839181095,
+                -0.2294107482796744,
+                -0.29148721100382863,
+                -0.35736632827209525,
+                -0.42550484763928037,
+                -0.4942732150964338,
+                -0.5619970472587308,
+                -0.6270053989114066,
+                -0.6876846547624795,
+                -0.7425359965173207,
+                -0.790233529292469,
+                -0.829679444524165,
+                -0.8600522130760813
+              ],
+              [
+                -3.146391312859083,
+                -2.8083859747970226,
+                -2.4736036237086316,
+                -2.149516004644805,
+                -1.8417917014463954,
+                -1.554629150876738,
+                -1.2910281132792911,
+                -1.0529851454200692,
+                -0.8416232599217826,
+                -0.6572778127833429,
+                -0.49956448994832636,
+                -0.3674538017504072,
+                -0.2593712847622023,
+                -0.1733347228656887,
+                -0.10713016326362533,
+                -0.058518534978085165,
+                -0.025455738953464643,
+                -0.006302755164255505,
+                0.0,
+                -0.006182652877543409,
+                -0.025220767272311664,
+                -0.05817841326889066,
+                -0.10669773887688479,
+                -0.17282423941518732,
+                -0.2587965713522553,
+                -0.3668266800206909,
+                -0.49889365617354453,
+                -0.6565683872980499,
+                -0.8408771215508304,
+                -1.0522020937735934,
+                -1.2902078288139915,
+                -1.5537738481972152,
+                -1.84090928894561,
+                -2.1486234645631814,
+                -2.472730199688516,
+                -2.8075755863637926,
+                -3.1457034038320515
+              ],
+              [
+                -11.11432029785413,
+                -10.672334000486414,
+                -10.124038588440765,
+                -9.46599509946126,
+                -8.715197801229227,
+                -7.898327692184724,
+                -7.041310716288933,
+                -6.165067374977421,
+                -5.28681554892914,
+                -4.423199885401633,
+                -3.5921894353437174,
+                -2.812825622003449,
+                -2.103600290249025,
+                -1.480722027103953,
+                -0.9570805784266272,
+                -0.5420605066480175,
+                -0.241949588362314,
+                -0.06059069707641674,
+                0.0,
+                -0.06078717871814513,
+                -0.2423017613808688,
+                -0.5424850367916668,
+                -0.9574488665785004,
+                -1.480858454862626,
+                -2.103285024763994,
+                -2.8118073151903067,
+                -3.5902134868208133,
+                -4.420054369765681,
+                -5.282387789439047,
+                -6.159392312010573,
+                -7.034586094497709,
+                -7.89087799454024,
+                -8.707386474488494,
+                -9.458105322781872,
+                -10.116164840936836,
+                -10.664343636518456,
+                -11.105926492205072
+              ],
+              [
+                -17.599179793181552,
+                -16.33113641357576,
+                -15.162206165043115,
+                -14.046657117275512,
+                -12.904705741172942,
+                -11.684338409261919,
+                -10.387199683560347,
+                -9.054234107898294,
+                -7.733380714726421,
+                -6.458958305180297,
+                -5.250773895253847,
+                -4.123331369712043,
+                -3.0936964344341655,
+                -2.182879690601243,
+                -1.4122895480340447,
+                -0.7995113481638148,
+                -0.35627182896072745,
+                -0.08888571893714844,
+                0.0,
+                -0.09025720179596283,
+                -0.3589464426409866,
+                -0.8033304367198171,
+                -1.4169757470503157,
+                -2.1880326755825816,
+                -3.0988502952554846,
+                -4.128090676957832,
+                -5.254982282176587,
+                -6.462774585209605,
+                -7.73712275372339,
+                -9.057950480169998,
+                -10.390108381688277,
+                -11.684484054734291,
+                -12.899301410272304,
+                -14.033217436070773,
+                -15.13986587160259,
+                -16.30166492615843,
+                -17.568233571193012
+              ]
+            ],
+            "target_db": [
+              -24.0,
+              -21.407407407407405,
+              -18.962962962962962,
+              -16.666666666666668,
+              -14.518518518518519,
+              -12.518518518518519,
+              -10.666666666666666,
+              -8.962962962962964,
+              -7.407407407407408,
+              -6.0,
+              -4.7407407407407405,
+              -3.6296296296296298,
+              -2.6666666666666665,
+              -1.851851851851852,
+              -1.1851851851851851,
+              -0.6666666666666666,
+              -0.2962962962962963,
+              -0.07407407407407407,
+              -0.0,
+              -0.07407407407407407,
+              -0.2962962962962963,
+              -0.6666666666666666,
+              -1.1851851851851851,
+              -1.851851851851852,
+              -2.6666666666666665,
+              -3.6296296296296298,
+              -4.7407407407407405,
+              -6.0,
+              -7.407407407407408,
+              -8.962962962962964,
+              -10.666666666666666,
+              -12.518518518518519,
+              -14.518518518518519,
+              -16.666666666666668,
+              -18.962962962962962,
+              -21.407407407407405,
+              -24.0
+            ]
+          },
+          "vertical": {
+            "rms_target_error_db": 7.856719553119714,
+            "angles_deg": [
+              -90.0,
+              -85.0,
+              -80.0,
+              -75.0,
+              -70.0,
+              -65.0,
+              -60.0,
+              -55.0,
+              -50.0,
+              -45.0,
+              -40.0,
+              -35.0,
+              -30.0,
+              -25.0,
+              -20.0,
+              -15.0,
+              -10.0,
+              -5.0,
+              0.0,
+              5.0,
+              10.0,
+              15.0,
+              20.0,
+              25.0,
+              30.0,
+              35.0,
+              40.0,
+              45.0,
+              50.0,
+              55.0,
+              60.0,
+              65.0,
+              70.0,
+              75.0,
+              80.0,
+              85.0,
+              90.0
+            ],
+            "relative_db": [
+              [
+                -0.8601356221918627,
+                -0.8297719013324866,
+                -0.7903329445744625,
+                -0.7426400068014614,
+                -0.6877907471467987,
+                -0.6271110419276418,
+                -0.5620998166726991,
+                -0.49437090502877834,
+                -0.4255955599296191,
+                -0.35744853603903637,
+                -0.29155979534216003,
+                -0.22947300958266253,
+                -0.17261125566303545,
+                -0.12224968829498795,
+                -0.07949455117705737,
+                -0.045267646107770426,
+                -0.0202952931561526,
+                -0.005100851741825275,
+                0.0,
+                -0.005098160079917518,
+                -0.02028968731266444,
+                -0.04525869341769759,
+                -0.0794816331046754,
+                -0.12223203564542458,
+                -0.17258799325502064,
+                -0.2294432083753001,
+                -0.2915225294810154,
+                -0.3574029418069924,
+                -0.42554089322296873,
+                -0.4943065938083255,
+                -0.5620255049499678,
+                -0.6270266223049853,
+                -0.6876963797637646,
+                -0.7425361237096133,
+                -0.790220239949595,
+                -0.8296513093422548,
+                -0.8600082855279355
+              ],
+              [
+                -3.146475342236626,
+                -2.8083453008752346,
+                -2.4734672478363793,
+                -2.149307543241704,
+                -1.841529346964421,
+                -1.55432638682681,
+                -1.2906948263382334,
+                -1.0526288820020073,
+                -0.8412504539576005,
+                -0.6568948665231731,
+                -0.4991786271716126,
+                -0.3670736399101499,
+                -0.25900709531794164,
+                -0.17299837221306316,
+                -0.10683475344515607,
+                -0.058277794291179366,
+                -0.02528324452421304,
+                -0.0062110958265229,
+                0.0,
+                -0.006282768294300702,
+                -0.025426736084331738,
+                -0.05849319210264274,
+                -0.10712170564201404,
+                -0.17335559394880012,
+                -0.2594318356613255,
+                -0.3675611896795119,
+                -0.4997219428342432,
+                -0.6574843731828993,
+                -0.8418740734491148,
+                -1.0532723112265723,
+                -1.2913420662292028,
+                -1.554960493691449,
+                -1.8421333464349179,
+                -2.1498654154813472,
+                -2.4739648656869133,
+                -2.808771186785534,
+                -3.1468211135535302
+              ],
+              [
+                -11.113826240548303,
+                -10.67159927452857,
+                -10.122806193248568,
+                -9.464132876747119,
+                -8.712737897990486,
+                -7.895438070563364,
+                -7.038228765954533,
+                -6.162032105149455,
+                -5.28401882571365,
+                -4.420762979937843,
+                -3.5901628304117477,
+                -2.811204503761971,
+                -2.102345914624803,
+                -1.4797811041845874,
+                -0.956398997891714,
+                -0.5415912822491388,
+                -0.2416565941208827,
+                -0.06044997877322743,
+                0.0,
+                -0.060928671649512524,
+                -0.24259786745960327,
+                -0.5429613510213334,
+                -0.9581434262899281,
+                -1.4818208729110547,
+                -2.1045736235359325,
+                -2.8134826868729257,
+                -3.5923270803806173,
+                -4.4226321836494025,
+                -5.2854122827299745,
+                -6.162788974497985,
+                -7.03822209201164,
+                -7.894577447763574,
+                -8.710962085802912,
+                -9.461401540983958,
+                -10.119101806104123,
+                -10.666942819779845,
+                -11.108298941409418
+              ],
+              [
+                -17.59274853293195,
+                -16.324400645810393,
+                -15.158025385887495,
+                -14.04602978217909,
+                -12.907345770758237,
+                -11.689186111709438,
+                -10.393035263760371,
+                -9.060173037981656,
+                -7.739020376678934,
+                -6.464246688465753,
+                -5.255796346669479,
+                -4.128145930876631,
+                -3.098263038317679,
+                -2.187069763667738,
+                -1.4159323126656118,
+                -0.8024367293285621,
+                -0.3583329790242189,
+                -0.08996365668028258,
+                0.0,
+                -0.0891054756717514,
+                -0.3565918525047004,
+                -0.799751716913681,
+                -1.4121899679232832,
+                -2.182095665601717,
+                -3.091837340088785,
+                -4.1200526349719935,
+                -5.24589340486137,
+                -6.452514431593937,
+                -7.725539408051225,
+                -9.045019947669013,
+                -10.37614639949699,
+                -11.670290597495661,
+                -12.886060509357552,
+                -14.022074369673753,
+                -15.13135526545212,
+                -16.295160840323494,
+                -17.561273629474996
+              ]
+            ],
+            "target_db": [
+              -24.0,
+              -21.407407407407405,
+              -18.962962962962962,
+              -16.666666666666668,
+              -14.518518518518519,
+              -12.518518518518519,
+              -10.666666666666666,
+              -8.962962962962964,
+              -7.407407407407408,
+              -6.0,
+              -4.7407407407407405,
+              -3.6296296296296298,
+              -2.6666666666666665,
+              -1.851851851851852,
+              -1.1851851851851851,
+              -0.6666666666666666,
+              -0.2962962962962963,
+              -0.07407407407407407,
+              -0.0,
+              -0.07407407407407407,
+              -0.2962962962962963,
+              -0.6666666666666666,
+              -1.1851851851851851,
+              -1.851851851851852,
+              -2.6666666666666665,
+              -3.6296296296296298,
+              -4.7407407407407405,
+              -6.0,
+              -7.407407407407408,
+              -8.962962962962964,
+              -10.666666666666666,
+              -12.518518518518519,
+              -14.518518518518519,
+              -16.666666666666668,
+              -18.962962962962962,
+              -21.407407407407405,
+              -24.0
+            ]
+          }
+        },
+        "drive_settings": {
+          "side_gain": 0.8,
+          "mid_highpass_hz": 350.0,
+          "upper_crossover_hz": 2000.0,
+          "mid_polarity": -1,
+          "hf_delay_s": 0.0,
+          "filter": "analogue_lr4",
+          "phasor_convention": "exp(-i omega t)"
+        },
+        "sphere": {
+          "sampling": "complete_pinned_fibonacci_equal_solid_angle",
+          "sample_count": 413,
+          "radius_m": 20.0,
+          "solid_angle_weight_sr": 0.030427047492395092,
+          "control_from_hz": 1000.0,
+          "scored_frequencies_hz": [
+            1000.0,
+            2000.0,
+            3000.0
+          ],
+          "rms_target_error_db": 16.08037705424223,
+          "per_frequency_rms_target_error_db": [
+            23.962898454761753,
+            21.632919510454975,
+            14.941043580585093,
+            9.19334481008048
+          ],
+          "sphere_mean_square_pressure_relative_to_axis": [
+            0.8611607548817789,
+            0.5718811370257141,
+            0.1872758091027949,
+            0.10375341178277715
+          ],
+          "on_axis_to_sphere_mean_db": [
+            0.6491577021715854,
+            2.4269422802186655,
+            7.2751831793539266,
+            9.839976132272316
+          ],
+          "target": "forward elliptical angular -6 dB envelope, clipped to declared rear attenuation",
+          "rear_attenuation_db": 30.0,
+          "angular_convergence_validated": false,
+          "radiated_power_or_efficiency_qualified": false
+        },
+        "electrical_validation": {
+          "schema_version": 1,
+          "evidence": "independent_equation_consistency",
+          "passed": true,
+          "project_sha256": "40d44583184ba7d4a8cf1bc9abea47004d913cfb177e0f3ae0d62e56acdb600b",
+          "evaluation_sha256": "14fbb5b75eb64716716b95073daeabf00229b99dd4d79bcd75dc1b4074feaa6e",
+          "rows": [
+            {
+              "frequency_hz": 350.0,
+              "passed": true,
+              "circuit_voltage_relative_residual": 1.9638895380871784e-16,
+              "electrical_reciprocity_relative_residual": 3.3877610923521356e-09,
+              "minimum_hermitian_admittance_eigenvalue_s": 0.0949466300297301
+            },
+            {
+              "frequency_hz": 1000.0,
+              "passed": true,
+              "circuit_voltage_relative_residual": 1.8368733266220967e-16,
+              "electrical_reciprocity_relative_residual": 4.03601774660482e-09,
+              "minimum_hermitian_admittance_eigenvalue_s": 0.01799703302025678
+            },
+            {
+              "frequency_hz": 2000.0,
+              "passed": true,
+              "circuit_voltage_relative_residual": 1.4448502818985395e-16,
+              "electrical_reciprocity_relative_residual": 5.740921412282653e-10,
+              "minimum_hermitian_admittance_eigenvalue_s": 0.09430194427911687
+            },
+            {
+              "frequency_hz": 3000.0,
+              "passed": true,
+              "circuit_voltage_relative_residual": 2.0781188443947496e-16,
+              "electrical_reciprocity_relative_residual": 4.921986188822367e-09,
+              "minimum_hermitian_admittance_eigenvalue_s": 0.14762644970816896
+            }
+          ],
+          "relative_tolerance": 1e-08,
+          "acoustic_accuracy_validated": false,
+          "limitations": [
+            "Circuit consistency cannot establish acoustic field accuracy",
+            "No measured driver or speaker comparison",
+            "No RMS or absolute SPL qualification"
+          ]
+        },
+        "parallel_mid_bank": {
+          "wiring": "parallel",
+          "amplifier_channels_for_mids": 1,
+          "hf_termination": "zero-voltage ideal amplifier",
+          "mid_count": 4,
+          "impedance_real_ohm": [
+            1.5029062103516488,
+            1.5460176149661427,
+            1.501396047125619,
+            1.5004833540688518
+          ],
+          "impedance_imag_ohm": [
+            0.017256930858104685,
+            0.02816128493162914,
+            -0.2461806195139706,
+            -0.42818973890643003
+          ],
+          "minimum_impedance_magnitude_ohm": 1.5030052823513946,
+          "maximum_current_per_volt_a": 0.6653336563365485,
+          "selected_drive_currents": {
+            "normalisation": "original native 2.83 V basis, no RMS calibration claim",
+            "mid_bank_real_a": [
+              0.6644544381683679,
+              -1.2135352471771843,
+              0.702129606334539,
+              0.1268682995066879
+            ],
+            "mid_bank_imag_a": [
+              0.35309671172413115,
+              -0.610400357305702,
+              -0.2461931646082446,
+              0.20307733104270306
+            ],
+            "hf_real_a": [
+              -0.002622576729873509,
+              0.005589257591560293,
+              -0.13389208477525064,
+              -0.25831863261850246
+            ],
+            "hf_imag_a": [
+              0.0012417193230985302,
+              -0.009598351391243301,
+              0.10050553424694363,
+              -0.25577350588304687
+            ]
+          }
+        },
+        "absolute_spl_calibrated": false,
+        "physical_validation": false,
+        "objective": 20.268788683380286,
+        "driver_count": 5,
+        "driver_cost": 20.0,
+        "evaluation_sha256": "14fbb5b75eb64716716b95073daeabf00229b99dd4d79bcd75dc1b4074feaa6e",
+        "geometry_manifest_sha256": "80ecc5d1e1f2e5a10f40c8155578ec2f8195eff5a6055ae7395dd7662d298c2b"
+      },
+      {
+        "index": 1,
+        "status": "complete",
+        "ripple_db": 14.24974809828142,
+        "side_gain": 0.8,
+        "relative_response_db": [
+          -20.140973682198975,
+          0.0,
+          -7.612127195178808,
+          -4.687599789055463
+        ],
+        "acoustic_objective": 19.577418878651535,
+        "directivity_error_db": 10.655341560740231,
+        "polars": {
+          "horizontal": {
+            "rms_target_error_db": 7.891399596372587,
+            "angles_deg": [
+              -90.0,
+              -85.0,
+              -80.0,
+              -75.0,
+              -70.0,
+              -65.0,
+              -60.0,
+              -55.0,
+              -50.0,
+              -45.0,
+              -40.0,
+              -35.0,
+              -30.0,
+              -25.0,
+              -20.0,
+              -15.0,
+              -10.0,
+              -5.0,
+              0.0,
+              5.0,
+              10.0,
+              15.0,
+              20.0,
+              25.0,
+              30.0,
+              35.0,
+              40.0,
+              45.0,
+              50.0,
+              55.0,
+              60.0,
+              65.0,
+              70.0,
+              75.0,
+              80.0,
+              85.0,
+              90.0
+            ],
+            "relative_db": [
+              [
+                -0.849328298109871,
+                -0.8193383181147961,
+                -0.7803831753885461,
+                -0.7332748490522643,
+                -0.6790986007533796,
+                -0.6191652419567876,
+                -0.5549564810232742,
+                -0.4880673301260582,
+                -0.4201491750059033,
+                -0.3528564102454968,
+                -0.2877986808954526,
+                -0.22649989678847554,
+                -0.17036441018135032,
+                -0.12065013594045061,
+                -0.07844796999167047,
+                -0.04466661912706754,
+                -0.020021868444482952,
+                -0.0050293494425589155,
+                0.0,
+                -0.005037599070158229,
+                -0.020037991052112326,
+                -0.044689869203574276,
+                -0.07847724892858135,
+                -0.12068401615148738,
+                -0.17040116806813235,
+                -0.22653755508334786,
+                -0.2878350608319419,
+                -0.3528891937686083,
+                -0.4201759768033122,
+                -0.4880857786139666,
+                -0.5549643065611346,
+                -0.6191603695387042,
+                -0.6790792433338331,
+                -0.7332395966670212,
+                -0.780331074533678,
+                -0.819268935656795,
+                -0.8492417644829724
+              ],
+              [
+                -3.0922219995574673,
+                -2.7559904647301177,
+                -2.423522297868525,
+                -2.1022592477257227,
+                -1.7978192011468475,
+                -1.5143342036296972,
+                -1.2547242005656845,
+                -1.020893742190707,
+                -0.8138633436198895,
+                -0.6338583745862735,
+                -0.48038142673348994,
+                -0.3522920539326988,
+                -0.24791225665513728,
+                -0.1651681622331658,
+                -0.10176901980952063,
+                -0.055415022102674336,
+                -0.024016956930607694,
+                -0.005904762181246921,
+                0.0,
+                -0.005929782481374698,
+                -0.024066559453192866,
+                -0.05548820012611123,
+                -0.10186396467378059,
+                -0.1652819762966183,
+                -0.24804067132663962,
+                -0.3524292088153566,
+                -0.4805197523180391,
+                -0.6339886004224072,
+                -0.8139746311376497,
+                -1.020973920829353,
+                -1.2547600715005398,
+                -1.5143118703878722,
+                -1.79772439315262,
+                -2.1020776225050555,
+                -2.423239739815653,
+                -2.7555934404037767,
+                -3.091698075595674
+              ],
+              [
+                -10.918836149344788,
+                -10.456313286184118,
+                -9.907637702390106,
+                -9.269092492350717,
+                -8.55142812842678,
+                -7.772683107440281,
+                -6.951324133253448,
+                -6.103819504349476,
+                -5.246061473824519,
+                -4.39564480718535,
+                -3.5725949440527227,
+                -2.798096690913602,
+                -2.092265442704418,
+                -1.4722372586733834,
+                -0.9512383909653974,
+                -0.5386102379225008,
+                -0.24042131495265837,
+                -0.06027036324501526,
+                0.0,
+                -0.060167458849802666,
+                -0.2402067359161556,
+                -0.5382654377461544,
+                -0.9507336507848465,
+                -1.4715312042621815,
+                -2.0913075058831136,
+                -2.7968350179719077,
+                -3.5709917202046357,
+                -4.3936983491247386,
+                -5.2438293282738435,
+                -6.101431166421527,
+                -6.9489704703973745,
+                -7.770575616650643,
+                -8.549732941869989,
+                -9.267856975470412,
+                -9.906738598032291,
+                -10.455457394306656,
+                -10.917623054240774
+              ],
+              [
+                -17.423312796361255,
+                -16.169229269697162,
+                -14.984687783392667,
+                -13.840313022788166,
+                -12.670644106011837,
+                -11.435299351715729,
+                -10.141120861041738,
+                -8.826764125121128,
+                -7.533931157682169,
+                -6.290918045471425,
+                -5.113660112560133,
+                -4.014901162953414,
+                -3.0111887627209617,
+                -2.123395558481568,
+                -1.3727001224361322,
+                -0.7762763664955694,
+                -0.34535865229358764,
+                -0.08581770269128985,
+                0.0,
+                -0.08844879232870471,
+                -0.35058420419779274,
+                -0.7840304306800174,
+                -1.382903413775841,
+                -2.13598211927543,
+                -3.0261425103784427,
+                -4.032291733685883,
+                -5.133652222209037,
+                -6.313722020063026,
+                -7.5596827267458,
+                -8.855369095187852,
+                -10.172156522489768,
+                -11.468103923209853,
+                -12.70467148207805,
+                -13.87560082016244,
+                -15.02210316079857,
+                -16.210367391584303,
+                -17.470120995408752
+              ]
+            ],
+            "target_db": [
+              -24.0,
+              -21.407407407407405,
+              -18.962962962962962,
+              -16.666666666666668,
+              -14.518518518518519,
+              -12.518518518518519,
+              -10.666666666666666,
+              -8.962962962962964,
+              -7.407407407407408,
+              -6.0,
+              -4.7407407407407405,
+              -3.6296296296296298,
+              -2.6666666666666665,
+              -1.851851851851852,
+              -1.1851851851851851,
+              -0.6666666666666666,
+              -0.2962962962962963,
+              -0.07407407407407407,
+              -0.0,
+              -0.07407407407407407,
+              -0.2962962962962963,
+              -0.6666666666666666,
+              -1.1851851851851851,
+              -1.851851851851852,
+              -2.6666666666666665,
+              -3.6296296296296298,
+              -4.7407407407407405,
+              -6.0,
+              -7.407407407407408,
+              -8.962962962962964,
+              -10.666666666666666,
+              -12.518518518518519,
+              -14.518518518518519,
+              -16.666666666666668,
+              -18.962962962962962,
+              -21.407407407407405,
+              -24.0
+            ]
+          },
+          "vertical": {
+            "rms_target_error_db": 7.890978237793941,
+            "angles_deg": [
+              -90.0,
+              -85.0,
+              -80.0,
+              -75.0,
+              -70.0,
+              -65.0,
+              -60.0,
+              -55.0,
+              -50.0,
+              -45.0,
+              -40.0,
+              -35.0,
+              -30.0,
+              -25.0,
+              -20.0,
+              -15.0,
+              -10.0,
+              -5.0,
+              0.0,
+              5.0,
+              10.0,
+              15.0,
+              20.0,
+              25.0,
+              30.0,
+              35.0,
+              40.0,
+              45.0,
+              50.0,
+              55.0,
+              60.0,
+              65.0,
+              70.0,
+              75.0,
+              80.0,
+              85.0,
+              90.0
+            ],
+            "relative_db": [
+              [
+                -0.8493624426842752,
+                -0.819375530702791,
+                -0.7804224291586441,
+                -0.733315060292363,
+                -0.6791386755998967,
+                -0.6192041231606594,
+                -0.5549931925861029,
+                -0.48810101792244925,
+                -0.42017914189825556,
+                -0.3528821446283229,
+                -0.2878198780207079,
+                -0.22651647258626573,
+                -0.1703765075830219,
+                -0.12065812393395282,
+                -0.07845243579987515,
+                -0.04466835401278852,
+                -0.020021847723545975,
+                -0.005028707337512233,
+                0.0,
+                -0.005039600479386135,
+                -0.020043412414852663,
+                -0.04470014929105326,
+                -0.0784938059684012,
+                -0.12070820598448113,
+                -0.17043424194182272,
+                -0.22658061785060313,
+                -0.287889030430971,
+                -0.35295476302253664,
+                -0.42025357879062303,
+                -0.48817555710518934,
+                -0.5550660932484432,
+                -0.6192736699439415,
+                -0.6792032332851905,
+                -0.7333731310101781,
+                -0.7804727092286879,
+                -0.819416963598416,
+                -0.8493942643222614
+              ],
+              [
+                -3.0927404797588753,
+                -2.7565401006288526,
+                -2.4240885838397546,
+                -2.1028285921758587,
+                -1.7983791005354464,
+                -1.514873353479203,
+                -1.2552325953598777,
+                -1.02136278856692,
+                -0.8142859939440095,
+                -0.6342292778539528,
+                -0.48069708749462675,
+                -0.3525509852438704,
+                -0.24811510889118402,
+                -0.16531780617305228,
+                -0.10187056090903063,
+                -0.055475724718041595,
+                -0.024046063449841136,
+                -0.0059132024808183315,
+                0.0,
+                -0.005934394393315415,
+                -0.02408914774890674,
+                -0.05554192382497273,
+                -0.10196129683004221,
+                -0.16543429560251682,
+                -0.24825794998698095,
+                -0.35271980772328293,
+                -0.4808903216966921,
+                -0.6344440734916554,
+                -0.814518290827648,
+                -1.021607514621958,
+                -1.2554839457851885,
+                -1.5151250917567176,
+                -1.7986248189612064,
+                -2.103061877306088,
+                -2.424303050529942,
+                -2.756729286809429,
+                -3.0928976332678992
+              ],
+              [
+                -10.92139886499643,
+                -10.458422034286038,
+                -9.90909795097822,
+                -9.269802577622189,
+                -8.55139782311645,
+                -7.772013972290734,
+                -6.950170299420101,
+                -6.1023494813811165,
+                -5.244431059078054,
+                -4.393982522898586,
+                -3.5709977328689524,
+                -2.796632384314811,
+                -2.0909783948952168,
+                -1.4711543452490767,
+                -0.950373886998544,
+                -0.5379692474575752,
+                -0.2400020781501574,
+                -0.06006597110225642,
+                0.0,
+                -0.060359701421325844,
+                -0.2405796746731576,
+                -0.5388109785711923,
+                -0.9514505279847867,
+                -1.4724286952733783,
+                -2.0924090025847595,
+                -2.7981804921151125,
+                -3.572637528640113,
+                -4.395712506788464,
+                -5.246281018806784,
+                -6.104375275125293,
+                -6.952430539149588,
+                -7.774530101966317,
+                -8.55410943677338,
+                -9.272538689893345,
+                -9.911587028086604,
+                -10.460350264242223,
+                -10.9224949552503
+              ],
+              [
+                -17.459483114965405,
+                -16.198710101005027,
+                -15.009100908253139,
+                -13.86108487178063,
+                -12.688780123397947,
+                -11.451356413595153,
+                -10.15531782686418,
+                -8.839189721662695,
+                -7.544711460737549,
+                -6.300264338327395,
+                -5.121821863276046,
+                -4.022088202413297,
+                -3.017516632777049,
+                -2.1288766351499575,
+                -1.3772707824495996,
+                -0.7798365852661628,
+                -0.34780604643375895,
+                -0.08706907533123054,
+                0.0,
+                -0.08716698471983717,
+                -0.34800176224534196,
+                -0.7801178664797737,
+                -1.3775920519882436,
+                -2.1291350859364173,
+                -3.017536399950967,
+                -4.02162560058765,
+                -5.12059851088856,
+                -6.298017138611026,
+                -7.541230336725208,
+                -8.834315829274551,
+                -10.148898702012088,
+                -11.443181205073433,
+                -12.678532711913139,
+                -13.84834246474125,
+                -14.993366814936879,
+                -16.17946911697881,
+                -17.436416594391687
+              ]
+            ],
+            "target_db": [
+              -24.0,
+              -21.407407407407405,
+              -18.962962962962962,
+              -16.666666666666668,
+              -14.518518518518519,
+              -12.518518518518519,
+              -10.666666666666666,
+              -8.962962962962964,
+              -7.407407407407408,
+              -6.0,
+              -4.7407407407407405,
+              -3.6296296296296298,
+              -2.6666666666666665,
+              -1.851851851851852,
+              -1.1851851851851851,
+              -0.6666666666666666,
+              -0.2962962962962963,
+              -0.07407407407407407,
+              -0.0,
+              -0.07407407407407407,
+              -0.2962962962962963,
+              -0.6666666666666666,
+              -1.1851851851851851,
+              -1.851851851851852,
+              -2.6666666666666665,
+              -3.6296296296296298,
+              -4.7407407407407405,
+              -6.0,
+              -7.407407407407408,
+              -8.962962962962964,
+              -10.666666666666666,
+              -12.518518518518519,
+              -14.518518518518519,
+              -16.666666666666668,
+              -18.962962962962962,
+              -21.407407407407405,
+              -24.0
+            ]
+          }
+        },
+        "drive_settings": {
+          "side_gain": 0.8,
+          "mid_highpass_hz": 350.0,
+          "upper_crossover_hz": 2000.0,
+          "mid_polarity": -1,
+          "hf_delay_s": 0.0,
+          "filter": "analogue_lr4",
+          "phasor_convention": "exp(-i omega t)"
+        },
+        "sphere": {
+          "sampling": "complete_pinned_fibonacci_equal_solid_angle",
+          "sample_count": 413,
+          "radius_m": 20.0,
+          "solid_angle_weight_sr": 0.030427047492395092,
+          "control_from_hz": 1000.0,
+          "scored_frequencies_hz": [
+            1000.0,
+            2000.0,
+            3000.0
+          ],
+          "rms_target_error_db": 16.183646848054163,
+          "per_frequency_rms_target_error_db": [
+            23.97146296469956,
+            21.680640398487768,
+            15.072664187336008,
+            9.407226058454176
+          ],
+          "sphere_mean_square_pressure_relative_to_axis": [
+            0.8627558447488516,
+            0.5771511194981728,
+            0.19009781373991197,
+            0.10644707714452076
+          ],
+          "on_axis_to_sphere_mean_db": [
+            0.6411208989381971,
+            2.387104576047769,
+            7.210228778013221,
+            9.728662590488938
+          ],
+          "target": "forward elliptical angular -6 dB envelope, clipped to declared rear attenuation",
+          "rear_attenuation_db": 30.0,
+          "angular_convergence_validated": false,
+          "radiated_power_or_efficiency_qualified": false
+        },
+        "electrical_validation": {
+          "schema_version": 1,
+          "evidence": "independent_equation_consistency",
+          "passed": true,
+          "project_sha256": "3b6d3b815543ec629790b015f3cecdb688404180b6342bb64a92f0ae422ddc89",
+          "evaluation_sha256": "5f1ce4032047f310670458e14046e06353995938592da4415f4be25fc682a2c8",
+          "rows": [
+            {
+              "frequency_hz": 350.0,
+              "passed": true,
+              "circuit_voltage_relative_residual": 1.7989230969317578e-16,
+              "electrical_reciprocity_relative_residual": 1.183401719973521e-09,
+              "minimum_hermitian_admittance_eigenvalue_s": 0.09493312507249563
+            },
+            {
+              "frequency_hz": 1000.0,
+              "passed": true,
+              "circuit_voltage_relative_residual": 2.253210207916294e-16,
+              "electrical_reciprocity_relative_residual": 6.531693085672362e-10,
+              "minimum_hermitian_admittance_eigenvalue_s": 0.01776596126838999
+            },
+            {
+              "frequency_hz": 2000.0,
+              "passed": true,
+              "circuit_voltage_relative_residual": 1.5413735615398358e-16,
+              "electrical_reciprocity_relative_residual": 2.5465809848057204e-10,
+              "minimum_hermitian_admittance_eigenvalue_s": 0.09419901290543167
+            },
+            {
+              "frequency_hz": 3000.0,
+              "passed": true,
+              "circuit_voltage_relative_residual": 8.279496717042449e-17,
+              "electrical_reciprocity_relative_residual": 2.2265698395613215e-09,
+              "minimum_hermitian_admittance_eigenvalue_s": 0.14751971908700498
+            }
+          ],
+          "relative_tolerance": 1e-08,
+          "acoustic_accuracy_validated": false,
+          "limitations": [
+            "Circuit consistency cannot establish acoustic field accuracy",
+            "No measured driver or speaker comparison",
+            "No RMS or absolute SPL qualification"
+          ]
+        },
+        "parallel_mid_bank": {
+          "wiring": "parallel",
+          "amplifier_channels_for_mids": 1,
+          "hf_termination": "zero-voltage ideal amplifier",
+          "mid_count": 4,
+          "impedance_real_ohm": [
+            1.5029323504693384,
+            1.5418805918535392,
+            1.501449812771677,
+            1.5004804039881852
+          ],
+          "impedance_imag_ohm": [
+            0.018167365858499394,
+            0.016165363277315416,
+            -0.24614045383097916,
+            -0.42818373192416975
+          ],
+          "minimum_impedance_magnitude_ohm": 1.5030421495319175,
+          "maximum_current_per_volt_a": 0.6653173367835515,
+          "selected_drive_currents": {
+            "normalisation": "original native 2.83 V basis, no RMS calibration claim",
+            "mid_bank_real_a": [
+              0.664651407625149,
+              -1.2120256160920126,
+              0.7022416857516152,
+              0.1268734312148765
+            ],
+            "mid_bank_imag_a": [
+              0.3526858252688522,
+              -0.6211618391038828,
+              -0.2462439338017147,
+              0.20307673113870894
+            ],
+            "hf_real_a": [
+              -0.002793218273390921,
+              0.001367202627035186,
+              -0.13383236518833638,
+              -0.25808482864576887
+            ],
+            "hf_imag_a": [
+              0.001306829627407895,
+              -0.010381774155645078,
+              0.10001012942606984,
+              -0.25561466661708215
+            ]
+          }
+        },
+        "absolute_spl_calibrated": false,
+        "physical_validation": false,
+        "objective": 19.977418878651534,
+        "driver_count": 5,
+        "driver_cost": 20.0,
+        "evaluation_sha256": "5f1ce4032047f310670458e14046e06353995938592da4415f4be25fc682a2c8",
+        "geometry_manifest_sha256": "e192d7e592802ce680254dfcd416faf65b8ab27b9061d63ba47a9a2089471237"
+      }
+    ],
+    "per_solver_stage_timeout_s": 1800,
+    "limitations": [
+      "Synthetic/unqualified sources may be used only for pipeline experiments",
+      "Relative on-axis ripple objective, not calibrated sensitivity or efficiency",
+      "Driver-only prices exclude amplifier, material, printing and assembly",
+      "Bounded straight-axis profiles; finite sampled grid is not a global optimum"
+    ],
+    "control_sha256": {
+      "brief.json": "d8d98b7f43c0b5ecee437deec2d49cc9d7246ec511d492d2314cfddcb76e1a6e",
+      "base-geometry.json": "0ce9bdc1a0de29d50dc283bbcb0a25224a51132352250ad937a4ddab2e5a66d1",
+      "catalogue-snapshot.json": "5078ff20f32b57afea5f717bad5496dad71bab19f10a4749fed1ba0439d5c5f2"
+    },
+    "proposals": [
+      {
+        "method": "declared_baseline",
+        "parent_index": null,
+        "rejected": []
+      },
+      {
+        "method": "elite_mutation",
+        "parent_index": 0,
+        "rejected": [],
+        "mutations": [
+          {
+            "kind": "profile",
+            "key": 1,
+            "columns": [
+              1,
+              3,
+              5,
+              7
+            ],
+            "before": 1.0,
+            "after": 1.015097073974727
+          },
+          {
+            "kind": "profile",
+            "key": 2,
+            "columns": [
+              1,
+              3,
+              5,
+              7
+            ],
+            "before": 1.0,
+            "after": 0.9708338647582204
+          },
+          {
+            "kind": "profile",
+            "key": 0,
+            "columns": [
+              1,
+              3,
+              5,
+              7
+            ],
+            "before": 1.05,
+            "after": 0.9742562090168303
+          },
+          {
+            "kind": "geometry",
+            "key": "driver_axial_offset_m",
+            "column": null,
+            "before": 0.02,
+            "after": 0.01973308791505669
+          },
+          {
+            "kind": "profile",
+            "key": 1,
+            "columns": [
+              0,
+              2,
+              4,
+              6
+            ],
+            "before": 0.9750000000000001,
+            "after": 0.9322049612725368
+          },
+          {
+            "kind": "profile",
+            "key": 0,
+            "columns": [
+              0,
+              2,
+              4,
+              6
+            ],
+            "before": 0.95,
+            "after": 0.9375467745614521
+          },
+          {
+            "kind": "profile",
+            "key": 2,
+            "columns": [
+              0,
+              2,
+              4,
+              6
+            ],
+            "before": 1.05,
+            "after": 1.0440534109372561
+          }
+        ]
+      }
+    ],
+    "winner_index": 1,
+    "winner": {
+      "index": 1,
+      "status": "complete",
+      "ripple_db": 14.24974809828142,
+      "side_gain": 0.8,
+      "relative_response_db": [
+        -20.140973682198975,
+        0.0,
+        -7.612127195178808,
+        -4.687599789055463
+      ],
+      "acoustic_objective": 19.577418878651535,
+      "directivity_error_db": 10.655341560740231,
+      "polars": {
+        "horizontal": {
+          "rms_target_error_db": 7.891399596372587,
+          "angles_deg": [
+            -90.0,
+            -85.0,
+            -80.0,
+            -75.0,
+            -70.0,
+            -65.0,
+            -60.0,
+            -55.0,
+            -50.0,
+            -45.0,
+            -40.0,
+            -35.0,
+            -30.0,
+            -25.0,
+            -20.0,
+            -15.0,
+            -10.0,
+            -5.0,
+            0.0,
+            5.0,
+            10.0,
+            15.0,
+            20.0,
+            25.0,
+            30.0,
+            35.0,
+            40.0,
+            45.0,
+            50.0,
+            55.0,
+            60.0,
+            65.0,
+            70.0,
+            75.0,
+            80.0,
+            85.0,
+            90.0
+          ],
+          "relative_db": [
+            [
+              -0.849328298109871,
+              -0.8193383181147961,
+              -0.7803831753885461,
+              -0.7332748490522643,
+              -0.6790986007533796,
+              -0.6191652419567876,
+              -0.5549564810232742,
+              -0.4880673301260582,
+              -0.4201491750059033,
+              -0.3528564102454968,
+              -0.2877986808954526,
+              -0.22649989678847554,
+              -0.17036441018135032,
+              -0.12065013594045061,
+              -0.07844796999167047,
+              -0.04466661912706754,
+              -0.020021868444482952,
+              -0.0050293494425589155,
+              0.0,
+              -0.005037599070158229,
+              -0.020037991052112326,
+              -0.044689869203574276,
+              -0.07847724892858135,
+              -0.12068401615148738,
+              -0.17040116806813235,
+              -0.22653755508334786,
+              -0.2878350608319419,
+              -0.3528891937686083,
+              -0.4201759768033122,
+              -0.4880857786139666,
+              -0.5549643065611346,
+              -0.6191603695387042,
+              -0.6790792433338331,
+              -0.7332395966670212,
+              -0.780331074533678,
+              -0.819268935656795,
+              -0.8492417644829724
+            ],
+            [
+              -3.0922219995574673,
+              -2.7559904647301177,
+              -2.423522297868525,
+              -2.1022592477257227,
+              -1.7978192011468475,
+              -1.5143342036296972,
+              -1.2547242005656845,
+              -1.020893742190707,
+              -0.8138633436198895,
+              -0.6338583745862735,
+              -0.48038142673348994,
+              -0.3522920539326988,
+              -0.24791225665513728,
+              -0.1651681622331658,
+              -0.10176901980952063,
+              -0.055415022102674336,
+              -0.024016956930607694,
+              -0.005904762181246921,
+              0.0,
+              -0.005929782481374698,
+              -0.024066559453192866,
+              -0.05548820012611123,
+              -0.10186396467378059,
+              -0.1652819762966183,
+              -0.24804067132663962,
+              -0.3524292088153566,
+              -0.4805197523180391,
+              -0.6339886004224072,
+              -0.8139746311376497,
+              -1.020973920829353,
+              -1.2547600715005398,
+              -1.5143118703878722,
+              -1.79772439315262,
+              -2.1020776225050555,
+              -2.423239739815653,
+              -2.7555934404037767,
+              -3.091698075595674
+            ],
+            [
+              -10.918836149344788,
+              -10.456313286184118,
+              -9.907637702390106,
+              -9.269092492350717,
+              -8.55142812842678,
+              -7.772683107440281,
+              -6.951324133253448,
+              -6.103819504349476,
+              -5.246061473824519,
+              -4.39564480718535,
+              -3.5725949440527227,
+              -2.798096690913602,
+              -2.092265442704418,
+              -1.4722372586733834,
+              -0.9512383909653974,
+              -0.5386102379225008,
+              -0.24042131495265837,
+              -0.06027036324501526,
+              0.0,
+              -0.060167458849802666,
+              -0.2402067359161556,
+              -0.5382654377461544,
+              -0.9507336507848465,
+              -1.4715312042621815,
+              -2.0913075058831136,
+              -2.7968350179719077,
+              -3.5709917202046357,
+              -4.3936983491247386,
+              -5.2438293282738435,
+              -6.101431166421527,
+              -6.9489704703973745,
+              -7.770575616650643,
+              -8.549732941869989,
+              -9.267856975470412,
+              -9.906738598032291,
+              -10.455457394306656,
+              -10.917623054240774
+            ],
+            [
+              -17.423312796361255,
+              -16.169229269697162,
+              -14.984687783392667,
+              -13.840313022788166,
+              -12.670644106011837,
+              -11.435299351715729,
+              -10.141120861041738,
+              -8.826764125121128,
+              -7.533931157682169,
+              -6.290918045471425,
+              -5.113660112560133,
+              -4.014901162953414,
+              -3.0111887627209617,
+              -2.123395558481568,
+              -1.3727001224361322,
+              -0.7762763664955694,
+              -0.34535865229358764,
+              -0.08581770269128985,
+              0.0,
+              -0.08844879232870471,
+              -0.35058420419779274,
+              -0.7840304306800174,
+              -1.382903413775841,
+              -2.13598211927543,
+              -3.0261425103784427,
+              -4.032291733685883,
+              -5.133652222209037,
+              -6.313722020063026,
+              -7.5596827267458,
+              -8.855369095187852,
+              -10.172156522489768,
+              -11.468103923209853,
+              -12.70467148207805,
+              -13.87560082016244,
+              -15.02210316079857,
+              -16.210367391584303,
+              -17.470120995408752
+            ]
+          ],
+          "target_db": [
+            -24.0,
+            -21.407407407407405,
+            -18.962962962962962,
+            -16.666666666666668,
+            -14.518518518518519,
+            -12.518518518518519,
+            -10.666666666666666,
+            -8.962962962962964,
+            -7.407407407407408,
+            -6.0,
+            -4.7407407407407405,
+            -3.6296296296296298,
+            -2.6666666666666665,
+            -1.851851851851852,
+            -1.1851851851851851,
+            -0.6666666666666666,
+            -0.2962962962962963,
+            -0.07407407407407407,
+            -0.0,
+            -0.07407407407407407,
+            -0.2962962962962963,
+            -0.6666666666666666,
+            -1.1851851851851851,
+            -1.851851851851852,
+            -2.6666666666666665,
+            -3.6296296296296298,
+            -4.7407407407407405,
+            -6.0,
+            -7.407407407407408,
+            -8.962962962962964,
+            -10.666666666666666,
+            -12.518518518518519,
+            -14.518518518518519,
+            -16.666666666666668,
+            -18.962962962962962,
+            -21.407407407407405,
+            -24.0
+          ]
+        },
+        "vertical": {
+          "rms_target_error_db": 7.890978237793941,
+          "angles_deg": [
+            -90.0,
+            -85.0,
+            -80.0,
+            -75.0,
+            -70.0,
+            -65.0,
+            -60.0,
+            -55.0,
+            -50.0,
+            -45.0,
+            -40.0,
+            -35.0,
+            -30.0,
+            -25.0,
+            -20.0,
+            -15.0,
+            -10.0,
+            -5.0,
+            0.0,
+            5.0,
+            10.0,
+            15.0,
+            20.0,
+            25.0,
+            30.0,
+            35.0,
+            40.0,
+            45.0,
+            50.0,
+            55.0,
+            60.0,
+            65.0,
+            70.0,
+            75.0,
+            80.0,
+            85.0,
+            90.0
+          ],
+          "relative_db": [
+            [
+              -0.8493624426842752,
+              -0.819375530702791,
+              -0.7804224291586441,
+              -0.733315060292363,
+              -0.6791386755998967,
+              -0.6192041231606594,
+              -0.5549931925861029,
+              -0.48810101792244925,
+              -0.42017914189825556,
+              -0.3528821446283229,
+              -0.2878198780207079,
+              -0.22651647258626573,
+              -0.1703765075830219,
+              -0.12065812393395282,
+              -0.07845243579987515,
+              -0.04466835401278852,
+              -0.020021847723545975,
+              -0.005028707337512233,
+              0.0,
+              -0.005039600479386135,
+              -0.020043412414852663,
+              -0.04470014929105326,
+              -0.0784938059684012,
+              -0.12070820598448113,
+              -0.17043424194182272,
+              -0.22658061785060313,
+              -0.287889030430971,
+              -0.35295476302253664,
+              -0.42025357879062303,
+              -0.48817555710518934,
+              -0.5550660932484432,
+              -0.6192736699439415,
+              -0.6792032332851905,
+              -0.7333731310101781,
+              -0.7804727092286879,
+              -0.819416963598416,
+              -0.8493942643222614
+            ],
+            [
+              -3.0927404797588753,
+              -2.7565401006288526,
+              -2.4240885838397546,
+              -2.1028285921758587,
+              -1.7983791005354464,
+              -1.514873353479203,
+              -1.2552325953598777,
+              -1.02136278856692,
+              -0.8142859939440095,
+              -0.6342292778539528,
+              -0.48069708749462675,
+              -0.3525509852438704,
+              -0.24811510889118402,
+              -0.16531780617305228,
+              -0.10187056090903063,
+              -0.055475724718041595,
+              -0.024046063449841136,
+              -0.0059132024808183315,
+              0.0,
+              -0.005934394393315415,
+              -0.02408914774890674,
+              -0.05554192382497273,
+              -0.10196129683004221,
+              -0.16543429560251682,
+              -0.24825794998698095,
+              -0.35271980772328293,
+              -0.4808903216966921,
+              -0.6344440734916554,
+              -0.814518290827648,
+              -1.021607514621958,
+              -1.2554839457851885,
+              -1.5151250917567176,
+              -1.7986248189612064,
+              -2.103061877306088,
+              -2.424303050529942,
+              -2.756729286809429,
+              -3.0928976332678992
+            ],
+            [
+              -10.92139886499643,
+              -10.458422034286038,
+              -9.90909795097822,
+              -9.269802577622189,
+              -8.55139782311645,
+              -7.772013972290734,
+              -6.950170299420101,
+              -6.1023494813811165,
+              -5.244431059078054,
+              -4.393982522898586,
+              -3.5709977328689524,
+              -2.796632384314811,
+              -2.0909783948952168,
+              -1.4711543452490767,
+              -0.950373886998544,
+              -0.5379692474575752,
+              -0.2400020781501574,
+              -0.06006597110225642,
+              0.0,
+              -0.060359701421325844,
+              -0.2405796746731576,
+              -0.5388109785711923,
+              -0.9514505279847867,
+              -1.4724286952733783,
+              -2.0924090025847595,
+              -2.7981804921151125,
+              -3.572637528640113,
+              -4.395712506788464,
+              -5.246281018806784,
+              -6.104375275125293,
+              -6.952430539149588,
+              -7.774530101966317,
+              -8.55410943677338,
+              -9.272538689893345,
+              -9.911587028086604,
+              -10.460350264242223,
+              -10.9224949552503
+            ],
+            [
+              -17.459483114965405,
+              -16.198710101005027,
+              -15.009100908253139,
+              -13.86108487178063,
+              -12.688780123397947,
+              -11.451356413595153,
+              -10.15531782686418,
+              -8.839189721662695,
+              -7.544711460737549,
+              -6.300264338327395,
+              -5.121821863276046,
+              -4.022088202413297,
+              -3.017516632777049,
+              -2.1288766351499575,
+              -1.3772707824495996,
+              -0.7798365852661628,
+              -0.34780604643375895,
+              -0.08706907533123054,
+              0.0,
+              -0.08716698471983717,
+              -0.34800176224534196,
+              -0.7801178664797737,
+              -1.3775920519882436,
+              -2.1291350859364173,
+              -3.017536399950967,
+              -4.02162560058765,
+              -5.12059851088856,
+              -6.298017138611026,
+              -7.541230336725208,
+              -8.834315829274551,
+              -10.148898702012088,
+              -11.443181205073433,
+              -12.678532711913139,
+              -13.84834246474125,
+              -14.993366814936879,
+              -16.17946911697881,
+              -17.436416594391687
+            ]
+          ],
+          "target_db": [
+            -24.0,
+            -21.407407407407405,
+            -18.962962962962962,
+            -16.666666666666668,
+            -14.518518518518519,
+            -12.518518518518519,
+            -10.666666666666666,
+            -8.962962962962964,
+            -7.407407407407408,
+            -6.0,
+            -4.7407407407407405,
+            -3.6296296296296298,
+            -2.6666666666666665,
+            -1.851851851851852,
+            -1.1851851851851851,
+            -0.6666666666666666,
+            -0.2962962962962963,
+            -0.07407407407407407,
+            -0.0,
+            -0.07407407407407407,
+            -0.2962962962962963,
+            -0.6666666666666666,
+            -1.1851851851851851,
+            -1.851851851851852,
+            -2.6666666666666665,
+            -3.6296296296296298,
+            -4.7407407407407405,
+            -6.0,
+            -7.407407407407408,
+            -8.962962962962964,
+            -10.666666666666666,
+            -12.518518518518519,
+            -14.518518518518519,
+            -16.666666666666668,
+            -18.962962962962962,
+            -21.407407407407405,
+            -24.0
+          ]
+        }
+      },
+      "drive_settings": {
+        "side_gain": 0.8,
+        "mid_highpass_hz": 350.0,
+        "upper_crossover_hz": 2000.0,
+        "mid_polarity": -1,
+        "hf_delay_s": 0.0,
+        "filter": "analogue_lr4",
+        "phasor_convention": "exp(-i omega t)"
+      },
+      "sphere": {
+        "sampling": "complete_pinned_fibonacci_equal_solid_angle",
+        "sample_count": 413,
+        "radius_m": 20.0,
+        "solid_angle_weight_sr": 0.030427047492395092,
+        "control_from_hz": 1000.0,
+        "scored_frequencies_hz": [
+          1000.0,
+          2000.0,
+          3000.0
+        ],
+        "rms_target_error_db": 16.183646848054163,
+        "per_frequency_rms_target_error_db": [
+          23.97146296469956,
+          21.680640398487768,
+          15.072664187336008,
+          9.407226058454176
+        ],
+        "sphere_mean_square_pressure_relative_to_axis": [
+          0.8627558447488516,
+          0.5771511194981728,
+          0.19009781373991197,
+          0.10644707714452076
+        ],
+        "on_axis_to_sphere_mean_db": [
+          0.6411208989381971,
+          2.387104576047769,
+          7.210228778013221,
+          9.728662590488938
+        ],
+        "target": "forward elliptical angular -6 dB envelope, clipped to declared rear attenuation",
+        "rear_attenuation_db": 30.0,
+        "angular_convergence_validated": false,
+        "radiated_power_or_efficiency_qualified": false
+      },
+      "electrical_validation": {
+        "schema_version": 1,
+        "evidence": "independent_equation_consistency",
+        "passed": true,
+        "project_sha256": "3b6d3b815543ec629790b015f3cecdb688404180b6342bb64a92f0ae422ddc89",
+        "evaluation_sha256": "5f1ce4032047f310670458e14046e06353995938592da4415f4be25fc682a2c8",
+        "rows": [
+          {
+            "frequency_hz": 350.0,
+            "passed": true,
+            "circuit_voltage_relative_residual": 1.7989230969317578e-16,
+            "electrical_reciprocity_relative_residual": 1.183401719973521e-09,
+            "minimum_hermitian_admittance_eigenvalue_s": 0.09493312507249563
+          },
+          {
+            "frequency_hz": 1000.0,
+            "passed": true,
+            "circuit_voltage_relative_residual": 2.253210207916294e-16,
+            "electrical_reciprocity_relative_residual": 6.531693085672362e-10,
+            "minimum_hermitian_admittance_eigenvalue_s": 0.01776596126838999
+          },
+          {
+            "frequency_hz": 2000.0,
+            "passed": true,
+            "circuit_voltage_relative_residual": 1.5413735615398358e-16,
+            "electrical_reciprocity_relative_residual": 2.5465809848057204e-10,
+            "minimum_hermitian_admittance_eigenvalue_s": 0.09419901290543167
+          },
+          {
+            "frequency_hz": 3000.0,
+            "passed": true,
+            "circuit_voltage_relative_residual": 8.279496717042449e-17,
+            "electrical_reciprocity_relative_residual": 2.2265698395613215e-09,
+            "minimum_hermitian_admittance_eigenvalue_s": 0.14751971908700498
+          }
+        ],
+        "relative_tolerance": 1e-08,
+        "acoustic_accuracy_validated": false,
+        "limitations": [
+          "Circuit consistency cannot establish acoustic field accuracy",
+          "No measured driver or speaker comparison",
+          "No RMS or absolute SPL qualification"
+        ]
+      },
+      "parallel_mid_bank": {
+        "wiring": "parallel",
+        "amplifier_channels_for_mids": 1,
+        "hf_termination": "zero-voltage ideal amplifier",
+        "mid_count": 4,
+        "impedance_real_ohm": [
+          1.5029323504693384,
+          1.5418805918535392,
+          1.501449812771677,
+          1.5004804039881852
+        ],
+        "impedance_imag_ohm": [
+          0.018167365858499394,
+          0.016165363277315416,
+          -0.24614045383097916,
+          -0.42818373192416975
+        ],
+        "minimum_impedance_magnitude_ohm": 1.5030421495319175,
+        "maximum_current_per_volt_a": 0.6653173367835515,
+        "selected_drive_currents": {
+          "normalisation": "original native 2.83 V basis, no RMS calibration claim",
+          "mid_bank_real_a": [
+            0.664651407625149,
+            -1.2120256160920126,
+            0.7022416857516152,
+            0.1268734312148765
+          ],
+          "mid_bank_imag_a": [
+            0.3526858252688522,
+            -0.6211618391038828,
+            -0.2462439338017147,
+            0.20307673113870894
+          ],
+          "hf_real_a": [
+            -0.002793218273390921,
+            0.001367202627035186,
+            -0.13383236518833638,
+            -0.25808482864576887
+          ],
+          "hf_imag_a": [
+            0.001306829627407895,
+            -0.010381774155645078,
+            0.10001012942606984,
+            -0.25561466661708215
+          ]
+        }
+      },
+      "absolute_spl_calibrated": false,
+      "physical_validation": false,
+      "objective": 19.977418878651534,
+      "driver_count": 5,
+      "driver_cost": 20.0,
+      "evaluation_sha256": "5f1ce4032047f310670458e14046e06353995938592da4415f4be25fc682a2c8",
+      "geometry_manifest_sha256": "e192d7e592802ce680254dfcd416faf65b8ab27b9061d63ba47a9a2089471237"
+    },
+    "winner_candidate_sha256": "73439460de9bbca183d2fb8322f872e66157a136cafba0678f5b849b8b95009b",
+    "winner_score_sha256": "f4c28953599e26d7d311263a24013f502c4e7b394e3f41cffe717266a97fae48",
+    "numerical_consistency_passed": true
+  },
+  "export": {
+    "status": "complete",
+    "output": "/Users/timrichardson/Documents/projects/personal/speakers/meh-design-studio/runs/periodic-symmetry-winner.zip",
+    "sha256": "966aa47ae663e2c8351dda9d90b06d9b075b578b10ed3d91e2a5f7fe8730e77f",
+    "driver_count": 5,
+    "driver_cost": 20.0,
+    "currency": "GBP",
+    "print_qualified": false,
+    "finalist_validation_included": false
+  },
+  "cad_comparison": {
+    "controls_identical_except_interpolation": true,
+    "legacy_extents": {
+      "unported_air": [
+        -50.000537264563846,
+        51.347793853768984,
+        -50.013616013959314,
+        50.01361601395927
+      ],
+      "front": [
+        -63.124424609281526,
+        63.530177095042994,
+        -63.12752882200255,
+        63.127528848127426
+      ],
+      "horn": [
+        -66.12442460928153,
+        66.530177095043,
+        -66.12752882200255,
+        66.12752884812743
+      ]
+    },
+    "periodic_geometry": {
+      "unported_air": {
+        "volume": 475619.0146752475,
+        "difference": 0.0,
+        "cut_valid": true,
+        "bbox": [
+          -50.000000099999994,
+          50.00000010000001,
+          -50.0000001,
+          50.00000010000001
+        ],
+        "sample_disagreements": []
+      },
+      "front": {
+        "volume": 616685.7062342684,
+        "difference": 0.0,
+        "cut_valid": true,
+        "bbox": [
+          -63.12439643384936,
+          63.12439643381769,
+          -63.12439643417328,
+          63.1243964341733
+        ],
+        "sample_disagreements": []
+      },
+      "horn": {
+        "volume": 168943.19827843492,
+        "difference": 0.0,
+        "cut_valid": true,
+        "bbox": [
+          -66.12439643384937,
+          66.12439643381768,
+          -66.12439643417328,
+          66.12439643417329
+        ],
+        "sample_disagreements": []
+      }
+    },
+    "legacy_invalid_boolean_difference_volumes_are_not_error_estimates": true
+  },
+  "qualified": false,
+  "physical_validation": false,
+  "target_horn_design": false,
+  "limitations": [
+    "Synthetic small native workflow, four frequencies, disabled 2-ohm screen, no mesh-convergence study",
+    "CAD/symmetry checks do not establish commercial source accuracy, motor/cone fit or print qualification",
+    "The dense 20 m baseline is a retained-trace projection of the previously failed target candidate",
+    "Excitation-column cancellation includes induced motion and is not a uniquely isolated physical mechanism"
+  ]
+}
