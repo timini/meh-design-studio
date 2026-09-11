@@ -112,5 +112,31 @@ at a 2% relative limit. This is the distributed sealed-cylinder solution, which
 retains its longitudinal resonances; a low-frequency compliance approximation
 would not suffice. See the [IIT Kanpur tube-acoustics lecture](https://archive.nptel.ac.in/content/storage2/courses/112104176/pdf/31.pdf).
 The test does not qualify arbitrary cavities, cone/basket geometry, damping,
-front/BEM meshes, response flatness or printing. The commercial coupled
-comparison remains a separate required experiment.
+front/BEM meshes, response flatness or printing.
+
+The separate commercial coupled comparison now completes those same four
+frequencies using source `bb727b59542b46dc915894be805ec404b31722fb`, with
+505,927 tetrahedra and 8,064 exterior triangles. Front FEM and final exterior
+meshes are byte-identical to the original commercial seed. The integrated native
+rear force/velocity load agrees with the analytic cylinder within 0.837% for
+both mid groups; the full force equation residual is below `9e-15` and the
+native electrical check passes its unchanged `1e-8` limit.
+
+| Four-frequency check | Maximum relative difference | 2% limit |
+| --- | ---: | --- |
+| Original versus layered raw excitation basis | 50.37% | Fail |
+| Original versus layered pressure with frozen DSP | 0.798% | Pass |
+| Original versus layered parallel-bank impedance | 0.519% | Pass |
+| Layered polar rotation between equivalent mid groups | 1.322% | Pass |
+
+The large raw-basis change shows why the original mesh cannot be accepted as
+converged. The crossover suppresses some affected responses, so the smaller
+frozen-DSP change does not establish general basis accuracy. These four samples
+also do not establish front/BEM or full-band convergence, response compliance,
+commercial-driver accuracy or a buildable optimised design.
+
+[Layered rear evidence](../validation/evidence/layered-rear-mesh/report.json)
+preserves the fresh CAD, meshes, native fields, controls, comparison scripts and
+earlier failed isolated refinements. All 114 archive members pass SHA-256 and CRC
+verification. The 43,637,991-byte archive SHA-256 is
+`106c38be3801bd06a4d184cbe779647f37e66a5caac790885061809836b1ec1b`.
