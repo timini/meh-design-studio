@@ -84,3 +84,44 @@ Mesh refinement and an independent full-model comparison must resolve the field
 discrepancy before mirror reduction can support search decisions. These results
 do not qualify commercial driver inputs, physical acoustic accuracy, output
 capability or printable driver fit.
+
+## Four-level mesh refinement
+
+The same quarter CAD was subsequently meshed at interior/exterior sizes of
+8/16, 6/12 and 4/8 mm, keeping driver parameters, observations, frequencies,
+solver backend and acceptance limits fixed. Native runs used source commit
+`25e69a8575077df2c533ccab6db13ee4a823cc53`. The original 10/20 mm quarter and
+full-model fields still have their original source identity; their new electrical
+assessment uses the corrected postprocessor.
+
+| Quarter mesh, interior/exterior | Tetrahedra | Exterior triangles | Maximum field difference from retained full model |
+| --- | ---: | ---: | ---: |
+| 10/20 mm | 36,019 | 674 | 5.84685%; fail |
+| 8/16 mm | 41,729 | 974 | 1.71519%; pass |
+| 6/12 mm | 57,006 | 1,630 | 3.87816%; fail |
+| 4/8 mm | 108,304 | 3,328 | 7.21882%; fail |
+
+The adjacent quarter-mesh differences are 4.89791%, 4.20802% and 3.61347%,
+respectively, normalised by the finer model. Each fails the original 2% limit.
+Their largest differences occur in the 3 kHz mid-pair radiation fields. The
+isolated 8 mm comparison pass therefore does not demonstrate convergence or
+justify choosing that mesh as a search screen. The existing full model has not
+itself demonstrated convergence, so its role as a comparison reference does not
+make its fields the exact solution.
+
+![Actual four-frequency complex-field comparisons](assets/mirror-quarter-refinement-comparison.png)
+
+All three new quarter models pass the unchanged electrical checks; maximum
+reciprocity residuals are `9.97592e-10`, `4.75146e-10` and `2.27199e-10`.
+Parallel-bank impedance comparisons also pass 2%. These checks do not resolve
+the acoustic-field discrepancy. No gain, delay or phase alignment was fitted,
+and all corresponding vector quantities and supported excitation groups were
+included.
+
+The [refinement evidence report](../validation/evidence/mirror-quarter-refinement/report.json)
+indexes the three new raw native evaluations, meshes, frozen controls, original
+failed comparison attempt made before solver finalisation, completed comparisons
+and plotted data. The native and postprocessing identities are distinct and
+explicit. The next numerical work must establish stable fields and separate
+full-model discretisation error from symmetry-reduction behaviour before this
+shortcut is integrated into production optimisation.
