@@ -77,3 +77,22 @@ def test_bad_print_mesh_fails_geometry_before_acoustic_preparation(tmp_path, mon
     assert saved['status'] == 'failed'
     assert 'STL volume differs from CAD' in saved['error']
     assert not (tmp_path / 'geometry/analysis').exists()
+
+
+@pytest.mark.cad
+def test_binary_rounding_preserves_thin_facets_with_ascii(tmp_path, monkeypatch):
+    pytest.importorskip('cadquery')
+    import meshio
+    from meh_studio.cad_runtime import load_cadquery
+    from meh_studio.material_export import export_material_meshes
+    cq = load_cadquery()
+    shape = cq.Workplane('XY').box(10, 10, 10).val()
+    # Nonzero CAD facet area becomes exactly zero in float32 near x=20 mm.
+    vertices = [cq.Vector(20, 0, 0), cq.Vector(20.0000001, 1, 0), cq.Vector(20, 2, 0)]
+    monkeypatch.setattr(shape, 'tessellate', lambda *args: (vertices, [(0, 1, 2)]))
+    policy = export_material_meshes(shape, tmp_path/'thin.stl', tmp_path/'thin.3mf', .0001)
+    assert policy['stl_encoding'] == 'ascii'
+    mesh = meshio.read(tmp_path/'thin.stl')
+    a, b, c = mesh.points[mesh.cells_dict['triangle'][0]]
+    assert np.linalg.norm(np.cross(b-a, c-a)) > 1e-12
+    np.testing.assert_array_equal(mesh.points, [v.toTuple() for v in vertices])

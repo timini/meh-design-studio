@@ -18,8 +18,14 @@ tightens linear and angular deflection together, within five attempts. The
 manifest records each attempt and the exporter source hash. An unsuccessful
 attempt sequence fails instead of silently accepting a coarser mesh.
 
-STL and 3MF use the same checked vertices and triangles. Exact coordinate welding
-can collapse an empty triangle at a revolution pole; only facets containing a
+STL and 3MF use the same checked vertices and triangles. Binary STL is the
+preferred encoding. If its float32 rounding makes distinct seam vertices
+collinear, the exporter retains the original coordinates in ASCII STL and 3MF;
+it records that encoding in the manifest. A degenerate original CAD facet still
+fails. This fixes the smooth freeform profile's six rounded zero-area facets
+without deleting them, moving vertices or relaxing the independent checks.
+
+Exact coordinate welding can collapse an empty triangle at a revolution pole; only facets containing a
 repeated vertex are removed. There is no proximity welding, hole filling or
 removal of nonzero-area facets. Remaining degenerate triangles, open/nonmanifold
 or inconsistently oriented edges, and volume errors above 1% are still rejected.
@@ -60,3 +66,8 @@ files remain unchanged. `derivation.json` records both source versions and the
 identity checks; no native simulation was rerun or attributed to the newer code.
 This is a separate corrected export, not a successful completed-search build
 bundle. Actual commercial driver fit and print qualification remain unresolved.
+
+The smooth-profile CI regression reproduced locally before the correction. Its
+corrected full export, FEM compilation and exterior preparation pass; the horn
+volume differs from CAD by 0.001733%. The original failed output remains retained
+locally. This is numerical geometry validation, not physical print qualification.
