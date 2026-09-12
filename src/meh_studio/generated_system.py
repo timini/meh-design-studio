@@ -68,7 +68,7 @@ def _compile_interior_system(geometry_directory: Path, sources: HornSources, out
         raise ValueError("complete matching geometry and metre-scale meshes are required")
     for source, radius in ((sources.throat, design.throat_radius_m), (sources.side, design.front_radius_m)):
         if not math.isclose(source.outlet_area_m2, math.pi * radius**2, rel_tol=1e-6):
-            raise ValueError("source effective area must match its ideal diaphragm disk")
+            raise ValueError("source effective area must match its projected diaphragm disk")
     axes = {name: list(axis) for name, _, axis in design.entry_sites}
     expected_sources = set(axes)
     source_locations = {s["id"]: s for s in geometry["sources"]}
@@ -197,6 +197,8 @@ def _compile_interior_system(geometry_directory: Path, sources: HornSources, out
                           "Throat piston omits compression-driver internals and rear load",
                           "Ideal source disks, no breakup, nonlinear or measured qualification",
                           "Mesh convergence and independent accuracy remain unestablished"])
+        if design.diaphragm_profile_m:
+            report['limitations'][2] = 'Explicit rigid source profiles, no breakup, nonlinear or measured qualification'
     except BaseException as exc:
         if report["status"] != "cancelled":
             report.update(status="failed", error=f"{type(exc).__name__}: {exc}")
