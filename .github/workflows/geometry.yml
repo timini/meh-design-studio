@@ -26,4 +26,4 @@ jobs:
           sudo apt-get update -o Dir::Etc::sourcelist="sources.list.d/ubuntu.sources" -o Dir::Etc::sourceparts="-"
           sudo apt-get install -y libglu1-mesa libgl1
       - run: python -m pip install -e ".[dev,cad]"
-      - run: python -m pytest --durations=20
+      - run: python -m pytest -v --durations=20 -o faulthandler_timeout=300
