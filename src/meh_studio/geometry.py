@@ -333,9 +333,18 @@ def export_geometry(design: HornGeometry, output: Path) -> dict:
                     from .material_export import export_material_meshes
                     # Write STEP before meshing, preserving the exact CAD model.
                     cq.exporters.export(shape, str(directory / f'{name}.step'))
-                    tessellation[name] = export_material_meshes(shape,
-                        directory / f'{name}.stl', directory / f'{name}.3mf',
-                        design.tessellation_tolerance_m)
+                    if design.throat_body is not None:
+                        # The near-throat package family stalls the default OCCT
+                        # triangulator on macOS. Normalise its saved faces and
+                        # use Delabella; retain the established path elsewhere.
+                        saved_shape = cq.importers.importStep(str(directory / f'{name}.step')).val()
+                        tessellation[name] = export_material_meshes(saved_shape,
+                            directory / f'{name}.stl', directory / f'{name}.3mf',
+                            design.tessellation_tolerance_m, algorithm="delabella")
+                    else:
+                        tessellation[name] = export_material_meshes(shape,
+                            directory / f'{name}.stl', directory / f'{name}.3mf',
+                            design.tessellation_tolerance_m)
                 for extension in (("step",) if group == "air" else ("step", "stl", "3mf")):
                     path = directory / f"{name}.{extension}"
                     if group == 'air':

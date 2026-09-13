@@ -4,28 +4,52 @@ from pathlib import Path
 import numpy as np
 
 
-def export_material_meshes(shape, stl, threemf, tolerance_m):
+def export_material_meshes(shape, stl, threemf, tolerance_m, *, algorithm="default"):
     from .cad_runtime import load_cadquery
     cq = load_cadquery()
     from OCP.BRepTools import BRepTools
     from OCP.BRepMesh import BRepMesh_IncrementalMesh
+    from OCP.IMeshTools import IMeshTools_Parameters, IMeshTools_MeshAlgoType_Delabella
     import meshio
     from cadquery.occ_impl.exporters.threemf import ThreeMFWriter
 
+    if algorithm not in {"default", "delabella"}:
+        raise ValueError("unknown material meshing algorithm")
     requested_mm = tolerance_m * 1000
     attempts = []
     for refinement in range(5):
         deflection = requested_mm / 2**refinement
         angular = .1 / 2**refinement
         BRepTools.Clean_s(shape.wrapped)
-        mesher = BRepMesh_IncrementalMesh(shape.wrapped, deflection, False, angular, False)
+        parameters = IMeshTools_Parameters()
+        parameters.Deflection = deflection
+        parameters.Angle = angular
+        parameters.Relative = False
+        parameters.InParallel = False
+        if algorithm == "delabella":
+            parameters.MeshAlgo = IMeshTools_MeshAlgoType_Delabella
+        mesher = BRepMesh_IncrementalMesh(shape.wrapped, parameters)
         confirmed = BRepTools.Triangulation_s(shape.wrapped, requested_mm)
         roundoff = None
         if confirmed:
             vertices, triangles = shape.tessellate(requested_mm, .1)
             original = np.array([v.toTuple() for v in vertices], dtype=float)
-            # Both formats use exactly the binary STL coordinate representation.
+            # Prefer compact binary STL, but its float32 coordinates can turn
+            # valid thin seam facets into collinear triangles. Keep full CAD
+            # coordinates in ASCII STL when quantisation would collapse them.
             coordinates = original.astype(np.float32).astype(float)
+            binary = True
+            tri = np.asarray(triangles)
+            def has_degenerate(points):
+                a, b, c = (points[tri[:, i]] for i in range(3))
+                repeated = (np.all(a == b, axis=1) | np.all(b == c, axis=1)
+                            | np.all(c == a, axis=1))
+                return np.any((np.linalg.norm(np.cross(b-a, c-a), axis=1) <= 1e-12) & ~repeated)
+            if has_degenerate(coordinates.astype(np.float32)):
+                coordinates = original
+                binary = False
+                if has_degenerate(coordinates):
+                    raise ValueError('CAD triangulation contains degenerate distinct-vertex facets')
             roundoff = float(np.linalg.norm(coordinates - original, axis=1).max())
             confirmed = (roundoff < requested_mm and BRepTools.Triangulation_s(
                 shape.wrapped, requested_mm - roundoff))
@@ -46,7 +70,7 @@ def export_material_meshes(shape, stl, threemf, tolerance_m):
     # Remove only those zero-area facets; no proximity welding or hole filling.
     # The caller still requires closed oriented edges and the original CAD volume.
     faces = faces[~collapsed]
-    meshio.write(stl, meshio.Mesh(points, [('triangle', faces)]), file_format='stl', binary=True)
+    meshio.write(stl, meshio.Mesh(points, [('triangle', faces)]), file_format='stl', binary=binary)
 
     class CheckedMeshWriter(ThreeMFWriter):
         def __init__(self):
@@ -56,6 +80,8 @@ def export_material_meshes(shape, stl, threemf, tolerance_m):
 
     CheckedMeshWriter().write3mf(threemf)
     return {'linear_tolerance_m': tolerance_m, 'relative': False,
+            'stl_encoding': 'binary' if binary else 'ascii',
+            'mesh_algorithm': algorithm,
             'angular_tolerance_rad': .1, 'attempts': attempts,
             'removed_collapsed_triangles': int(collapsed.sum()),
             'exporter_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
