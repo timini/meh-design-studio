@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 
 
-def export_material_meshes(shape, stl, threemf, tolerance_m):
+def export_material_meshes(shape, stl, threemf, tolerance_m, *, algorithm="default"):
     from .cad_runtime import load_cadquery
     cq = load_cadquery()
     from OCP.BRepTools import BRepTools
@@ -13,6 +13,8 @@ def export_material_meshes(shape, stl, threemf, tolerance_m):
     import meshio
     from cadquery.occ_impl.exporters.threemf import ThreeMFWriter
 
+    if algorithm not in {"default", "delabella"}:
+        raise ValueError("unknown material meshing algorithm")
     requested_mm = tolerance_m * 1000
     attempts = []
     for refinement in range(5):
@@ -24,7 +26,8 @@ def export_material_meshes(shape, stl, threemf, tolerance_m):
         parameters.Angle = angular
         parameters.Relative = False
         parameters.InParallel = False
-        parameters.MeshAlgo = IMeshTools_MeshAlgoType_Delabella
+        if algorithm == "delabella":
+            parameters.MeshAlgo = IMeshTools_MeshAlgoType_Delabella
         mesher = BRepMesh_IncrementalMesh(shape.wrapped, parameters)
         confirmed = BRepTools.Triangulation_s(shape.wrapped, requested_mm)
         roundoff = None
@@ -78,7 +81,7 @@ def export_material_meshes(shape, stl, threemf, tolerance_m):
     CheckedMeshWriter().write3mf(threemf)
     return {'linear_tolerance_m': tolerance_m, 'relative': False,
             'stl_encoding': 'binary' if binary else 'ascii',
-            'mesh_algorithm': 'delabella',
+            'mesh_algorithm': algorithm,
             'angular_tolerance_rad': .1, 'attempts': attempts,
             'removed_collapsed_triangles': int(collapsed.sum()),
             'exporter_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}

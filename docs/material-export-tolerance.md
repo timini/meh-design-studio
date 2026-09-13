@@ -75,8 +75,8 @@ locally. This is numerical geometry validation, not physical print qualification
 ## macOS native triangulation stall
 
 The full throat-body export stalled inside OCCT's default triangulator on macOS,
-including when run alone. The material exporter now uses OCCT's Delabella
-algorithm on the delivered STEP representation, with the same absolute linear
+including when run alone. For the explicit throat-body geometry family, the material exporter uses OCCT's
+Delabella algorithm on the delivered STEP representation, with the same absolute linear
 and angular limits and independent final validation. The algorithm is recorded
 in each material mesh's metadata. Original design volumes still supply the
 independent volume reference. Acoustic meshes and retained solver evidence are
@@ -87,3 +87,10 @@ macOS in 141 seconds. All 20 saved STEP parts in those successful exports were
 valid and matched the original volume calculation within 1.7e-11 relative error,
 using the existing adaptive integration for spline profiles. CI on all three
 platforms remains required before merge.
+
+Applying that alternate path to every geometry caused a native crash in the
+existing eccentric-port case on macOS and Windows. It is therefore restricted to
+the explicit throat-body family that requires it; other geometry retains the
+original in-memory default mesher, including the validated STL precision fix.
+The algorithm choice is deterministic and recorded; every resulting mesh still
+passes the same independent topology, volume and requested-deflection checks.
