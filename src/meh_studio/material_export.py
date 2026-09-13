@@ -9,6 +9,7 @@ def export_material_meshes(shape, stl, threemf, tolerance_m):
     cq = load_cadquery()
     from OCP.BRepTools import BRepTools
     from OCP.BRepMesh import BRepMesh_IncrementalMesh
+    from OCP.IMeshTools import IMeshTools_Parameters, IMeshTools_MeshAlgoType_Delabella
     import meshio
     from cadquery.occ_impl.exporters.threemf import ThreeMFWriter
 
@@ -18,7 +19,13 @@ def export_material_meshes(shape, stl, threemf, tolerance_m):
         deflection = requested_mm / 2**refinement
         angular = .1 / 2**refinement
         BRepTools.Clean_s(shape.wrapped)
-        mesher = BRepMesh_IncrementalMesh(shape.wrapped, deflection, False, angular, False)
+        parameters = IMeshTools_Parameters()
+        parameters.Deflection = deflection
+        parameters.Angle = angular
+        parameters.Relative = False
+        parameters.InParallel = False
+        parameters.MeshAlgo = IMeshTools_MeshAlgoType_Delabella
+        mesher = BRepMesh_IncrementalMesh(shape.wrapped, parameters)
         confirmed = BRepTools.Triangulation_s(shape.wrapped, requested_mm)
         roundoff = None
         if confirmed:
@@ -71,6 +78,7 @@ def export_material_meshes(shape, stl, threemf, tolerance_m):
     CheckedMeshWriter().write3mf(threemf)
     return {'linear_tolerance_m': tolerance_m, 'relative': False,
             'stl_encoding': 'binary' if binary else 'ascii',
+            'mesh_algorithm': 'delabella',
             'angular_tolerance_rad': .1, 'attempts': attempts,
             'removed_collapsed_triangles': int(collapsed.sum()),
             'exporter_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest()}
