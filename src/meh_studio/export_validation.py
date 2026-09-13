@@ -10,6 +10,11 @@ from .boundary_lab import _read_json, _contained, sha256
 def validate_export(root: Path):
     root=Path(root)
     state=_read_json(root/'geometry.json')
+    return _validate_export_state(root, state)
+
+
+def _validate_export_state(root: Path, state):
+    """Also check freshly generated meshes before their manifest is published."""
     if state.get('status')!='complete' or state.get('units',{}).get('cad_and_stl')!='mm':
         raise ValueError('complete millimetre geometry export required')
     rows=[]

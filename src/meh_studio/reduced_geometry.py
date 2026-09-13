@@ -83,6 +83,35 @@ def _source_descriptor(shape, point, axis, expected_area, role):
             'area_m2': area, 'role': role}
 
 
+def _curved_source_descriptor(full, reduced, surface, projected_area, axis):
+    from .cad_runtime import load_cadquery
+    cq = load_cadquery()
+    matches = [face for face in full.Faces()
+               if math.dist([v / 1000 for v in face.Center().toTuple()], surface['center_m']) < 1e-7
+               and math.isclose(adaptive_area(face), surface['area_m2'], rel_tol=CAD_RELATIVE_TOLERANCE)]
+    if len(matches) != 1:
+        raise ValueError('full curved source must identify one CAD face')
+    bounds = full.BoundingBox()
+    box = cq.Solid.makeBox(max(bounds.xmax, 0) + 1, max(bounds.ymax, 0) + 1,
+                          bounds.zlen + 2, cq.Vector(0, 0, bounds.zmin - 1))
+    # Merge the two trims when the retained half crosses the revolution seam,
+    # matching the cleanup already applied to the quarter air solid.
+    cut = matches[0].intersect(box).clean()
+    if not cut.isValid() or len(cut.Faces()) != 1:
+        raise ValueError('curved source partition must retain one connected face')
+    from .diaphragm_geometry import descriptor
+    value = descriptor(cut.Faces()[0])
+    if not math.isclose(value['area_m2'], surface['area_m2'] / 2, rel_tol=CAD_RELATIVE_TOLERANCE):
+        raise ValueError('curved source area differs from its physical half')
+    matches = [face for face in reduced.Faces()
+               if math.dist([v / 1000 for v in face.Center().toTuple()], value['center_m']) < 1e-7
+               and math.isclose(adaptive_area(face), value['area_m2'], rel_tol=CAD_RELATIVE_TOLERANCE)]
+    if len(matches) != 1:
+        raise ValueError('curved source is not retained in quarter air CAD')
+    return value | {'role': 'source', 'curved': True,
+                    'projected_area_m2': projected_area, 'motion_axis': axis}
+
+
 def _partition(output, geometry, design, directory):
     from .cad_runtime import load_cadquery
     cq = load_cadquery()
@@ -111,9 +140,14 @@ def _partition(output, geometry, design, directory):
     for name in retained:
         source = sources[name]
         for side, region in [('front', 'front'), ('rear', 'rear_' + name)]:
-            descriptors[region][name + '_' + side + '_source'] = _source_descriptor(
-                reduced[region], source[side + '_center_m'], source['motion_axis'],
-                math.pi * source['radius_m']**2 / 2, 'source')
+            if source.get(side + '_surface'):
+                value = _curved_source_descriptor(full[region], reduced[region],
+                    source[side + '_surface'], math.pi * source['radius_m']**2 / 2,
+                    source['motion_axis'])
+            else:
+                value = _source_descriptor(reduced[region], source[side + '_center_m'],
+                    source['motion_axis'], math.pi * source['radius_m']**2 / 2, 'source')
+            descriptors[region][name + '_' + side + '_source'] = value
     cad_files = {}
     for name, shape in reduced.items():
         path = directory / f'{name}.step'
@@ -171,8 +205,10 @@ def mesh_quarter_geometry(output: Path, geometry, design):
                 for dim, tag in gmsh.model.getBoundary(volumes, oriented=False):
                     centre = gmsh.model.occ.getCenterOfMass(dim, tag)
                     matches = [name for name, descriptor in boundaries.items()
-                               if gmsh.model.getType(dim, tag) == 'Plane'
-                               and math.dist(centre, descriptor['center_m']) < 1e-7]
+                               if (descriptor.get('curved') or gmsh.model.getType(dim, tag) == 'Plane')
+                               and math.dist(centre, descriptor['center_m']) < 1e-7
+                               and (not descriptor.get('curved') or math.isclose(
+                                   gmsh.model.occ.getMass(dim, tag), descriptor['area_m2'], rel_tol=1e-6))]
                     if len(matches) > 1:
                         raise ValueError('ambiguous quarter source boundary')
                     (selected[matches[0]] if matches else walls).append(tag)
@@ -211,8 +247,10 @@ def mesh_quarter_geometry(output: Path, geometry, design):
                     raise ValueError('quarter mesh contains inverted or degenerate tetrahedra')
                 path = directory / f'{region}.msh'
                 gmsh.write(str(path))
-                areas = source_area_checks(path, {name: math.sqrt(value['area_m2'] / math.pi)
-                                                  for name, value in boundaries.items()})
+                areas = source_area_checks(path, {name: math.sqrt(value.get('projected_area_m2', value['area_m2']) / math.pi)
+                                                  for name, value in boundaries.items()},
+                    axes={name: value['motion_axis'] for name, value in boundaries.items() if value.get('curved')},
+                    surface_areas={name: value['area_m2'] for name, value in boundaries.items() if value.get('curved')})
                 report['regions'].append({'id': region, 'estimated_tetrahedra': estimate,
                     'source_area_checks': areas, 'path': path.relative_to(output).as_posix(),
                     'sha256': sha256(path), 'volume_m3': volume, 'tetrahedra': len(tets),

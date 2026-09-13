@@ -1,0 +1,25 @@
+{
+  "length_m": 0.25,
+  "throat_radius_m": 0.0127,
+  "mouth_radius_m": 0.1,
+  "wall_m": 0.003,
+  "entry_positions_m": [
+    0.09
+  ],
+  "port_radius_m": 0.006,
+  "port_length_m": 0.012,
+  "front_radius_m": 0.032,
+  "front_depth_m": 0.01,
+  "rear_depth_m": 0.04,
+  "mesh_size_m": 0.008,
+  "tessellation_tolerance_m": 0.0001,
+  "entry_layout": "four_driver_ring",
+  "diaphragm_profile_m": [
+    0.01,
+    0.01,
+    0.005,
+    0.0
+  ],
+  "rear_axial_mesh_size_m": 0.002,
+  "solver_symmetry": "xy"
+}

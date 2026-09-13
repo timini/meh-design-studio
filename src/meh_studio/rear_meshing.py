@@ -1,4 +1,4 @@
-"""Axially refined P1 tetrahedra in the existing cylindrical rear air volume."""
+"""Axially refined P1 tetrahedra in a source-face extrusion verified against CAD."""
 import math
 import hashlib
 from pathlib import Path

@@ -18,7 +18,7 @@ from .waveguide_profile import mouth_face, cad_volume, imported_volume
 def meshing_runtime_identity():
     return {'python':sys.version,
         'packages':{name:importlib.metadata.version(name) for name in ('cadquery','cadquery-ocp','gmsh','numpy')},
-        'source_sha256':{name:sha256(Path(__file__).with_name(name)) for name in ('geometry.py','reduced_geometry.py','radiation_geometry.py','waveguide_profile.py','interface_coordinates.py','native_mouth_conform.py')}}
+        'source_sha256':{name:sha256(Path(__file__).with_name(name)) for name in ('geometry.py','diaphragm_geometry.py','reduced_geometry.py','radiation_geometry.py','waveguide_profile.py','interface_coordinates.py','native_mouth_conform.py')}}
 
 
 def step_geometry_sha256(path: Path) -> str:
@@ -218,9 +218,8 @@ def export_exterior(design: HornGeometry, output: Path, mesh_size_m: float = .02
             report['throat_body'] = {'kind': 'ideal_rigid_driver_envelope',
                 'dimensions': design.throat_body.model_dump(mode='json'), 'print_part': False}
         for source in sources:
-            centre = cq.Vector(*[x * 1000 for x in source["front_center_m"]])
-            solids.append(cq.Solid.makeCylinder(source["radius_m"] * 1000, design.wall_m * 1000,
-                                                centre, cq.Vector(*source["motion_axis"])))
+            from .diaphragm_geometry import diaphragm_gap
+            solids.append(diaphragm_gap(design, source))
         body = solids[0].fuse(*solids[1:]).clean()
         if not body.isValid() or len(body.Solids()) != 1:
             raise ValueError("exterior envelope is not one valid solid")
