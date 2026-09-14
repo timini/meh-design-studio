@@ -5,10 +5,10 @@ root=Path(__file__).resolve().parent.parent
 handles=[]
 def reader(folder):
  report=json.loads((root/folder/'report.json').read_text());members={}
- for p in (root/folder).glob('*.zip'):
+ for declared in report['archives']:
+  p=root/folder/declared['file']
   digest=hashlib.sha256(p.read_bytes()).hexdigest()
-  expected=next(x['sha256'] for x in report['archives'] if x['file']==p.name)
-  assert digest==expected
+  assert digest==declared['sha256']
   z=zipfile.ZipFile(p);handles.append(z)
   for n in z.namelist():assert n not in members;members[n]=z
  def read(n):
