@@ -1,0 +1,9 @@
+{
+  "frequency_hz": 4000.0,
+  "common_mid_coarse_norm": 0.15414915925170605,
+  "common_mid_refined_norm": 0.14357457799684634,
+  "relative_complex_refinement_error": 0.5107258994935404,
+  "refined_common_mid_rotation_error": 0.003623907255328819,
+  "qualified": false,
+  "scope": "Auxiliary equal-voltage shared-bank reanalysis; original failures and acceptance gates unchanged"
+}

@@ -1,0 +1,54 @@
+{
+  "scope": "Derived equal-voltage shared mid-bank diagnostic; no new solver execution or qualification",
+  "source_commit": "381eb8cb8ef14b1feb27bb7586bbcb34f50ff093",
+  "archive_sha256": "35437cae99229d23b789383e3105bfd32200d9a5991a4dad0c4be0d5b7bb8d5f",
+  "rows": [
+    {
+      "case": "plain",
+      "frequency_hz": 700.0,
+      "common_mid_pressure_norm": 53.05695323005234,
+      "common_mid_rotation_relative_error": 8.326488950435144e-05,
+      "within_original_2pct_screen": true
+    },
+    {
+      "case": "plain",
+      "frequency_hz": 2750.0,
+      "common_mid_pressure_norm": 7.621907011648504,
+      "common_mid_rotation_relative_error": 0.0015868341288390988,
+      "within_original_2pct_screen": true
+    },
+    {
+      "case": "plain",
+      "frequency_hz": 4000.0,
+      "common_mid_pressure_norm": 1.9165423238261345,
+      "common_mid_rotation_relative_error": 0.007663403191160567,
+      "within_original_2pct_screen": true
+    },
+    {
+      "case": "annular",
+      "frequency_hz": 700.0,
+      "common_mid_pressure_norm": 59.56524297959677,
+      "common_mid_rotation_relative_error": 8.509353153770424e-05,
+      "within_original_2pct_screen": true
+    },
+    {
+      "case": "annular",
+      "frequency_hz": 2750.0,
+      "common_mid_pressure_norm": 7.674920497075415,
+      "common_mid_rotation_relative_error": 0.002535747264557904,
+      "within_original_2pct_screen": true
+    },
+    {
+      "case": "annular",
+      "frequency_hz": 4000.0,
+      "common_mid_pressure_norm": 0.15414915925170605,
+      "common_mid_rotation_relative_error": 0.007510273805772999,
+      "within_original_2pct_screen": true
+    }
+  ],
+  "qualified": false,
+  "limitations": [
+    "Original per-basis rotational and refinement failures remain unchanged.",
+    "No changed acceptance gate; this auxiliary screen cannot qualify a candidate."
+  ]
+}
