@@ -93,3 +93,13 @@ fields within 2e-13 relative error. The common-mid pressure changes 0.117317%,
 far below the earlier 51.07% mesh change; both electrical checks pass unchanged.
 This points toward mesh discretisation as the larger unresolved issue for this
 comparison, without identifying a domain or establishing acoustic convergence.
+
+### Isolated rear-mesh sensitivity
+
+A [separate controlled rear-mesh test](../validation/evidence/annular-isolated-rear/README.md)
+keeps the refined front/exterior pair and replaces only the two rear meshes with
+the historical coarse versions. At 4 kHz the common-mid field changes 0.009691%
+relative to the refined baseline, with electrical validation still passing.
+This leaves front/exterior discretisation as the larger unresolved concern in
+the earlier whole-mesh comparison; it does not establish convergence or exclude
+interactions between mesh domains.
