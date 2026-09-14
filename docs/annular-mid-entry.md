@@ -83,3 +83,13 @@ common-drive rotational errors are below 1% for both coarse cases and the refine
 annular case. However, the annular common-mid field changes **51.07%** between
 meshes. Common-drive symmetry therefore does not resolve the failed convergence
 or qualify the dip. Original individual-basis checks and limits remain unchanged.
+
+### Fixed-mesh integration sensitivity
+
+A [controlled 4 kHz comparison](../validation/evidence/annular-fixed-quadrature/README.md)
+holds the refined project and meshes fixed while raising boundary integration
+orders from 2/2 to 4/4. A matched-runtime baseline reproduces the historical
+fields within 2e-13 relative error. The common-mid pressure changes 0.117317%,
+far below the earlier 51.07% mesh change; both electrical checks pass unchanged.
+This points toward mesh discretisation as the larger unresolved issue for this
+comparison, without identifying a domain or establishing acoustic convergence.
