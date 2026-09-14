@@ -74,3 +74,12 @@ horizontal and vertical pressure changes are 12.08233% and 11.51388%, also faili
 2%; velocity and current changes pass at 0.14911% and 0.02297%. The acoustic
 field around this predicted dip remains numerically unresolved. This result
 neither qualifies the annular candidate nor establishes a reliable dip depth.
+
+### Equal-voltage shared mid bank
+
+An [offline shared-bank diagnostic](../validation/evidence/annular-shared-bank/README.md)
+sums the original mid-pair voltage bases without repeating a solve. At 4 kHz,
+common-drive rotational errors are below 1% for both coarse cases and the refined
+annular case. However, the annular common-mid field changes **51.07%** between
+meshes. Common-drive symmetry therefore does not resolve the failed convergence
+or qualify the dip. Original individual-basis checks and limits remain unchanged.
