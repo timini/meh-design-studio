@@ -32,6 +32,21 @@ def arrays(members, prefix):
         return {name: data[q['key']].copy() for name, q in quantities.items()}
 
 
+def verify_coarse_origin(rear, project):
+    # Bind replacement bytes to the historical coarse archive, not only this package.
+    provenance = json.loads(rear['provenance.json'])
+    coarse_blob = (ROOT.parent / 'annular-mid-entry/evidence.zip').read_bytes()
+    assert hashlib.sha256(coarse_blob).hexdigest() == provenance['coarse_archive_sha256']
+    with zipfile.ZipFile(io.BytesIO(coarse_blob)) as archive:
+        prefix = 'annular-entry-native/annular/system/'
+        coarse_project = json.loads(archive.read(prefix + 'project.blab.json'))
+        for mesh in project['physical_system']['meshes']:
+            if mesh['id'].startswith('mesh:rear_'):
+                original = archive.read(prefix + mesh['file'])
+                assert original == rear['system/' + mesh['file']]
+                assert hashlib.sha256(original).hexdigest() == coarse_project['physical_system']['metadata']['generated_mesh_sha256'][mesh['id']]
+
+
 def reproduce():
     report, rear = read_verified(ROOT)
     _, baseline = read_verified(ROOT.parent / 'annular-fixed-quadrature')
@@ -51,6 +66,7 @@ def reproduce():
     hb = pb['physical_system']['metadata'].pop('generated_mesh_sha256')
     assert pa == pb
     assert {key for key in ha if ha[key] != hb[key]} == {'mesh:rear_entry_0_positive', 'mesh:rear_entry_0_positive_y'}
+    verify_coarse_origin(rear, pb)
     assert baseline['request-baseline.json'] == rear['request.json']
     x, y = arrays(baseline, 'evaluation-baseline/upstream'), arrays(rear, 'evaluation/upstream')
     errors = {}

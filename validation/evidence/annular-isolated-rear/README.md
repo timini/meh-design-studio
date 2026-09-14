@@ -40,14 +40,15 @@ The initial wrong-module CLI failure, before evaluation creation, is also retain
 ## Reproduce without a native solve
 
 Install NumPy, retain this directory and the adjacent `annular-fixed-quadrature`
-evidence directory, then run from the repository root:
+and `annular-mid-entry` evidence directories, then run from the repository root:
 
 ```sh
 python validation/evidence/annular-isolated-rear/reproduce.py
 ```
 
 The script reads both ZIPs in memory, verifies archive/member hashes and complete
-inventories, checks unchanged project fields, the two changed mesh hashes,
+inventories, checks unchanged project fields, binds both replacement rear meshes to the
+hash-verified historical coarse archive, checks the two changed mesh hashes,
 identical requests and runtime/solver settings, and recomputes pressure/current/
 velocity differences. It compares the numbers with `report.json`. It neither
 extracts archive paths nor invokes native code. Original path-bound electrical
