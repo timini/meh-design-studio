@@ -39,6 +39,7 @@ class HornGeometry(Record):
     profile_loft: Literal['smooth', 'ruled'] = 'smooth'
     port_radius_m: Positive
     port_length_m: Positive
+    port_core_radius_m: Annotated[float, Field(strict=True, ge=0, le=.5)] = 0.
     front_radius_m: Positive
     front_depth_m: Positive
     diaphragm_profile_m: tuple[Annotated[float, Field(strict=True, ge=0, le=.1)], ...] = ()
@@ -54,6 +55,8 @@ class HornGeometry(Record):
     @model_serializer(mode='wrap')
     def preserve_legacy_pair_identity(self, handler):
         value = handler(self)
+        if self.port_core_radius_m == 0:
+            value.pop('port_core_radius_m', None)
         if self.throat_body is None:
             value.pop('throat_body', None)
         if not self.diaphragm_profile_m:
@@ -102,6 +105,11 @@ class HornGeometry(Record):
             raise ValueError('throat body must cover the throat and its wall')
         if self.front_radius_m <= self.port_radius_m:
             raise ValueError("front chamber radius must exceed port radius")
+        if self.port_core_radius_m:
+            if self.driver_axial_offset_m:
+                raise ValueError('annular entries require concentric driver and port axes')
+            if not self.wall_m < self.port_core_radius_m < self.port_radius_m - self.wall_m:
+                raise ValueError('annular core must exceed support width and leave a wall-width radial air gap')
         if self.driver_tilt_deg and self.driver_axial_offset_m:
             raise ValueError('tilted entries currently require concentric driver and port axes')
         if abs(self.driver_axial_offset_m)+self.port_radius_m >= self.front_radius_m:
@@ -198,6 +206,19 @@ def build_geometry(design: HornGeometry):
         material = material.fuse(
             cylinder(design.port_radius_m * mm + wall, 0, duct_end + wall),
             cylinder(design.front_radius_m * mm + wall, duct_end - wall, design.front_depth_m * mm + 2 * wall,driver_z))
+        if design.port_core_radius_m:
+            from .annular_entry import supported_core
+            from .diaphragm_geometry import orient
+            insert = supported_core(design)
+            start = duct_end - design.port_length_m * mm
+            centre = [axis[0] * start / mm, axis[1] * start / mm,
+                      entry + axis[2] * start / mm]
+            insert = orient(insert, centre, axis)
+            # Trim the upstream supports to the actual flare, including freeform
+            # walls whose radius varies across the finite entry opening.
+            insert = insert.cut(unported_air).clean()
+            front_air = front_air.cut(insert)
+            material = material.fuse(insert)
         # Open mounting aperture; the missing driver is an explicit reserved volume.
         material = material.cut(cylinder(design.front_radius_m * mm, diaphragm, wall * 2,driver_z))
         rear_start = diaphragm + wall
@@ -245,7 +266,7 @@ def build_geometry(design: HornGeometry):
         if not solid.isValid() or solid.Volume() <= 0 or len(solid.Solids()) != 1:
             raise ValueError(f"geometry kernel produced an invalid or disconnected solid: {name}")
     verify_front_chamber_back_walls(design, front_air, parts["horn"], unported_air=unported_air)
-    if design.profile_sections or design.driver_axial_offset_m or design.driver_tilt_deg or design.diaphragm_profile_m:
+    if design.profile_sections or design.driver_axial_offset_m or design.driver_tilt_deg or design.diaphragm_profile_m or design.port_core_radius_m:
         for air in air_regions.values():
             if any(air.intersect(part).Volume() > 1e-3 for part in parts.values()):
                 raise ValueError('freeform air intersects material')

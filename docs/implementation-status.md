@@ -241,6 +241,12 @@ The circuit accepts a prescribed mechanical load matrix in N·s/m. It does not d
 
 ## Next reviewable increments
 
+[Annular mid entries](annular-mid-entry.md) now participate in the same CAD,
+coupled solver and evolutionary search. The first retained public-circuit
+comparison completes all three declared frequencies and passes electrical/force
+checks, but fails rotational accuracy at 4 kHz and does not establish an improved
+horn. Its fields and failed checks remain available for subsequent refinement.
+
 1. Find a target-band candidate with acceptable response, coverage and operating requirements; verify frozen DSP on held-out frequencies and progressively refined meshes.
 2. Obtain commercial HF source/load data and driver/chamber geometry, and test model uncertainty and the unresolved strict electrical reciprocity discrepancy.
 3. Make manufacturing interfaces and estimated material costs correspond to actual driver mounts, cone clearances, assembly and slicing; complete physical source and speaker measurements.

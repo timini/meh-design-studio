@@ -12,6 +12,7 @@ from .domain import Positive, Record
 from .geometry import HornGeometry
 
 Parameter = Literal['length_m','mouth_radius_m','port_radius_m','port_length_m',
+                    'port_core_radius_m',
                     'front_depth_m','rear_depth_m','entry_fraction_0','entry_fraction_1','driver_axial_offset_m','driver_tilt_deg']
 
 

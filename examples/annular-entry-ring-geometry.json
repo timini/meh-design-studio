@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "length_m": 0.25,
+  "throat_radius_m": 0.0127,
+  "mouth_radius_m": 0.1,
+  "wall_m": 0.003,
+  "entry_positions_m": [
+    0.09
+  ],
+  "entry_layout": "four_driver_ring",
+  "port_radius_m": 0.024,
+  "port_length_m": 0.012,
+  "port_core_radius_m": 0.016,
+  "front_radius_m": 0.032,
+  "front_depth_m": 0.01,
+  "rear_depth_m": 0.04,
+  "mesh_size_m": 0.008,
+  "tessellation_tolerance_m": 0.0001,
+  "solver_symmetry": "xy",
+  "rear_axial_mesh_size_m": 0.002
+}

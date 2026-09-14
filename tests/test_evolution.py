@@ -44,6 +44,27 @@ def test_failed_simulation_is_not_an_elite_and_does_not_stop_search():
     assert c1['design']!=c0['design']
 
 
+def test_annular_core_mutates_from_fitness_and_replays():
+    brief, base, drivers = inputs()
+    base = HornGeometry.model_validate(base.model_dump() | {
+        'port_radius_m': .024, 'port_core_radius_m': .016, 'front_radius_m': .032})
+    brief = SearchBrief.model_validate(brief.model_dump() | {'evolution': {
+        'mutate_profile': False, 'elite_size': 1, 'explore_every': 3,
+        'geometry_bounds': {'port_core_radius_m': [.008, .020]}}})
+    seeds = candidates(brief, base, drivers)
+    history, previous, proposals = [], [], []
+    for index in range(4):
+        candidate, proposal = propose(brief, seeds, history, previous)
+        previous.append(candidate); proposals.append(proposal)
+        history.append({'status': 'complete', 'objective': float(4-index)})
+    assert proposals[2]['parent_index'] == 1
+    assert proposals[3]['method'] == 'random_exploration'
+    assert len({c['design'].port_core_radius_m for c in previous}) == 4
+    repeated, records = replay(brief, base, drivers, history)
+    assert records == proposals
+    assert [candidate_record(c) for c in repeated] == [candidate_record(c) for c in previous]
+
+
 def test_evolution_contract_rejects_invalid_bounds():
     brief,_,_=inputs()
     with pytest.raises(ValueError):SearchBrief.model_validate(brief.model_dump()|{'evolution':{'geometry_bounds':{'entry_fraction_0':[.5,1.]}}})

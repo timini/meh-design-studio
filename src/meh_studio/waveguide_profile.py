@@ -112,12 +112,12 @@ def entry_support_radius(design, air, entry, axis):
 
 def cad_volume(design, shape):
     # Default non-adaptive BRepGProp integration is inaccurate on trimmed splines.
-    return shape.Volume(tol=1e-9) if design.profile_sections else shape.Volume()
+    return shape.Volume(tol=1e-9) if design.profile_sections or design.port_core_radius_m else shape.Volume()
 
 
 def imported_volume(design, default_volume, path):
     """Independently check the saved metre-scale OCC geometry with adaptive quadrature."""
-    if not design.profile_sections:
+    if not design.profile_sections and not design.port_core_radius_m:
         return default_volume
     import gmsh
     from .cad_runtime import load_cadquery
