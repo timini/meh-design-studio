@@ -60,3 +60,12 @@ inventory and electrical result. The adjacent archive supplies the fully refined
 baseline; it is required rather than silently substituted. Portable reproduction
 passed with exactly the recorded derived values. No solver rerun or relaxed
 acceptance criterion was needed for this package.
+
+The copied compilation record describes the **parent refined input**, not the
+replacement project. Its exact original bytes are retained under
+`parent-input/compilation.json`; `derivation.json` binds parent and derived project
+hashes and records its original location. There is no derived compilation claim
+or resumable search candidate in this manual diagnostic. The original run
+directory remains untouched. Portable reproduction checks this derivation and
+binds the reported electrical result to the archived comparison, project and
+evaluation hashes.

@@ -58,6 +58,16 @@ def reproduce():
     assert ra == rb
     assert a['solver_options'] == b['solver_options']
     pa, pb = [json.loads(m['system/project.blab.json']) for m in (baseline, rear)]
+    derivation = json.loads(rear['derivation.json'])
+    assert rear['parent-input/compilation.json'] == baseline['system/compilation.json']
+    assert derivation['parent_project_sha256'] == a['project_sha256']
+    assert derivation['derived_project_sha256'] == b['project_sha256']
+    assert json.loads(rear['parent-input/compilation.json'])['project_sha256'] == a['project_sha256']
+    assert 'system/compilation.json' not in rear
+    retained_check = json.loads(rear['comparison.json'])['electrical_check']
+    assert retained_check == report['electrical_check']
+    assert retained_check['project_sha256'] == b['project_sha256']
+    assert retained_check['evaluation_sha256'] == hashlib.sha256(rear['evaluation/evaluation.json']).hexdigest()
     for project, members, manifest in [(pa, baseline, a), (pb, rear, b)]:
         assert hashlib.sha256(members['system/project.blab.json']).hexdigest() == manifest['project_sha256']
         for mesh in project['physical_system']['meshes']:
