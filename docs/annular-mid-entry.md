@@ -103,3 +103,12 @@ relative to the refined baseline, with electrical validation still passing.
 This leaves front/exterior discretisation as the larger unresolved concern in
 the earlier whole-mesh comparison; it does not establish convergence or exclude
 interactions between mesh domains.
+
+### Fixed-geometry exterior enrichment
+
+An [isolated rigid-exterior test](../validation/evidence/annular-isolated-exterior/README.md)
+subdivides rigid surface triangles while preserving every FEM mesh and mouth
+facet. Common-mid pressure changes 0.496418% at 4 kHz and electrical checks pass.
+This is a limited surface-basis test on the same polyhedral shape: it does not
+refine original edges, the mouth or CAD curvature, and cannot by itself assign
+the original 51.07% discrepancy to the interior mesh.
