@@ -112,3 +112,13 @@ facet. Common-mid pressure changes 0.496418% at 4 kHz and electrical checks pass
 This is a limited surface-basis test on the same polyhedral shape: it does not
 refine original edges, the mouth or CAD curvature, and cannot by itself assign
 the original 51.07% discrepancy to the interior mesh.
+
+### Front-volume sensitivity with fixed boundaries
+
+An [isolated front-volume remesh](../validation/evidence/annular-isolated-front/README.md)
+keeps every boundary facet and all rear/exterior meshes fixed while changing
+64,181 front tetrahedra to 80,834. At 4 kHz, common-mid complex pressure changes
+133.9963%, and full H/V pressure bases change 2.51/2.68%, failing the unchanged
+2% field screen despite passing electrical equations. This demonstrates a
+substantial interior discretisation problem even without changing the boundary;
+the annular response and candidate ranking remain unqualified.

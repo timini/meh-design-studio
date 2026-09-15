@@ -1,0 +1,115 @@
+{
+  "source_commit": "5eff8a3c44128743941af34d71a11968b0205a06",
+  "frequency_hz": 4000,
+  "relative_errors_against_refined_baseline": {
+    "mechanical:diaphragm-velocity": 0.0029669604726365907,
+    "electrical:voice-coil-current": 0.00045021431472991666,
+    "acoustic:pressure:horizontal-polar": 0.02511592246600455,
+    "acoustic:pressure:vertical-polar": 0.026845891262162785,
+    "common_mid_pressure": 1.339963205705752
+  },
+  "electrical_check": {
+    "schema_version": 1,
+    "evidence": "independent_equation_consistency",
+    "passed": true,
+    "project_sha256": "a286ddd08ef405108e4c22544227c24c2c1d000e5321de18ccad44e516289a64",
+    "evaluation_sha256": "2e4fa653821d0532212b85c68e474dbf86201acf35aae17334d89877c296e805",
+    "rows": [
+      {
+        "frequency_hz": 4000.0,
+        "passed": true,
+        "circuit_voltage_relative_residual": 9.294910891687801e-17,
+        "electrical_reciprocity_relative_residual": 3.0402925431435114e-11,
+        "minimum_hermitian_admittance_eigenvalue_s": 0.13127474544185488
+      }
+    ],
+    "relative_tolerance": 1e-08,
+    "acoustic_accuracy_validated": false,
+    "limitations": [
+      "Circuit consistency cannot establish acoustic field accuracy",
+      "No measured driver or speaker comparison",
+      "No RMS or absolute SPL qualification"
+    ],
+    "symmetry": {
+      "mode": "xy",
+      "components": {
+        "component:throat": {
+          "physical_driver_orbit_count": 1,
+          "surface_completion_factor": 4,
+          "fractional_symmetry_axes": [
+            "x",
+            "y"
+          ]
+        },
+        "component:entry_0_positive": {
+          "physical_driver_orbit_count": 2,
+          "surface_completion_factor": 2,
+          "fractional_symmetry_axes": [
+            "y"
+          ]
+        },
+        "component:entry_0_positive_y": {
+          "physical_driver_orbit_count": 2,
+          "surface_completion_factor": 2,
+          "fractional_symmetry_axes": [
+            "x"
+          ]
+        }
+      },
+      "admittance_current_convention": "sum_of_physical_driver_orbit_currents",
+      "circuit_voltage_convention": "per_physical_coil"
+    }
+  },
+  "runtime_and_solver_options_match_after_julia_path_canonicalisation": true,
+  "qualified": false,
+  "limitations": [
+    "One-frequency fixed-boundary front remeshing is not full mesh or curvature convergence.",
+    "Original 51.07% all-domain mesh change remains failed."
+  ],
+  "archive_sha256": "12b42709636027c2e5f7f1329fdd55035da6ff8e173a86d2e9b1f4f0199743a9",
+  "archive_members_sha256": {
+    "common-bank-norms.json": "ffb1842094e88e4336dceb61382b0b5cc58c3565b9ad1499ad479a87fbf72dfc",
+    "compare.py": "92c57c75553ebd2a03a9d67a4c341e254e00891a685f6ebac321739cdf603113",
+    "comparison.json": "aeea622a9364ff4710404d56d5b2c20c3a3ad66fc012c9e4544ed554d493b160",
+    "derivation.json": "5c5c87ffab6e8c60a5db94e9caa1f73ab21cbef421ca1fd9262960d832d3b115",
+    "evaluation/evaluation.json": "2e4fa653821d0532212b85c68e474dbf86201acf35aae17334d89877c296e805",
+    "evaluation/preflight.json": "75b2ab1729cc97b1cc7b86cdaff531c232e7bc087598eb452ac10ed0791dad91",
+    "evaluation/preflight.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evaluation/request.json": "9462be33cf5e83656599819ba06a7adf87e87cc13d4e0038505a8cc755bb8044",
+    "evaluation/solve.ndjson": "5e1da12305f5497829c5cf9cd6ed267d68ba1d71551e8591ecbe34132f4ae4a3",
+    "evaluation/solve.stderr.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "evaluation/upstream/compiled-system.json": "0829b700f5132d25b07db1fa72684002fcb4719bf50fd3684255481199bc7fb3",
+    "evaluation/upstream/domains.json": "1186465518509a0590c861b2b84f400e338e25435f865227c4dee7f90392e72d",
+    "evaluation/upstream/domains.npz": "c739847f1c2fb7f9acac77f2630a2800e18d2a6ec08b58a92fefcb118afff5cb",
+    "evaluation/upstream/frequencies/000000.json": "8f89b1f2e00cbe7e38b8f643bf23829b682e3ca1e08e0d21d2ec1bf9f1a94813",
+    "evaluation/upstream/frequencies/000000.npz": "0baa613cc19ab52aab8e2d3700ac1c247a11f2850959ac149279acdfbfdc6651",
+    "evaluation/upstream/manifest.json": "7aa5da5cc4dd82450c5617c6c62f27306d9e9513c19396dc8031e729e5bde3b8",
+    "evaluation/upstream/project.snapshot.blab.json": "a286ddd08ef405108e4c22544227c24c2c1d000e5321de18ccad44e516289a64",
+    "evaluation/upstream/request.json": "eff2b9607157e4c770c887850814e0bce841e265fc42d3dd5c04d0646eb882ad",
+    "evaluation/upstream/runtime.json": "f713e85027893202b1177072f5a0bd1b42b4a18f6ab0cef07769d07985ef5fa8",
+    "front-hybrid.msh": "369640154dfc91e9b6f1184d2a019cfebc21d4fdd8f2fba21365ba4a70a3f961",
+    "front-remeshed.msh": "c198ce58751c74cf6857b2781b4610a00ea1a9730e3b47fc0df8241007a0f5b0",
+    "hybrid.log": "b01ea8f53c8f9fb1d2fc8b952d8e73033337a53240303b6929483abfaecf1d67",
+    "parent-input/compilation.json": "746e966bec264dd44d7f3369b327c5361c709a5661ccc98cc2dd899df5fbed58",
+    "preparation.log": "750a1382f9807bb6965082a3b23aceb817c6b5ee25954197036dddfe3b75d8bf",
+    "prepare-hybrid.py": "b7d8192657ba06783952ff1f368644aa04db22dc7cc5dca437e5e2489a907448",
+    "prepare.py": "585cc6ffe0bb9aaf776bda85cc0d42fc40f1a8b0759bc22b3147e4278b627c45",
+    "request.json": "9462be33cf5e83656599819ba06a7adf87e87cc13d4e0038505a8cc755bb8044",
+    "solve.log": "3b54390c0db1a2cbed5cf99f33644d941b8b7b9b331f18dc96d37c3806c0bc4a",
+    "system/conform-interface.json": "2159484e6253de946c77aa079d2cf9e17bdac503869eac5ba21c3101482fcaa3",
+    "system/conform-interface.log": "75a11da44c802486bc6f65640aa48a730f0f684c5c07a42ba3cd1735eb3fb070",
+    "system/exterior/envelope.step": "55c99450ccfefe2a3e72de72abbe18ca5df9f5655a5bf940aa6be976a99308f3",
+    "system/exterior/exterior.json": "e527fd5d7f7ce07571347e3c9954a5b9139e9ed0b48fe42af2f911bfff7b229d",
+    "system/exterior/exterior.msh": "4726b0a3d7ab84897d087d9dcd0ec3d3baed5f4fe12acbec5ac34fa2dfcf9256",
+    "system/exterior/fragmented.step": "bf5fa903e8ab75ea1ecf1b6dc6aa14ea36d62dcb5aa8532b868eadd2ce281fe1",
+    "system/exterior/mouth.step": "c8a9785fe60535e6a54b271d9e4c2db201b8a5f56ae237fa80eedebf13252071",
+    "system/meshes/exterior-conformed-raw.msh": "81a998b134cab8f50b839803d62623adf3806612677458baa76283855a6208a7",
+    "system/meshes/exterior.msh": "b9446460faa35bad5df1d8a6336b68ed3c60a6f602571a7f9c72b00b4864f4a6",
+    "system/meshes/front.msh": "369640154dfc91e9b6f1184d2a019cfebc21d4fdd8f2fba21365ba4a70a3f961",
+    "system/meshes/rear_entry_0_positive.msh": "e85a8bf3d72272bc690affce76d3782331125303423d50c2ad7b5bd611851752",
+    "system/meshes/rear_entry_0_positive_y.msh": "64581e9d82068a52627be971abf0ee7a73f3a0fd28445799ea6d4490fa45b5a3",
+    "system/project.blab.json": "a286ddd08ef405108e4c22544227c24c2c1d000e5321de18ccad44e516289a64",
+    "system/sources.json": "d32b2faf82e8721af13a365de1ec9911c364dbbdf57ff1a0929104e4239d7d1a",
+    "verification.json": "6d3ceb63d19b17192c75da8d49404ff3b3231a74bf757704bc49634cc643b8ae"
+  }
+}
