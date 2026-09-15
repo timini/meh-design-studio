@@ -88,11 +88,12 @@ thread default; the validation repeats the coarse mesh with its own fixed settin
 ## Opt-in native GitHub validation
 
 The `Native horn end-to-end validation` workflow runs on Ubuntu when a maintainer
-adds the `run-native-e2e` label to a pull request. Once merged, it can also be
-started manually. It runs a fresh analytic tube comparison, the 17-frequency
+explicitly starts it with `workflow_dispatch`. Pull-request labels and code
+pushes do not launch it. This is a costly experiment (up to 70 jobs), so prefer
+the local runner and obtain explicit authorisation for each hosted experiment. It runs a fresh analytic tube comparison, the 17-frequency
 horn search, an equal-gain baseline on the validation grid, and the frozen winner
-at 33 frequencies and three mesh levels. This is separate from the fast platform
-unit/CAD checks and is intentionally not triggered by every code push.
+at 33 frequencies and three mesh levels. This is separate from routine unit tests and release-only
+CAD checks and is intentionally not triggered by every code push.
 
 `validation/fixtures/run_native_e2e.py` runs the same experiment locally with
 explicit checkout, Python and Julia paths. Its report separates pipeline success

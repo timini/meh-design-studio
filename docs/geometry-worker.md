@@ -19,7 +19,7 @@ Local integration tests execute the real geometry exporter through spawn and req
 - No automatic restart loop. Expired leases can be recovered through the queue API, but orphan process cleanup is not yet integrated.
 - Snapshot and attempt storage remain caller-controlled. The worker does not protect against another process modifying its output files while publication hashes them.
 - Runtime identity records Python, OS release and architecture, the installed distribution-version inventory, and SHA-256 hashes of worker and geometry source modules. This assumes a trusted installation: it does not attest every native binary, detect all in-place dependency edits or include unrecorded environment settings. Reusable production caching still needs a pinned installation and an explicit environment contract.
-- Hosted CAD CI runs the worker tests on Linux, macOS and Windows. Platform results establish the tested software workflow, not print or acoustic qualification.
+- Published-release CAD validation runs the worker tests on Linux, macOS and Windows. Platform results establish the tested software workflow, not print or acoustic qualification.
 
 Do not promote this draft as completed B04 or enable unattended production execution until those boundaries have tests and implementations. The CLI/desktop service integration follows the worker contract rather than duplicating CAD logic in the UI.
 
