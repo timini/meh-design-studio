@@ -221,7 +221,7 @@ The [240–3000 Hz R1 prototype](../designs/240hz-3khz-four-driver/README.md) no
 - Explicit dry moving mass and source-data validation. Synthetic records cannot qualify. A declared qualification is user-supplied metadata, not independently verified evidence.
 - Private SQLite catalogue import/list with immutable revisions, idempotent insertion, conflict rejection, read-only access and content-integrity checking. Original synthetic driver fixtures are bundled for experiments; no qualified commercial catalogue is claimed.
 - Independent rigid-box modal reference and coupled linear driver circuit reference with explicit RMS/phase/load conventions. Circuit tests cover known resonant impedance, mutual motion, reciprocity, power conservation and complex superposition.
-- Headless commands, regression tests and a Linux/macOS/Windows CI matrix for Python 3.11/3.14.
+- Headless commands, regression tests and Ubuntu CI tests for Python 3.11/3.14, with the full Linux/macOS/Windows CAD suite restricted to published releases.
 
 - A repeatable [experimental build-bundle exporter](search-build-bundle.md) packages a completed search with verified geometry, driver BOM, fixed gains and source identities. Manufacturing interfaces and two-slicer/physical qualification remain open (B06).
 

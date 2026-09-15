@@ -31,7 +31,7 @@ Inputs require at least 1 micrometre tessellation tolerance and radial chamber c
 
 For acoustic meshes, source disks and the mouth must be identified uniquely by planar geometry, centre and area. Remaining constructed faces are rigid walls. Each region has a named volume and physical boundary groups. The front volume contains `throat_source`, one source per side entry and `mouth_interface`; each rear region contains its own rear source. All required source/interface faces must be found. Tetrahedra must have positive quality, and imported air volume must match the source CAD.
 
-The three-driver reference produced three air regions and valid positive-quality tetrahedra locally. Test coverage includes both driver counts, air/material separation, correct 3MF units, named source boundaries, STEP-to-metre conversion and overwrite refusal. A dedicated Linux CI job installs the real CAD kernels; the base test suite can skip CAD-specific tests when those optional tools are absent.
+The three-driver reference produced three air regions and valid positive-quality tetrahedra locally. Test coverage includes both driver counts, air/material separation, correct 3MF units, named source boundaries, STEP-to-metre conversion and overwrite refusal. Published-release jobs install the real CAD kernels on Linux, macOS and Windows; routine CI explicitly excludes CAD tests.
 
 Meshes are explicitly marked `not_converged`, and exports `print_verified: false`. The mouth is tagged for later radiation coupling; this increment does not generate an exterior BEM domain or solve the horn. The next task connects these domains and source interfaces to the adapter, then adds independent numerical comparisons and refinement studies before trusting a candidate's acoustic scores.
 

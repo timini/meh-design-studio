@@ -6,12 +6,14 @@ The target product is a local desktop application, with a headless CLI and Pytho
 
 | Layer | Configured platforms | What this establishes |
 | --- | --- | --- |
-| Core contracts, catalogue, jobs and available library tests | Linux, macOS, Windows; Python 3.11 and 3.14 | Platform-dependent file, queue, numeric and command behavior |
-| CadQuery geometry and Gmsh mesh tests | Linux, macOS, Windows; Python 3.11 | Native CAD dependencies install and geometry tests execute on each hosted runner |
+| Core contracts, catalogue, jobs and non-CAD library tests on PRs and main | Linux; Python 3.11 and 3.14 | Platform-dependent file, queue, numeric and command behavior |
+| Full suite including CadQuery geometry and Gmsh mesh tests on published releases | Linux, macOS, Windows; Python 3.11 | Native CAD dependencies install and geometry tests execute on each hosted runner |
 | Real Boundary Lab coupled solves | Local experiments so far; not a full hosted matrix | Integration evidence for the recorded local environment only |
 | Packaged desktop application | Not implemented | No installer or desktop-support claim yet |
 
-Matrix jobs do not cancel other operating systems when one fails. Superseded workflow runs are cancelled, and branch pushes do not duplicate pull-request runs. CAD jobs have a 30-minute limit; Linux graphics dependencies are installed only on Linux. These workflows configure checks, not proof that they passed. At the time of this change, GitHub Actions cannot start jobs because of account billing/spending restrictions. Local successes do not replace the missing platform results.
+Routine CI runs only two Ubuntu test jobs, each limited to 15 minutes. CAD generation, mesh builds and the full three-platform geometry suite run only when a release is published, with a 60-minute limit per platform. Superseded runs are cancelled; branch pushes do not duplicate pull-request runs. There is no desktop or distribution build workflow at present. Any future packaging/build workflow must also be release-only.
+
+Native end-to-end and retained-evidence replay workflows are manual-only; PR labels cannot launch them. Native experiments should normally run locally. Request explicit authorisation before launching a hosted native experiment because the end-to-end matrix can create 70 jobs. These workflows configure checks; individual run results establish whether they passed.
 
 ## Required before claiming desktop support
 

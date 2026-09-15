@@ -7,15 +7,13 @@ on:
         description: Numerical horn benchmark
         default: compact
         options: [compact, full-size]
-  pull_request:
-    types: [labeled]
 defaults:
   run:
     shell: bash
 permissions:
   contents: read
 concurrency:
-  group: native-e2e-${{ github.event.pull_request.number || github.ref }}-${{ github.event.label.name || github.event_name }}
+  group: native-e2e-${{ github.ref }}
   cancel-in-progress: true
 env:
   JULIA_NUM_PRECOMPILE_TASKS: '1'
@@ -23,7 +21,6 @@ env:
   OMP_NUM_THREADS: '1'
 jobs:
   search:
-    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'run-native-e2e'
     runs-on: ubuntu-latest
     timeout-minutes: 360
     steps:
