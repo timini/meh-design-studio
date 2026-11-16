@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MEH Design Studio</title>
+<meta name="description" content="Python tools for designing, simulating and exporting 3D-printable multiple entry horn speakers, with the designs and validation results recorded so far.">
+<style>
+:root {
+  --bg: #f6f8fa;
+  --surface: #ffffff;
+  --text: #1c2730;
+  --muted: #55636e;
+  --accent: #1d6b80;
+  --border: #d8dee4;
+  --warn-bg: #fff6e0;
+  --warn-border: #e2c37a;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #12181d;
+    --surface: #1b232a;
+    --text: #e3e9ee;
+    --muted: #9aa8b3;
+    --accent: #6cc1d6;
+    --border: #2e3a44;
+    --warn-bg: #2b2414;
+    --warn-border: #6b5a2c;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 17px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+.wrap { max-width: 960px; margin: 0 auto; padding: 0 16px; }
+header { padding: 48px 0 24px; }
+h1 { font-size: 2.1rem; line-height: 1.2; margin: 0 0 8px; }
+.lede { font-size: 1.15rem; color: var(--muted); margin: 0 0 20px; }
+.links { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.links a {
+  display: inline-block; padding: 8px 14px; border-radius: 6px;
+  border: 1px solid var(--accent); color: var(--accent); text-decoration: none; font-weight: 600;
+}
+.links a.primary { background: var(--accent); color: var(--bg); }
+a { color: var(--accent); }
+h2 { font-size: 1.5rem; margin: 48px 0 12px; padding-top: 8px; border-top: 1px solid var(--border); }
+h3 { font-size: 1.15rem; margin: 28px 0 8px; }
+p { margin: 0 0 14px; }
+.note {
+  background: var(--warn-bg); border: 1px solid var(--warn-border);
+  border-radius: 8px; padding: 12px 16px; margin: 20px 0;
+}
+figure { margin: 20px 0; }
+figure img {
+  display: block; width: 100%; height: auto; border-radius: 8px;
+  border: 1px solid var(--border); background: #fff;
+}
+figcaption { font-size: 0.9rem; color: var(--muted); margin-top: 6px; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 720px) { .grid { grid-template-columns: 1fr; } h1 { font-size: 1.7rem; } }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 16px 0; }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+.stat b { display: block; font-size: 1.3rem; line-height: 1.3; }
+.stat span { font-size: 0.85rem; color: var(--muted); }
+.table-scroll { overflow-x: auto; margin: 16px 0; }
+table { border-collapse: collapse; width: 100%; background: var(--surface); font-size: 0.95rem; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+td.num, th.num { text-align: right; white-space: nowrap; }
+pre {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  padding: 12px; overflow-x: auto; font-size: 0.85rem; line-height: 1.5;
+}
+code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+footer { margin: 56px 0 40px; padding-top: 16px; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>MEH Design Studio</h1>
+  <p class="lede">Python tools for designing multiple entry horn speakers from cheap drivers, simulating them with coupled FEM/BEM, and exporting parts sized for a home 3D printer.</p>
+  <ul class="links">
+    <li><a class="primary" href="https://github.com/timini/meh-design-studio">Source on GitHub</a></li>
+    <li><a href="https://timini.github.io/devblog/meh-design-studio/">Devblog post</a></li>
+  </ul>
+</header>
+
+<main>
+
+<section>
+  <h2>What it does</h2>
+  <p>A multiple entry horn (MEH) feeds one horn from several drivers. A compression driver sits at the throat. A ring of small midrange drivers enters through ports in the horn wall further out. If the ports are close enough together, the drivers sum into one source.</p>
+  <p>Port position, port size, the cavities around each driver and the crossover all interact, so a MEH is hard to design by hand. MEH Design Studio searches that space with simulation. It starts from a design brief, a driver catalogue and a budget. One parametric model generates both the air domain that is simulated and the solids that are printed. The search varies drivers, entry positions and horn shape, scores each candidate with a coupled FEM/BEM solve through <a href="https://github.com/JWSound/boundary-lab">Boundary Lab</a>, and exports the winner as STEP, STL and 3MF.</p>
+  <p>The project is validation first. Every experiment, including the failures, is kept in the repository with its raw evidence and the limits it was judged against.</p>
+  <div class="note"><strong>Status:</strong> experimental. A complete numerical optimisation and validation run has passed. No speaker from this project has been printed or physically measured yet.</div>
+
+  <figure>
+    <img src="img/architecture.png" width="1400" height="700" loading="lazy" alt="Pipeline diagram: brief and catalogue, search controller, geometry compiler, solver adapter, metrics and checks, evaluation store and build exporter.">
+    <figcaption>The intended pipeline. Results from each solve guide the next candidate.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2>How to use it</h2>
+  <p>It needs Python 3.11 or newer. The foundation tools install and run without the solver:</p>
+<pre><code>git clone https://github.com/timini/meh-design-studio.git
+cd meh-design-studio
+python -m venv .venv &amp;&amp; . .venv/bin/activate
+python -m pip install -e ".[dev]"
+meh validate-brief examples/reference-brief.json
+meh cavity-reference --lengths-m 0.47 0.33 0.22 --max-hz 1000
+python -m pytest</code></pre>
+  <p>Horn CAD needs the <code>cad</code> extra. A full search also needs a separate Boundary Lab checkout and Julia. A search takes a brief and a starting geometry:</p>
+<pre><code>python validation/fixtures/create_synthetic_catalogue.py drivers.sqlite
+meh optimise examples/synthetic-dense-search-brief.json \
+  --geometry examples/three-driver-geometry.json --database drivers.sqlite \
+  --checkout /path/to/boundary-lab --python /path/to/blab-env/bin/python \
+  --julia /path/to/julia --output runs/search</code></pre>
+  <p>Other commands continue a stopped search (<code>meh resume-optimise</code>), package a finished search with its geometry and driver BOM (<code>meh export-search</code>), and compare replacement drivers on a fixed geometry (<code>meh reanalyse-circuits</code>). The <a href="https://github.com/timini/meh-design-studio/blob/main/docs/end-to-end-search.md">search guide</a> has the details.</p>
+</section>
+
+<section>
+  <h2>Prototype R1: 240 to 3000 Hz</h2>
+  <p>R1 is the first printable design. Four 3 inch FaitalPRO 3FE25 mids sit around a Celestion CDX1-1445 compression driver. Each mid has its own sealed rear chamber. The horn splits into a core, three bands of eight sectors and four rear covers.</p>
+  <figure>
+    <img src="img/r1-prototype.png" width="1400" height="801" loading="lazy" alt="Render of the R1 horn from the mouth and from the rear, showing four mid-driver chambers around the throat.">
+    <figcaption>R1 rendered from its exported STL geometry.</figcaption>
+  </figure>
+  <div class="stats">
+    <div class="stat"><b>600 mm</b><span>clear mouth diameter</span></div>
+    <div class="stat"><b>450 mm</b><span>axial horn length</span></div>
+    <div class="stat"><b>29</b><span>assembly prints</span></div>
+    <div class="stat"><b>242 mm</b><span>largest part, fits a 250 mm printer</span></div>
+    <div class="stat"><b>3.795 L</b><span>CAD material volume, about 5.8 kg PETG with allowance</span></div>
+    <div class="stat"><b>£300</b><span>budget ceiling per speaker, horn and drivers</span></div>
+  </div>
+  <p>Every print part passed the geometry checks: single valid solids, closed and oriented meshes, and reconstruction volume error below 1 ppm. These checks do not establish print strength, airtightness or acoustic accuracy.</p>
+
+  <h3>First simulations of R1</h3>
+  <p>A simplified FEM diagnostic drove the four mid ports with equal prescribed flow and a plane-wave load at the mouth. Across 17 frequencies the mouth transfer spans 20.14 dB, with a dip near 1595.5 Hz. This is an internal diagnostic, not a speaker response.</p>
+  <figure>
+    <img src="img/r1-sweep.png" width="1350" height="750" loading="lazy" alt="Line chart of R1 mouth-mean transfer magnitude from 240 to 3000 Hz, with a dip near 1600 Hz and a rise at 3000 Hz.">
+    <figcaption>R1 prescribed-flow diagnostic on the 15 mm mesh (228,551 tetrahedra).</figcaption>
+  </figure>
+  <p>The mesh refinement check failed at 3 kHz. Going from 15 mm to 10 mm changed the complex transfer by 24.10%, and 10 mm to 7.5 mm changed it by 10.208%, against a 10% limit. The mid-band samples passed. The limit was not relaxed. A later coupled FEM/BEM solve on the actual R1 mesh completed at 240 Hz with an interior residual of 1.96e-14. That shows the mesh connects to exterior radiation; it does not qualify the band.</p>
+</section>
+
+<section>
+  <h2>End-to-end test horn</h2>
+  <p>The first full run of the pipeline used a small test horn with three synthetic drivers. It covered catalogue loading, search, CAD, meshing, coupled FEM/BEM, frozen-finalist validation and export. All 68 validation solves completed.</p>
+  <div class="grid">
+    <figure>
+      <img src="img/end-to-end-horn.png" width="1200" height="950" loading="lazy" alt="Render of the selected test horn, a cone with two cylindrical side-entry chambers.">
+      <figcaption>The selected horn, rendered from its exported geometry.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/end-to-end-response.png" width="1400" height="1120" loading="lazy" alt="Two charts: baseline and winner response from 1 to 4 kHz, and mesh sensitivity between 8, 6 and 4 mm meshes, all far below the 0.5 dB limit.">
+      <figcaption>Response on search and held-out frequencies, and the three-mesh stability check.</figcaption>
+    </figure>
+  </div>
+  <div class="table-scroll">
+  <table>
+    <thead><tr><th>Check</th><th class="num">Result</th></tr></thead>
+    <tbody>
+      <tr><td>Search</td><td class="num">4 candidates, 17 frequencies, 1 to 4 kHz</td></tr>
+      <tr><td>Baseline ripple</td><td class="num">14.883 dB</td></tr>
+      <tr><td>Selected horn</td><td class="num">120 mm path, 100 mm mouth</td></tr>
+      <tr><td>Selected ripple</td><td class="num">9.016 dB</td></tr>
+      <tr><td>Improvement at held-out frequencies</td><td class="num">3.771 dB (required 1 dB)</td></tr>
+      <tr><td>Frozen validation</td><td class="num">33 frequencies, 3 mesh sizes</td></tr>
+      <tr><td>Mesh stability</td><td class="num">Pass: 0.042 dB, 0.70° (limits 0.5 dB, 5°)</td></tr>
+      <tr><td>Physical or print qualification</td><td class="num">Not performed</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>The drivers and prices in this run are synthetic. It shows that the pipeline works; it does not show a hi-fi or efficient speaker.</p>
+</section>
+
+<section>
+  <h2>Searches with catalogue drivers</h2>
+  <h3>Larger 350 Hz horn</h3>
+  <p>An eight-proposal evolutionary search used four FaitalPRO 4FE32 mids and a synthetic throat source. Three proposals completed all eight coupled frequencies. Five failed in geometry or interface compilation and are kept as failures.</p>
+  <figure>
+    <img src="img/larger-mid-field.png" width="1400" height="816" loading="lazy" alt="Pressure level inside the larger horn at 1200, 2000 and 3000 Hz, on horizontal and vertical sections.">
+    <figcaption>Simulated pressure inside the baseline horn at 1200, 2000 and 3000 Hz, driven by the mids at 1 V RMS.</figcaption>
+  </figure>
+  <p>The selected mutation cut the response range from 8.2486 dB to 7.3464 dB and the coverage error from 6.7434 dB to 6.4123 dB. It still misses the provisional ±3 dB screen. Its minimum parallel-bank impedance is 3.1377 Ω and its frozen build estimate is £261.30.</p>
+  <figure>
+    <img src="img/larger-target-result.png" width="1367" height="782" loading="lazy" alt="Chart comparing baseline and selected mutation residuals from 350 to 7500 Hz against a ±3 dB band.">
+    <figcaption>Baseline and selected mutation against the provisional screen.</figcaption>
+  </figure>
+
+  <h3>Quarter-turn vocal-band search</h3>
+  <p>A search over noncircular profiles with quarter-turn symmetry evaluated three candidates at 15 frequencies from 350 to 7500 Hz. None met the 6 dB response screen. Response variation was 14.468 dB for the baseline, 14.623 dB for the best combined candidate and 28.085 dB for a random exploration.</p>
+  <figure>
+    <img src="img/quarter-turn-vocal-comparison.png" width="1400" height="746" loading="lazy" alt="Chart of three candidate residuals against a 6 dB screening span; all three leave the span.">
+    <figcaption>All three completed candidates leave the 6 dB screening span.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2>Checking the solver against a measurement</h2>
+  <p>The solver itself was also compared with a real measurement: the 2x12 CRAM example supplied with Boundary Lab. With a ground-plane model the maximum held-out error is 4.848 dB and the RMS error is 3.042 dB. Three of six held-out samples fail the ±3 dB limit, so the comparison fails. Without ground loading the maximum error was 5.193 dB.</p>
+  <figure>
+    <img src="img/cram-ground-reference.png" width="1400" height="933" loading="lazy" alt="Chart comparing the simulated and measured response of the 2x12 CRAM cabinet with a ground-plane model.">
+    <figcaption>Conditional ground-plane comparison against the supplied measurement.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2>What comes next</h2>
+  <p>Catalogue datasheets do not say how a cheap cone behaves at 3 kHz behind a small port in a horn wall. Only measurement can answer that. The next step is to print R1, measure each driver and the combined horn with a calibrated microphone, and compare the results with a coupled model of the actual geometry before tuning anything.</p>
+  <p>The <a href="https://github.com/timini/meh-design-studio/blob/main/docs/implementation-status.md">implementation status</a>, <a href="https://github.com/timini/meh-design-studio/blob/main/docs/validation-strategy.md">validation strategy</a> and <a href="https://github.com/timini/meh-design-studio/blob/main/designs/240hz-3khz-four-driver/README.md">R1 build notes</a> have the full detail.</p>
+</section>
+
+</main>
+
+<footer>
+  <p>Figures and numbers on this page come from the evidence and reports in the <a href="https://github.com/timini/meh-design-studio">repository</a>. Background and motivation are in the <a href="https://timini.github.io/devblog/meh-design-studio/">devblog post</a>.</p>
+</footer>
+
+</div>
+</body>
+</html>
